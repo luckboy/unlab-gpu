@@ -64,5 +64,6 @@ pub struct Lexer<'a>
     reader: &'a mut dyn BufRead,
     line_tokens: Vec<Result<(Token, Pos)>>,
     line_token_index: usize,
+    is_stopped: bool,
     keywords: HashMap<String, Token>,
 }
