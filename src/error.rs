@@ -16,12 +16,12 @@ pub struct Pos
 {
     pub path: Arc<String>,
     pub line: u64,
-    pub column: u64,
+    pub column: usize,
 }
 
 impl Pos
 {
-    pub fn new(path: Arc<String>, line: u64, column: u64) -> Self
+    pub fn new(path: Arc<String>, line: u64, column: usize) -> Self
     { Pos { path, line, column, } }
 }
 

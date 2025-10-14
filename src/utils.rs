@@ -33,3 +33,17 @@ impl<T: Iterator> Iterator for PushbackIter<T>
         }
     }
 }
+
+pub fn str_without_crnl(s: &str) -> &str
+{
+    if s.ends_with('\n') {
+        let s2 = &s[0..(s.len() - 1)];
+        if s2.ends_with('\r') {
+            &s2[0..(s2.len() - 1)]
+        } else {
+            s2
+        }
+    } else {
+        s
+    }
+}
