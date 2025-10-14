@@ -42,6 +42,7 @@ pub enum Token
     End,
     Else,
     False,
+    Fill,
     For,
     Function,
     If,
