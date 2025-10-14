@@ -98,10 +98,12 @@ impl<'a> Lexer<'a>
                 let path = self.path.clone();
                 let line_count = self.line;
                 let line_without_crnl = str_without_crnl(line.as_str());
-                let mut cs = PushbackIter::new(line_without_crnl.chars().enumerate().map(|p| (p.1, Pos::new(path.clone(), line_count, p.0 + 1))));
+                let mut cs = line_without_crnl.chars().enumerate().map(|p| (p.1, Pos::new(path.clone(), line_count, p.0 + 1)));
+                let mut cs2: &mut dyn Iterator<Item = (char, Pos)> = &mut cs;
+                let mut cs3 = PushbackIter::new(cs2);
                 self.line_tokens.clear();
                 self.eol_column = line_without_crnl.chars().count() + 1;
-                while self.read_token(&mut cs) {}
+                while self.read_token(&mut cs3) {}
                 self.line_tokens.push(Ok((Token::Newline, Pos::new(path, line_count, self.eol_column))));
                 self.line_token_index = 0;
             },
@@ -113,7 +115,7 @@ impl<'a> Lexer<'a>
         }
     }
     
-    fn skip_spaces<T: Iterator<Item = (char, Pos)>>(&self, cs: &mut PushbackIter<T>)
+    fn skip_spaces(&self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>)
     {
         loop {
             match cs.next() {
@@ -127,7 +129,7 @@ impl<'a> Lexer<'a>
         }
     }
     
-    fn read_one_or_more_digits<T: Iterator<Item = (char, Pos)>>(&mut self, cs: &mut PushbackIter<T>, s: &mut String, s_pos: Option<&mut Pos>) -> bool
+    fn read_one_or_more_digits(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, s: &mut String, s_pos: Option<&mut Pos>) -> bool
     {
         match cs.next() {
             Some((c, pos)) if c.is_ascii_digit() => {
@@ -161,7 +163,7 @@ impl<'a> Lexer<'a>
         }
     }
 
-    fn read_one_or_more_hexdigits<T: Iterator<Item = (char, Pos)>>(&mut self, cs: &mut PushbackIter<T>, s: &mut String, s_pos: Option<&mut Pos>) -> bool
+    fn read_one_or_more_hexdigits(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, s: &mut String, s_pos: Option<&mut Pos>) -> bool
     {
         match cs.next() {
             Some((c, pos)) if c.is_ascii_hexdigit() => {
@@ -195,10 +197,10 @@ impl<'a> Lexer<'a>
         }
     }
     
-    fn read_number_token<T: Iterator<Item = (char, Pos)>>(&mut self, cs: &mut PushbackIter<T>) -> bool
+    fn read_number_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>) -> bool
     {
         let mut s = String::new(); 
-        let mut s_pos = Pos::new(self.path.clone(), self.line, self.eol_column);
+        let mut s_pos = Pos::new(self.path.clone(), self.line, 1);
         let mut is_dot_or_exp = false;
         match cs.next() {
             Some((c @ '0', pos)) => {
@@ -280,7 +282,7 @@ impl<'a> Lexer<'a>
         true
     }
     
-    fn read_token<T: Iterator<Item = (char, Pos)>>(&mut self, cs: &mut PushbackIter<T>) -> bool
+    fn read_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>) -> bool
     {
         self.skip_spaces(cs);
         match cs.next() {
