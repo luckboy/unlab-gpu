@@ -86,6 +86,7 @@ pub enum UnaryOp
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum BinOp
 {
+    Index,
     Mul,
     DotMul,
     Div,
@@ -102,13 +103,11 @@ pub enum BinOp
     Ne,
     And,
     Or,
-    Index,
 }
 
 #[derive(Clone, Debug)]
 pub enum Name
 {
-    AbsGlobal(Vec<String>, String),
-    RelGlobal(Vec<String>, String),
-    Local(String),
+    Abs(Vec<String>, String),
+    Rel(Vec<String>, String),
 }
