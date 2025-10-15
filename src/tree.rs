@@ -12,6 +12,9 @@ use crate::error::*;
 pub struct Tree(pub Arc<Mod>);
 
 #[derive(Clone, Debug)]
+pub struct Mod(pub Vec<Node>);
+
+#[derive(Clone, Debug)]
 pub enum Node
 {
     Def(Def),
@@ -24,9 +27,6 @@ pub enum Def
     Mod(String, Arc<Mod>, Pos),
     Fun(String, Arc<Fun>, Pos),
 }
-
-#[derive(Clone, Debug)]
-pub struct Mod(pub Vec<Node>);
 
 #[derive(Clone, Debug)]
 pub struct Fun(pub Vec<String>, pub Vec<Arc<Stat>>);
