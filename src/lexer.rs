@@ -49,6 +49,7 @@ pub enum Token
     Function,
     If,
     In,
+    Inf,
     Module,
     Not,
     Or,
@@ -99,7 +100,7 @@ impl<'a> Lexer<'a>
                 let line_count = self.line;
                 let line_without_crnl = str_without_crnl(line.as_str());
                 let mut cs = line_without_crnl.chars().enumerate().map(|p| (p.1, Pos::new(path.clone(), line_count, p.0 + 1)));
-                let mut cs2: &mut dyn Iterator<Item = (char, Pos)> = &mut cs;
+                let cs2: &mut dyn Iterator<Item = (char, Pos)> = &mut cs;
                 let mut cs3 = PushbackIter::new(cs2);
                 self.line_tokens.clear();
                 self.eol_column = line_without_crnl.chars().count() + 1;
@@ -156,7 +157,7 @@ impl<'a> Lexer<'a>
                 false
             },
             None => {
-                self.line_tokens.push(Err(Error::ParserEof(Pos::new(self.path.clone(), self.line, self.eol_column))));
+                self.line_tokens.push(Err(Error::Parser(Pos::new(self.path.clone(), self.line, self.eol_column), String::from("no decimal digits"))));
                 self.is_stopped = true;
                 false
             },
@@ -190,7 +191,7 @@ impl<'a> Lexer<'a>
                 false
             },
             None => {
-                self.line_tokens.push(Err(Error::ParserEof(Pos::new(self.path.clone(), self.line, self.eol_column))));
+                self.line_tokens.push(Err(Error::Parser(Pos::new(self.path.clone(), self.line, self.eol_column), String::from("no hexadecimal digits"))));
                 self.is_stopped = true;
                 false
             },
@@ -281,6 +282,132 @@ impl<'a> Lexer<'a>
         }
         true
     }
+
+    fn read_string_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, token_pos: Pos) -> bool
+    {
+        let mut s = String::new();
+        loop {
+            match cs.next() {
+                Some(('"', _)) => break,
+                Some(('\\', pos)) => {
+                    match cs.next() {
+                        Some(('a', _)) => s.push('\x07'),
+                        Some(('b', _)) => s.push('\x08'),
+                        Some(('t', _)) => s.push('\t'),
+                        Some(('n', _)) => s.push('\n'),
+                        Some(('v', _)) => s.push('\x0b'),
+                        Some(('f', _)) => s.push('\x0c'),
+                        Some(('r', _)) => s.push('\r'),
+                        Some((c2 @ ('U'| 'u'), _)) => {
+                            let mut t = String::new();
+                            let n = if c2 == 'U' { 6 } else { 4 };
+                            for _ in 0..n {
+                                match cs.next() {
+                                    Some((c3, _)) if c3.is_ascii_hexdigit() => t.push(c3),
+                                    _ => {
+                                        self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
+                                        self.is_stopped = true;
+                                        return false;
+                                    }
+                                }
+                            }
+                            match u32::from_str_radix(t.as_str(), 16) {
+                                Ok(code) => {
+                                    match char::from_u32(code) {
+                                        Some(esc_c) => s.push(esc_c),
+                                        None => {
+                                            self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
+                                            self.is_stopped = true;
+                                            return false;
+                                        },
+                                    }
+                                },
+                                Err(_) => {
+                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
+                                    self.is_stopped = true;
+                                    return false;
+                                },
+                            }
+                        },
+                        Some((c2 @ ('0'..='7'), _)) => {
+                            let mut t = String::new();
+                            t.push(c2);
+                            for _ in 0..2 {
+                                match cs.next() {
+                                    Some((c3 @ ('0'..='7'), _)) => t.push(c3),
+                                    Some((c3, pos3)) => {
+                                        cs.undo((c3, pos3));
+                                        break;
+                                    },
+                                    None => {
+                                        self.line_tokens.push(Err(Error::Parser(pos, String::from("unclosed string"))));
+                                        self.is_stopped = true;
+                                        return false;
+                                    }
+                                }
+                            }
+                            match u32::from_str_radix(t.as_str(), 8) {
+                                Ok(code) => {
+                                    match char::from_u32(code) {
+                                        Some(esc_c) => s.push(esc_c),
+                                        None => {
+                                            self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
+                                            self.is_stopped = true;
+                                            return false;
+                                        },
+                                    }
+                                },
+                                Err(_) => {
+                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
+                                    self.is_stopped = true;
+                                    return false;
+                                },
+                            }
+                        },
+                        Some((c2, _)) => s.push(c2),
+                        None => {
+                            self.line_tokens.push(Err(Error::Parser(token_pos, String::from("unclosed string"))));
+                            self.is_stopped = true;
+                            return false;
+                        },
+                    }
+                },
+                Some((c, _)) => s.push(c),
+                None => {
+                    self.line_tokens.push(Err(Error::Parser(token_pos, String::from("unclosed string"))));
+                    self.is_stopped = true;
+                    return false;
+                },
+            }
+        }
+        self.line_tokens.push(Ok((Token::String(s), token_pos)));
+        true
+    }
+    
+    fn read_ident_chars(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, s: &mut String)
+    {
+        loop {
+            match cs.next() {
+                Some((c, _)) if c.is_alphanumeric() || c == '_' => s.push(c),
+                Some((c, pos)) => {
+                    cs.undo((c, pos));
+                    break;
+                },
+                None => break,
+            }
+        }
+    }
+    
+    fn read_keyword_or_ident_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, c: char, token_pos: Pos)
+    {
+        let mut s = String::new();
+        s.push(c);
+        self.read_ident_chars(cs, &mut s);
+        match self.keywords.get(&s) {
+            Some(keyword) => self.line_tokens.push(Ok((keyword.clone(), token_pos))),
+            None => self.line_tokens.push(Ok((Token::Ident(s), token_pos))),
+        }
+    }
     
     fn read_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>) -> bool
     {
@@ -353,10 +480,12 @@ impl<'a> Lexer<'a>
             },
             Some((',', pos)) => self.line_tokens.push(Ok((Token::Comma, pos))),
             Some((';', pos)) => self.line_tokens.push(Ok((Token::Newline, pos))),
+            Some(('"', pos)) => return self.read_string_token(cs, pos),
             Some((c, pos)) if c.is_ascii_digit() => {
                 cs.undo((c, pos));
                 return self.read_number_token(cs);
             },
+            Some((c, pos)) if c.is_alphabetic() || c == '_' => self.read_keyword_or_ident_token(cs, c, pos),
             Some((_, pos)) => {
                 self.line_tokens.push(Err(Error::Parser(pos, String::from("unexpected character"))));
                 self.is_stopped = true;
