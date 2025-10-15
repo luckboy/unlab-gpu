@@ -25,11 +25,18 @@ impl Pos
     { Pos { path, line, column, } }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+pub enum ParserEofFlag
+{
+    NoRepetition,
+    Repetition,
+}
+
 #[derive(Debug)]
 pub enum Error
 {
     ParserIo(Arc<String>, io::Error),
-    ParserEof(Arc<String>),
+    ParserEof(Arc<String>, ParserEofFlag),
     Parser(Pos, String),
 }
 
@@ -42,7 +49,7 @@ impl fmt::Display for Error
     {
         match self {
             Error::ParserIo(path, err) => write!(f, "{}: i/o error: {}", path, err),
-            Error::ParserEof(path) => write!(f, "{}: end of file", path),
+            Error::ParserEof(path, _) => write!(f, "{}: end of file", path),
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
         }
     }
