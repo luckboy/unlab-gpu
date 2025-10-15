@@ -64,7 +64,7 @@ pub enum Lit
     FilledMatrix(MatrixRow, Arc<Expr>),
     Array(Vec<Arc<Expr>>),
     FilledArray(Arc<Expr>, Arc<Expr>),
-    Struct(Vec<(String, Arc<Expr>)>),
+    Struct(Vec<FieldPair>),
 }
 
 #[derive(Clone, Debug)]
@@ -73,6 +73,9 @@ pub enum MatrixRow
     Row(Vec<Arc<Expr>>),
     Filled(Arc<Expr>, Arc<Expr>),
 }
+
+#[derive(Clone, Debug)]
+pub struct FieldPair(pub String, pub Arc<Expr>, pub Pos);
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum UnaryOp
