@@ -29,7 +29,7 @@ impl Pos
 pub enum Error
 {
     ParserIo(Arc<String>, io::Error),
-    ParserEof(Pos),
+    ParserEof(Arc<String>),
     Parser(Pos, String),
 }
 
@@ -42,7 +42,7 @@ impl fmt::Display for Error
     {
         match self {
             Error::ParserIo(path, err) => write!(f, "{}: i/o error: {}", path, err),
-            Error::ParserEof(pos) => write!(f, "{}: {}.{}: end of file", pos.path, pos.line, pos.column),
+            Error::ParserEof(path) => write!(f, "{}: end of file", path),
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
         }
     }
