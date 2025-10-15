@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::error::*;
 
 #[derive(Clone, Debug)]
-pub struct Tree(pub Vec<Node>);
+pub struct Tree(pub Arc<Mod>);
 
 #[derive(Clone, Debug)]
 pub enum Node
