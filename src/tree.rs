@@ -71,7 +71,7 @@ pub enum Lit
 pub enum MatrixRow
 {
     Row(Vec<Arc<Expr>>),
-    Filled(Arc<Expr>, Arc<Expr>),
+    FilledRow(Arc<Expr>, Arc<Expr>),
 }
 
 #[derive(Clone, Debug)]
