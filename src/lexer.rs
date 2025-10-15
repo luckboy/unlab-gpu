@@ -116,6 +116,9 @@ impl<'a> Lexer<'a>
         }
     }
     
+    pub fn path(&self) -> &Arc<String>
+    { &self.path }
+    
     fn read_line_tokens(&mut self)
     {
         let mut line = String::new();
