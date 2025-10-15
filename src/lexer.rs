@@ -24,16 +24,19 @@ pub enum Token
     DotRBracket,
     Star,
     Slash,
-    DotStar,
-    DotSlash,
     Plus,
     Minus,
+    DotStar,
+    DotSlash,
+    DotPlus,
+    DotMinus,
     Lt,
     GtEq,
     Gt,
     LtEq,
     Eq,
     EqEq,
+    ExEq,
     Apos,
     Dot,
     Colon,
@@ -41,8 +44,9 @@ pub enum Token
     Comma,
     Newline,
     And,
-    End,
+    By,
     Else,
+    End,
     False,
     Fill,
     For,
@@ -51,9 +55,11 @@ pub enum Token
     In,
     Inf,
     Module,
+    Nan,
     Not,
     Or,
     Return,
+    To,
     True,
     While,
     Int(i64),
@@ -69,7 +75,6 @@ pub struct Lexer<'a>
     eol_column: usize,
     reader: &'a mut dyn BufRead,
     line_tokens: Vec<Result<(Token, Pos)>>,
-    line_token_index: usize,
     is_stopped: bool,
     keywords: HashMap<String, Token>,
 }
@@ -78,19 +83,38 @@ impl<'a> Lexer<'a>
 {
     pub fn new(path: Arc<String>, reader: &'a mut dyn BufRead) -> Self
     {
+        let mut keywords: HashMap<String, Token> = HashMap::new();
+        keywords.insert(String::from("and"), Token::And);
+        keywords.insert(String::from("by"), Token::By);
+        keywords.insert(String::from("else"), Token::Else);
+        keywords.insert(String::from("end"), Token::End);
+        keywords.insert(String::from("false"), Token::False);
+        keywords.insert(String::from("fill"), Token::Fill);
+        keywords.insert(String::from("for"), Token::For);
+        keywords.insert(String::from("function"), Token::Function);
+        keywords.insert(String::from("if"), Token::If);
+        keywords.insert(String::from("in"), Token::In);
+        keywords.insert(String::from("inf"), Token::Inf);
+        keywords.insert(String::from("module"), Token::Module);
+        keywords.insert(String::from("nan"), Token::Nan);
+        keywords.insert(String::from("not"), Token::Not);
+        keywords.insert(String::from("or"), Token::Or);
+        keywords.insert(String::from("return"), Token::Return);
+        keywords.insert(String::from("to"), Token::To);
+        keywords.insert(String::from("true"), Token::True);
+        keywords.insert(String::from("while"), Token::While);
         Lexer {
             path,
             line: 1,
             eol_column: 0,
             reader,
             line_tokens: Vec::new(),
-            line_token_index: 0,
             is_stopped: false,
-            keywords: HashMap::new(),
+            keywords,
         }
     }
     
-    fn read_tokens(&mut self)
+    fn read_line_tokens(&mut self)
     {
         let mut line = String::new();
         match self.reader.read_line(&mut line) {
@@ -106,11 +130,11 @@ impl<'a> Lexer<'a>
                 self.eol_column = line_without_crnl.chars().count() + 1;
                 while self.read_token(&mut cs3) {}
                 self.line_tokens.push(Ok((Token::Newline, Pos::new(path, line_count, self.eol_column))));
-                self.line_token_index = 0;
+                self.line_tokens.reverse();
+                self.line += 1;
             },
             Err(err) => {
                 self.line_tokens = vec![Err(Error::ParserIo(self.path.clone(), err))];
-                self.line_token_index = 0;
                 self.is_stopped = true;
             },
         }
@@ -283,82 +307,92 @@ impl<'a> Lexer<'a>
         true
     }
 
-    fn read_string_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, token_pos: Pos) -> bool
+    fn read_string_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>) -> bool
     {
-        let mut s = String::new();
-        loop {
-            match cs.next() {
-                Some(('"', _)) => break,
-                Some(('\\', pos)) => {
+        match cs.next() {
+            Some(('"', pos)) => {
+                let mut s = String::new();
+                loop {
                     match cs.next() {
-                        Some(('a', _)) => s.push('\x07'),
-                        Some(('b', _)) => s.push('\x08'),
-                        Some(('t', _)) => s.push('\t'),
-                        Some(('n', _)) => s.push('\n'),
-                        Some(('v', _)) => s.push('\x0b'),
-                        Some(('f', _)) => s.push('\x0c'),
-                        Some(('r', _)) => s.push('\r'),
-                        Some((c2 @ ('U'| 'u'), _)) => {
-                            let mut t = String::new();
-                            let n = if c2 == 'U' { 6 } else { 4 };
-                            for _ in 0..n {
-                                match cs.next() {
-                                    Some((c3, _)) if c3.is_ascii_hexdigit() => t.push(c3),
-                                    _ => {
-                                        self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
-                                        self.is_stopped = true;
-                                        return false;
+                        Some(('"', _)) => break,
+                        Some(('\\', pos2)) => {
+                            match cs.next() {
+                                Some(('a', _)) => s.push('\x07'),
+                                Some(('b', _)) => s.push('\x08'),
+                                Some(('t', _)) => s.push('\t'),
+                                Some(('n', _)) => s.push('\n'),
+                                Some(('v', _)) => s.push('\x0b'),
+                                Some(('f', _)) => s.push('\x0c'),
+                                Some(('r', _)) => s.push('\r'),
+                                Some((c3 @ ('U'| 'u'), _)) => {
+                                    let mut t = String::new();
+                                    let n = if c3 == 'U' { 6 } else { 4 };
+                                    for _ in 0..n {
+                                        match cs.next() {
+                                            Some((c4, _)) if c4.is_ascii_hexdigit() => t.push(c4),
+                                            _ => {
+                                                self.line_tokens.push(Err(Error::Parser(pos2, String::from("invalid unicode escape"))));
+                                                self.is_stopped = true;
+                                                return false;
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            match u32::from_str_radix(t.as_str(), 16) {
-                                Ok(code) => {
-                                    match char::from_u32(code) {
-                                        Some(esc_c) => s.push(esc_c),
-                                        None => {
+                                    match u32::from_str_radix(t.as_str(), 16) {
+                                        Ok(code) => {
+                                            match char::from_u32(code) {
+                                                Some(esc_c) => s.push(esc_c),
+                                                None => {
+                                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
+                                                    self.is_stopped = true;
+                                                    return false;
+                                                },
+                                            }
+                                        },
+                                        Err(_) => {
                                             self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
                                             self.is_stopped = true;
                                             return false;
                                         },
                                     }
                                 },
-                                Err(_) => {
-                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
-                                    self.is_stopped = true;
-                                    return false;
-                                },
-                            }
-                        },
-                        Some((c2 @ ('0'..='7'), _)) => {
-                            let mut t = String::new();
-                            t.push(c2);
-                            for _ in 0..2 {
-                                match cs.next() {
-                                    Some((c3 @ ('0'..='7'), _)) => t.push(c3),
-                                    Some((c3, pos3)) => {
-                                        cs.undo((c3, pos3));
-                                        break;
-                                    },
-                                    None => {
-                                        self.line_tokens.push(Err(Error::Parser(pos, String::from("unclosed string"))));
-                                        self.is_stopped = true;
-                                        return false;
+                                Some((c3 @ ('0'..='7'), _)) => {
+                                    let mut t = String::new();
+                                    t.push(c3);
+                                    for _ in 0..2 {
+                                        match cs.next() {
+                                            Some((c4 @ ('0'..='7'), _)) => t.push(c4),
+                                            Some((c4, pos4)) => {
+                                                cs.undo((c4, pos4));
+                                                break;
+                                            },
+                                            None => {
+                                                self.line_tokens.push(Err(Error::Parser(pos, String::from("unclosed string"))));
+                                                self.is_stopped = true;
+                                                return false;
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            match u32::from_str_radix(t.as_str(), 8) {
-                                Ok(code) => {
-                                    match char::from_u32(code) {
-                                        Some(esc_c) => s.push(esc_c),
-                                        None => {
+                                    match u32::from_str_radix(t.as_str(), 8) {
+                                        Ok(code) => {
+                                            match char::from_u32(code) {
+                                                Some(esc_c) => s.push(esc_c),
+                                                None => {
+                                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
+                                                    self.is_stopped = true;
+                                                    return false;
+                                                },
+                                            }
+                                        },
+                                        Err(_) => {
                                             self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
                                             self.is_stopped = true;
                                             return false;
                                         },
                                     }
                                 },
-                                Err(_) => {
-                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
+                                Some((c3, _)) => s.push(c3),
+                                None => {
+                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("unclosed string"))));
                                     self.is_stopped = true;
                                     return false;
                                 },
@@ -366,22 +400,26 @@ impl<'a> Lexer<'a>
                         },
                         Some((c2, _)) => s.push(c2),
                         None => {
-                            self.line_tokens.push(Err(Error::Parser(token_pos, String::from("unclosed string"))));
+                            self.line_tokens.push(Err(Error::Parser(pos, String::from("unclosed string"))));
                             self.is_stopped = true;
                             return false;
                         },
                     }
-                },
-                Some((c, _)) => s.push(c),
-                None => {
-                    self.line_tokens.push(Err(Error::Parser(token_pos, String::from("unclosed string"))));
-                    self.is_stopped = true;
-                    return false;
-                },
-            }
+                }
+                self.line_tokens.push(Ok((Token::String(s), pos)));
+                true
+            },
+            Some((_, pos)) => {
+                self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid string"))));
+                self.is_stopped = true;
+                false
+            },
+            None => {
+                self.line_tokens.push(Err(Error::Parser(Pos::new(self.path.clone(), self.line, self.eol_column), String::from("invalid string"))));
+                self.is_stopped = true;
+                false
+            },
         }
-        self.line_tokens.push(Ok((Token::String(s), token_pos)));
-        true
     }
     
     fn read_ident_chars(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, s: &mut String)
@@ -398,14 +436,29 @@ impl<'a> Lexer<'a>
         }
     }
     
-    fn read_keyword_or_ident_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>, c: char, token_pos: Pos)
+    fn read_keyword_or_ident_token(&mut self, cs: &mut PushbackIter<&mut dyn Iterator<Item = (char, Pos)>>) -> bool
     {
-        let mut s = String::new();
-        s.push(c);
-        self.read_ident_chars(cs, &mut s);
-        match self.keywords.get(&s) {
-            Some(keyword) => self.line_tokens.push(Ok((keyword.clone(), token_pos))),
-            None => self.line_tokens.push(Ok((Token::Ident(s), token_pos))),
+        match cs.next() {
+            Some((c, pos)) if c.is_alphabetic() || c == '_' => {
+                let mut s = String::new();
+                s.push(c);
+                self.read_ident_chars(cs, &mut s);
+                match self.keywords.get(&s) {
+                    Some(keyword) => self.line_tokens.push(Ok((keyword.clone(), pos))),
+                    None => self.line_tokens.push(Ok((Token::Ident(s), pos))),
+                }
+                true
+            },
+            Some((_, pos)) => {
+                self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid keyword or identifier"))));
+                self.is_stopped = true;
+                false
+            },
+            None => {
+                self.line_tokens.push(Err(Error::Parser(Pos::new(self.path.clone(), self.line, self.eol_column), String::from("invalid keyword or identifier"))));
+                self.is_stopped = true;
+                false
+            },
         }
     }
     
@@ -454,6 +507,16 @@ impl<'a> Lexer<'a>
                     None => self.line_tokens.push(Ok((Token::Eq, pos))),
                 }
             },
+            Some(('!', pos)) => {
+                match cs.next() {
+                    Some(('=', _)) => self.line_tokens.push(Ok((Token::ExEq, pos))),
+                    _ => {
+                        self.line_tokens.push(Err(Error::Parser(pos, String::from("unexpected character"))));
+                        self.is_stopped = true;
+                        return false;
+                    },
+                }
+            },
             Some(('\'', pos)) => self.line_tokens.push(Ok((Token::Apos, pos))),
             Some(('.', pos)) => {
                 match cs.next() {
@@ -461,6 +524,8 @@ impl<'a> Lexer<'a>
                     Some((']', _)) => self.line_tokens.push(Ok((Token::DotRBracket, pos))),
                     Some(('*', _)) => self.line_tokens.push(Ok((Token::DotStar, pos))),
                     Some(('/', _)) => self.line_tokens.push(Ok((Token::DotSlash, pos))),
+                    Some(('+', _)) => self.line_tokens.push(Ok((Token::DotPlus, pos))),
+                    Some(('-', _)) => self.line_tokens.push(Ok((Token::DotMinus, pos))),
                     Some((c2, pos2)) => {
                         self.line_tokens.push(Ok((Token::Dot, pos)));
                         cs.undo((c2, pos2));
@@ -480,12 +545,18 @@ impl<'a> Lexer<'a>
             },
             Some((',', pos)) => self.line_tokens.push(Ok((Token::Comma, pos))),
             Some((';', pos)) => self.line_tokens.push(Ok((Token::Newline, pos))),
-            Some(('"', pos)) => return self.read_string_token(cs, pos),
+            Some((c @ '"', pos)) => {
+                cs.undo((c, pos));
+                return self.read_string_token(cs);
+            },
             Some((c, pos)) if c.is_ascii_digit() => {
                 cs.undo((c, pos));
                 return self.read_number_token(cs);
             },
-            Some((c, pos)) if c.is_alphabetic() || c == '_' => self.read_keyword_or_ident_token(cs, c, pos),
+            Some((c, pos)) if c.is_alphabetic() || c == '_' => {
+                cs.undo((c, pos));
+                return self.read_keyword_or_ident_token(cs);
+            },
             Some((_, pos)) => {
                 self.line_tokens.push(Err(Error::Parser(pos, String::from("unexpected character"))));
                 self.is_stopped = true;
@@ -494,5 +565,25 @@ impl<'a> Lexer<'a>
             None => return false,
         }
         true
+    }
+}
+
+impl<'a> Iterator for Lexer<'a>
+{
+    type Item = Result<(Token, Pos)>;
+    
+    fn next(&mut self) -> Option<Self::Item>
+    {
+        if self.line_tokens.is_empty() {
+            if !self.is_stopped {
+                self.read_line_tokens();
+            } else {
+                return None;
+            }
+        }
+        match self.line_tokens.pop() {
+            Some(res) => Some(res),
+            None => None,
+        }
     }
 }
