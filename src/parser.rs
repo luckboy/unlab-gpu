@@ -11,6 +11,13 @@ use crate::lexer::*;
 use crate::tree::*;
 use crate::utils::*;
 
+#[derive(Clone, Debug)]
+enum FillableExprs
+{
+    Exprs(Vec<Box<Expr>>),
+    FilledExprs(Box<Expr>, Box<Expr>),
+}
+
 pub struct Parser<'a>
 {
     path: Arc<String>,
@@ -323,8 +330,94 @@ impl<'a> Parser<'a>
     }
 
     fn parse_lit(&mut self) -> Result<(Lit, Pos)>
-    { Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)) }
+    {
+        match self.tokens.next().transpose()? {
+            Some((Token::False, pos)) => Ok((Lit::Bool(false), pos)),
+            Some((Token::True, pos)) => Ok((Lit::Bool(true), pos)),
+            Some((Token::Int(n), pos)) => Ok((Lit::Int(n), pos)),
+            Some((Token::Float(n), pos)) => Ok((Lit::Float(n), pos)),
+            Some((Token::Inf, pos)) => Ok((Lit::Float(f32::INFINITY), pos)),
+            Some((Token::Nan, pos)) => Ok((Lit::Float(f32::NAN), pos)),
+            Some((Token::String(s), pos)) => Ok((Lit::String(s), pos)),
+            Some((Token::LBracket, pos)) => {
+                self.parse_newlines()?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::RBracket, _)) => Ok((Lit::Matrix(Vec::new()), pos)),
+                    Some((token2, pos2)) => {
+                        self.tokens.undo(Ok((token2, pos2)));
+                        let matrix_row = self.parse_matrix_row()?;
+                        let lit = match self.tokens.next().transpose()? {
+                            Some((Token::Newline, _)) => {
+                                self.parse_newlines()?;
+                                match self.tokens.next().transpose()? {
+                                    Some((Token::Fill, _)) => {
+                                        let expr = self.parse_expr()?;
+                                        self.parse_newlines()?;
+                                        Lit::FilledMatrix(matrix_row, expr)
+                                    },
+                                    Some((token4, pos4))=> {
+                                        self.tokens.undo(Ok((token4, pos4)));
+                                        let mut matrix_rows = vec![matrix_row];
+                                        matrix_rows.extend_from_slice(self.parse_zero_or_more_with_newlines(&[Some(Token::RBracket)], Self::parse_matrix_row)?.as_slice());
+                                        Lit::Matrix(matrix_rows)
+                                    },
+                                    None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                                }
+                            },
+                            Some((token3, pos3)) => {
+                                self.tokens.undo(Ok((token3, pos3)));
+                                Lit::Matrix(vec![matrix_row])
+                            },
+                            None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                        };
+                        match self.tokens.next().transpose()? {
+                            Some((Token::RBracket, _)) => Ok((lit, pos)),
+                            Some((_, pos3)) => Err(Error::Parser(pos3, String::from("unexpected token"))),
+                            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                        }
+                    },
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
+            Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
+        }
+    }
 
+    fn parse_fillable_exprs(&mut self, end_tokens: &[Option<Token>]) -> Result<FillableExprs>
+    {
+        match self.tokens.next().transpose()? {
+            Some((token, _)) if end_tokens.contains(&Some(token.clone())) => Ok(FillableExprs::Exprs(Vec::new())),
+            Some((token, pos)) => {
+                self.tokens.undo(Ok((token, pos)));
+                let expr = self.parse_expr()?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::Comma, _)) => {
+                        let mut exprs = vec![expr];
+                        exprs.extend_from_slice(self.parse_zero_or_more_with_commas(end_tokens, Self::parse_expr)?.as_slice());
+                        Ok(FillableExprs::Exprs(exprs))
+                    },
+                    Some((Token::Fill, _)) => Ok(FillableExprs::FilledExprs(expr, self.parse_expr()?)),
+                    Some((token2, pos2)) => {
+                        self.tokens.undo(Ok((token2, pos2)));
+                        Ok(FillableExprs::Exprs(vec![expr]))
+                    },
+                    None => Ok(FillableExprs::Exprs(vec![expr]))
+                }
+            },
+            None if end_tokens.contains(&None) => Ok(FillableExprs::Exprs(Vec::new())),
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+        }
+    }
+
+    fn parse_matrix_row(&mut self) -> Result<MatrixRow>
+    {
+        match self.parse_fillable_exprs(&[Some(Token::RBracket), Some(Token::Newline)])? {
+            FillableExprs::Exprs(exprs) => Ok(MatrixRow::Row(exprs)),
+            FillableExprs::FilledExprs(expr, expr2) => Ok(MatrixRow::FilledRow(expr, expr2)),
+        }
+    }
+    
     fn parse_lvalue2(&mut self) -> Result<Box<Lvalue>>
     {
         match self.tokens.next().transpose()? {
