@@ -47,6 +47,7 @@ pub enum Expr
 {
     Lit(Lit, Pos),
     Var(Name, Pos),
+    App(Box<Expr>, Vec<Box<Expr>>, Pos),
     UnaryOp(UnaryOp, Box<Expr>, Pos),
     BinOp(BinOp, Box<Expr>, Box<Expr>, Pos),
     Field(Box<Expr>, String, Pos),
