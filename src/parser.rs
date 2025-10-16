@@ -53,7 +53,7 @@ impl<'a> Parser<'a>
         Ok(())
     }
     
-    fn parse_zero_or_more_with_newlines<T, F>(&mut self, end_tokens: &[Option<Token>], mut f: F) -> Result<Vec<T>>
+    fn parse_zero_or_more_with_newlines<T, F>(&mut self, end_tokens: &[Option<Token>], flag: ParserEofFlag, mut f: F) -> Result<Vec<T>>
         where F: FnMut(&mut Self) -> Result<T>
     {
         let mut xs: Vec<T> = Vec::new();
@@ -66,7 +66,7 @@ impl<'a> Parser<'a>
                 },
                 Some((token, pos)) => self.tokens.undo(Ok((token, pos))),
                 None if end_tokens.contains(&None) => break,
-                None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                None => return Err(Error::ParserEof(self.path.clone(), flag)),
             }
             xs.push(f(self)?);
             match self.tokens.next().transpose()? {
@@ -82,7 +82,7 @@ impl<'a> Parser<'a>
         Ok(xs)
     }
 
-    fn parse_zero_or_more_with_commas<T, F>(&mut self, end_tokens: &[Option<Token>], mut f: F) -> Result<Vec<T>>
+    fn parse_zero_or_more_with_commas<T, F>(&mut self, end_tokens: &[Option<Token>], flag: ParserEofFlag, mut f: F) -> Result<Vec<T>>
         where F: FnMut(&mut Self) -> Result<T>
     {
         let mut xs: Vec<T> = Vec::new();
@@ -94,7 +94,7 @@ impl<'a> Parser<'a>
                 },
                 Some((token, pos)) => self.tokens.undo(Ok((token, pos))),
                 None if end_tokens.contains(&None) => break,
-                None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
+                None => return Err(Error::ParserEof(self.path.clone(), flag)),
             }
             xs.push(f(self)?);
             match self.tokens.next().transpose()? {
@@ -142,7 +142,7 @@ impl<'a> Parser<'a>
             let expr_pos = expr.pos().clone();
             match self.tokens.next().transpose()? {
                 Some((Token::LParen, _)) => {
-                    expr = Box::new(Expr::App(expr, self.parse_zero_or_more_with_commas(&[Some(Token::RParen)], Self::parse_expr)?, expr_pos));
+                    expr = Box::new(Expr::App(expr, self.parse_zero_or_more_with_commas(&[Some(Token::RParen)], ParserEofFlag::NoRepetition, Self::parse_expr)?, expr_pos));
                     match self.tokens.next().transpose()? {
                         Some((Token::RParen, _)) => (),
                         Some((_, pos2)) => return Err(Error::Parser(pos2, String::from("unclosed parenthesis"))),
@@ -358,7 +358,7 @@ impl<'a> Parser<'a>
                                     Some((token4, pos4))=> {
                                         self.tokens.undo(Ok((token4, pos4)));
                                         let mut matrix_rows = vec![matrix_row];
-                                        matrix_rows.extend_from_slice(self.parse_zero_or_more_with_newlines(&[Some(Token::RBracket)], Self::parse_matrix_row)?.as_slice());
+                                        matrix_rows.extend_from_slice(self.parse_zero_or_more_with_newlines(&[Some(Token::RBracket)], ParserEofFlag::Repetition, Self::parse_matrix_row)?.as_slice());
                                         Lit::Matrix(matrix_rows)
                                     },
                                     None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
@@ -394,7 +394,7 @@ impl<'a> Parser<'a>
                 match self.tokens.next().transpose()? {
                     Some((Token::Comma, _)) => {
                         let mut exprs = vec![expr];
-                        exprs.extend_from_slice(self.parse_zero_or_more_with_commas(end_tokens, Self::parse_expr)?.as_slice());
+                        exprs.extend_from_slice(self.parse_zero_or_more_with_commas(end_tokens, ParserEofFlag::Repetition, Self::parse_expr)?.as_slice());
                         Ok(FillableExprs::Exprs(exprs))
                     },
                     Some((Token::Fill, _)) => Ok(FillableExprs::FilledExprs(expr, self.parse_expr()?)),
