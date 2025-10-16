@@ -29,17 +29,17 @@ pub enum Def
 }
 
 #[derive(Clone, Debug)]
-pub struct Fun(pub Vec<String>, pub Vec<Arc<Stat>>);
+pub struct Fun(pub Vec<String>, pub Vec<Box<Stat>>);
 
 #[derive(Clone, Debug)]
 pub enum Stat
 {
-    Expr(Arc<Expr>, Pos),
-    Assign(Arc<Lvalue>, Arc<Expr>, Pos),
-    If(Arc<Expr>, Vec<Arc<Stat>>, Vec<(Arc<Expr>, Vec<Arc<Stat>>)>, Option<Vec<Arc<Stat>>>, Pos),
-    For(String, Arc<Expr>, Vec<Stat>, Pos),
-    While(Arc<Expr>, Vec<Stat>, Pos),
-    Return(Option<Arc<Expr>>, Pos),
+    Expr(Box<Expr>, Pos),
+    Assign(Box<Lvalue>, Box<Expr>, Pos),
+    If(Box<Expr>, Vec<Box<Stat>>, Vec<(Box<Expr>, Vec<Box<Stat>>)>, Option<Vec<Box<Stat>>>, Pos),
+    For(String, Box<Expr>, Vec<Stat>, Pos),
+    While(Box<Expr>, Vec<Box<Stat>>, Pos),
+    Return(Option<Box<Expr>>, Pos),
 }
 
 #[derive(Clone, Debug)]
@@ -47,10 +47,10 @@ pub enum Expr
 {
     Lit(Lit, Pos),
     Var(Name, Pos),
-    UnaryOp(UnaryOp, Arc<Expr>, Pos),
-    BinOp(BinOp, Arc<Expr>, Arc<Expr>, Pos),
-    Field(Arc<Expr>, String, Pos),
-    Range(Arc<Expr>, Arc<Expr>, Option<Arc<Expr>>, Pos),
+    UnaryOp(UnaryOp, Box<Expr>, Pos),
+    BinOp(BinOp, Box<Expr>, Box<Expr>, Pos),
+    Field(Box<Expr>, String, Pos),
+    Range(Box<Expr>, Box<Expr>, Option<Box<Expr>>, Pos),
 }
 
 #[derive(Clone, Debug)]
@@ -61,21 +61,21 @@ pub enum Lit
     Float(f32),
     String(String),
     Matrix(Vec<MatrixRow>),
-    FilledMatrix(MatrixRow, Arc<Expr>),
-    Array(Vec<Arc<Expr>>),
-    FilledArray(Arc<Expr>, Arc<Expr>),
+    FilledMatrix(MatrixRow, Box<Expr>),
+    Array(Vec<Box<Expr>>),
+    FilledArray(Box<Expr>, Box<Expr>),
     Struct(Vec<FieldPair>),
 }
 
 #[derive(Clone, Debug)]
 pub enum MatrixRow
 {
-    Row(Vec<Arc<Expr>>),
-    FilledRow(Arc<Expr>, Arc<Expr>),
+    Row(Vec<Box<Expr>>),
+    FilledRow(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Clone, Debug)]
-pub struct FieldPair(pub String, pub Arc<Expr>, pub Pos);
+pub struct FieldPair(pub String, pub Box<Expr>, pub Pos);
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum UnaryOp
@@ -112,8 +112,8 @@ pub enum BinOp
 pub enum Lvalue
 {
     Var(Name, Pos),
-    Index(Arc<Lvalue>, Arc<Expr>, Pos),
-    Field(Arc<Lvalue>, String, Pos),
+    Index(Box<Lvalue>, Box<Expr>, Pos),
+    Field(Box<Lvalue>, String, Pos),
 }
 
 #[derive(Clone, Debug)]
@@ -121,4 +121,5 @@ pub enum Name
 {
     Abs(Vec<String>, String),
     Rel(Vec<String>, String),
+    Var(String),
 }
