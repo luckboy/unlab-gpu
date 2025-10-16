@@ -28,6 +28,17 @@ pub enum Def
     Fun(String, Arc<Fun>, Pos),
 }
 
+impl Def
+{
+    pub fn pos(&self) -> &Pos
+    {
+        match &self {
+            Def::Mod(_, _, pos) => pos,
+            Def::Fun(_, _, pos) => pos,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Fun(pub Vec<String>, pub Vec<Box<Stat>>);
 
@@ -42,6 +53,21 @@ pub enum Stat
     Return(Option<Box<Expr>>, Pos),
 }
 
+impl Stat
+{
+    pub fn pos(&self) -> &Pos
+    {
+        match &self {
+            Stat::Expr(_, pos) => pos,
+            Stat::Assign(_, _, pos) => pos,
+            Stat::If(_, _, _, _, pos) => pos,
+            Stat::For(_, _, _, pos) => pos,
+            Stat::While(_, _, pos) => pos,
+            Stat::Return(_, pos) => pos,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Expr
 {
@@ -52,6 +78,22 @@ pub enum Expr
     BinOp(BinOp, Box<Expr>, Box<Expr>, Pos),
     Field(Box<Expr>, String, Pos),
     Range(Box<Expr>, Box<Expr>, Option<Box<Expr>>, Pos),
+}
+
+impl Expr
+{
+    pub fn pos(&self) -> &Pos
+    {
+        match &self {
+            Expr::Lit(_, pos) => pos,
+            Expr::Var(_, pos) => pos,
+            Expr::App(_, _, pos) => pos,
+            Expr::UnaryOp(_, _, pos) => pos,
+            Expr::BinOp(_, _, _, pos) => pos,
+            Expr::Field(_, _, pos) => pos,
+            Expr::Range(_, _, _, pos) => pos,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -115,6 +157,18 @@ pub enum Lvalue
     Var(Name, Pos),
     Index(Box<Lvalue>, Box<Expr>, Pos),
     Field(Box<Lvalue>, String, Pos),
+}
+
+impl Lvalue
+{
+    pub fn pos(&self) -> &Pos
+    {
+        match &self {
+            Lvalue::Var(_, pos) => pos,
+            Lvalue::Index(_, _, pos) => pos,
+            Lvalue::Field(_, _, pos) => pos,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
