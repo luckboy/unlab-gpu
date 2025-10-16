@@ -379,6 +379,34 @@ impl<'a> Parser<'a>
                     None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
                 }
             },
+            Some((Token::DotLBracket, pos)) => {
+                self.parse_newlines()?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::DotRBracket, _)) => Ok((Lit::Matrix(Vec::new()), pos)),
+                    Some((token2, pos2)) => {
+                        self.tokens.undo(Ok((token2, pos2)));
+                        let lit = match self.parse_fillable_exprs(&[Some(Token::DotRBracket), Some(Token::Newline)])? {
+                            FillableExprs::Exprs(exprs) => Lit::Array(exprs),
+                            FillableExprs::FilledExprs(expr, expr2) => Lit::FilledArray(expr, expr2),
+                        };
+                        self.parse_newlines()?;
+                        match self.tokens.next().transpose()? {
+                            Some((Token::RBracket, _)) => Ok((lit, pos)),
+                            Some((_, pos3)) => Err(Error::Parser(pos3, String::from("unclosed dot bracket"))),
+                            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                        }
+                    },
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
+            Some((Token::LBrace, pos)) => {
+                let field_pairs = self.parse_zero_or_more_with_newlines(&[Some(Token::RBrace)], ParserEofFlag::Repetition, Self::parse_field_pair)?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::RBrace, _)) => Ok((Lit::Struct(field_pairs), pos)),
+                    Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unclosed brace"))),
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
             Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
             None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
         }
@@ -416,6 +444,13 @@ impl<'a> Parser<'a>
             FillableExprs::Exprs(exprs) => Ok(MatrixRow::Row(exprs)),
             FillableExprs::FilledExprs(expr, expr2) => Ok(MatrixRow::FilledRow(expr, expr2)),
         }
+    }
+    
+    fn parse_field_pair(&mut self) -> Result<FieldPair>
+    {
+        let (ident, pos) = self.parse_ident()?;
+        self.parse_colon()?;
+        Ok(FieldPair(ident, self.parse_expr()?, pos))
     }
     
     fn parse_lvalue2(&mut self) -> Result<Box<Lvalue>>
@@ -536,6 +571,15 @@ impl<'a> Parser<'a>
     {
         match self.tokens.next().transpose()? {
             Some((Token::Ident(ident), pos)) => Ok((ident, pos)),
+            Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
+        }
+    }
+
+    fn parse_colon(&mut self) -> Result<()>
+    {
+        match self.tokens.next().transpose()? {
+            Some((Token::Colon, _)) => Ok(()),
             Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
             None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
         }
