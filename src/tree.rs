@@ -35,7 +35,7 @@ pub struct Fun(pub Vec<String>, pub Vec<Arc<Stat>>);
 pub enum Stat
 {
     Expr(Arc<Expr>, Pos),
-    Assign(Name, Arc<Expr>, Pos),
+    Assign(Arc<Lvalue>, Arc<Expr>, Pos),
     If(Arc<Expr>, Vec<Arc<Stat>>, Vec<(Arc<Expr>, Vec<Arc<Stat>>)>, Option<Vec<Arc<Stat>>>, Pos),
     For(String, Arc<Expr>, Vec<Stat>, Pos),
     While(Arc<Expr>, Vec<Stat>, Pos),
@@ -106,6 +106,14 @@ pub enum BinOp
     Ne,
     And,
     Or,
+}
+
+#[derive(Clone, Debug)]
+pub enum Lvalue
+{
+    Var(Name, Pos),
+    Index(Arc<Lvalue>, Arc<Expr>, Pos),
+    Field(Arc<Lvalue>, String, Pos),
 }
 
 #[derive(Clone, Debug)]
