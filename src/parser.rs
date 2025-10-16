@@ -372,7 +372,7 @@ impl<'a> Parser<'a>
                         };
                         match self.tokens.next().transpose()? {
                             Some((Token::RBracket, _)) => Ok((lit, pos)),
-                            Some((_, pos3)) => Err(Error::Parser(pos3, String::from("unexpected token"))),
+                            Some((_, pos3)) => Err(Error::Parser(pos3, String::from("unclosed bracket"))),
                             None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
                         }
                     },
