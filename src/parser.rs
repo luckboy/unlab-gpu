@@ -313,12 +313,13 @@ impl<'a> Parser<'a>
         let mut last_ident = String::new();
         let mut is_last_ident = true;
         let mut name_pos = Pos::new(self.path.clone(), 1, 1);
-        let is_name_pos = false;
+        let mut is_name_pos = false;
         let mut is_first_colon_colon = false;
         let mut is_root = true;
         match self.tokens.next().transpose()? {
             Some((Token::ColonColon, pos)) => {
                 name_pos = pos.clone();
+                is_name_pos = true;
                 is_first_colon_colon = true;
             },
             Some((token, pos)) => self.tokens.undo(Ok((token, pos))),
