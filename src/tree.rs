@@ -9,10 +9,8 @@ use std::sync::Arc;
 use crate::error::*;
 
 #[derive(Clone, Debug)]
-pub struct Tree(pub Arc<Mod>);
+pub struct Tree(pub Vec<Node>);
 
-#[derive(Clone, Debug)]
-pub struct Mod(pub Vec<Node>);
 
 #[derive(Clone, Debug)]
 pub enum Node
@@ -24,7 +22,7 @@ pub enum Node
 #[derive(Clone, Debug)]
 pub enum Def
 {
-    Mod(String, Arc<Mod>, Pos),
+    Mod(String, Box<Mod>, Pos),
     Fun(String, Arc<Fun>, Pos),
 }
 
@@ -38,6 +36,9 @@ impl Def
         }
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct Mod(pub Vec<Node>);
 
 #[derive(Clone, Debug)]
 pub struct Fun(pub Vec<String>, pub Vec<Box<Stat>>);
