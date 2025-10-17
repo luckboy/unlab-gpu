@@ -51,6 +51,8 @@ pub enum Stat
     If(Box<Expr>, Vec<Box<Stat>>, Vec<(Box<Expr>, Vec<Box<Stat>>)>, Option<Vec<Box<Stat>>>, Pos),
     For(String, Box<Expr>, Vec<Stat>, Pos),
     While(Box<Expr>, Vec<Box<Stat>>, Pos),
+    Break(Pos),
+    Continue(Pos),
     Return(Option<Box<Expr>>, Pos),
 }
 
@@ -64,6 +66,8 @@ impl Stat
             Stat::If(_, _, _, _, pos) => pos,
             Stat::For(_, _, _, pos) => pos,
             Stat::While(_, _, pos) => pos,
+            Stat::Break(pos) => pos,
+            Stat::Continue(pos) => pos,
             Stat::Return(_, pos) => pos,
         }
     }

@@ -44,7 +44,9 @@ pub enum Token
     Comma,
     Newline,
     And,
+    Break,
     By,
+    Continue,
     Else,
     End,
     False,
@@ -86,7 +88,9 @@ impl<'a> Lexer<'a>
     {
         let mut keywords: HashMap<String, Token> = HashMap::new();
         keywords.insert(String::from("and"), Token::And);
+        keywords.insert(String::from("break"), Token::Break);
         keywords.insert(String::from("by"), Token::By);
+        keywords.insert(String::from("continue"), Token::Continue);
         keywords.insert(String::from("else"), Token::Else);
         keywords.insert(String::from("end"), Token::End);
         keywords.insert(String::from("false"), Token::False);
