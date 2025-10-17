@@ -453,52 +453,6 @@ impl<'a> Parser<'a>
         Ok(FieldPair(ident, self.parse_expr()?, pos))
     }
     
-    fn parse_lvalue2(&mut self) -> Result<Box<Lvalue>>
-    {
-        match self.tokens.next().transpose()? {
-            Some((Token::LParen, _)) => {
-                let lvalue = self.parse_lvalue()?;
-                match self.tokens.next().transpose()? {
-                    Some((Token::RParen, _)) => (),
-                    Some((_, pos2)) => return Err(Error::Parser(pos2, String::from("unclosed parenthesis"))),
-                    None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
-                }
-                Ok(lvalue)
-            },
-            Some((token, pos)) => {
-                self.tokens.undo(Ok((token, pos)));
-                let (name, name_pos) = self.parse_name()?;
-                Ok(Box::new(Lvalue::Var(name, name_pos)))
-            },
-            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
-        }
-    }
-    
-    fn parse_lvalue(&mut self) -> Result<Box<Lvalue>>
-    {
-        let mut lvalue = self.parse_lvalue2()?;
-        loop {
-            let lvalue_pos = lvalue.pos().clone();
-            match self.tokens.next().transpose()? {
-                Some((Token::LBracket, _)) => {
-                    lvalue = Box::new(Lvalue::Index(lvalue, self.parse_expr()?, lvalue_pos));
-                    match self.tokens.next().transpose()? {
-                        Some((Token::RBracket, _)) => (),
-                        Some((_, pos2)) => return Err(Error::Parser(pos2, String::from("unclosed bracket"))),
-                        None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
-                    }
-                },
-                Some((Token::Dot, _)) => lvalue = Box::new(Lvalue::Field(lvalue, self.parse_ident()?.0, lvalue_pos)),
-                Some((token, pos)) => {
-                    self.tokens.undo(Ok((token, pos)));
-                    break;
-                },
-                None => break,
-            }
-        }
-        Ok(lvalue)
-    }    
-    
     fn parse_name(&mut self) -> Result<(Name, Pos)>
     {
         let mut idents: Vec<String> = Vec::new();

@@ -46,7 +46,7 @@ pub struct Fun(pub Vec<String>, pub Vec<Box<Stat>>);
 pub enum Stat
 {
     Expr(Box<Expr>, Pos),
-    Assign(Box<Lvalue>, Box<Expr>, Pos),
+    Assign(Box<Expr>, Box<Expr>, Pos),
     If(Box<Expr>, Vec<Box<Stat>>, Vec<(Box<Expr>, Vec<Box<Stat>>)>, Option<Vec<Box<Stat>>>, Pos),
     For(String, Box<Expr>, Vec<Stat>, Pos),
     While(Box<Expr>, Vec<Box<Stat>>, Pos),
@@ -149,26 +149,6 @@ pub enum BinOp
     Ne,
     And,
     Or,
-}
-
-#[derive(Clone, Debug)]
-pub enum Lvalue
-{
-    Var(Name, Pos),
-    Index(Box<Lvalue>, Box<Expr>, Pos),
-    Field(Box<Lvalue>, String, Pos),
-}
-
-impl Lvalue
-{
-    pub fn pos(&self) -> &Pos
-    {
-        match &self {
-            Lvalue::Var(_, pos) => pos,
-            Lvalue::Index(_, _, pos) => pos,
-            Lvalue::Field(_, _, pos) => pos,
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
