@@ -60,7 +60,7 @@ impl<'a> Parser<'a>
         self.parse_newlines()?;
         loop {
             match self.tokens.next().transpose()? {
-                    Some((token, pos)) if end_tokens.contains(&Some(token.clone())) => {
+                Some((token, pos)) if end_tokens.contains(&Some(token.clone())) => {
                     self.tokens.undo(Ok((token, pos)));
                     break;
                 },
@@ -88,7 +88,7 @@ impl<'a> Parser<'a>
         let mut xs: Vec<T> = Vec::new();
         loop {
             match self.tokens.next().transpose()? {
-                    Some((token, pos)) if end_tokens.contains(&Some(token.clone())) => {
+                Some((token, pos)) if end_tokens.contains(&Some(token.clone())) => {
                     self.tokens.undo(Ok((token, pos)));
                     break;
                 },
