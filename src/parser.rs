@@ -212,7 +212,7 @@ impl<'a> Parser<'a>
         }
     }
     
-    fn parse_expr10(&mut self) -> Result<Box<Expr>>
+    fn parse_expr11(&mut self) -> Result<Box<Expr>>
     {
         match self.tokens.next().transpose()? {
             Some((Token::LParen, _)) => {
@@ -238,9 +238,9 @@ impl<'a> Parser<'a>
         }
     }
 
-    fn parse_expr9(&mut self) -> Result<Box<Expr>>
+    fn parse_expr10(&mut self) -> Result<Box<Expr>>
     {
-        let mut expr = self.parse_expr10()?;
+        let mut expr = self.parse_expr11()?;
         loop {
             let expr_pos = expr.pos().clone();
             match self.tokens.next().transpose()? {
@@ -261,6 +261,23 @@ impl<'a> Parser<'a>
                     }
                 },
                 Some((Token::Dot, _)) => expr = Box::new(Expr::Field(expr, self.parse_ident()?.0, expr_pos)),
+                Some((token, pos)) => {
+                    self.tokens.undo(Ok((token, pos)));
+                    break;
+                },
+                None => break,
+            }
+        }
+        Ok(expr)
+    }
+    
+    fn parse_expr9(&mut self) -> Result<Box<Expr>>
+    {
+        let mut expr = self.parse_expr10()?;
+        let expr_pos = expr.pos().clone();
+        loop {
+            match self.tokens.next().transpose()? {
+                Some((Token::Ques, _)) => expr = Box::new(Expr::UnaryOp(UnaryOp::PropagateError, expr, expr_pos.clone())),
                 Some((token, pos)) => {
                     self.tokens.undo(Ok((token, pos)));
                     break;

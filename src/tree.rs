@@ -133,6 +133,7 @@ pub enum UnaryOp
     DotNeg,
     Not,
     Transpose,
+    PropagateError,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
