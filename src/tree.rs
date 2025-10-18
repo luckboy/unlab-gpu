@@ -113,7 +113,7 @@ impl Expr
 #[derive(Clone, Debug)]
 pub enum Lit
 {
-    Nil,
+    None,
     Bool(bool),
     Int(i64),
     Float(f32),
