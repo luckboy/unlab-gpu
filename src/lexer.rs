@@ -58,6 +58,7 @@ pub enum Token
     Inf,
     Module,
     Nan,
+    Nil,
     Not,
     Or,
     Return,
@@ -102,6 +103,7 @@ impl<'a> Lexer<'a>
         keywords.insert(String::from("inf"), Token::Inf);
         keywords.insert(String::from("module"), Token::Module);
         keywords.insert(String::from("nan"), Token::Nan);
+        keywords.insert(String::from("nil"), Token::Nil);
         keywords.insert(String::from("not"), Token::Not);
         keywords.insert(String::from("or"), Token::Or);
         keywords.insert(String::from("return"), Token::Return);

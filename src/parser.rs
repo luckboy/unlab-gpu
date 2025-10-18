@@ -332,6 +332,7 @@ impl<'a> Parser<'a>
     fn parse_lit(&mut self) -> Result<(Lit, Pos)>
     {
         match self.tokens.next().transpose()? {
+            Some((Token::Nil, pos)) => Ok((Lit::Nil, pos)),
             Some((Token::False, pos)) => Ok((Lit::Bool(false), pos)),
             Some((Token::True, pos)) => Ok((Lit::Bool(true), pos)),
             Some((Token::Int(n), pos)) => Ok((Lit::Int(n), pos)),
