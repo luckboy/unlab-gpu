@@ -49,7 +49,7 @@ pub enum Stat
     Expr(Box<Expr>, Pos),
     Assign(Box<Expr>, Box<Expr>, Pos),
     If(Box<Expr>, Vec<Box<Stat>>, Vec<(Box<Expr>, Vec<Box<Stat>>)>, Option<Vec<Box<Stat>>>, Pos),
-    For(String, Box<Expr>, Vec<Stat>, Pos),
+    For(String, Box<Expr>, Vec<Box<Stat>>, Pos),
     While(Box<Expr>, Vec<Box<Stat>>, Pos),
     Break(Pos),
     Continue(Pos),

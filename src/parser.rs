@@ -109,6 +109,109 @@ impl<'a> Parser<'a>
         Ok(xs)
     }
     
+    fn parse_stat(&mut self) -> Result<Box<Stat>>
+    {
+        match self.tokens.next().transpose()? {
+            Some((Token::If, pos)) => {
+                let if_expr = self.parse_expr()?;
+                self.parse_newline()?;
+                let if_stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End), Some(Token::Else)], ParserEofFlag::Repetition, Self::parse_stat)?;
+                let mut else_if_pairs: Vec<(Box<Expr>, Vec<Box<Stat>>)> = Vec::new();
+                loop {
+                    match self.tokens.next().transpose()? {
+                        Some((token2 @ Token::Else, pos2)) => {
+                            match self.tokens.next().transpose()? {
+                                Some((Token::If, _)) => {
+                                    let else_if_expr = self.parse_expr()?;
+                                    self.parse_newline()?;
+                                    let else_if_stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End), Some(Token::Else)], ParserEofFlag::Repetition, Self::parse_stat)?;
+                                    else_if_pairs.push((else_if_expr, else_if_stats));
+                                },
+                                Some((token3, pos3)) => {
+                                    self.tokens.undo(Ok((token3, pos3)));
+                                    self.tokens.undo(Ok((token2, pos2)));
+                                    break;
+                                },
+                                None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                            }
+                        },
+                        Some((token2, pos2)) => {
+                            self.tokens.undo(Ok((token2, pos2)));
+                            break;
+                        },
+                        None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                    }
+                }
+                match self.tokens.next().transpose()? {
+                    Some((Token::Else, _)) => {
+                        self.parse_newline()?;
+                        let else_stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_stat)?;
+                        match self.tokens.next().transpose()? {
+                            Some((Token::End, _)) => (),
+                            Some((_, pos3)) => return Err(Error::Parser(pos3, String::from("unexpected token"))),
+                            None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                        }
+                        Ok(Box::new(Stat::If(if_expr, if_stats, else_if_pairs, Some(else_stats), pos)))
+                    },
+                    Some((Token::End, _)) => Ok(Box::new(Stat::If(if_expr, if_stats, else_if_pairs, None, pos))),
+                    Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
+            Some((Token::For, pos)) => {
+                let ident = self.parse_ident()?.0;
+                self.parse_in()?;
+                let expr = self.parse_expr()?;
+                self.parse_newline()?;
+                let stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_stat)?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::End, _)) => Ok(Box::new(Stat::For(ident, expr, stats, pos))),
+                    Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
+            Some((Token::While, pos)) => {
+                let expr = self.parse_expr()?;
+                self.parse_newline()?;
+                let stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_stat)?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::End, _)) => Ok(Box::new(Stat::While(expr, stats, pos))),
+                    Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
+            Some((Token::Break, pos)) => Ok(Box::new(Stat::Break(pos))),
+            Some((Token::Continue, pos)) => Ok(Box::new(Stat::Continue(pos))),
+            Some((Token::Return, pos)) => {
+                match self.tokens.next().transpose()? {
+                    Some((token2 @ (Token::Newline | Token::Else | Token::End), pos2)) => {
+                        self.tokens.undo(Ok((token2, pos2)));
+                        Ok(Box::new(Stat::Return(None, pos)))
+                    },
+                    Some((token2, pos2)) => {
+                        self.tokens.undo(Ok((token2, pos2)));
+                        Ok(Box::new(Stat::Return(Some(self.parse_expr()?), pos)))
+                    },
+                    None => Ok(Box::new(Stat::Return(None, pos))),
+                }
+            },
+            Some((token, pos)) => {
+                self.tokens.undo(Ok((token, pos)));
+                let expr = self.parse_expr()?;
+                let expr_pos = expr.pos().clone();
+                match self.tokens.next().transpose()? {
+                    Some((Token::Eq, _)) => Ok(Box::new(Stat::Assign(expr, self.parse_expr()?, expr_pos))),
+                    Some((token2, pos2)) => {
+                        self.tokens.undo(Ok((token2, pos2)));
+                        Ok(Box::new(Stat::Expr(expr, expr_pos)))
+                    },
+                    None => Ok(Box::new(Stat::Expr(expr, expr_pos))),
+                }
+            },
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+        }
+    }
+    
     fn parse_expr10(&mut self) -> Result<Box<Expr>>
     {
         match self.tokens.next().transpose()? {
@@ -535,6 +638,15 @@ impl<'a> Parser<'a>
     {
         match self.tokens.next().transpose()? {
             Some((Token::Colon, _)) => Ok(()),
+            Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
+        }
+    }
+
+    fn parse_in(&mut self) -> Result<()>
+    {
+        match self.tokens.next().transpose()? {
+            Some((Token::In, _)) => Ok(()),
             Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
             None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
         }
