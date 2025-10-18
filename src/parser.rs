@@ -29,12 +29,15 @@ impl<'a> Parser<'a>
     pub fn new(path: Arc<String>, tokens: &'a mut dyn Iterator<Item = Result<(Token, Pos)>>) -> Self
     { Parser { path, tokens: PushbackIter::new(tokens), } }
     
+    pub fn parse(&mut self) -> Result<Tree>
+    { Ok(Tree(self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_node)?)) }
+    
     fn parse_newline(&mut self) -> Result<()>
     {
         match self.tokens.next().transpose()? {
             Some((Token::Newline, _)) => Ok(()),
             Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
-            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
         }
     }
 
@@ -108,6 +111,58 @@ impl<'a> Parser<'a>
         }
         Ok(xs)
     }
+
+    fn parse_node(&mut self) -> Result<Node>
+    {
+        match self.tokens.next().transpose()? {
+            Some((token @ (Token::Function | Token::Module), pos)) => {
+                self.tokens.undo(Ok((token, pos)));
+                Ok(Node::Def(self.parse_def()?))
+            },
+            Some((token, pos)) => {
+                self.tokens.undo(Ok((token, pos)));
+                Ok(Node::Stat(self.parse_stat()?))
+            },
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+        }
+    }
+    
+    fn parse_def(&mut self) -> Result<Box<Def>>
+    {
+        match self.tokens.next().transpose()? {
+            Some((Token::Module, pos)) => {
+                let ident = self.parse_ident()?.0;
+                self.parse_newline()?;
+                let nodes = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_node)?;
+                match self.tokens.next().transpose()? {
+                    Some((Token::End, _)) => Ok(Box::new(Def::Mod(ident, Box::new(Mod(nodes)), pos))),
+                    Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                }
+            },
+            Some((Token::Function, pos)) => {
+                let ident = self.parse_ident()?.0;
+                match self.tokens.next().transpose()? {
+                    Some((Token::LParen, _)) => {
+                        let args = self.parse_zero_or_more_with_commas(&[Some(Token::RParen)], ParserEofFlag::NoRepetition, Self::parse_arg)?;
+                        self.parse_newline()?;
+                        let stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_stat)?;
+                        Ok(Box::new(Def::Fun(ident, Arc::new(Fun(args, stats)), pos)))
+                    },
+                    Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
+                    None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
+                }
+            },
+            Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
+            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+        }
+    }
+    
+    fn parse_arg(&mut self) -> Result<Arg>
+    {
+        let (ident, pos) = self.parse_ident()?;
+        Ok(Arg(ident, pos))
+    }
     
     fn parse_stat(&mut self) -> Result<Box<Stat>>
     {
@@ -132,7 +187,7 @@ impl<'a> Parser<'a>
                                     self.tokens.undo(Ok((token2, pos2)));
                                     break;
                                 },
-                                None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                                None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
                             }
                         },
                         Some((token2, pos2)) => {

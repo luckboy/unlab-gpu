@@ -15,8 +15,8 @@ pub struct Tree(pub Vec<Node>);
 #[derive(Clone, Debug)]
 pub enum Node
 {
-    Def(Def),
-    Stat(Stat),
+    Def(Box<Def>),
+    Stat(Box<Stat>),
 }
 
 #[derive(Clone, Debug)]
@@ -41,7 +41,16 @@ impl Def
 pub struct Mod(pub Vec<Node>);
 
 #[derive(Clone, Debug)]
-pub struct Fun(pub Vec<String>, pub Vec<Box<Stat>>);
+pub struct Fun(pub Vec<Arg>, pub Vec<Box<Stat>>);
+
+#[derive(Clone, Debug)]
+pub struct Arg(pub String, pub Pos);
+
+impl Arg
+{
+    pub fn pos(&self) -> &Pos
+    { &self.1 }
+}
 
 #[derive(Clone, Debug)]
 pub enum Stat
