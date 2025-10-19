@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
 use crate::matrix::Matrix;
+use crate::tree::*;
 
 #[derive(Clone, Debug)]
 pub enum Value
@@ -30,6 +31,7 @@ pub enum Object
     IntRange(i64, i64, i64),
     FloatRange(f32, f32, f32),
     Matrix(Matrix),
+    Fun(Vec<String>, String, Arc<Fun>),
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
     MatrixRowSlice(Arc<Object>, usize),
     Error(String, String),
