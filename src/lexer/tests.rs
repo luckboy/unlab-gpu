@@ -329,12 +329,13 @@ fn test_lexer_next_returns_keyboard_tokens()
 }
 
 #[test]
-fn test_lexer_next_returns_integer_token()
+fn test_lexer_next_returns_integer_tokens()
 {
     let s = "
 1234
 0x1234abcf
 0XABCF1234
+01234
 ";
     let s2 = &s[1..];
     let mut cursor = Cursor::new(s2.as_bytes());
@@ -364,13 +365,21 @@ fn test_lexer_next_returns_integer_token()
         _ => assert!(false),
     }
     match lexer.next() {
+        Some(Ok((Token::Int(1234), pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 1), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 6), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
         None => assert!(true),
         _ => assert!(false),
     }
 }
 
 #[test]
-fn test_lexer_next_returns_float_token()
+fn test_lexer_next_returns_float_tokens()
 {
     let s = "
 12.3456
@@ -447,6 +456,367 @@ fn test_lexer_next_returns_float_token()
     }
     match lexer.next() {
         Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 6), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_returns_string_token()
+{
+    let s = "\"abc def ghi jkl ąćę\"";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Ok((Token::String(t), pos))) => {
+            assert_eq!(String::from("abc def ghi jkl ąćę"), t);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 22), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_returns_string_token_with_escapes()
+{
+    let s = "\"\\a\\b\\t\\n\\v\\f\\r\\7\\41\\177\\\\\\\"\"";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Ok((Token::String(t), pos))) => {
+            assert_eq!(String::from("\x07\x08\t\n\x0b\x0c\r\x07!\x7f\\\""), t);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 30), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_returns_string_token_with_unicode_escapes()
+{
+    let s = "\"\\u0104\\U10ffff\"";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Ok((Token::String(t), pos))) => {
+            assert_eq!(String::from("\u{0104}\u{10ffff}"), t);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 17), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_returns_identifier_tokens()
+{
+    let s = "
+ABCdef
+abcDEF
+abc123
+_abc123
+_123abc
+abc_def
+ąćę
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("ABCdef"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 7), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("abcDEF"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 7), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("abc123"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 7), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("_abc123"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 8), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("_123abc"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 8), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("abc_def"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 8), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Ident(ident), pos))) => {
+            assert_eq!(String::from("ąćę"), ident);
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 7, 1), pos);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 7, 4), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_unexpected_character()
+{
+    let s = "@";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+            assert_eq!(String::from("unexpected character"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_unexpected_character_for_exclamation()
+{
+    let s = "!";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+            assert_eq!(String::from("unexpected character"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_no_hexadecimal_digits()
+{
+    let s = "0xg";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 3), pos);
+            assert_eq!(String::from("no hexadecimal digits"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_no_decimal_digits()
+{
+    let s = "0.a";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 3), pos);
+            assert_eq!(String::from("no decimal digits"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_invalid_number_for_too_large_hexadecimal_number()
+{
+    let s = "0x8000000000000000";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+            assert_eq!(String::from("invalid number"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_invalid_number_for_too_large_decimal_number()
+{
+    let s = "9223372036854775808";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+            assert_eq!(String::from("invalid number"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_invalid_unicode_escape_for_small_unicode_escape_and_invalid_hexadecimal_digit()
+{
+    let s = "\"\\u123g\"";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 2), pos);
+            assert_eq!(String::from("invalid unicode escape"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_invalid_unicode_escape_for_big_unicode_escape_and_invalid_hexadecimal_digit()
+{
+    let s = "\"\\U12345g\"";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 2), pos);
+            assert_eq!(String::from("invalid unicode escape"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_invalid_unicode_escape_for_big_unicode_escape_and_too_large_number()
+{
+    let s = "\"\\Uffffff\"";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 2), pos);
+            assert_eq!(String::from("invalid unicode escape"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_next_complains_on_unclosed_string()
+{
+    let s = "\"abc";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    match lexer.next() {
+        Some(Err(Error::Parser(pos, msg))) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), pos);
+            assert_eq!(String::from("unclosed string"), msg);
+        },
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        None => assert!(true),
         _ => assert!(false),
     }
 }

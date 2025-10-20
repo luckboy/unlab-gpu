@@ -354,14 +354,14 @@ impl<'a> Lexer<'a>
                                             match char::from_u32(code) {
                                                 Some(esc_c) => s.push(esc_c),
                                                 None => {
-                                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
+                                                    self.line_tokens.push(Err(Error::Parser(pos2, String::from("invalid unicode escape"))));
                                                     self.is_stopped = true;
                                                     return false;
                                                 },
                                             }
                                         },
                                         Err(_) => {
-                                            self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid unicode escape"))));
+                                            self.line_tokens.push(Err(Error::Parser(pos2, String::from("invalid unicode escape"))));
                                             self.is_stopped = true;
                                             return false;
                                         },
@@ -378,7 +378,7 @@ impl<'a> Lexer<'a>
                                                 break;
                                             },
                                             None => {
-                                                self.line_tokens.push(Err(Error::Parser(pos, String::from("unclosed string"))));
+                                                self.line_tokens.push(Err(Error::Parser(pos2, String::from("unclosed string"))));
                                                 self.is_stopped = true;
                                                 return false;
                                             }
@@ -389,14 +389,14 @@ impl<'a> Lexer<'a>
                                             match char::from_u32(code) {
                                                 Some(esc_c) => s.push(esc_c),
                                                 None => {
-                                                    self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
+                                                    self.line_tokens.push(Err(Error::Parser(pos2, String::from("invalid octal escape"))));
                                                     self.is_stopped = true;
                                                     return false;
                                                 },
                                             }
                                         },
                                         Err(_) => {
-                                            self.line_tokens.push(Err(Error::Parser(pos, String::from("invalid octal escape"))));
+                                            self.line_tokens.push(Err(Error::Parser(pos2, String::from("invalid octal escape"))));
                                             self.is_stopped = true;
                                             return false;
                                         },
@@ -595,7 +595,11 @@ impl<'a> Iterator for Lexer<'a>
             }
         }
         match self.line_tokens.pop() {
-            Some(res) => Some(res),
+            Some(Ok(token)) => Some(Ok(token)),
+            Some(Err(err)) => {
+                self.line_tokens.clear();
+                Some(Err(err))
+            },
             None => None,
         }
     }
