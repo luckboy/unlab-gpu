@@ -600,3 +600,6 @@ impl<'a> Iterator for Lexer<'a>
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -11,7 +11,7 @@ use std::io;
 use std::result;
 use std::sync::Arc;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub struct Pos
 {
     pub path: Arc<String>,
