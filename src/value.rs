@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
 use crate::matrix::Matrix;
+use crate::error::*;
 use crate::tree::*;
 
 #[derive(Clone, Debug)]
@@ -32,6 +33,7 @@ pub enum Object
     FloatRange(f32, f32, f32),
     Matrix(Matrix),
     Fun(Vec<String>, String, Arc<Fun>),
+    BuiltinFun(String, fn(Vec<Value>) -> Result<Value>),
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
     MatrixRowSlice(Arc<Object>, usize),
     Error(String, String),
