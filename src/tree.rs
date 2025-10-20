@@ -92,6 +92,7 @@ pub enum Expr
     BinOp(BinOp, Box<Expr>, Box<Expr>, Pos),
     Field(Box<Expr>, String, Pos),
     Range(Box<Expr>, Box<Expr>, Option<Box<Expr>>, Pos),
+    PropagateError(Box<Expr>, Pos),
 }
 
 impl Expr
@@ -106,6 +107,7 @@ impl Expr
             Expr::BinOp(_, _, _, pos) => pos,
             Expr::Field(_, _, pos) => pos,
             Expr::Range(_, _, _, pos) => pos,
+            Expr::PropagateError(_, pos) => pos,
         }
     }
 }
@@ -142,7 +144,6 @@ pub enum UnaryOp
     DotNeg,
     Not,
     Transpose,
-    PropagateError,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]

@@ -332,7 +332,7 @@ impl<'a> Parser<'a>
         let expr_pos = expr.pos().clone();
         loop {
             match self.tokens.next().transpose()? {
-                Some((Token::Ques, _)) => expr = Box::new(Expr::UnaryOp(UnaryOp::PropagateError, expr, expr_pos.clone())),
+                Some((Token::Ques, _)) => expr = Box::new(Expr::PropagateError(expr, expr_pos.clone())),
                 Some((token, pos)) => {
                     self.tokens.undo(Ok((token, pos)));
                     break;
