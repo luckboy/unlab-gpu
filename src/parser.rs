@@ -250,6 +250,7 @@ impl<'a> Parser<'a>
                     None => Ok(Box::new(Stat::Return(None, pos))),
                 }
             },
+            Some((Token::Quit, pos)) => Ok(Box::new(Stat::Quit(pos))),
             Some((token, pos)) => {
                 self.tokens.undo(Ok((token, pos)));
                 let expr = self.parse_expr()?;

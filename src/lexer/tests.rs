@@ -223,7 +223,7 @@ fn test_lexer_next_returns_interpuction_tokens()
 #[test]
 fn test_lexer_next_returns_keyboard_tokens()
 {
-    let s = "and break by continue else end false fill for function if in inf module nan none not or return root to true while";
+    let s = "and break by continue else end false fill for function if in inf module nan none not or quit return root to true while";
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     match lexer.next() {
@@ -299,27 +299,31 @@ fn test_lexer_next_returns_keyboard_tokens()
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::Return, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 89), pos),
+        Some(Ok((Token::Quit, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 89), pos),
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::Root, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 96), pos),
+        Some(Ok((Token::Return, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 94), pos),
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::To, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 101), pos),
+        Some(Ok((Token::Root, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 101), pos),
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::True, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 104), pos),
+        Some(Ok((Token::To, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 106), pos),
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::While, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 109), pos),
+        Some(Ok((Token::True, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 109), pos),
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 114), pos),
+        Some(Ok((Token::While, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 114), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 119), pos),
         _ => assert!(false),
     }
     match lexer.next() {

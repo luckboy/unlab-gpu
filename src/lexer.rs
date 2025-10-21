@@ -62,6 +62,7 @@ pub enum Token
     None,
     Not,
     Or,
+    Quit,
     Return,
     Root,
     To,
@@ -107,6 +108,7 @@ impl<'a> Lexer<'a>
         keywords.insert(String::from("none"), Token::None);
         keywords.insert(String::from("not"), Token::Not);
         keywords.insert(String::from("or"), Token::Or);
+        keywords.insert(String::from("quit"), Token::Quit);
         keywords.insert(String::from("return"), Token::Return);
         keywords.insert(String::from("root"), Token::Root);
         keywords.insert(String::from("to"), Token::To);

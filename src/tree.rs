@@ -75,6 +75,7 @@ pub enum Stat
     Break(Pos),
     Continue(Pos),
     Return(Option<Box<Expr>>, Pos),
+    Quit(Pos),
 }
 
 impl Stat
@@ -90,6 +91,7 @@ impl Stat
             Stat::Break(pos) => pos,
             Stat::Continue(pos) => pos,
             Stat::Return(_, pos) => pos,
+            Stat::Quit(pos) => pos,
         }
     }
 
@@ -104,6 +106,7 @@ impl Stat
             Stat::Break(pos2) => *pos2 = pos,
             Stat::Continue(pos2) => *pos2 = pos,
             Stat::Return(_, pos2) => *pos2 = pos,
+            Stat::Quit(pos2) => *pos2 = pos,
         }
     }
 }
