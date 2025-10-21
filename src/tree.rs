@@ -30,11 +30,20 @@ impl Def
 {
     pub fn pos(&self) -> &Pos
     {
-        match &self {
+        match self {
             Def::Mod(_, _, pos) => pos,
             Def::Fun(_, _, pos) => pos,
         }
     }
+
+    pub fn set_pos(&mut self, pos: Pos)
+    {
+        match self {
+            Def::Mod(_, _, pos2) => *pos2 = pos,
+            Def::Fun(_, _, pos2) => *pos2 = pos,
+        }
+    }
+
 }
 
 #[derive(Clone, Debug)]
@@ -69,7 +78,7 @@ impl Stat
 {
     pub fn pos(&self) -> &Pos
     {
-        match &self {
+        match self {
             Stat::Expr(_, pos) => pos,
             Stat::Assign(_, _, pos) => pos,
             Stat::If(_, _, _, _, pos) => pos,
@@ -78,6 +87,20 @@ impl Stat
             Stat::Break(pos) => pos,
             Stat::Continue(pos) => pos,
             Stat::Return(_, pos) => pos,
+        }
+    }
+
+    pub fn set_pos(&mut self, pos: Pos)
+    {
+        match self {
+            Stat::Expr(_, pos2) => *pos2 = pos,
+            Stat::Assign(_, _, pos2) => *pos2 = pos,
+            Stat::If(_, _, _, _, pos2) => *pos2 = pos,
+            Stat::For(_, _, _, pos2) => *pos2 = pos,
+            Stat::While(_, _, pos2) => *pos2 = pos,
+            Stat::Break(pos2) => *pos2 = pos,
+            Stat::Continue(pos2) => *pos2 = pos,
+            Stat::Return(_, pos2) => *pos2 = pos,
         }
     }
 }
@@ -99,7 +122,7 @@ impl Expr
 {
     pub fn pos(&self) -> &Pos
     {
-        match &self {
+        match self {
             Expr::Lit(_, pos) => pos,
             Expr::Var(_, pos) => pos,
             Expr::App(_, _, pos) => pos,
@@ -108,6 +131,20 @@ impl Expr
             Expr::Field(_, _, pos) => pos,
             Expr::Range(_, _, _, pos) => pos,
             Expr::PropagateError(_, pos) => pos,
+        }
+    }
+
+    pub fn set_pos(&mut self, pos: Pos)
+    {
+        match self {
+            Expr::Lit(_, pos2) => *pos2 = pos,
+            Expr::Var(_, pos2) => *pos2 = pos,
+            Expr::App(_, _, pos2) => *pos2 = pos,
+            Expr::UnaryOp(_, _, pos2) => *pos2 = pos,
+            Expr::BinOp(_, _, _, pos2) => *pos2 = pos,
+            Expr::Field(_, _, pos2) => *pos2 = pos,
+            Expr::Range(_, _, _, pos2) => *pos2 = pos,
+            Expr::PropagateError(_, pos2) => *pos2 = pos,
         }
     }
 }
@@ -168,7 +205,7 @@ pub enum BinOp
     Or,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum Name
 {
     Abs(Vec<String>, String),

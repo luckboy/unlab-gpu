@@ -30,7 +30,7 @@ impl<'a> Parser<'a>
     { Parser { path, tokens: PushbackIter::new(tokens), } }
     
     pub fn parse(&mut self) -> Result<Tree>
-    { Ok(Tree(self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_node)?)) }
+    { Ok(Tree(self.parse_zero_or_more_with_newlines(&[None], ParserEofFlag::Repetition, Self::parse_node)?)) }
     
     fn parse_newline(&mut self) -> Result<()>
     {
@@ -270,8 +270,9 @@ impl<'a> Parser<'a>
     fn parse_expr11(&mut self) -> Result<Box<Expr>>
     {
         match self.tokens.next().transpose()? {
-            Some((Token::LParen, _)) => {
-                let expr = self.parse_expr()?;
+            Some((Token::LParen, pos)) => {
+                let mut expr = self.parse_expr()?;
+                expr.set_pos(pos);
                 match self.tokens.next().transpose()? {
                     Some((Token::RParen, _)) => (),
                     Some((_, pos2)) => return Err(Error::Parser(pos2, String::from("unclosed parenthesis"))),
@@ -637,7 +638,7 @@ impl<'a> Parser<'a>
         let mut name_pos = Pos::new(self.path.clone(), 1, 1);
         let mut is_name_pos = false;
         let mut is_first_colon_colon = false;
-        let mut is_root = true;
+        let mut is_root = false;
         match self.tokens.next().transpose()? {
             Some((Token::ColonColon, pos)) => {
                 name_pos = pos.clone();
@@ -724,3 +725,6 @@ impl<'a> Parser<'a>
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
