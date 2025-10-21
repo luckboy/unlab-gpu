@@ -30,7 +30,13 @@ impl<'a> Parser<'a>
     { Parser { path, tokens: PushbackIter::new(tokens), } }
     
     pub fn parse(&mut self) -> Result<Tree>
-    { Ok(Tree(self.parse_zero_or_more_with_newlines(&[None], ParserEofFlag::Repetition, Self::parse_node)?)) }
+    {
+        let nodes = self.parse_zero_or_more_with_newlines(&[None], ParserEofFlag::Repetition, Self::parse_node)?;
+        match self.tokens.next().transpose()? {
+            Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
+            None => Ok(Tree(nodes)),
+        }
+    }
     
     fn parse_newline(&mut self) -> Result<()>
     {
@@ -145,9 +151,18 @@ impl<'a> Parser<'a>
                 match self.tokens.next().transpose()? {
                     Some((Token::LParen, _)) => {
                         let args = self.parse_zero_or_more_with_commas(&[Some(Token::RParen)], ParserEofFlag::NoRepetition, Self::parse_arg)?;
+                        match self.tokens.next().transpose()? {
+                            Some((Token::RParen, _)) => (),
+                            Some((_, pos2)) => return Err(Error::Parser(pos2, String::from("unclosed parenthesis"))),
+                            None => return Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),
+                        }
                         self.parse_newline()?;
                         let stats = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_stat)?;
-                        Ok(Box::new(Def::Fun(ident, Arc::new(Fun(args, stats)), pos)))
+                        match self.tokens.next().transpose()? {
+                            Some((Token::End, _)) => Ok(Box::new(Def::Fun(ident, Arc::new(Fun(args, stats)), pos))),
+                            Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
+                            None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
+                        }
                     },
                     Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
                     None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::NoRepetition)),

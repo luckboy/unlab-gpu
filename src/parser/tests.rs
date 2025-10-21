@@ -529,6 +529,57 @@ fn test_parser_parse_parses_expression8()
 }
 
 #[test]
+fn test_parser_parse_parses_expression8_with_tranpose()
+{
+    let s = "-1?'";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Expr(expr, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            match &**expr {
+                                Expr::UnaryOp(UnaryOp::Neg, expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                                    match &**expr2 {
+                                        Expr::UnaryOp(UnaryOp::Transpose, expr3, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 2), *pos);
+                                            match &**expr3 {
+                                                Expr::PropagateError(expr4, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 2), *pos);
+                                                    match &**expr4 {
+                                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 2), *pos),
+                                                        _ => assert!(false),
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+
+#[test]
 fn test_parser_parse_parses_expression_with_parenthesis()
 {
     let s = "(1 + 2) * (3 - 4)";
@@ -1912,7 +1963,7 @@ f()
 }
 
 #[test]
-fn test_parser_parse_parses_assigment_statements()
+fn test_parser_parse_parses_assignment_statements()
 {
     let s = "
 X = f()
@@ -2522,5 +2573,1319 @@ end
             }
         },
         Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_for_statement()
+{
+    let s = "
+for i in 1 to 10
+    f()
+
+    g()
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::For(ident, expr, stats, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            assert_eq!(String::from("i"), *ident);
+                            match &**expr {
+                                Expr::Range(expr2, expr3, None, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 10), *pos);
+                                    match &**expr2 {
+                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 10), *pos),
+                                        _ => assert!(false),
+                                    }
+                                    match &**expr3 {
+                                        Expr::Lit(Lit::Int(10), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 15), *pos),
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, stats.len());
+                            match &*stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("f")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*stats[1] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("g")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_while_statement()
+{
+    let s = "
+while true
+    f()
+
+    g()
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::While(expr, stats, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            match &**expr {
+                                Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 7), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, stats.len());
+                            match &*stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("f")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*stats[1] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("g")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_break_statement()
+{
+    let s = "break";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Break(pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_continue_statement()
+{
+    let s = "continue";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Continue(pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_return_statement_with_expression()
+{
+    let s = "return X + 1";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Return(Some(expr), pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            match &**expr {
+                                Expr::BinOp(BinOp::Add, expr2, expr3, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 8), *pos);
+                                    match &**expr2 {
+                                        Expr::Var(name, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 8), *pos);
+                                            assert_eq!(Name::Var(String::from("X")), *name);
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                    match &**expr3 {
+                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 12), *pos),
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_return_statement_without_expression()
+{
+    let s = "return";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Return(None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_quit_statement()
+{
+    let s = "quit";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Quit(pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_definition()
+{
+    let s = "
+function f(X)
+    g()
+
+    X + 1
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Def(def) => {
+                    match &**def {
+                        Def::Fun(ident, fun, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            assert_eq!(String::from("f"), *ident);
+                            match &**fun {
+                                Fun(args, stats) => {
+                                    assert_eq!(1, args.len());
+                                    match &args[0] {
+                                        Arg(ident2, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 12), *pos);
+                                            assert_eq!(String::from("X"), *ident2);
+                                        },
+                                    }
+                                    assert_eq!(2, stats.len());
+                                    match &*stats[0] {
+                                        Stat::Expr(expr, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr {
+                                                Expr::App(expr2, args, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    match &**expr2 {
+                                                        Expr::Var(name, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                            assert_eq!(Name::Var(String::from("g")), *name);
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                    assert_eq!(true, args.is_empty());
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                    match &*stats[1] {
+                                        Stat::Expr(expr, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                            match &**expr {
+                                                Expr::BinOp(BinOp::Add, expr2, expr3, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                    match &**expr2 {
+                                                        Expr::Var(name, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                            assert_eq!(Name::Var(String::from("X")), *name);
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                    match &**expr3 {
+                                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 9), *pos),
+                                                        _ => assert!(false),
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_module_definition()
+{
+    let s = "
+module a
+    function f(X)
+        X + 1
+    end
+
+    X = 1
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Def(def) => {
+                    match &**def {
+                        Def::Mod(ident, mod1, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            assert_eq!(String::from("a"), *ident);
+                            match &**mod1 {
+                                Mod(nodes2) => {
+                                    assert_eq!(2, nodes2.len());
+                                    match &nodes2[0] {
+                                        Node::Def(def) => {
+                                            match &**def {
+                                                Def::Fun(ident, fun, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    assert_eq!(String::from("f"), *ident);
+                                                    match &**fun {
+                                                        Fun(args, stats) => {
+                                                            assert_eq!(1, args.len());
+                                                            match &args[0] {
+                                                                Arg(ident2, pos) => {
+                                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 16), *pos);
+                                                                    assert_eq!(String::from("X"), *ident2);
+                                                                },
+                                                            }
+                                                            assert_eq!(1, stats.len());
+                                                            match &*stats[0] {
+                                                                Stat::Expr(expr, pos) => {
+                                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 9), *pos);
+                                                                    match &**expr {
+                                                                        Expr::BinOp(BinOp::Add, expr2, expr3, pos) => {
+                                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 9), *pos);
+                                                                            match &**expr2 {
+                                                                                Expr::Var(name, pos) => {
+                                                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 9), *pos);
+                                                                                    assert_eq!(Name::Var(String::from("X")), *name);
+                                                                                },
+                                                                                _ => assert!(false),
+                                                                            }
+                                                                            match &**expr3 {
+                                                                                Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 13), *pos),
+                                                                                _ => assert!(false),
+                                                                            }
+                                                                        },
+                                                                        _ => assert!(false),
+                                                                    }
+                                                                },
+                                                                _ => assert!(false),
+                                                            }
+                                                        },
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                    match &nodes2[1] {
+                                        Node::Stat(stat) => {
+                                            match &**stat {
+                                                Stat::Assign(expr, expr2, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                    match &**expr {
+                                                        Expr::Var(name, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                            assert_eq!(Name::Var(String::from("X")), *name);
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                    match &**expr2 {
+                                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 9), *pos),
+                                                        _ => assert!(false),
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_function_definitions()
+{
+    let s = "
+function f()
+    1
+end
+
+function g(X)
+    X + 1
+end
+
+function h(X, Y, Z)
+    X + Y + Z
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(3, nodes.len());
+            match &nodes[0] {
+                Node::Def(def) => {
+                    match &**def {
+                        Def::Fun(ident, fun, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            assert_eq!(String::from("f"), *ident);
+                            match &**fun {
+                                Fun(args, stats) => {
+                                    assert_eq!(true, args.is_empty());
+                                    assert_eq!(1, stats.len());
+                                    match &*stats[0] {
+                                        Stat::Expr(expr, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr {
+                                                Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos),
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match &nodes[1] {
+                Node::Def(def) => {
+                    match &**def {
+                        Def::Fun(ident, fun, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 1), *pos);
+                            assert_eq!(String::from("g"), *ident);
+                            match &**fun {
+                                Fun(args, stats) => {
+                                    assert_eq!(1, args.len());
+                                    match &args[0] {
+                                        Arg(ident2, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 12), *pos);
+                                            assert_eq!(String::from("X"), *ident2);
+                                        },
+                                    }
+                                    assert_eq!(1, stats.len());
+                                    match &*stats[0] {
+                                        Stat::Expr(expr, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                            match &**expr {
+                                                Expr::BinOp(BinOp::Add, expr2, expr3, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                    match &**expr2 {
+                                                        Expr::Var(name, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                            assert_eq!(Name::Var(String::from("X")), *name);
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                    match &**expr3 {
+                                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 9), *pos),
+                                                        _ => assert!(false),
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match &nodes[2] {
+                Node::Def(def) => {
+                    match &**def {
+                        Def::Fun(ident, fun, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 9, 1), *pos);
+                            assert_eq!(String::from("h"), *ident);
+                            match &**fun {
+                                Fun(args, stats) => {
+                                    assert_eq!(3, args.len());
+                                    match &args[0] {
+                                        Arg(ident2, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 9, 12), *pos);
+                                            assert_eq!(String::from("X"), *ident2);
+                                        },
+                                    }
+                                    match &args[1] {
+                                        Arg(ident2, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 9, 15), *pos);
+                                            assert_eq!(String::from("Y"), *ident2);
+                                        },
+                                    }
+                                    match &args[2] {
+                                        Arg(ident2, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 9, 18), *pos);
+                                            assert_eq!(String::from("Z"), *ident2);
+                                        },
+                                    }
+                                    assert_eq!(1, stats.len());
+                                    match &*stats[0] {
+                                        Stat::Expr(expr, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                            match &**expr {
+                                                Expr::BinOp(BinOp::Add, expr2, expr3, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                                    match &**expr2 {
+                                                        Expr::BinOp(BinOp::Add, expr4, expr5, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                                            match &**expr4 {
+                                                                Expr::Var(name, pos) => {
+                                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                                                    assert_eq!(Name::Var(String::from("X")), *name);
+                                                                },
+                                                                _ => assert!(false),
+                                                            }
+                                                            match &**expr5 {
+                                                                Expr::Var(name, pos) => {
+                                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 9), *pos);
+                                                                    assert_eq!(Name::Var(String::from("Y")), *name);
+                                                                },
+                                                                _ => assert!(false),
+                                                            }
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                    match &**expr3 {
+                                                        Expr::Var(name, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 13), *pos);
+                                                            assert_eq!(Name::Var(String::from("Z")), *name);
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_tree()
+{
+    let s = "
+function f(X)
+    X + 1
+end
+
+X = 1
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(2, nodes.len());
+            match &nodes[0] {
+                Node::Def(def) => {
+                    match &**def {
+                        Def::Fun(ident, fun, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            assert_eq!(String::from("f"), *ident);
+                            match &**fun {
+                                Fun(args, stats) => {
+                                    assert_eq!(1, args.len());
+                                    match &args[0] {
+                                        Arg(ident2, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 12), *pos);
+                                            assert_eq!(String::from("X"), *ident2);
+                                        },
+                                    }
+                                    assert_eq!(1, stats.len());
+                                    match &*stats[0] {
+                                        Stat::Expr(expr, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr {
+                                                Expr::BinOp(BinOp::Add, expr2, expr3, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    match &**expr2 {
+                                                        Expr::Var(name, pos) => {
+                                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                            assert_eq!(Name::Var(String::from("X")), *name);
+                                                        },
+                                                        _ => assert!(false),
+                                                    }
+                                                    match &**expr3 {
+                                                        Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 9), *pos),
+                                                        _ => assert!(false),
+                                                    }
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match &nodes[1] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::Assign(expr, expr2, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 1), *pos);
+                            match &**expr {
+                                Expr::Var(name, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 1), *pos);
+                                    assert_eq!(Name::Var(String::from("X")), *name);
+                                },
+                                _ => assert!(false),
+                            }
+                            match &**expr2 {
+                                Expr::Lit(Lit::Int(1), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 5), *pos),
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token()
+{
+    let s = "
+1 + 2
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 1), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_module()
+{
+    let s = "
+module a
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_function()
+{
+    let s = "
+function f()
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_if()
+{
+    let s = "
+if true
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_if_else()
+{
+    let s = "
+if true
+else
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_if_else_if()
+{
+    let s = "
+if true
+else if false
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_for()
+{
+    let s = "
+for i in 1 to 10
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unexpected_token_for_while()
+{
+    let s = "
+while true
+    ]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), pos);
+            assert_eq!(String::from("unexpected token"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_parenthesis_for_function()
+{
+    let s = "
+function f(X, Y]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 16), pos);
+            assert_eq!(String::from("unclosed parenthesis"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_parenthesis_for_application()
+{
+    let s = "
+f(X, Y]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 7), pos);
+            assert_eq!(String::from("unclosed parenthesis"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_parenthesis_for_expression()
+{
+    let s = "
+(1 + 2]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 7), pos);
+            assert_eq!(String::from("unclosed parenthesis"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_bracket_for_index_expression()
+{
+    let s = "
+X[1}
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 4), pos);
+            assert_eq!(String::from("unclosed bracket"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_bracket_for_matrix_literal()
+{
+    let s = "
+[1,2,3; 4}
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 10), pos);
+            assert_eq!(String::from("unclosed bracket"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_dot_bracket()
+{
+    let s = "
+.[1,2,3}
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 8), pos);
+            assert_eq!(String::from("unclosed dot bracket"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_unclosed_brace()
+{
+    let s = "
+{a: 1)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::Parser(pos, msg)) => {
+            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 6), pos);
+            assert_eq!(String::from("unclosed brace"), msg);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_module()
+{
+    let s = "
+module a
+    X = 1
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_function()
+{
+    let s = "
+function f(X)
+    X + 1
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_if()
+{
+    let s = "
+if true
+    f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_if_else()
+{
+    let s = "
+if true
+else
+    f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_if_else_if()
+{
+    let s = "
+if true
+else if false
+    f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_for()
+{
+    let s = "
+for i in 1 to 10
+    f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_while()
+{
+    let s = "
+while true
+    f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_matrix_literal()
+{
+    let s = "
+[
+    1, 2, 3
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_array_literal()
+{
+    let s = "
+.[
+    1, 2, 3
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_complains_on_eof_with_repetition_for_structure_literal()
+{
+    let s = "
+{
+    a: 1
+    b: 2
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
+        _ => assert!(false),
     }
 }
