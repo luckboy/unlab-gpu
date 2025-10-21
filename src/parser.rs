@@ -559,7 +559,7 @@ impl<'a> Parser<'a>
             Some((Token::DotLBracket, pos)) => {
                 self.parse_newlines()?;
                 match self.tokens.next().transpose()? {
-                    Some((Token::DotRBracket, _)) => Ok((Lit::Matrix(Vec::new()), pos)),
+                    Some((Token::DotRBracket, _)) => Ok((Lit::Array(Vec::new()), pos)),
                     Some((token2, pos2)) => {
                         self.tokens.undo(Ok((token2, pos2)));
                         let lit = match self.parse_fillable_exprs(&[Some(Token::DotRBracket), Some(Token::Newline)])? {
@@ -568,7 +568,7 @@ impl<'a> Parser<'a>
                         };
                         self.parse_newlines()?;
                         match self.tokens.next().transpose()? {
-                            Some((Token::RBracket, _)) => Ok((lit, pos)),
+                            Some((Token::DotRBracket, _)) => Ok((lit, pos)),
                             Some((_, pos3)) => Err(Error::Parser(pos3, String::from("unclosed dot bracket"))),
                             None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
                         }
@@ -634,7 +634,7 @@ impl<'a> Parser<'a>
     {
         let mut idents: Vec<String> = Vec::new();
         let mut last_ident = String::new();
-        let mut is_last_ident = true;
+        let mut is_last_ident = false;
         let mut name_pos = Pos::new(self.path.clone(), 1, 1);
         let mut is_name_pos = false;
         let mut is_first_colon_colon = false;

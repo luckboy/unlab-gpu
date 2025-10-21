@@ -59,6 +59,9 @@ impl Arg
 {
     pub fn pos(&self) -> &Pos
     { &self.1 }
+    
+    pub fn set_pos(&mut self, pos: Pos)
+    { self.1 = pos; }
 }
 
 #[derive(Clone, Debug)]
@@ -173,6 +176,16 @@ pub enum MatrixRow
 
 #[derive(Clone, Debug)]
 pub struct FieldPair(pub String, pub Box<Expr>, pub Pos);
+
+impl FieldPair
+{
+    pub fn pos(&self) -> &Pos
+    { &self.2 }
+    
+    pub fn set_pos(&mut self, pos: Pos)
+    { self.2 = pos; }
+}
+
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum UnaryOp
