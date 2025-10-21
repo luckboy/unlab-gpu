@@ -2052,6 +2052,7 @@ fn test_parser_parse_parses_if_statement()
     let s = "
 if true
     f()
+
     g()
 end
 ";
@@ -2096,13 +2097,13 @@ end
                             }
                             match &*stats[1] {
                                 Stat::Expr(expr2, pos) => {
-                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 5), *pos);
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
                                     match &**expr2 {
                                         Expr::App(expr3, args, pos) => {
-                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 5), *pos);
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
                                             match &**expr3 {
                                                 Expr::Var(name, pos) => {
-                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 5), *pos);
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
                                                     assert_eq!(Name::Var(String::from("g")), *name);
                                                 },
                                                 _ => assert!(false),
@@ -2115,6 +2116,404 @@ end
                                 _ => assert!(false),
                             }
                             assert_eq!(true, else_if_pairs.is_empty());
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_if_statement_with_else()
+{
+    let s = "
+if true
+    f()
+else
+    g()
+
+    h()
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::If(expr, stats, else_if_pairs, Some(else_stats), pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            match &**expr {
+                                Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 4), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(1, stats.len());
+                            match &*stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("f")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            assert_eq!(true, else_if_pairs.is_empty());
+                            assert_eq!(2, else_stats.len());
+                            match &*else_stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("g")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*else_stats[1] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("h")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_if_statement_with_else_if_pairs()
+{
+    let s = "
+if true
+    f()
+else if false
+    g()
+
+    h()
+else if true
+    i()
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::If(expr, stats, else_if_pairs, None, pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            match &**expr {
+                                Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 4), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(1, stats.len());
+                            match &*stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("f")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, else_if_pairs.len());
+                            match &*else_if_pairs[0].0 {
+                                Expr::Lit(Lit::Bool(false), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 9), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, else_if_pairs[0].1.len());
+                            match &*else_if_pairs[0].1[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("g")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*else_if_pairs[0].1[1] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("h")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*else_if_pairs[1].0 {
+                                Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 7, 9), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, else_if_pairs[0].1.len());
+                            match &*else_if_pairs[1].1[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("i")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_parse_parses_if_statement_with_else_if_pairs_and_else()
+{
+    let s = "
+if true
+    f()
+else if false
+    g()
+
+    h()
+else if true
+    i()
+else
+    j()
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(Tree(nodes)) => {
+            assert_eq!(1, nodes.len());
+            match &nodes[0] {
+                Node::Stat(stat) => {
+                    match &**stat {
+                        Stat::If(expr, stats, else_if_pairs, Some(else_stats), pos) => {
+                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
+                            match &**expr {
+                                Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 4), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(1, stats.len());
+                            match &*stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("f")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, else_if_pairs.len());
+                            match &*else_if_pairs[0].0 {
+                                Expr::Lit(Lit::Bool(false), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 9), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, else_if_pairs[0].1.len());
+                            match &*else_if_pairs[0].1[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("g")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*else_if_pairs[0].1[1] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("h")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            match &*else_if_pairs[1].0 {
+                                Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 7, 9), *pos),
+                                _ => assert!(false),
+                            }
+                            assert_eq!(2, else_if_pairs[0].1.len());
+                            match &*else_if_pairs[1].1[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("i")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            assert_eq!(1, else_stats.len());
+                            match &*else_stats[0] {
+                                Stat::Expr(expr2, pos) => {
+                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                    match &**expr2 {
+                                        Expr::App(expr3, args, pos) => {
+                                            assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                            match &**expr3 {
+                                                Expr::Var(name, pos) => {
+                                                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 10, 5), *pos);
+                                                    assert_eq!(Name::Var(String::from("j")), *name);
+                                                },
+                                                _ => assert!(false),
+                                            }
+                                            assert_eq!(true, args.is_empty());
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                            
                         },
                         _ => assert!(false),
                     }
