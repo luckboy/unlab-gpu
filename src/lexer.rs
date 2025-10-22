@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::sync::Arc;
+use crate::doc::*;
 use crate::error::*;
 use crate::utils::*;
 
@@ -83,11 +84,12 @@ pub struct Lexer<'a>
     line_tokens: Vec<Result<(Token, Pos)>>,
     is_stopped: bool,
     keywords: HashMap<String, Token>,
+    doc: Option<Option<String>>,
 }
 
 impl<'a> Lexer<'a>
 {
-    pub fn new(path: Arc<String>, reader: &'a mut dyn BufRead) -> Self
+    pub fn new_with_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, is_doc: bool) -> Self
     {
         let mut keywords: HashMap<String, Token> = HashMap::new();
         keywords.insert(String::from("and"), Token::And);
@@ -114,6 +116,11 @@ impl<'a> Lexer<'a>
         keywords.insert(String::from("to"), Token::To);
         keywords.insert(String::from("true"), Token::True);
         keywords.insert(String::from("while"), Token::While);
+        let doc = if is_doc {
+            Some(None)
+        } else {
+            None
+        };
         Lexer {
             path,
             line: 1,
@@ -122,8 +129,12 @@ impl<'a> Lexer<'a>
             line_tokens: Vec::new(),
             is_stopped: false,
             keywords,
+            doc,
         }
     }
+
+    pub fn new(path: Arc<String>, reader: &'a mut dyn BufRead) -> Self
+    { Self::new_with_doc_flag(path, reader, true) }
     
     pub fn path(&self) -> &Arc<String>
     { &self.path }
@@ -480,7 +491,30 @@ impl<'a> Lexer<'a>
     {
         self.skip_spaces(cs);
         match cs.next() {
-            Some(('#' | '%', _)) => return false,
+            Some(('#' | '%', _)) => {
+                match cs.next() {
+                    Some(('#' | '%', _)) => {
+                        match &mut self.doc {
+                            Some(doc) => {
+                                match cs.next() {
+                                    Some((c3, _)) if c3.is_whitespace() => (),
+                                    Some((c3, pos3)) => cs.undo((c3, pos3)),
+                                    None => (),
+                                }
+                                let mut doc_line: String = cs.map(|p| p.0).collect();
+                                doc_line.push('\n');
+                                match doc {
+                                    Some(doc) => doc.push_str(doc_line.as_str()),
+                                    None => *doc = Some(doc_line),
+                                }
+                            },
+                            None => (),
+                        }
+                    },
+                    _ => (),
+                }
+                return false
+            },
             Some(('(', pos)) => self.line_tokens.push(Ok((Token::LParen, pos))),
             Some((')', pos)) => self.line_tokens.push(Ok((Token::RParen, pos))),
             Some(('[', pos)) => self.line_tokens.push(Ok((Token::LBracket, pos))),
@@ -602,6 +636,17 @@ impl<'a> Iterator for Lexer<'a>
                 self.line_tokens.clear();
                 Some(Err(err))
             },
+            None => None,
+        }
+    }
+}
+
+impl<'a> DocIterator for Lexer<'a>
+{
+    fn take_doc(&mut self) -> Option<String>
+    {
+        match &mut self.doc {
+            Some(doc) => doc.take(),
             None => None,
         }
     }

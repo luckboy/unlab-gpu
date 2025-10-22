@@ -16,7 +16,7 @@ fn test_parser_parse_parses_expression()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -61,7 +61,7 @@ fn test_parser_parse_parses_expression1()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -123,7 +123,7 @@ fn test_parser_parse_parses_expression2()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -185,7 +185,7 @@ fn test_parser_parse_parses_expression3()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -247,7 +247,7 @@ fn test_parser_parse_parses_expression4()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -313,7 +313,7 @@ fn test_parser_parse_parses_expression5()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -375,7 +375,7 @@ fn test_parser_parse_parses_expression6()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -437,7 +437,7 @@ fn test_parser_parse_parses_expression7()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -491,7 +491,7 @@ fn test_parser_parse_parses_expression8()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -535,7 +535,7 @@ fn test_parser_parse_parses_expression8_with_tranpose()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -586,7 +586,7 @@ fn test_parser_parse_parses_expression_with_parenthesis()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -653,7 +653,7 @@ h(2, 3, 4)
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -761,7 +761,7 @@ fn test_parser_parse_parses_index_expression()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -806,7 +806,7 @@ fn test_parser_parse_parses_field_expression()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -858,7 +858,7 @@ nan
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1016,7 +1016,7 @@ fn test_parser_parse_parses_matrix_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1110,7 +1110,7 @@ fn test_parser_parse_parses_matrix_literal_with_one_row()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1170,7 +1170,7 @@ fn test_parser_parse_parses_matrix_literal_with_one_column()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1242,7 +1242,7 @@ fn test_parser_parse_parses_matrix_literal_with_filled_rows()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1331,7 +1331,7 @@ fn test_parser_parse_parses_filled_matrix_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1392,7 +1392,7 @@ fn test_parser_parse_parses_filled_matrix_literal_with_filled_rows()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1447,7 +1447,7 @@ fn test_parser_parse_parses_empty_matrix_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1487,7 +1487,7 @@ fn test_parser_parse_parses_array_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1538,7 +1538,7 @@ fn test_parser_parse_parses_array_literal_with_one_element()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1585,7 +1585,7 @@ fn test_parser_parse_parses_filled_array_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1634,7 +1634,7 @@ fn test_parser_parse_parses_empty_array_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1681,7 +1681,7 @@ fn test_parser_parse_parses_structure_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1753,7 +1753,7 @@ fn test_parser_parse_parses_empty_structure_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1799,7 +1799,7 @@ root::c::d::Z
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1927,7 +1927,7 @@ f()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -1974,7 +1974,7 @@ Z.a = h()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2111,7 +2111,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2194,7 +2194,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2300,7 +2300,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2437,7 +2437,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2590,7 +2590,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2681,7 +2681,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2754,7 +2754,7 @@ fn test_parser_parse_parses_break_statement()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2780,7 +2780,7 @@ fn test_parser_parse_parses_continue_statement()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2806,7 +2806,7 @@ fn test_parser_parse_parses_return_statement_with_expression()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2851,7 +2851,7 @@ fn test_parser_parse_parses_return_statement_without_expression()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2877,7 +2877,7 @@ fn test_parser_parse_parses_quit_statement()
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -2910,7 +2910,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -3003,7 +3003,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -3119,7 +3119,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -3293,7 +3293,7 @@ X = 1
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Ok(Tree(nodes)) => {
@@ -3383,7 +3383,7 @@ end
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3405,7 +3405,7 @@ module a
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3427,7 +3427,7 @@ function f()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3449,7 +3449,7 @@ if true
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3472,7 +3472,7 @@ else
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3495,7 +3495,7 @@ else if false
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3517,7 +3517,7 @@ for i in 1 to 10
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3539,7 +3539,7 @@ while true
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3560,7 +3560,7 @@ function f(X, Y]
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3581,7 +3581,7 @@ f(X, Y]
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3602,7 +3602,7 @@ fn test_parser_parse_complains_on_unclosed_parenthesis_for_expression()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3623,7 +3623,7 @@ X[1}
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3644,7 +3644,7 @@ fn test_parser_parse_complains_on_unclosed_bracket_for_matrix_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3665,7 +3665,7 @@ fn test_parser_parse_complains_on_unclosed_dot_bracket()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3686,7 +3686,7 @@ fn test_parser_parse_complains_on_unclosed_brace()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::Parser(pos, msg)) => {
@@ -3708,7 +3708,7 @@ module a
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3727,7 +3727,7 @@ function f(X)
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3746,7 +3746,7 @@ if true
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3766,7 +3766,7 @@ else
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3786,7 +3786,7 @@ else if false
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3805,7 +3805,7 @@ for i in 1 to 10
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3824,7 +3824,7 @@ while true
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3843,7 +3843,7 @@ fn test_parser_parse_complains_on_eof_with_repetition_for_matrix_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3862,7 +3862,7 @@ fn test_parser_parse_complains_on_eof_with_repetition_for_array_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),
@@ -3882,7 +3882,7 @@ fn test_parser_parse_complains_on_eof_with_repetition_for_structure_literal()
     let mut cursor = Cursor::new(s2.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     let path = lexer.path().clone();
-    let tokens: &mut dyn Iterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
     let mut parser = Parser::new(path, tokens);
     match parser.parse() {
         Err(Error::ParserEof(path, ParserEofFlag::Repetition)) => assert_eq!(Arc::new(String::from("test.un")), path),

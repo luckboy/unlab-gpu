@@ -22,6 +22,12 @@ impl<T: Iterator> PushbackIter<T>
     pub fn new(iter: T) -> Self
     { PushbackIter { iter, pushed_items: Vec::new(), } }
 
+    pub fn iter(&self) -> &T
+    { &self.iter }
+    
+    pub fn iter_mut(&mut self) -> &mut T
+    { &mut self.iter }
+
     pub fn undo(&mut self, item: T::Item)
     { self.pushed_items.push(item); }
 }

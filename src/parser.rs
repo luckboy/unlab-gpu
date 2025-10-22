@@ -6,8 +6,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::sync::Arc;
+use std::sync::RwLock;
+use crate::doc::*;
 use crate::error::*;
 use crate::lexer::*;
+use crate::mod_node::*;
 use crate::tree::*;
 use crate::utils::*;
 
@@ -18,19 +21,48 @@ enum FillableExprs
     FilledExprs(Box<Expr>, Box<Expr>),
 }
 
+#[derive(Clone, Debug)]
+struct DocEnv
+{
+    root_mod: Arc<RwLock<ModNode<String, Option<String>>>>,
+    current_mod: Arc<RwLock<ModNode<String, Option<String>>>>,
+}
+
 pub struct Parser<'a>
 {
     path: Arc<String>,
-    tokens: PushbackIter<&'a mut dyn Iterator<Item = Result<(Token, Pos)>>>,
+    tokens: PushbackIter<&'a mut dyn DocIterator<Item = Result<(Token, Pos)>>>,
+    doc_env: Option<DocEnv>,
 }
 
 impl<'a> Parser<'a>
 {
-    pub fn new(path: Arc<String>, tokens: &'a mut dyn Iterator<Item = Result<(Token, Pos)>>) -> Self
-    { Parser { path, tokens: PushbackIter::new(tokens), } }
+    pub fn new_with_doc_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
+    {
+        let doc_env = match doc_root_mod {
+            Some(doc_root_mod) => Some(DocEnv { root_mod: doc_root_mod.clone(), current_mod: doc_root_mod, }),
+            None => None,
+        };
+        Parser { path, tokens: PushbackIter::new(tokens), doc_env, }
+    }
+
+    pub fn new(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>) -> Self
+    { Self::new_with_doc_mod(path, tokens, None) }
+    
+    pub fn doc_root_mod(&self) -> Option<&Arc<RwLock<ModNode<String, Option<String>>>>>
+    { 
+        match &self.doc_env {
+            Some(doc_env) => Some(&doc_env.root_mod),
+            None => None,
+        }
+    }
     
     pub fn parse(&mut self) -> Result<Tree>
     {
+        match &mut self.doc_env {
+            Some(doc_env) => doc_env.current_mod = doc_env.root_mod.clone(),
+            None => (),
+        }
         let nodes = self.parse_zero_or_more_with_newlines(&[None], ParserEofFlag::Repetition, Self::parse_node)?;
         match self.tokens.next().transpose()? {
             Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),
@@ -138,16 +170,52 @@ impl<'a> Parser<'a>
         match self.tokens.next().transpose()? {
             Some((Token::Module, pos)) => {
                 let ident = self.parse_ident()?.0;
+                match &mut self.doc_env {
+                    Some(doc_env) => {
+                        let doc = self.tokens.iter_mut().take_doc();
+                        let new_mod: Arc<RwLock<ModNode<String, Option<String>>>> = Arc::new(RwLock::new(ModNode::new(doc)));
+                        ModNode::add_mod(&doc_env.current_mod, ident.clone(), new_mod.clone())?;
+                        doc_env.current_mod = new_mod;
+                    },
+                    None => (),
+                }
                 self.parse_newline()?;
                 let nodes = self.parse_zero_or_more_with_newlines(&[Some(Token::End)], ParserEofFlag::Repetition, Self::parse_node)?;
                 match self.tokens.next().transpose()? {
-                    Some((Token::End, _)) => Ok(Box::new(Def::Mod(ident, Box::new(Mod(nodes)), pos))),
+                    Some((Token::End, _)) => {
+                        match &mut self.doc_env {
+                            Some(doc_env) => {
+                                let parent = {
+                                    let current_mod_g = rw_lock_read(&*doc_env.current_mod)?;
+                                    current_mod_g.parent()
+                                };
+                                match parent {
+                                    Some(parent) => doc_env.current_mod = parent,
+                                    None => (),
+                                }
+                            },
+                            None => (),
+                        }
+                        Ok(Box::new(Def::Mod(ident, Box::new(Mod(nodes)), pos)))
+                    },
                     Some((_, pos2)) => Err(Error::Parser(pos2, String::from("unexpected token"))),
                     None => Err(Error::ParserEof(self.path.clone(), ParserEofFlag::Repetition)),
                 }
             },
             Some((Token::Function, pos)) => {
                 let ident = self.parse_ident()?.0;
+                match &mut self.doc_env {
+                    Some(doc_env) => {
+                        match self.tokens.iter_mut().take_doc() {
+                            Some(doc) => {
+                                let mut current_mod_g = rw_lock_write(&*doc_env.current_mod)?;
+                                current_mod_g.add_var(ident.clone(), doc);
+                            },
+                            None => (),
+                        }
+                    },
+                    None => (),
+                }
                 match self.tokens.next().transpose()? {
                     Some((Token::LParen, _)) => {
                         let args = self.parse_zero_or_more_with_commas(&[Some(Token::RParen)], ParserEofFlag::NoRepetition, Self::parse_arg)?;
