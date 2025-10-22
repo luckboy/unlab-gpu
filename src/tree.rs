@@ -119,6 +119,8 @@ pub enum Expr
     App(Box<Expr>, Vec<Box<Expr>>, Pos),
     UnaryOp(UnaryOp, Box<Expr>, Pos),
     BinOp(BinOp, Box<Expr>, Box<Expr>, Pos),
+    And(Box<Expr>, Box<Expr>, Pos),
+    Or(Box<Expr>, Box<Expr>, Pos),
     Field(Box<Expr>, String, Pos),
     Range(Box<Expr>, Box<Expr>, Option<Box<Expr>>, Pos),
     PropagateError(Box<Expr>, Pos),
@@ -134,6 +136,8 @@ impl Expr
             Expr::App(_, _, pos) => pos,
             Expr::UnaryOp(_, _, pos) => pos,
             Expr::BinOp(_, _, _, pos) => pos,
+            Expr::And(_, _, pos) => pos,
+            Expr::Or(_, _, pos) => pos,
             Expr::Field(_, _, pos) => pos,
             Expr::Range(_, _, _, pos) => pos,
             Expr::PropagateError(_, pos) => pos,
@@ -148,6 +152,8 @@ impl Expr
             Expr::App(_, _, pos2) => *pos2 = pos,
             Expr::UnaryOp(_, _, pos2) => *pos2 = pos,
             Expr::BinOp(_, _, _, pos2) => *pos2 = pos,
+            Expr::And(_, _, pos2) => *pos2 = pos,
+            Expr::Or(_, _, pos2) => *pos2 = pos,
             Expr::Field(_, _, pos2) => *pos2 = pos,
             Expr::Range(_, _, _, pos2) => *pos2 = pos,
             Expr::PropagateError(_, pos2) => *pos2 = pos,
@@ -217,8 +223,6 @@ pub enum BinOp
     Le,
     Eq,
     Ne,
-    And,
-    Or,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]

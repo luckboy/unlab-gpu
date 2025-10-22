@@ -72,10 +72,10 @@ fn test_parser_parse_parses_expression1()
                         Stat::Expr(expr, pos) => {
                             assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
                             match &**expr {
-                                Expr::BinOp(BinOp::Or, expr2, expr3, pos) => {
+                                Expr::Or(expr2, expr3, pos) => {
                                     assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
                                     match &**expr2 {
-                                        Expr::BinOp(BinOp::And, expr4, expr5, pos) => {
+                                        Expr::And(expr4, expr5, pos) => {
                                             assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
                                             match &**expr4 {
                                                 Expr::Lit(Lit::Bool(true), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
@@ -89,7 +89,7 @@ fn test_parser_parse_parses_expression1()
                                         _ => assert!(false),
                                     }
                                     match &**expr3 {
-                                        Expr::BinOp(BinOp::And, expr4, expr5, pos) => {
+                                        Expr::And(expr4, expr5, pos) => {
                                             assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 18), *pos);
                                             match &**expr4 {
                                                 Expr::Lit(Lit::Bool(false), pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 18), *pos),
@@ -134,7 +134,7 @@ fn test_parser_parse_parses_expression2()
                         Stat::Expr(expr, pos) => {
                             assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
                             match &**expr {
-                                Expr::BinOp(BinOp::And, expr2, expr3, pos) => {
+                                Expr::And(expr2, expr3, pos) => {
                                     assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos);
                                     match &**expr2 {
                                         Expr::BinOp(BinOp::Eq, expr4, expr5, pos) => {

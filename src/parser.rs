@@ -493,7 +493,7 @@ impl<'a> Parser<'a>
         loop {
             let expr_pos = expr.pos().clone();
             match self.tokens.next().transpose()? {
-                Some((Token::And, _)) => expr = Box::new(Expr::BinOp(BinOp::And, expr, self.parse_expr3()?, expr_pos)),
+                Some((Token::And, _)) => expr = Box::new(Expr::And(expr, self.parse_expr3()?, expr_pos)),
                 Some((token, pos)) => {
                     self.tokens.undo(Ok((token, pos)));
                     break;
@@ -510,7 +510,7 @@ impl<'a> Parser<'a>
         loop {
             let expr_pos = expr.pos().clone();
             match self.tokens.next().transpose()? {
-                Some((Token::Or, _)) => expr = Box::new(Expr::BinOp(BinOp::Or, expr, self.parse_expr2()?, expr_pos)),
+                Some((Token::Or, _)) => expr = Box::new(Expr::Or(expr, self.parse_expr2()?, expr_pos)),
                 Some((token, pos)) => {
                     self.tokens.undo(Ok((token, pos)));
                     break;
