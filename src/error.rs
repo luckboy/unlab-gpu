@@ -38,6 +38,8 @@ pub enum Error
     ParserIo(Arc<String>, io::Error),
     ParserEof(Arc<String>, ParserEofFlag),
     Parser(Pos, String),
+    RwLockRead,
+    RwLockWrite,
 }
 
 impl error::Error for Error
@@ -51,6 +53,8 @@ impl fmt::Display for Error
             Error::ParserIo(path, err) => write!(f, "{}: i/o error: {}", path, err),
             Error::ParserEof(path, _) => write!(f, "{}: end of file", path),
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
+            Error::RwLockRead => write!(f, "can't read r/w lock"),
+            Error::RwLockWrite => write!(f, "can't write r/w lock"),
         }
     }
 }

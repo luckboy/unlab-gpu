@@ -5,6 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
+use std::sync::RwLockWriteGuard;
+use crate::error::*;
+
 #[derive(Clone)]
 pub struct PushbackIter<T: Iterator>
 {
@@ -45,5 +50,21 @@ pub fn str_without_crnl(s: &str) -> &str
         }
     } else {
         s
+    }
+}
+
+pub fn rw_lock_read<T>(rw_lock: &RwLock<T>) -> Result<RwLockReadGuard<'_, T>>
+{
+    match rw_lock.read() {
+        Ok(guard) => Ok(guard),
+        Err(_) => Err(Error::RwLockRead),
+    }
+}
+
+pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
+{
+    match rw_lock.write() {
+        Ok(guard) => Ok(guard),
+        Err(_) => Err(Error::RwLockRead),
     }
 }
