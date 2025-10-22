@@ -339,7 +339,42 @@ impl<'a> Parser<'a>
                 let expr = self.parse_expr()?;
                 let expr_pos = expr.pos().clone();
                 match self.tokens.next().transpose()? {
-                    Some((Token::Eq, _)) => Ok(Box::new(Stat::Assign(expr, self.parse_expr()?, expr_pos))),
+                    Some((Token::Eq, _)) => {
+                        match &mut self.doc_env {
+                            Some(doc_env) => {
+                                let pair = match &*expr {
+                                    Expr::Var(Name::Abs(idents, ident), _) => {
+                                        match ModNode::mod_from(&doc_env.root_mod, idents.as_slice())? {
+                                            Some(tmp_mod) => Some((tmp_mod, ident.clone())),
+                                            None => None,
+                                        }
+                                    },
+                                    Expr::Var(Name::Rel(idents, ident), _) => {
+                                        match ModNode::mod_from(&doc_env.current_mod, idents.as_slice())? {
+                                            Some(tmp_mod) => Some((tmp_mod, ident.clone())),
+                                            None => None,
+                                        }
+                                    },
+                                    Expr::Var(Name::Var(ident), _) => Some((doc_env.current_mod.clone(), ident.clone())),
+                                    _ => None,
+                                };
+                                match pair {
+                                    Some((mod1, ident)) => {
+                                        match self.tokens.iter_mut().take_doc() {
+                                            Some(doc) => {
+                                                let mut mod_g = rw_lock_write(&*mod1)?;
+                                                mod_g.add_var(ident, doc);
+                                            },
+                                            None => (),
+                                        }
+                                    },
+                                    None => (),
+                                }
+                            },
+                            None => (),
+                        }
+                        Ok(Box::new(Stat::Assign(expr, self.parse_expr()?, expr_pos)))
+                    },
                     Some((token2, pos2)) => {
                         self.tokens.undo(Ok((token2, pos2)));
                         Ok(Box::new(Stat::Expr(expr, expr_pos)))
