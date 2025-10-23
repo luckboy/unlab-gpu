@@ -352,7 +352,12 @@ impl<'a> Parser<'a>
                                     Expr::Var(Name::Rel(idents, ident), _) => {
                                         match ModNode::mod_from(&doc_env.current_mod, idents.as_slice())? {
                                             Some(tmp_mod) => Some((tmp_mod, ident.clone())),
-                                            None => None,
+                                            None => {
+                                                match ModNode::mod_from(&doc_env.root_mod, idents.as_slice())? {
+                                                    Some(tmp_mod) => Some((tmp_mod, ident.clone())),
+                                                    None => None,
+                                                }
+                                            },
                                         }
                                     },
                                     Expr::Var(Name::Var(ident), _) => Some((doc_env.current_mod.clone(), ident.clone())),
