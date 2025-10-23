@@ -17,14 +17,14 @@ pub struct ModNode<T, U>
 {
     mods: HashMap<String, Arc<RwLock<ModNode<T, U>>>>,
     vars: HashMap<String, T>,
-    parent: Weak<RwLock<ModNode<T, U>>>,
+    parent: Option<Weak<RwLock<ModNode<T, U>>>>,
     value: U,
 }
 
 impl<T, U> ModNode<T, U>
 {
     pub fn new(value: U) -> Self
-    { ModNode { mods: HashMap::new(), vars: HashMap::new(), parent: Weak::new(), value, } }
+    { ModNode { mods: HashMap::new(), vars: HashMap::new(), parent: None, value, } }
     
     pub fn mods(&self) -> &HashMap<String, Arc<RwLock<ModNode<T, U>>>>
     { &self.mods }
@@ -39,7 +39,10 @@ impl<T, U> ModNode<T, U>
     {
         {
             let mut child_g = rw_lock_write(&*child)?;
-            child_g.parent = Arc::downgrade(&parent);
+            if child_g.parent.is_some() {
+                return Err(Error::AlreadyAddedModNode);
+            }
+            child_g.parent = Some(Arc::downgrade(&parent));
         }
         let mut parent_g = rw_lock_write(&**parent)?;
         parent_g.mods.insert(ident, child);
@@ -65,7 +68,12 @@ impl<T, U> ModNode<T, U>
     { self.vars.remove(ident); }
     
     pub fn parent(&self) -> Option<Arc<RwLock<ModNode<T, U>>>>
-    { self.parent.upgrade() }
+    {
+        match &self.parent{
+            Some(parent) => parent.upgrade(),
+            None => None,
+        }
+    }
     
     pub fn value(&self) -> &U
     { &self.value }

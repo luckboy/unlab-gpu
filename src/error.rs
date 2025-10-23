@@ -40,6 +40,7 @@ pub enum Error
     Parser(Pos, String),
     RwLockRead,
     RwLockWrite,
+    AlreadyAddedModNode,
 }
 
 impl error::Error for Error
@@ -55,6 +56,7 @@ impl fmt::Display for Error
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
             Error::RwLockRead => write!(f, "can't read r/w lock"),
             Error::RwLockWrite => write!(f, "can't write r/w lock"),
+            Error::AlreadyAddedModNode => write!(f, "already added module node"),
         }
     }
 }
