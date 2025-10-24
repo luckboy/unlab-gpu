@@ -283,7 +283,30 @@ impl Value
                         Ok(ident == ident2)
                     },
                     (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
-                        Ok(a_row_count == b_row_count && a_col_count == b_col_count && a_transpose_flag == b_transpose_flag && xs == ys)
+                        if a_row_count != b_row_count || a_col_count != b_col_count {
+                            return Ok(false);
+                        }
+                        for i in 0..(*a_row_count) {
+                            for j in 0..(*a_col_count) {
+                                let ak = match a_transpose_flag {
+                                    TransposeFlag::NoTranspose => i * (*a_col_count) + j,
+                                    TransposeFlag::Transpose => j * (*a_row_count) + i,
+                                };
+                                let bk = match b_transpose_flag {
+                                    TransposeFlag::NoTranspose => i * (*b_col_count) + j,
+                                    TransposeFlag::Transpose => j * (*b_row_count) + i,
+                                };
+                                match (xs.get(ak), ys.get(bk)) {
+                                    (Some(x), Some(y)) => {
+                                        if x != y {
+                                            return Ok(false);
+                                        }
+                                    },
+                                    (_, _) => return Err(Error::Interp(String::from("no element"))),
+                                }
+                            }
+                        }
+                        Ok(true)
                     },
                     (Object::MatrixRowSlice(a, ai), Object::MatrixRowSlice(b, bi)) => {
                         match (&**a, &**b) {
@@ -291,13 +314,13 @@ impl Value
                                 if a_col_count != b_col_count {
                                     return Ok(false);
                                 }
-                                for j in 0..*a_col_count {
+                                for j in 0..(*a_col_count) {
                                     let ak = match a_transpose_flag {
                                         TransposeFlag::NoTranspose => ai * (*a_col_count) + j,
                                         TransposeFlag::Transpose => j * (*a_row_count) + ai,
                                     };
                                     let bk = match b_transpose_flag {
-                                        TransposeFlag::NoTranspose => bi * *b_col_count + j,
+                                        TransposeFlag::NoTranspose => bi * (*b_col_count) + j,
                                         TransposeFlag::Transpose => j * (*b_row_count) + bi,
                                     };
                                     match (xs.get(ak), ys.get(bk)) {
