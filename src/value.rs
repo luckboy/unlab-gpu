@@ -279,7 +279,7 @@ impl Value
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
                     (Some(object), Some(object2)) => Value::Ref(object).eq_with_types(&Value::Ref(object2)),
-                    _ => Ok(false),
+                    (_, _) => Ok(false),
                 }
             },
             (_, _) => Ok(false),
