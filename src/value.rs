@@ -265,8 +265,7 @@ impl Value
 
     pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
-        let value2 = value;
-        match (&self, value2) {
+        match (&self, value) {
             (Value::None, Value::None) => Ok(true),
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
@@ -297,7 +296,7 @@ impl Value
                                         TransposeFlag::NoTranspose => ai * (*a_col_count) + j,
                                         TransposeFlag::Transpose => j * (*a_row_count) + ai,
                                     };
-                                    let bk = match a_transpose_flag {
+                                    let bk = match b_transpose_flag {
                                         TransposeFlag::NoTranspose => bi * *b_col_count + j,
                                         TransposeFlag::Transpose => j * (*b_row_count) + bi,
                                     };
@@ -339,7 +338,6 @@ impl Value
                         if idents != idents2 {
                             return Ok(false);
                         }
-                        let mut zs: BTreeMap<String, Value> = BTreeMap::new();
                         for ident in &idents {
                             match (xs.get(ident), ys.get(ident)) {
                                 (Some(x), Some(y)) => {
@@ -415,14 +413,13 @@ impl Value
     fn apply_dot_fun2_for_elem_with_fun_ref<F>(&self, value: &Value, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
-        let value2 = value;
-        match (self, value2) {
-            (Value::Float(_), Value::Float(_)) => f(self, value2),
+        match (self, value) {
+            (Value::Float(_), Value::Float(_)) => f(self, value),
             (Value::Object(object), Value::Object(object2)) => {
                 match (&**object, &**object2) {
-                    (Object::Matrix(_), Object::Matrix(_)) => f(self, value2),
+                    (Object::Matrix(_), Object::Matrix(_)) => f(self, value),
                     (_, _) => {
-                        if !self.eq_with_types(value2)? {
+                        if !self.eq_with_types(value)? {
                             return Err(Error::Interp(String::from("two values aren't equal")))
                         }
                         Ok(self.clone())
@@ -430,7 +427,7 @@ impl Value
                 }
             },
             (_, _) => {
-                if !self.eq_with_types(value2)? {
+                if !self.eq_with_types(value)? {
                     return Err(Error::Interp(String::from("two values aren't equal")))
                 }
                 Ok(self.clone())
@@ -441,8 +438,7 @@ impl Value
     fn apply_dot_fun2_with_fun_ref<F>(&self, value: &Value, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
-        let value2 = value;
-        match (self, value2) {
+        match (self, value) {
             (Value::Ref(object), Value::Ref(object2)) => {
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
@@ -531,7 +527,7 @@ impl Value
             },
             Value::Ref(object) => {
                 let object_g = rw_lock_read(&**object)?;
-                match (&*object_g) {
+                match &*object_g {
                     MutObject::Array(xs) => {
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
@@ -622,7 +618,7 @@ impl Value
                     MutObject::Struct(xs) => {
                         match xs.get(ident) {
                             Some(x) => Ok(x.clone()),
-                            None => Err(Error::Interp(String::from("not found key")))
+                            None => Err(Error::Interp(String::from("no field")))
                         }
                     },
                     _ => Err(Error::Interp(String::from("object isn't structure"))),
