@@ -270,111 +270,11 @@ impl Value
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
             (Value::Float(a), Value::Float(b)) => Ok(a == b),
-            (Value::Object(object), Value::Object(object2)) => {
-                match (&**object, &**object2) {
-                    (Object::String(s), Object::String(t)) => Ok(s == t),
-                    (Object::IntRange(a, b, c), Object::IntRange(d, e, f)) => Ok(a == d && b == e && c == f),
-                    (Object::FloatRange(a, b, c), Object::FloatRange(d, e, f)) => Ok(a == d && b == e && c == f),
-                    (Object::Matrix(_), Object::Matrix(_)) => Ok(false),
-                    (Object::Fun(idents, ident, fun), Object::Fun(idents2, ident2, fun2)) => {
-                        Ok(idents == idents2 && ident == ident2 && Arc::ptr_eq(fun, fun2))
-                    },
-                    (Object::BuiltinFun(ident, _), Object::BuiltinFun(ident2, _)) => {
-                        Ok(ident == ident2)
-                    },
-                    (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
-                        if a_row_count != b_row_count || a_col_count != b_col_count {
-                            return Ok(false);
-                        }
-                        for i in 0..(*a_row_count) {
-                            for j in 0..(*a_col_count) {
-                                let ak = match a_transpose_flag {
-                                    TransposeFlag::NoTranspose => i * (*a_col_count) + j,
-                                    TransposeFlag::Transpose => j * (*a_row_count) + i,
-                                };
-                                let bk = match b_transpose_flag {
-                                    TransposeFlag::NoTranspose => i * (*b_col_count) + j,
-                                    TransposeFlag::Transpose => j * (*b_row_count) + i,
-                                };
-                                match (xs.get(ak), ys.get(bk)) {
-                                    (Some(x), Some(y)) => {
-                                        if x != y {
-                                            return Ok(false);
-                                        }
-                                    },
-                                    (_, _) => return Err(Error::Interp(String::from("no element"))),
-                                }
-                            }
-                        }
-                        Ok(true)
-                    },
-                    (Object::MatrixRowSlice(a, ai), Object::MatrixRowSlice(b, bi)) => {
-                        match (&**a, &**b) {
-                            (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
-                                if a_col_count != b_col_count {
-                                    return Ok(false);
-                                }
-                                for j in 0..(*a_col_count) {
-                                    let ak = match a_transpose_flag {
-                                        TransposeFlag::NoTranspose => ai * (*a_col_count) + j,
-                                        TransposeFlag::Transpose => j * (*a_row_count) + ai,
-                                    };
-                                    let bk = match b_transpose_flag {
-                                        TransposeFlag::NoTranspose => bi * (*b_col_count) + j,
-                                        TransposeFlag::Transpose => j * (*b_row_count) + bi,
-                                    };
-                                    match (xs.get(ak), ys.get(bk)) {
-                                        (Some(x), Some(y)) => {
-                                            if x != y {
-                                                return Ok(false);
-                                            }
-                                        },
-                                        (_, _) => return Err(Error::Interp(String::from("no element"))),
-                                    }
-                                }
-                                Ok(true)
-                            },
-                            (_, _) => return Err(Error::Interp(String::from("unsupported object type")))
-                        }
-                    },
-                    (Object::Error(kind, msg), Object::Error(kind2, msg2)) => {
-                        Ok(kind == kind2 && msg == msg2)
-                    },
-                    (_, _) => Ok(false),
-                }
-            },
+            (Value::Object(object), Value::Object(object2)) => object.private_eq(&**object2),
             (Value::Ref(object), Value::Ref(object2)) => {
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
-                match (&*object_g, &*object2_g) {
-                    (MutObject::Array(xs), MutObject::Array(ys)) => {
-                        for (x, y) in xs.iter().zip(ys.iter()) {
-                            if !x.eq_with_types(y)? {
-                                return Ok(false);
-                            }
-                        }
-                        Ok(true)
-                    },
-                    (MutObject::Struct(xs), MutObject::Struct(ys)) => {
-                        let idents: BTreeSet<String> = xs.keys().map(|s| s.clone()).collect();
-                        let idents2: BTreeSet<String> = ys.keys().map(|s| s.clone()).collect();
-                        if idents != idents2 {
-                            return Ok(false);
-                        }
-                        for ident in &idents {
-                            match (xs.get(ident), ys.get(ident)) {
-                                (Some(x), Some(y)) => {
-                                    if !x.eq_with_types(y)? {
-                                        return Ok(false);
-                                    }
-                                },
-                                (_, _) => return Err(Error::Interp(String::from("no field value"))),
-                            }
-                        }
-                        Ok(true)
-                    },
-                    (_, _) => Ok(false),
-                }
+                object_g.private_eq(&*object2_g, Self::eq_with_types)
             },
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
@@ -702,6 +602,84 @@ pub enum Object
     Error(String, String),
 }
 
+impl Object
+{
+    fn private_eq(&self, object: &Object) -> Result<bool>
+    {
+        match (self, object) {
+            (Object::String(s), Object::String(t)) => Ok(s == t),
+            (Object::IntRange(a, b, c), Object::IntRange(d, e, f)) => Ok(a == d && b == e && c == f),
+            (Object::FloatRange(a, b, c), Object::FloatRange(d, e, f)) => Ok(a == d && b == e && c == f),
+            (Object::Matrix(_), Object::Matrix(_)) => Ok(false),
+            (Object::Fun(idents, ident, fun), Object::Fun(idents2, ident2, fun2)) => {
+                Ok(idents == idents2 && ident == ident2 && Arc::ptr_eq(fun, fun2))
+            },
+            (Object::BuiltinFun(ident, _), Object::BuiltinFun(ident2, _)) => {
+                Ok(ident == ident2)
+            },
+            (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
+                if a_row_count != b_row_count || a_col_count != b_col_count {
+                    return Ok(false);
+                }
+                for i in 0..(*a_row_count) {
+                    for j in 0..(*a_col_count) {
+                        let ak = match a_transpose_flag {
+                            TransposeFlag::NoTranspose => i * (*a_col_count) + j,
+                            TransposeFlag::Transpose => j * (*a_row_count) + i,
+                        };
+                        let bk = match b_transpose_flag {
+                            TransposeFlag::NoTranspose => i * (*b_col_count) + j,
+                            TransposeFlag::Transpose => j * (*b_row_count) + i,
+                        };
+                        match (xs.get(ak), ys.get(bk)) {
+                            (Some(x), Some(y)) => {
+                                if x != y {
+                                    return Ok(false);
+                                }
+                            },
+                            (_, _) => return Err(Error::Interp(String::from("no element"))),
+                        }
+                    }
+                }
+                Ok(true)
+            },
+            (Object::MatrixRowSlice(a, ai), Object::MatrixRowSlice(b, bi)) => {
+                match (&**a, &**b) {
+                    (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
+                        if a_col_count != b_col_count {
+                            return Ok(false);
+                        }
+                        for j in 0..(*a_col_count) {
+                            let ak = match a_transpose_flag {
+                                TransposeFlag::NoTranspose => ai * (*a_col_count) + j,
+                                TransposeFlag::Transpose => j * (*a_row_count) + ai,
+                            };
+                            let bk = match b_transpose_flag {
+                                TransposeFlag::NoTranspose => bi * (*b_col_count) + j,
+                                TransposeFlag::Transpose => j * (*b_row_count) + bi,
+                            };
+                            match (xs.get(ak), ys.get(bk)) {
+                                (Some(x), Some(y)) => {
+                                    if x != y {
+                                        return Ok(false);
+                                    }
+                                },
+                                (_, _) => return Err(Error::Interp(String::from("no element"))),
+                            }
+                        }
+                        Ok(true)
+                    },
+                    (_, _) => return Err(Error::Interp(String::from("unsupported object type")))
+                }
+            },
+            (Object::Error(kind, msg), Object::Error(kind2, msg2)) => {
+                Ok(kind == kind2 && msg == msg2)
+            },
+            (_, _) => Ok(false),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum TransposeFlag
 {
@@ -714,4 +692,41 @@ pub enum MutObject
 {
     Array(Vec<Value>),
     Struct(BTreeMap<String, Value>),
+}
+
+impl MutObject
+{
+    fn private_eq<F>(&self, object: &MutObject, mut f: F) -> Result<bool>
+        where F: FnMut(&Value, &Value) -> Result<bool>
+    {
+        match (self, object) {
+            (MutObject::Array(xs), MutObject::Array(ys)) => {
+                for (x, y) in xs.iter().zip(ys.iter()) {
+                    if !f(x, y)? {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            },
+            (MutObject::Struct(xs), MutObject::Struct(ys)) => {
+                let idents: BTreeSet<String> = xs.keys().map(|s| s.clone()).collect();
+                let idents2: BTreeSet<String> = ys.keys().map(|s| s.clone()).collect();
+                if idents != idents2 {
+                    return Ok(false);
+                }
+                for ident in &idents {
+                    match (xs.get(ident), ys.get(ident)) {
+                        (Some(x), Some(y)) => {
+                            if !f(x, y)? {
+                                return Ok(false);
+                            }
+                        },
+                        (_, _) => return Err(Error::Interp(String::from("no field value"))),
+                    }
+                }
+                Ok(true)
+            },
+            (_, _) => Ok(false),
+        }
+    }
 }
