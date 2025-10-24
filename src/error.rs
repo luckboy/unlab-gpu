@@ -10,6 +10,7 @@ use std::fmt;
 use std::io;
 use std::result;
 use std::sync::Arc;
+use crate::matrix;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub struct Pos
@@ -38,6 +39,8 @@ pub enum Error
     ParserIo(Arc<String>, io::Error),
     ParserEof(Arc<String>, ParserEofFlag),
     Parser(Pos, String),
+    Interp(String),
+    Matrix(matrix::Error),
     RwLockRead,
     RwLockWrite,
     AlreadyAddedModNode,
@@ -54,6 +57,8 @@ impl fmt::Display for Error
             Error::ParserIo(path, err) => write!(f, "{}: i/o error: {}", path, err),
             Error::ParserEof(path, _) => write!(f, "{}: end of file", path),
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
+            Error::Interp(msg) => write!(f, "{}", msg),
+            Error::Matrix(err) => write!(f, "matrix error: {}", err),
             Error::RwLockRead => write!(f, "can't read r/w lock"),
             Error::RwLockWrite => write!(f, "can't write r/w lock"),
             Error::AlreadyAddedModNode => write!(f, "already added module node"),
