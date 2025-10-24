@@ -486,6 +486,25 @@ impl Value
         match self {
             Value::Object(object) => {
                 match &**object {
+                    Object::String(s) => {
+                        match idx_value {
+                            Value::Int(_) | Value::Float(_) => {
+                                let i = idx_value.to_i64();
+                                if i >= 1 && i <= (s.chars().count() as i64) {
+                                    return Err(Error::Interp(String::from("index out of bounds")));
+                                }
+                                match s.chars().nth((i - 1) as usize) {
+                                    Some(c) => {
+                                        let mut t = String::new();
+                                        t.push(c);
+                                        Ok(Value::Object(Arc::new(Object::String(t))))
+                                    }
+                                    None => Err(Error::Interp(String::from("index out of bounds"))),
+                                }
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
                     Object::MatrixArray(row_count, _, _, _) => {
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
