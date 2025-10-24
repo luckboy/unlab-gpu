@@ -44,6 +44,9 @@ impl Env
     pub fn mod_idents(&self) -> &[String]
     { self.mod_idents.as_slice() }
     
+    pub fn stack(&self) -> &[BTreeMap<String, Value>]
+    { self.stack.as_slice() }
+    
     pub fn add_and_push_mod(&mut self, ident: String) -> Result<bool>
     {
         {
