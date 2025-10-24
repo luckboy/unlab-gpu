@@ -263,8 +263,9 @@ impl Value
         }
     }
 
-    pub fn eq_with_types(&self, value2: &Value) -> Result<bool>
+    pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
+        let value2 = value;
         match (&self, value2) {
             (Value::None, Value::None) => Ok(true),
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
@@ -272,7 +273,7 @@ impl Value
             (Value::Float(a), Value::Float(b)) => Ok(a == b),
             (Value::Object(object), Value::Object(object2)) => {
                 match (&**object, &**object2) {
-                    (Object::String(a), Object::String(b)) => Ok(a == b),
+                    (Object::String(s), Object::String(t)) => Ok(s == t),
                     (Object::IntRange(a, b, c), Object::IntRange(d, e, f)) => Ok(a == d && b == e && c == f),
                     (Object::FloatRange(a, b, c), Object::FloatRange(d, e, f)) => Ok(a == d && b == e && c == f),
                     (Object::Matrix(_), Object::Matrix(_)) => Ok(false),
@@ -282,16 +283,42 @@ impl Value
                     (Object::BuiltinFun(ident, _), Object::BuiltinFun(ident2, _)) => {
                         Ok(ident == ident2)
                     },
-                    (Object::MatrixArray(x_row_count, x_col_count, x_transpose_flag, xs), Object::MatrixArray(y_row_count, y_col_count, y_transpose_flag, ys)) => {
-                        Ok(x_row_count == y_row_count && x_col_count == y_col_count && x_transpose_flag == y_transpose_flag && xs == ys)
+                    (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
+                        Ok(a_row_count == b_row_count && a_col_count == b_col_count && a_transpose_flag == b_transpose_flag && xs == ys)
                     },
-                    (Object::MatrixRowSlice(x, x_col_count), Object::MatrixRowSlice(y, y_col_count)) => {
-                        Ok(Value::Object(x.clone()).eq_with_types(&Value::Object(y.clone()))? && x_col_count == y_col_count)
+                    (Object::MatrixRowSlice(a, ai), Object::MatrixRowSlice(b, bi)) => {
+                        match (&**a, &**b) {
+                            (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
+                                if a_col_count != b_col_count {
+                                    return Ok(false);
+                                }
+                                for j in 0..*a_col_count {
+                                    let ak = match a_transpose_flag {
+                                        TransposeFlag::NoTranspose => ai * (*a_col_count) + j,
+                                        TransposeFlag::Transpose => j * (*a_row_count) + ai,
+                                    };
+                                    let bk = match a_transpose_flag {
+                                        TransposeFlag::NoTranspose => bi * *b_col_count + j,
+                                        TransposeFlag::Transpose => j * (*b_row_count) + bi,
+                                    };
+                                    match (xs.get(ak), ys.get(bk)) {
+                                        (Some(x), Some(y)) => {
+                                            if x != y {
+                                                return Ok(false);
+                                            }
+                                        },
+                                        (_, _) => return Err(Error::Interp(String::from("no element"))),
+                                    }
+                                }
+                                Ok(true)
+                            },
+                            (_, _) => return Err(Error::Interp(String::from("unsupported object type")))
+                        }
                     },
                     (Object::Error(kind, msg), Object::Error(kind2, msg2)) => {
                         Ok(kind == kind2 && msg == msg2)
                     },
-                    _ => Ok(false),
+                    (_, _) => Ok(false),
                 }
             },
             (Value::Ref(object), Value::Ref(object2)) => {
@@ -320,12 +347,12 @@ impl Value
                                         return Ok(false);
                                     }
                                 },
-                                _ => return Err(Error::Interp(String::from("no field value"))),
+                                (_, _) => return Err(Error::Interp(String::from("no field value"))),
                             }
                         }
                         Ok(true)
                     },
-                    _ => Ok(false),
+                    (_, _) => Ok(false),
                 }
             },
             (Value::Weak(object), Value::Weak(object2)) => {
@@ -334,7 +361,7 @@ impl Value
                     _ => Ok(false),
                 }
             },
-            _ => Ok(false),
+            (_, _) => Ok(false),
         }
     }
     
@@ -377,7 +404,7 @@ impl Value
                     },
                 }
             },
-            _ => Err(Error::Interp(String::from("invalid type"))),
+            _ => Err(Error::Interp(String::from("unsupported value type"))),
         }
     }
     
@@ -385,15 +412,16 @@ impl Value
         where F: FnMut(&Value) -> Result<Value>
     { self.apply_dot_fun1_with_fun_ref(&mut f) }
 
-    fn apply_dot_fun2_for_elem_with_fun_ref<F>(&self, value2: &Value, f: &mut F) -> Result<Value>
+    fn apply_dot_fun2_for_elem_with_fun_ref<F>(&self, value: &Value, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
+        let value2 = value;
         match (self, value2) {
             (Value::Float(_), Value::Float(_)) => f(self, value2),
             (Value::Object(object), Value::Object(object2)) => {
                 match (&**object, &**object2) {
                     (Object::Matrix(_), Object::Matrix(_)) => f(self, value2),
-                    _ => {
+                    (_, _) => {
                         if !self.eq_with_types(value2)? {
                             return Err(Error::Interp(String::from("two values aren't equal")))
                         }
@@ -401,7 +429,7 @@ impl Value
                     },
                 }
             },
-            _ => {
+            (_, _) => {
                 if !self.eq_with_types(value2)? {
                     return Err(Error::Interp(String::from("two values aren't equal")))
                 }
@@ -410,9 +438,10 @@ impl Value
         }
     }
     
-    fn apply_dot_fun2_with_fun_ref<F>(&self, value2: &Value, f: &mut F) -> Result<Value>
+    fn apply_dot_fun2_with_fun_ref<F>(&self, value: &Value, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
+        let value2 = value;
         match (self, value2) {
             (Value::Ref(object), Value::Ref(object2)) => {
                 let object_g = rw_lock_read(&**object)?;
@@ -440,21 +469,185 @@ impl Value
                                 (Some(x), Some(y)) => {
                                     zs.insert(ident.clone(), x.apply_dot_fun2_for_elem_with_fun_ref(y, f)?);
                                 },
-                                _ => return Err(Error::Interp(String::from("no field value"))),
+                                (_, _) => return Err(Error::Interp(String::from("no field value"))),
                             }
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(zs)))))
                     },
-                    _ => Err(Error::Interp(String::from("two value types aren't equal"))),
+                    (_, _) => Err(Error::Interp(String::from("two value types aren't equal"))),
                 }
             },
-            _ => Err(Error::Interp(String::from("invalid types"))),
+            (_, _) => Err(Error::Interp(String::from("unsupported value type"))),
         }
     }
 
     pub fn apply_dot_fun2<F>(&self, value2: &Value, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     { self.apply_dot_fun2_with_fun_ref(value2, f) }
+
+    pub fn elem(&self, idx_value: &Value) -> Result<Value>
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::MatrixArray(row_count, _, _, _) => {
+                        match idx_value {
+                            Value::Int(_) | Value::Float(_) => {
+                                let i = idx_value.to_i64();
+                                if i >= 1 && i <= (*row_count as i64) {
+                                    return Err(Error::Interp(String::from("index out of bounds")));
+                                }
+                                Ok(Value::Object(Arc::new(Object::MatrixRowSlice(object.clone(), (i - 1) as usize))))
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
+                    Object::MatrixRowSlice(matrix_array, i) => {
+                        match idx_value {
+                            Value::Int(_) | Value::Float(_) => {
+                                let j = idx_value.to_i64();
+                                match &**matrix_array {
+                                    Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+                                        if j >= 1 && j <= (*col_count as i64) {
+                                            return Err(Error::Interp(String::from("index out of bounds")));
+                                        }
+                                        let k = match transpose_flag {
+                                            TransposeFlag::NoTranspose => i * (*col_count) + ((j - 1) as usize),
+                                            TransposeFlag::Transpose => ((j - 1) as usize) * (*row_count) + i,
+                                        };
+                                        match xs.get(k) {
+                                            Some(x) => Ok(Value::Float(*x)),
+                                            None => Err(Error::Interp(String::from("index out of bounds"))),
+                                        }
+                                    },
+                                    _ => Err(Error::Interp(String::from("unsupported object type"))),
+                                }
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
+                    _ => Err(Error::Interp(String::from("unsupported object type"))),
+                }
+            },
+            Value::Ref(object) => {
+                let object_g = rw_lock_read(&**object)?;
+                match (&*object_g) {
+                    MutObject::Array(xs) => {
+                        match idx_value {
+                            Value::Int(_) | Value::Float(_) => {
+                                let i = idx_value.to_i64();
+                                if i >= 1 && i <= (xs.len() as i64) {
+                                    return Err(Error::Interp(String::from("index out of bounds")));
+                                }
+                                match xs.get((i - 1) as usize) { 
+                                    Some(x) => Ok(x.clone()),
+                                    None => Err(Error::Interp(String::from("index out of bounds"))),
+                                }
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
+                    MutObject::Struct(xs) => {
+                        match idx_value {
+                            Value::Object(idx_object) => {
+                                match &**idx_object {
+                                    Object::String(ident) => {
+                                        match xs.get(ident) {
+                                            Some(x) => Ok(x.clone()),
+                                            None => Err(Error::Interp(String::from("not found key")))
+                                        }
+                                    },
+                                    _ => Err(Error::Interp(String::from("unsupported index object type"))),
+                                }
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported value type"))),
+        }
+    }
+
+    pub fn set_elem(&self, idx_value: &Value, value: Value) -> Result<()>
+    {
+        match self {
+            Value::Ref(object) => {
+                let mut object_g = rw_lock_write(&**object)?;
+                match &mut *object_g {
+                    MutObject::Array(xs) => {
+                        match idx_value {
+                            Value::Int(_) | Value::Float(_) => {
+                                let i = idx_value.to_i64();
+                                if i >= 1 && i <= (xs.len() as i64) {
+                                    return Err(Error::Interp(String::from("index out of bounds")));
+                                }
+                                match xs.get_mut((i - 1) as usize) {
+                                    Some(x) => {
+                                        *x = value;
+                                        Ok(())
+                                    }
+                                    None => Err(Error::Interp(String::from("index out of bounds"))),
+                                }
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
+                    MutObject::Struct(xs) => {
+                        match idx_value {
+                            Value::Object(idx_object) => {
+                                match &**idx_object {
+                                    Object::String(ident) => {
+                                        xs.insert(ident.clone(), value);
+                                        Ok(())
+                                    },
+                                    _ => Err(Error::Interp(String::from("unsupported index object type"))),
+                                }
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                        }
+                    },
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported value type"))),
+        }
+    }
+
+    pub fn field(&self, ident: &String) -> Result<Value>
+    {
+        match self {
+            Value::Ref(object) => {
+                let object_g = rw_lock_read(&**object)?;
+                match &*object_g {
+                    MutObject::Struct(xs) => {
+                        match xs.get(ident) {
+                            Some(x) => Ok(x.clone()),
+                            None => Err(Error::Interp(String::from("not found key")))
+                        }
+                    },
+                    _ => Err(Error::Interp(String::from("object isn't structure"))),
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported value type"))),
+        }
+    }
+
+    pub fn set_field(&self, ident: &String, value: Value) -> Result<()>
+    {
+        match self {
+            Value::Ref(object) => {
+                let mut object_g = rw_lock_write(&**object)?;
+                match &mut *object_g {
+                    MutObject::Struct(xs) => {
+                        xs.insert(ident.clone(), value);
+                        Ok(())
+                    },
+                    _ => Err(Error::Interp(String::from("object isn't structure"))),
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported value type"))),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
