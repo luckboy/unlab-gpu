@@ -7,6 +7,16 @@
 //
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::cmp::Ordering;
+use std::ops::Neg;
+use std::ops::Add;
+use std::ops::AddAssign;
+use std::ops::Sub;
+use std::ops::SubAssign;
+use std::ops::Mul;
+use std::ops::MulAssign;
+use std::ops::Div;
+use std::ops::DivAssign;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
@@ -960,12 +970,13 @@ impl Value
             },
             BinOp::Lt => {
                 match (self, value) {
+                    (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a < b)),
                     (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
                     (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Bool(self.to_f32() < value.to_f32())),
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::String(s), Object::String(t)) => Ok(Value::Bool(s < t)),
-                            _ => Err(Error::Interp(String::from("unsupported object types for comparation"))),
+                            (_, _) => Err(Error::Interp(String::from("unsupported object types for comparation"))),
                         }
                     },
                     (_, _) => Err(Error::Interp(String::from("unsupported value types for subtraction"))),
@@ -976,6 +987,223 @@ impl Value
             BinOp::Le => Ok(Value::Bool(!value.bin_op(BinOp::Lt, self)?.to_bool())),
             BinOp::Eq => Ok(Value::Bool(self.eq_without_types(value)?)),
             BinOp::Ne => Ok(Value::Bool(!self.bin_op(BinOp::Eq, value)?.to_bool())),
+        }
+    }
+}
+
+impl Neg for Value
+{
+    type Output = Self;
+    
+    fn neg(self) -> Self::Output
+    { self.unary_op(UnaryOp::Neg).unwrap() }
+}
+
+impl Neg for &Value
+{
+    type Output = Value;
+    
+    fn neg(self) -> Self::Output
+    { self.unary_op(UnaryOp::Neg).unwrap() }
+}
+
+impl Add for Value
+{
+    type Output = Self;
+    
+    fn add(self, rhs: Self) -> Self::Output
+    { self.bin_op(BinOp::Add, &rhs).unwrap() }
+}
+
+impl Add<&Value> for Value
+{
+    type Output = Self;
+    
+    fn add(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Add, rhs).unwrap() }
+}
+
+impl Add<Value> for &Value
+{
+    type Output = Value;
+    
+    fn add(self, rhs: Value) -> Self::Output
+    { self.bin_op(BinOp::Add, &rhs).unwrap() }
+}
+
+impl Add<&Value> for &Value
+{
+    type Output = Value;
+    
+    fn add(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Add, rhs).unwrap() }
+}
+
+impl AddAssign for Value
+{
+    fn add_assign(&mut self, rhs: Self)
+    { *self = self.bin_op(BinOp::Add, &rhs).unwrap(); }
+}
+
+impl AddAssign<&Value> for Value
+{
+    fn add_assign(&mut self, rhs: &Self)
+    { *self = self.bin_op(BinOp::Add, rhs).unwrap(); }
+}
+
+impl Sub for Value
+{
+    type Output = Self;
+    
+    fn sub(self, rhs: Self) -> Self::Output
+    { self.bin_op(BinOp::Sub, &rhs).unwrap() }
+}
+
+impl Sub<&Value> for Value
+{
+    type Output = Self;
+    
+    fn sub(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Sub, rhs).unwrap() }
+}
+
+impl Sub<Value> for &Value
+{
+    type Output = Value;
+    
+    fn sub(self, rhs: Value) -> Self::Output
+    { self.bin_op(BinOp::Sub, &rhs).unwrap() }
+}
+
+impl Sub<&Value> for &Value
+{
+    type Output = Value;
+    
+    fn sub(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Sub, rhs).unwrap() }
+}
+
+impl SubAssign for Value
+{
+    fn sub_assign(&mut self, rhs: Self)
+    { *self = self.bin_op(BinOp::Sub, &rhs).unwrap(); }
+}
+
+impl SubAssign<&Value> for Value
+{
+    fn sub_assign(&mut self, rhs: &Self)
+    { *self = self.bin_op(BinOp::Sub, rhs).unwrap(); }
+}
+
+impl Mul for Value
+{
+    type Output = Self;
+    
+    fn mul(self, rhs: Self) -> Self::Output
+    { self.bin_op(BinOp::Mul, &rhs).unwrap() }
+}
+
+impl Mul<&Value> for Value
+{
+    type Output = Self;
+    
+    fn mul(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Mul, rhs).unwrap() }
+}
+
+impl Mul<Value> for &Value
+{
+    type Output = Value;
+    
+    fn mul(self, rhs: Value) -> Self::Output
+    { self.bin_op(BinOp::Mul, &rhs).unwrap() }
+}
+
+impl Mul<&Value> for &Value
+{
+    type Output = Value;
+    
+    fn mul(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Mul, rhs).unwrap() }
+}
+
+impl MulAssign for Value
+{
+    fn mul_assign(&mut self, rhs: Self)
+    { *self = self.bin_op(BinOp::Mul, &rhs).unwrap(); }
+}
+
+impl MulAssign<&Value> for Value
+{
+    fn mul_assign(&mut self, rhs: &Self)
+    { *self = self.bin_op(BinOp::Mul, rhs).unwrap(); }
+}
+
+impl Div for Value
+{
+    type Output = Self;
+    
+    fn div(self, rhs: Self) -> Self::Output
+    { self.bin_op(BinOp::Div, &rhs).unwrap() }
+}
+
+impl Div<&Value> for Value
+{
+    type Output = Self;
+    
+    fn div(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Div, rhs).unwrap() }
+}
+
+impl Div<Value> for &Value
+{
+    type Output = Value;
+    
+    fn div(self, rhs: Value) -> Self::Output
+    { self.bin_op(BinOp::Div, &rhs).unwrap() }
+}
+
+impl Div<&Value> for &Value
+{
+    type Output = Value;
+    
+    fn div(self, rhs: &Value) -> Self::Output
+    { self.bin_op(BinOp::Div, rhs).unwrap() }
+}
+
+impl DivAssign for Value
+{
+    fn div_assign(&mut self, rhs: Self)
+    { *self = self.bin_op(BinOp::Div, &rhs).unwrap(); }
+}
+
+impl DivAssign<&Value> for Value
+{
+    fn div_assign(&mut self, rhs: &Self)
+    { *self = self.bin_op(BinOp::Div, rhs).unwrap(); }
+}
+
+impl PartialEq for Value
+{
+    fn eq(&self, other: &Self) -> bool
+    { self.bin_op(BinOp::Eq, other).unwrap().to_bool() }
+}
+
+impl PartialOrd for Value
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>
+    {
+        match (self, other) {
+            (Value::Bool(a), Value::Bool(b)) => a.partial_cmp(b),
+            (Value::Int(a), Value::Int(b)) => a.partial_cmp(b),
+            (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => self.to_f32().partial_cmp(&other.to_f32()),
+            (Value::Object(object), Value::Object(object2)) => {
+                match (&**object, &**object2) {
+                    (Object::String(s), Object::String(t)) => s.partial_cmp(t),
+                    (_, _) => None,
+                }
+            },
+            (_, _) => None,
         }
     }
 }
