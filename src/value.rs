@@ -17,6 +17,7 @@ use std::ops::Mul;
 use std::ops::MulAssign;
 use std::ops::Div;
 use std::ops::DivAssign;
+use std::str::Chars;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
@@ -989,6 +990,30 @@ impl Value
             BinOp::Ne => Ok(Value::Bool(!self.bin_op(BinOp::Eq, value)?.to_bool())),
         }
     }
+    
+    pub fn iter(&self) -> Result<Option<Iter<'_>>>
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::IntRange(a, b, c) => Ok(Some(Iter::new(IterEnum::IntRange(*a, *b, *c, false)))),
+                    Object::FloatRange(a, b, c) => Ok(Some(Iter::new(IterEnum::FloatRange(*a, *b, *c, false)))),
+                    Object::String(s) => Ok(Some(Iter::new(IterEnum::String(s.chars())))),
+                    Object::MatrixArray(_, _, _, _) => Ok(Some(Iter::new(IterEnum::MatrixArray(object.clone(), 0, false)))), 
+                    Object::MatrixRowSlice(matrix_array, i) => Ok(Some(Iter::new(IterEnum::MatrixRowSlice(matrix_array.clone(), *i, 0, false)))),
+                    _ => Ok(None),
+                }
+            },
+            Value::Ref(object) => {
+                let object_g = rw_lock_read(&**object)?;
+                match &*object_g {
+                    MutObject::Array(_) => Ok(Some(Iter::new(IterEnum::Array(object.clone(), 0, false)))),
+                    _ => Ok(None),
+                }
+            }
+            _ => Ok(None),
+        }
+    }
 }
 
 impl Neg for Value
@@ -1343,4 +1368,173 @@ impl MutObject
             (_, _) => Ok(false),
         }
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct Iter<'a>
+{
+    iter_enum: IterEnum<'a>,
+}
+
+impl<'a> Iter<'a>
+{
+    fn new(iter_enum: IterEnum<'a>) -> Self
+    { Iter { iter_enum, } }
+}
+
+impl<'a> Iterator for Iter<'a>
+{
+    type Item = Result<Value>;
+    
+    fn next(&mut self) -> Option<Self::Item>
+    {
+        match &mut self.iter_enum {
+            IterEnum::IntRange(from, to, step, is_stopped) => {
+                if !*is_stopped {
+                    let current = if *from <= *to {
+                        Some(*from)
+                    } else {
+                        None
+                    };
+                    if *from < *to {
+                        *from += *step;
+                    } else {
+                        *is_stopped = true;
+                    }
+                    match current {
+                        Some(current) => Some(Ok(Value::Int(current))),
+                        None => None,
+                    }
+                } else {
+                    None
+                }
+            },
+            IterEnum::FloatRange(from, to, step, is_stopped) => {
+                if !*is_stopped {
+                    let current = if *from <= *to {
+                        Some(*from)
+                    } else {
+                        None
+                    };
+                    if *from < *to {
+                        *from += *step;
+                    } else {
+                        *is_stopped = true;
+                    }
+                    match current {
+                        Some(current) => Some(Ok(Value::Float(current))),
+                        None => None,
+                    }
+                } else {
+                    None
+                }
+            },
+            IterEnum::String(cs) => {
+                match cs.next() {
+                    Some(c) => {
+                        let mut s = String::new();
+                        s.push(c);
+                        Some(Ok(Value::Object(Arc::new(Object::String(s)))))
+                    },
+                    None => None,
+                }
+            },
+            IterEnum::MatrixArray(matrix_array, i, is_stopped) => {
+                if !*is_stopped {
+                    match &**matrix_array {
+                        Object::MatrixArray(row_count, _, _, _) => {
+                            if *i < *row_count {
+                                *i += 1;
+                                Some(Ok(Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array.clone(), *i)))))
+                            } else {
+                                None
+                            }
+                        },
+                        _ => {
+                            *is_stopped = true;
+                            Some(Err(Error::Interp(String::from("invalid object type"))))
+                        },
+                    }
+                } else {
+                    None
+                }
+            },
+            IterEnum::MatrixRowSlice(matrix_array, i, j, is_stopped) => {
+                if !*is_stopped {
+                    match &**matrix_array {
+                        Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+                            if *j < *col_count {
+                                let k = match transpose_flag {
+                                    TransposeFlag::NoTranspose => (*i) * (*col_count) + (*j),
+                                    TransposeFlag::Transpose => (*j) * (*row_count) + (*i),
+                                };
+                                *j += 1;
+                                match xs.get(k) {
+                                    Some(x) => Some(Ok(Value::Float(*x))),
+                                    None => {
+                                        *is_stopped = true;
+                                        Some(Err(Error::Interp(String::from("invalid index"))))
+                                    },
+                                }
+                            } else {
+                                None
+                            }
+                        },
+                        _ => {
+                            *is_stopped = true;
+                            Some(Err(Error::Interp(String::from("invalid object type"))))
+                        },
+                    }
+                } else {
+                    None
+                }
+            },
+            IterEnum::Array(array, i, is_stopped) => {
+                if !*is_stopped {
+                    match rw_lock_read(&**array) {
+                        Ok(array_g) => {
+                            match &*array_g {
+                                MutObject::Array(xs) => {
+                                    if *i < xs.len() {
+                                        let j = *i;
+                                        *i += 1;
+                                        match xs.get(j) {
+                                            Some(x) => Some(Ok(x.clone())),
+                                            None => {
+                                                *is_stopped = true;
+                                                Some(Err(Error::Interp(String::from("invalid index"))))
+                                            },
+                                        }
+                                    } else {
+                                        None
+                                    }
+                                },
+                                _ => {
+                                    *is_stopped = true;
+                                    Some(Err(Error::Interp(String::from("invalid object type"))))
+                                },
+                            }
+                        },
+                        Err(err) => {
+                            *is_stopped = true;
+                            Some(Err(err))
+                        },
+                    }
+                } else {
+                    None
+                }
+            },
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+enum IterEnum<'a>
+{
+    IntRange(i64, i64, i64, bool),
+    FloatRange(f32, f32, f32, bool),
+    String(Chars<'a>),
+    MatrixArray(Arc<Object>, usize, bool),
+    MatrixRowSlice(Arc<Object>, usize, usize, bool),
+    Array(Arc<RwLock<MutObject>>, usize, bool),
 }
