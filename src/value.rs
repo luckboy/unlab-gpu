@@ -754,9 +754,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot multiplication", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot multiplication", |v| self.bin_op(op, v)),
-                    _ => self.apply_dot_fun2(value, "unsupported value types dot multiplication", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot multiplication", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot multiplication", |v| self.bin_op(op, v)),
+                    _ => self.apply_dot_fun2(value, "unsupported value types for dot multiplication", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Div => {
@@ -810,9 +810,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot divistion"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot division", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot division", |v| self.bin_op(op, v)),
-                    (_, _) => self.apply_dot_fun2(value, "unsupported value types dot division", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot division", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot division", |v| self.bin_op(op, v)),
+                    (_, _) => self.apply_dot_fun2(value, "unsupported value types for dot division", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Add => {
@@ -907,9 +907,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot addition", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot addition", |v| self.bin_op(op, v)),
-                    (_, _) => self.apply_dot_fun2(value, "unsupported value types dot addition", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot addition", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot addition", |v| self.bin_op(op, v)),
+                    (_, _) => self.apply_dot_fun2(value, "unsupported value types for dot addition", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Sub => {
@@ -963,9 +963,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot subtraction", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot subtraction", |v| self.bin_op(op, v)),
-                    (_, _) => self.apply_dot_fun2(value, "unsupported value types dot subtraction", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot subtraction", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot subtraction", |v| self.bin_op(op, v)),
+                    (_, _) => self.apply_dot_fun2(value, "unsupported value types for dot subtraction", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Lt => {
