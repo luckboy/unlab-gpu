@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::cmp::Ordering;
+use std::fmt;
 use std::ops::Neg;
 use std::ops::Add;
 use std::ops::AddAssign;
@@ -205,6 +206,26 @@ fn matrix_rdiv_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_rdiv_for_scalar(a, b) {
         Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_to_matrix_array(a: &Matrix) -> matrix::Result<Object>
+{
+    let frontend = Frontend::new()?;
+    let (xs, is_transposed) = frontend.elems_and_transpose_flag(a)?;
+    let transpose_flag = if is_transposed {
+        TransposeFlag::Transpose
+    } else {
+        TransposeFlag::NoTranspose
+    };
+    Ok(Object::MatrixArray(a.row_count(), a.col_count(), transpose_flag, xs))
+}
+
+fn matrix_to_matrix_array(a: &Matrix) -> Result<Object>
+{
+    match matrix_res_to_matrix_array(a) {
+        Ok(object) => Ok(object),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
@@ -1014,6 +1035,153 @@ impl Value
             _ => Ok(None),
         }
     }
+    
+    pub fn to_matrix_array(&self) -> Result<Value>
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::Matrix(a) => Ok(Value::Object(Arc::new(matrix_to_matrix_array(a)?))),
+                    _ => Err(Error::Interp(String::from("unsupported object type for conversion to matrix array"))),
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported value type for conversion to matrix array"))),
+        }
+    }
+
+    fn fmt_with_indent(&self, f: &mut fmt::Formatter<'_>, indent: usize, is_width: bool) -> fmt::Result
+    {
+        let width = if is_width { 10 } else { 0 };
+        match self {
+            Value::None => write!(f, "{:>width$}", "none")?,
+            Value::Bool(false) => write!(f, "{:>width$}", "false")?,
+            Value::Bool(true) => write!(f, "{:>width$}", "true")?,
+            Value::Int(n) => write!(f, "{:>width$}", n)?,
+            Value::Float(n) => {
+                if format!("{:.4}", n).len() > 10 {
+                    write!(f, "{:>width$.4e}", n)?;
+                } else {
+                    write!(f, "{:>width$.4}", n)?;
+                }
+            },
+            Value::Object(object) => {
+                match &**object {
+                    Object::String(s) => write!(f, "{}", s)?,
+                    Object::IntRange(a, b, c) => {
+                        Value::Int(*a).fmt_with_indent(f, indent, is_width)?;
+                        write!(f, " to ")?;
+                        Value::Int(*b).fmt_with_indent(f, indent, is_width)?;
+                        write!(f, " by ")?;
+                        Value::Int(*c).fmt_with_indent(f, indent, is_width)?;
+                    },
+                    Object::FloatRange(a, b, c) => {
+                        Value::Float(*a).fmt_with_indent(f, indent, is_width)?;
+                        write!(f, " to ")?;
+                        Value::Float(*b).fmt_with_indent(f, indent, is_width)?;
+                        write!(f, " by ")?;
+                        Value::Float(*c).fmt_with_indent(f, indent, is_width)?;
+                    },
+                    Object::Matrix(_) => self.to_matrix_array().unwrap().fmt_with_indent(f, indent, is_width)?,
+                    Object::Fun(idents, ident, _) => {
+                        for ident2 in idents {
+                            write!(f, "{}::", ident2)?;
+                        }
+                        write!(f, "{}", ident)?;
+                    },
+                    Object::BuiltinFun(ident, _) => write!(f, "{}", ident)?,
+                    Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+                        if *row_count > 0 { 
+                            let new_indent = indent + 4;
+                            writeln!(f, "[")?;
+                            for i in 0..*row_count {
+                                write!(f, "{:new_indent$}", "")?;
+                                for j in 0..*col_count {
+                                    let k = match transpose_flag {
+                                        TransposeFlag::NoTranspose => i * (*col_count) + j,
+                                        TransposeFlag::Transpose => j * (*row_count) + i,
+                                    };
+                                    Value::Float(xs[k]).fmt_with_indent(f, new_indent, true)?;
+                                    if j + 1 < *col_count {
+                                        write!(f, " ")?;
+                                    }
+                                }
+                                writeln!(f, "")?;          
+                            }
+                            write!(f, "{:indent$}]", "")?;
+                        } else {
+                            write!(f, "[]")?;
+                        }
+                    },
+                    Object::MatrixRowSlice(matrix_array, i) => {
+                        match &**matrix_array {
+                            Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+                                if *col_count > 0 {
+                                    let new_indent = indent + 4;
+                                    write!(f, "[")?;
+                                    for j in 0..*col_count {
+                                        let k = match transpose_flag {
+                                            TransposeFlag::NoTranspose => (*i) * (*col_count) + j,
+                                            TransposeFlag::Transpose => j * (*row_count) + (*i),
+                                        };
+                                        write!(f, " ")?;
+                                        Value::Float(xs[k]).fmt_with_indent(f, new_indent, is_width)?;
+                                    }
+                                    write!(f, " ]")?;
+                                } else {
+                                    write!(f, "[]")?;
+                                }
+                            },
+                            _ => panic!("invalid object type"),
+                        }
+                    },
+                    Object::Error(_, msg) => write!(f, "{}", msg)?,
+                }
+            },
+            Value::Ref(object) => {
+                let object_g = rw_lock_read(&**object).unwrap();
+                match &*object_g {
+                    MutObject::Array(xs) => {
+                        if !xs.is_empty() {
+                            let new_indent = indent + 4;
+                            write!(f, ".[")?;
+                            for x in xs {
+                                write!(f, " ")?;
+                                x.fmt_with_indent(f, new_indent, is_width)?;
+                            }
+                            write!(f, " .]")?;
+                        } else {
+                            write!(f, ".[.]")?;
+                        }
+                    },
+                    MutObject::Struct(xs) => {
+                        if !xs.is_empty() {
+                            let new_indent = indent + 4;
+                            writeln!(f, "{{")?;
+                            for (ident, x) in xs {
+                                write!(f, "{}: ", ident)?;
+                                x.fmt_with_indent(f, new_indent, is_width)?;
+                                writeln!(f, "")?;
+                            }
+                            write!(f, "}}")?;
+                        } else {
+                            write!(f, "{{}}")?;
+                        }
+                    },
+                }
+            },
+            Value::Weak(object) => {
+                match object.upgrade() {
+                    Some(object) => {
+                        write!(f, "weak(")?;
+                        Value::Ref(object).fmt_with_indent(f, indent, is_width)?;
+                        write!(f, ")")?;
+                    },
+                    None => write!(f, "weak()")?,
+                }
+            },
+        }
+        Ok(())
+    }
 }
 
 impl Neg for Value
@@ -1231,6 +1399,12 @@ impl PartialOrd for Value
             (_, _) => None,
         }
     }
+}
+
+impl fmt::Display for Value
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    { self.fmt_with_indent(f, 0, false) }
 }
 
 #[derive(Clone, Debug)]
