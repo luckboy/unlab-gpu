@@ -263,6 +263,32 @@ impl Value
         }
     }
 
+    pub fn to_opt_bool(&self) -> Option<bool>
+    {
+        match self {
+            Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    pub fn to_opt_i64(&self) -> Option<i64>
+    {
+        match self {
+            Value::Int(n) => Some(*n),
+            Value::Float(n) => Some(*n as i64),
+            _ => None,
+        }
+    }
+
+    pub fn to_opt_f32(&self) -> Option<f32>
+    {
+        match self {
+            Value::Int(n) => Some(*n as f32),
+            Value::Float(n) => Some(*n),
+            _ => None,
+        }
+    }
+
     pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
         match (&self, value) {
