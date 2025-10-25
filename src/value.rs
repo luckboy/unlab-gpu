@@ -18,7 +18,7 @@ use crate::error::*;
 use crate::tree::*;
 use crate::utils::*;
 
-fn matrix_result_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+fn matrix_res_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -28,13 +28,13 @@ fn matrix_result_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 
 fn matrix_add(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
-    match matrix_result_add(a, b) {
+    match matrix_res_add(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_sub(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+fn matrix_res_sub(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -44,13 +44,13 @@ fn matrix_result_sub(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 
 fn matrix_sub(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
-    match matrix_result_sub(a, b) {
+    match matrix_res_sub(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_mul(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+fn matrix_res_mul(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = if  frontend.backend().has_cublas() {
@@ -64,13 +64,13 @@ fn matrix_result_mul(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 
 fn matrix_mul(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
-    match matrix_result_mul(a, b) {
+    match matrix_res_mul(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_mul_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+fn matrix_res_mul_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -80,13 +80,13 @@ fn matrix_result_mul_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 
 fn matrix_mul_elems(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
-    match matrix_result_mul_elems(a, b) {
+    match matrix_res_mul_elems(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_div_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+fn matrix_res_div_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -96,13 +96,13 @@ fn matrix_result_div_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 
 fn matrix_div_elems(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
-    match matrix_result_div_elems(a, b) {
+    match matrix_res_div_elems(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_add_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+fn matrix_res_add_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -112,13 +112,13 @@ fn matrix_result_add_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 
 fn matrix_add_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
-    match matrix_result_add_for_scalar(a, b) {
+    match matrix_res_add_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_sub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+fn matrix_res_sub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -128,13 +128,13 @@ fn matrix_result_sub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 
 fn matrix_sub_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
-    match matrix_result_sub_for_scalar(a, b) {
+    match matrix_res_sub_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_rsub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+fn matrix_res_rsub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -144,13 +144,13 @@ fn matrix_result_rsub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 
 fn matrix_rsub_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
-    match matrix_result_rsub_for_scalar(a, b) {
+    match matrix_res_rsub_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_mul_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+fn matrix_res_mul_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -160,13 +160,13 @@ fn matrix_result_mul_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 
 fn matrix_mul_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
-    match matrix_result_mul_for_scalar(a, b) {
+    match matrix_res_mul_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_div_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+fn matrix_res_div_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -176,13 +176,13 @@ fn matrix_result_div_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 
 fn matrix_div_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
-    match matrix_result_div_for_scalar(a, b) {
+    match matrix_res_div_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
 }
 
-fn matrix_result_rdiv_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+fn matrix_res_rdiv_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
     let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
@@ -192,7 +192,7 @@ fn matrix_result_rdiv_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 
 fn matrix_rdiv_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
-    match matrix_result_rdiv_for_scalar(a, b) {
+    match matrix_res_rdiv_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
     }
@@ -270,15 +270,40 @@ impl Value
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
             (Value::Float(a), Value::Float(b)) => Ok(a == b),
-            (Value::Object(object), Value::Object(object2)) => object.private_eq(&**object2),
+            (Value::Object(object), Value::Object(object2)) => object.priv_eq(&**object2),
             (Value::Ref(object), Value::Ref(object2)) => {
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
-                object_g.private_eq(&*object2_g, Self::eq_with_types)
+                object_g.priv_eq(&*object2_g, Self::eq_with_types)
             },
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
                     (Some(object), Some(object2)) => Value::Ref(object).eq_with_types(&Value::Ref(object2)),
+                    (None, None) => Ok(true),
+                    (_, _) => Ok(false),
+                }
+            },
+            (_, _) => Ok(false),
+        }
+    }
+
+    pub fn eq_without_types(&self, value: &Value) -> Result<bool>
+    {
+        match (&self, value) {
+            (Value::None, Value::None) => Ok(true),
+            (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
+            (Value::Int(a), Value::Int(b)) => Ok(a == b),
+            (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(self.to_f32() == value.to_f32()),
+            (Value::Object(object), Value::Object(object2)) => object.priv_eq(&**object2),
+            (Value::Ref(object), Value::Ref(object2)) => {
+                let object_g = rw_lock_read(&**object)?;
+                let object2_g = rw_lock_read(&**object2)?;
+                object_g.priv_eq(&*object2_g, Self::eq_without_types)
+            },
+            (Value::Weak(object), Value::Weak(object2)) => {
+                match (object.upgrade(), object2.upgrade()) {
+                    (Some(object), Some(object2)) => Value::Ref(object).eq_with_types(&Value::Ref(object2)),
+                    (None, None) => Ok(true),
                     (_, _) => Ok(false),
                 }
             },
@@ -286,7 +311,7 @@ impl Value
         }
     }
     
-    fn apply_dot_fun1_for_elem_with_fun_ref<F>(&self, f: &mut F) -> Result<Value>
+    fn apply_dot_fun1_for_elem_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
     {
         match self {
@@ -297,12 +322,12 @@ impl Value
                     _ => Ok(self.clone()),
                 }
             },
-            Value::Ref(_) => self.apply_dot_fun1_with_fun_ref(f),
+            Value::Ref(_) => self.apply_dot_fun1_with_fun_ref(err_msg, f),
             _ => Ok(self.clone()),
         }
     }
     
-    fn apply_dot_fun1_with_fun_ref<F>(&self, f: &mut F) -> Result<Value>
+    fn apply_dot_fun1_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
     {
         match self {
@@ -312,28 +337,28 @@ impl Value
                     MutObject::Array(xs) => {
                         let mut ys: Vec<Value> = Vec::new();
                         for x in xs {
-                            ys.push(x.apply_dot_fun1_for_elem_with_fun_ref(f)?);
+                            ys.push(x.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(ys)))))
                     },
                     MutObject::Struct(xs) => {
                         let mut ys: BTreeMap<String, Value> = BTreeMap::new();
                         for (ident, x) in xs {
-                            ys.insert(ident.clone(), x.apply_dot_fun1_for_elem_with_fun_ref(f)?);
+                            ys.insert(ident.clone(), x.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(ys)))))
                     },
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type"))),
+            _ => Err(Error::Interp(String::from(err_msg))),
         }
     }
     
-    pub fn apply_dot_fun1<F>(&self, mut f: F) -> Result<Value>
+    pub fn apply_dot_fun1<F>(&self, msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
-    { self.apply_dot_fun1_with_fun_ref(&mut f) }
+    { self.apply_dot_fun1_with_fun_ref(msg, &mut f) }
 
-    fn apply_dot_fun2_for_elem_with_fun_ref<F>(&self, value: &Value, f: &mut F) -> Result<Value>
+    fn apply_dot_fun2_for_elem_with_fun_ref<F>(&self, value: &Value, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
         match (self, value) {
@@ -349,8 +374,8 @@ impl Value
                     },
                 }
             },
-            (Value::Ref(_), Value::Ref(_)) => self.apply_dot_fun2_with_fun_ref(value, f),
-            (Value::Weak(_), _) | (_, Value::Weak(_)) => Err(Error::Interp(String::from("value is weak reference"))),
+            (Value::Ref(_), Value::Ref(_)) => self.apply_dot_fun2_with_fun_ref(value, err_msg, f),
+            (Value::Weak(_), _) | (_, Value::Weak(_)) => Err(Error::Interp(String::from("values are weak references"))),
             (_, _) => {
                 if !self.eq_with_types(value)? {
                     return Err(Error::Interp(String::from("two values aren't equal")))
@@ -360,7 +385,7 @@ impl Value
         }
     }
     
-    fn apply_dot_fun2_with_fun_ref<F>(&self, value: &Value, f: &mut F) -> Result<Value>
+    fn apply_dot_fun2_with_fun_ref<F>(&self, value: &Value, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
         match (self, value) {
@@ -374,7 +399,7 @@ impl Value
                         }
                         let mut zs: Vec<Value> = Vec::new();
                         for (x, y) in xs.iter().zip(ys.iter()) {
-                            zs.push(x.apply_dot_fun2_for_elem_with_fun_ref(y, f)?);
+                            zs.push(x.apply_dot_fun2_for_elem_with_fun_ref(y, err_msg, f)?);
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(zs)))))
                     },
@@ -388,23 +413,23 @@ impl Value
                         for ident in &idents {
                             match (xs.get(ident), ys.get(ident)) {
                                 (Some(x), Some(y)) => {
-                                    zs.insert(ident.clone(), x.apply_dot_fun2_for_elem_with_fun_ref(y, f)?);
+                                    zs.insert(ident.clone(), x.apply_dot_fun2_for_elem_with_fun_ref(y, err_msg, f)?);
                                 },
                                 (_, _) => return Err(Error::Interp(String::from("no field value"))),
                             }
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(zs)))))
                     },
-                    (_, _) => Err(Error::Interp(String::from("two value types aren't equal"))),
+                    (_, _) => Err(Error::Interp(String::from("two object types aren't equal"))),
                 }
             },
-            (_, _) => Err(Error::Interp(String::from("unsupported value type"))),
+            (_, _) => Err(Error::Interp(String::from(err_msg))),
         }
     }
 
-    pub fn apply_dot_fun2<F>(&self, value2: &Value, f: &mut F) -> Result<Value>
+    pub fn apply_dot_fun2<F>(&self, value: &Value, msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
-    { self.apply_dot_fun2_with_fun_ref(value2, f) }
+    { self.apply_dot_fun2_with_fun_ref(value, msg, &mut f) }
 
     pub fn elem(&self, idx_value: &Value) -> Result<Value>
     {
@@ -427,7 +452,7 @@ impl Value
                                     None => Err(Error::Interp(String::from("index out of bounds"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
                         }
                     },
                     Object::MatrixArray(row_count, _, _, _) => {
@@ -439,7 +464,7 @@ impl Value
                                 }
                                 Ok(Value::Object(Arc::new(Object::MatrixRowSlice(object.clone(), (i - 1) as usize))))
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
                         }
                     },
                     Object::MatrixRowSlice(matrix_array, i) => {
@@ -463,10 +488,10 @@ impl Value
                                     _ => Err(Error::Interp(String::from("unsupported object type"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
                         }
                     },
-                    _ => Err(Error::Interp(String::from("unsupported object type"))),
+                    _ => Err(Error::Interp(String::from("unsupported object type for indexing"))),
                 }
             },
             Value::Ref(object) => {
@@ -484,7 +509,7 @@ impl Value
                                     None => Err(Error::Interp(String::from("index out of bounds"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
                         }
                     },
                     MutObject::Struct(xs) => {
@@ -497,15 +522,15 @@ impl Value
                                             None => Err(Error::Interp(String::from("not found key")))
                                         }
                                     },
-                                    _ => Err(Error::Interp(String::from("unsupported index object type"))),
+                                    _ => Err(Error::Interp(String::from("unsupported index object type for indexing"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
                         }
                     },
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type"))),
+            _ => Err(Error::Interp(String::from("unsupported value type for indexing"))),
         }
     }
 
@@ -530,7 +555,7 @@ impl Value
                                     None => Err(Error::Interp(String::from("index out of bounds"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for mutable indexing"))),
                         }
                     },
                     MutObject::Struct(xs) => {
@@ -544,12 +569,12 @@ impl Value
                                     _ => Err(Error::Interp(String::from("unsupported index object type"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type"))),
+                            _ => Err(Error::Interp(String::from("unsupported index value type for mutable indexing"))),
                         }
                     },
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type"))),
+            _ => Err(Error::Interp(String::from("unsupported value type for mutable indexing"))),
         }
     }
 
@@ -562,17 +587,17 @@ impl Value
                     MutObject::Struct(xs) => {
                         match xs.get(ident) {
                             Some(x) => Ok(x.clone()),
-                            None => Err(Error::Interp(String::from("no field")))
+                            None => Err(Error::Interp(format!("no field {}", ident))),
                         }
                     },
-                    _ => Err(Error::Interp(String::from("object isn't structure"))),
+                    _ => Err(Error::Interp(format!("unsupported object type for field {}", ident))),
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type"))),
+            _ => Err(Error::Interp(format!("unsupported value type for field {}", ident))),
         }
     }
 
-    pub fn set_field(&self, ident: &String, value: Value) -> Result<()>
+    pub fn set_field(&self, ident: String, value: Value) -> Result<()>
     {
         match self {
             Value::Ref(object) => {
@@ -582,10 +607,349 @@ impl Value
                         xs.insert(ident.clone(), value);
                         Ok(())
                     },
-                    _ => Err(Error::Interp(String::from("object isn't structure"))),
+                    _ => Err(Error::Interp(format!("unsupported object type for mutable field {}", ident))),
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type"))),
+            _ => Err(Error::Interp(format!("unsupported value type for mutable field {}", ident))),
+        }
+    }
+
+    pub fn unary_op(&self, op: UnaryOp) -> Result<Value>
+    {
+        match op {
+            UnaryOp::Neg => {
+                match self {
+                    Value::Int(a) => {
+                        match a.checked_neg() {
+                            Some(b) => Ok(Value::Int(b)),
+                            None => Err(Error::Interp(String::from("overflow"))),
+                        }
+                    },
+                    Value::Float(a) => Ok(Value::Float(-a)),
+                    Value::Object(object) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(a, 0.0)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object type for negation"))),
+                        }
+                    },
+                    _ => Err(Error::Interp(String::from("unsupported value type for negation"))),
+                }
+            },
+            UnaryOp::DotNeg => {
+                match self {
+                    Value::Int(_) | Value::Float(_) => Ok(Value::Float(self.to_f32())),
+                    Value::Object(object) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(a, 0.0)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object type for dot negation"))),
+                        }
+                    },
+                    _ => self.apply_dot_fun1("unsupported object type for dot negation", |v| v.unary_op(op)),
+                }
+            },
+            UnaryOp::Not => Ok(Value::Bool(!self.to_bool())),
+            UnaryOp::Transpose => {
+                match self {
+                    Value::Int(_) | Value::Float(_) => Ok(self.clone()),
+                    Value::Object(object) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(a.transpose())))),
+                            _ => Err(Error::Interp(String::from("unsupported object type for transpose"))),
+                        }
+                    },
+                    _ => Err(Error::Interp(String::from("unsupported value type for transpose"))),
+                }
+            },
+        }
+    }
+
+    pub fn bin_op(&self, op: BinOp, value: &Value) -> Result<Value>
+    {
+        match op {
+            BinOp::Index => self.elem(value),
+            BinOp::Mul => {
+                match (self, value) {
+                    (Value::Int(a), Value::Int(b)) => {
+                        match a.checked_mul(*b) {
+                            Some(c) => Ok(Value::Int(c)),
+                            None => Err(Error::Interp(String::from("overflow"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() * value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for multiplication"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for multiplication"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for multiplication"))),
+                        }
+                    },
+                    _ => Err(Error::Interp(String::from("unsupported value types for multiplication"))),
+                }
+            },
+            BinOp::DotMul => {
+                match (self, value) {
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() * value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_elems(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
+                        }
+                    },
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot multiplication", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot multiplication", |v| self.bin_op(op, v)),
+                    _ => self.apply_dot_fun2(value, "unsupported value types dot multiplication", |v, w| v.bin_op(op, w)),
+                }
+            },
+            BinOp::Div => {
+                match (self, value) {
+                    (Value::Int(a), Value::Int(b)) => {
+                        match a.checked_div(*b) {
+                            Some(c) => Ok(Value::Int(c)),
+                            None => {
+                                if *b == 0 {
+                                    Err(Error::Interp(String::from("division by zero")))
+                                } else {
+                                    Err(Error::Interp(String::from("overflow")))
+                                }
+                            },
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() / value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_div_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for division"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rdiv_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for division"))),
+                        }
+                    },
+                    (_, _) => Err(Error::Interp(String::from("unsupported value types for division"))),
+                }
+            },
+            BinOp::DotDiv => {
+                match (self, value) {
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() * value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot division"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot division"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_div_elems(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot divistion"))),
+                        }
+                    },
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot division", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot division", |v| self.bin_op(op, v)),
+                    (_, _) => self.apply_dot_fun2(value, "unsupported value types dot division", |v, w| v.bin_op(op, w)),
+                }
+            },
+            BinOp::Add => {
+                match (self, value) {
+                    (Value::Int(a), Value::Int(b)) => {
+                        match a.checked_add(*b) {
+                            Some(c) => Ok(Value::Int(c)),
+                            None => Err(Error::Interp(String::from("overflow"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() + value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::String(s), Object::String(t)) => Ok(Value::Object(Arc::new(Object::String(s.clone() + t.as_str())))),
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                        }
+                    },
+                    (Value::Ref(object), Value::Ref(object2)) => {
+                        let object_g = rw_lock_read(&**object)?;
+                        let object2_g = rw_lock_read(&**object2)?;
+                        match (&*object_g, &*object2_g) {
+                            (MutObject::Array(xs), MutObject::Array(ys)) => {
+                                let mut zs = xs.clone();
+                                zs.extend_from_slice(ys.as_slice());
+                                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(zs)))))
+                            },
+                            (MutObject::Struct(xs), MutObject::Struct(ys)) => {
+                                let mut zs: BTreeMap<String, Value> = BTreeMap::new();
+                                let idents: BTreeSet<String> = xs.keys().map(|s| s.clone()).collect();
+                                let idents2: BTreeSet<String> = ys.keys().map(|s| s.clone()).collect();
+                                let idents3: Vec<String> = idents.union(&idents2).map(|s| s.clone()).collect();
+                                for ident in &idents3 {
+                                    match xs.get(ident) {
+                                        Some(x) => {
+                                            zs.insert(ident.clone(), x.clone());
+                                        },
+                                        None => {
+                                            match ys.get(ident) {
+                                                Some(y) => {
+                                                    zs.insert(ident.clone(), y.clone());
+                                                },
+                                                None => (),
+                                            }
+                                        },
+                                    }
+                                }
+                                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(zs)))))
+                            },
+                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                        }
+                    },
+                    (_, _) => Err(Error::Interp(String::from("unsupported value types for addition"))),
+                }
+            },
+            BinOp::DotAdd => {
+                match (self, value) {
+                    (Value::Int(a), Value::Int(b)) => {
+                        match a.checked_add(*b) {
+                            Some(c) => Ok(Value::Int(c)),
+                            None => Err(Error::Interp(String::from("overflow"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() + value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
+                        }
+                    },
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot addition", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot addition", |v| self.bin_op(op, v)),
+                    (_, _) => self.apply_dot_fun2(value, "unsupported value types dot addition", |v, w| v.bin_op(op, w)),
+                }
+            },
+            BinOp::Sub => {
+                match (self, value) {
+                    (Value::Int(a), Value::Int(b)) => {
+                        match a.checked_sub(*b) {
+                            Some(c) => Ok(Value::Int(c)),
+                            None => Err(Error::Interp(String::from("overflow"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() - value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for subtraction"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for subtraction"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for subtraction"))),
+                        }
+                    },
+                    (_, _) => Err(Error::Interp(String::from("unsupported value types for subtraction"))),
+                }
+            },
+            BinOp::DotSub => {
+                match (self, value) {
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() - value.to_f32())),
+                    (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
+                        match &**object {
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub_for_scalar(a, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
+                        }
+                    },
+                    (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
+                        match &**object2 {
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, value.to_f32())?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
+                        }
+                    },
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub(a, b)?)))),
+                            _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
+                        }
+                    },
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types dot subtraction", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types dot subtraction", |v| self.bin_op(op, v)),
+                    (_, _) => self.apply_dot_fun2(value, "unsupported value types dot subtraction", |v, w| v.bin_op(op, w)),
+                }
+            },
+            BinOp::Lt => {
+                match (self, value) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Bool(self.to_f32() < value.to_f32())),
+                    (Value::Object(object), Value::Object(object2)) => {
+                        match (&**object, &**object2) {
+                            (Object::String(s), Object::String(t)) => Ok(Value::Bool(s < t)),
+                            _ => Err(Error::Interp(String::from("unsupported object types for comparation"))),
+                        }
+                    },
+                    (_, _) => Err(Error::Interp(String::from("unsupported value types for subtraction"))),
+                }
+            },
+            BinOp::Ge => Ok(Value::Bool(!self.bin_op(BinOp::Lt, value)?.to_bool())),
+            BinOp::Gt => Ok(Value::Bool(value.bin_op(BinOp::Lt, self)?.to_bool())),
+            BinOp::Le => Ok(Value::Bool(!value.bin_op(BinOp::Lt, self)?.to_bool())),
+            BinOp::Eq => Ok(Value::Bool(self.eq_without_types(value)?)),
+            BinOp::Ne => Ok(Value::Bool(!self.bin_op(BinOp::Eq, value)?.to_bool())),
         }
     }
 }
@@ -606,19 +970,15 @@ pub enum Object
 
 impl Object
 {
-    fn private_eq(&self, object: &Object) -> Result<bool>
+    fn priv_eq(&self, object: &Object) -> Result<bool>
     {
         match (self, object) {
             (Object::String(s), Object::String(t)) => Ok(s == t),
             (Object::IntRange(a, b, c), Object::IntRange(d, e, f)) => Ok(a == d && b == e && c == f),
             (Object::FloatRange(a, b, c), Object::FloatRange(d, e, f)) => Ok(a == d && b == e && c == f),
             (Object::Matrix(_), Object::Matrix(_)) => Ok(false),
-            (Object::Fun(idents, ident, fun), Object::Fun(idents2, ident2, fun2)) => {
-                Ok(idents == idents2 && ident == ident2 && Arc::ptr_eq(fun, fun2))
-            },
-            (Object::BuiltinFun(ident, _), Object::BuiltinFun(ident2, _)) => {
-                Ok(ident == ident2)
-            },
+            (Object::Fun(idents, ident, fun), Object::Fun(idents2, ident2, fun2)) => Ok(idents == idents2 && ident == ident2 && Arc::ptr_eq(fun, fun2)),
+            (Object::BuiltinFun(ident, _), Object::BuiltinFun(ident2, _)) => Ok(ident == ident2),
             (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
                 if a_row_count != b_row_count || a_col_count != b_col_count {
                     return Ok(false);
@@ -671,12 +1031,10 @@ impl Object
                         }
                         Ok(true)
                     },
-                    (_, _) => return Err(Error::Interp(String::from("unsupported object type")))
+                    (_, _) => return Err(Error::Interp(String::from("invalid object type")))
                 }
             },
-            (Object::Error(kind, msg), Object::Error(kind2, msg2)) => {
-                Ok(kind == kind2 && msg == msg2)
-            },
+            (Object::Error(kind, msg), Object::Error(kind2, msg2)) => Ok(kind == kind2 && msg == msg2),
             (_, _) => Ok(false),
         }
     }
@@ -698,7 +1056,7 @@ pub enum MutObject
 
 impl MutObject
 {
-    fn private_eq<F>(&self, object: &MutObject, mut f: F) -> Result<bool>
+    fn priv_eq<F>(&self, object: &MutObject, mut f: F) -> Result<bool>
         where F: FnMut(&Value, &Value) -> Result<bool>
     {
         match (self, object) {
