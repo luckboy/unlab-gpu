@@ -1131,7 +1131,7 @@ impl Value
                                     write!(f, "[]")?;
                                 }
                             },
-                            _ => panic!("invalid object type"),
+                            _ => write!(f, "[]")?,
                         }
                     },
                     Object::Error(_, msg) => write!(f, "{}", msg)?,
