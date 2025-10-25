@@ -507,7 +507,7 @@ impl Value
                                         t.push(c);
                                         Ok(Value::Object(Arc::new(Object::String(t))))
                                     }
-                                    None => Err(Error::Interp(String::from("index out of bounds"))),
+                                    None => Err(Error::Interp(String::from("no character"))),
                                 }
                             },
                             _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
@@ -540,7 +540,7 @@ impl Value
                                         };
                                         match xs.get(k) {
                                             Some(x) => Ok(Value::Float(*x)),
-                                            None => Err(Error::Interp(String::from("index out of bounds"))),
+                                            None => Err(Error::Interp(String::from("no element"))),
                                         }
                                     },
                                     _ => Err(Error::Interp(String::from("unsupported object type"))),
@@ -564,7 +564,7 @@ impl Value
                                 }
                                 match xs.get((i - 1) as usize) { 
                                     Some(x) => Ok(x.clone()),
-                                    None => Err(Error::Interp(String::from("index out of bounds"))),
+                                    None => Err(Error::Interp(String::from("no element"))),
                                 }
                             },
                             _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
@@ -610,7 +610,7 @@ impl Value
                                         *x = value;
                                         Ok(())
                                     }
-                                    None => Err(Error::Interp(String::from("index out of bounds"))),
+                                    None => Err(Error::Interp(String::from("no element"))),
                                 }
                             },
                             _ => Err(Error::Interp(String::from("unsupported index value type for mutable indexing"))),
