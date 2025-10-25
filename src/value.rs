@@ -587,7 +587,7 @@ impl Value
                     MutObject::Struct(xs) => {
                         match xs.get(ident) {
                             Some(x) => Ok(x.clone()),
-                            None => Err(Error::Interp(format!("no field {}", ident))),
+                            None => Err(Error::Interp(format!("structure hasn't field {}", ident))),
                         }
                     },
                     _ => Err(Error::Interp(format!("unsupported object type for field {}", ident))),
