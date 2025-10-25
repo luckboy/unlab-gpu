@@ -336,7 +336,7 @@ impl Value
             },
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
-                    (Some(object), Some(object2)) => Value::Ref(object).eq_with_types(&Value::Ref(object2)),
+                    (Some(object), Some(object2)) => Ok(Arc::ptr_eq(&object, &object2)),
                     (None, None) => Ok(true),
                     (_, _) => Ok(false),
                 }
@@ -360,7 +360,7 @@ impl Value
             },
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
-                    (Some(object), Some(object2)) => Value::Ref(object).eq_with_types(&Value::Ref(object2)),
+                    (Some(object), Some(object2)) => Ok(Arc::ptr_eq(&object, &object2)),
                     (None, None) => Ok(true),
                     (_, _) => Ok(false),
                 }
@@ -1171,11 +1171,7 @@ impl Value
             },
             Value::Weak(object) => {
                 match object.upgrade() {
-                    Some(object) => {
-                        write!(f, "weak(")?;
-                        Value::Ref(object).fmt_with_indent(f, indent, is_width)?;
-                        write!(f, ")")?;
-                    },
+                    Some(_) => write!(f, "weak(...)")?,
                     None => write!(f, "weak()")?,
                 }
             },
