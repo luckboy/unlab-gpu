@@ -49,8 +49,20 @@ impl<T, U> ModNode<T, U>
         Ok(())
     }
 
-    pub fn remove_mod(&mut self, ident: &String)
-    { self.mods.remove(ident); }
+    pub fn remove_mod(&mut self, ident: &String) -> Result<()>
+    {
+        match self.mods.get(ident) {
+            Some(child) => {
+                {
+                    let mut child_g = rw_lock_write(&*child)?;
+                    child_g.parent = None;
+                }
+                self.mods.remove(ident);
+                Ok(())
+            },
+            None => Ok(()),
+        }
+    }
 
     pub fn vars(&self) -> &HashMap<String, T>
     { &self.vars }
@@ -74,7 +86,7 @@ impl<T, U> ModNode<T, U>
             None => None,
         }
     }
-    
+
     pub fn value(&self) -> &U
     { &self.value }
     
