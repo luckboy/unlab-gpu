@@ -370,7 +370,7 @@ impl Value
         }
     }
     
-    fn apply_dot_fun1_for_elem_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
+    fn dot1_for_elem_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
     {
         match self {
@@ -381,12 +381,12 @@ impl Value
                     _ => Ok(self.clone()),
                 }
             },
-            Value::Ref(_) => self.apply_dot_fun1_with_fun_ref(err_msg, f),
+            Value::Ref(_) => self.dot1_with_fun_ref(err_msg, f),
             _ => Ok(self.clone()),
         }
     }
     
-    fn apply_dot_fun1_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
+    fn dot1_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
     {
         match self {
@@ -396,14 +396,14 @@ impl Value
                     MutObject::Array(elems) => {
                         let mut new_elems: Vec<Value> = Vec::new();
                         for elem in elems {
-                            new_elems.push(elem.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
+                            new_elems.push(elem.dot1_for_elem_with_fun_ref(err_msg, f)?);
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
                     },
                     MutObject::Struct(fields) => {
                         let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
                         for (ident, field) in fields {
-                            new_fields.insert(ident.clone(), field.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
+                            new_fields.insert(ident.clone(), field.dot1_for_elem_with_fun_ref(err_msg, f)?);
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(new_fields)))))
                     },
@@ -413,11 +413,11 @@ impl Value
         }
     }
     
-    pub fn apply_dot_fun1<F>(&self, msg: &str, mut f: F) -> Result<Value>
+    pub fn dot1<F>(&self, err_msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
-    { self.apply_dot_fun1_with_fun_ref(msg, &mut f) }
+    { self.dot1_with_fun_ref(err_msg, &mut f) }
 
-    fn apply_dot_fun2_for_elem_with_fun_ref<F>(&self, value: &Value, err_msg: &str, f: &mut F) -> Result<Value>
+    fn dot2_for_elem_with_fun_ref<F>(&self, value: &Value, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
         match (self, value) {
@@ -433,7 +433,7 @@ impl Value
                     },
                 }
             },
-            (Value::Ref(_), Value::Ref(_)) => self.apply_dot_fun2_with_fun_ref(value, err_msg, f),
+            (Value::Ref(_), Value::Ref(_)) => self.dot2_with_fun_ref(value, err_msg, f),
             (Value::Weak(_), _) | (_, Value::Weak(_)) => Err(Error::Interp(String::from("value is weak reference"))),
             (_, _) => {
                 if !self.eq_with_types(value)? {
@@ -444,7 +444,7 @@ impl Value
         }
     }
     
-    fn apply_dot_fun2_with_fun_ref<F>(&self, value: &Value, err_msg: &str, f: &mut F) -> Result<Value>
+    fn dot2_with_fun_ref<F>(&self, value: &Value, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     {
         match (self, value) {
@@ -458,7 +458,7 @@ impl Value
                         }
                         let mut new_elems: Vec<Value> = Vec::new();
                         for (elem, elem2) in elems.iter().zip(elems2.iter()) {
-                            new_elems.push(elem.apply_dot_fun2_for_elem_with_fun_ref(elem2, err_msg, f)?);
+                            new_elems.push(elem.dot2_for_elem_with_fun_ref(elem2, err_msg, f)?);
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
                     },
@@ -472,7 +472,7 @@ impl Value
                         for ident in &idents {
                             match (fields.get(*ident), fields2.get(*ident)) {
                                 (Some(field), Some(field2)) => {
-                                    new_fields.insert((*ident).clone(), field.apply_dot_fun2_for_elem_with_fun_ref(field2, err_msg, f)?);
+                                    new_fields.insert((*ident).clone(), field.dot2_for_elem_with_fun_ref(field2, err_msg, f)?);
                                 },
                                 (_, _) => return Err(Error::Interp(String::from("no field value"))),
                             }
@@ -486,9 +486,9 @@ impl Value
         }
     }
 
-    pub fn apply_dot_fun2<F>(&self, value: &Value, msg: &str, mut f: F) -> Result<Value>
+    pub fn dot2<F>(&self, value: &Value, err_msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
-    { self.apply_dot_fun2_with_fun_ref(value, msg, &mut f) }
+    { self.dot2_with_fun_ref(value, err_msg, &mut f) }
 
     pub fn elem(&self, idx_value: &Value) -> Result<Value>
     {
@@ -703,7 +703,7 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object type for dot negation"))),
                         }
                     },
-                    _ => self.apply_dot_fun1("unsupported object type for dot negation", |v| v.unary_op(op)),
+                    _ => self.dot1("unsupported object type for dot negation", |v| v.unary_op(op)),
                 }
             },
             UnaryOp::Not => Ok(Value::Bool(!self.to_bool())),
@@ -777,9 +777,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot multiplication", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot multiplication", |v| self.bin_op(op, v)),
-                    _ => self.apply_dot_fun2(value, "unsupported value types for dot multiplication", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot multiplication", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot multiplication", |v| self.bin_op(op, v)),
+                    _ => self.dot2(value, "unsupported value types for dot multiplication", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Div => {
@@ -833,9 +833,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot divistion"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot division", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot division", |v| self.bin_op(op, v)),
-                    (_, _) => self.apply_dot_fun2(value, "unsupported value types for dot division", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot division", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot division", |v| self.bin_op(op, v)),
+                    (_, _) => self.dot2(value, "unsupported value types for dot division", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Add => {
@@ -930,9 +930,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot addition", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot addition", |v| self.bin_op(op, v)),
-                    (_, _) => self.apply_dot_fun2(value, "unsupported value types for dot addition", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot addition", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot addition", |v| self.bin_op(op, v)),
+                    (_, _) => self.dot2(value, "unsupported value types for dot addition", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Sub => {
@@ -986,9 +986,9 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.apply_dot_fun1("unsupported value types for dot subtraction", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.apply_dot_fun1("unsupported value types for dot subtraction", |v| self.bin_op(op, v)),
-                    (_, _) => self.apply_dot_fun2(value, "unsupported value types for dot subtraction", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot subtraction", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot subtraction", |v| self.bin_op(op, v)),
+                    (_, _) => self.dot2(value, "unsupported value types for dot subtraction", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Lt => {
