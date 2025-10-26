@@ -28,6 +28,12 @@ struct DocEnv
     current_mod: Arc<RwLock<ModNode<String, Option<String>>>>,
 }
 
+impl DocEnv
+{
+    fn new(root_mod: Arc<RwLock<ModNode<String, Option<String>>>>) -> Self
+    { DocEnv { root_mod: root_mod.clone(), current_mod: root_mod, } }
+}
+
 pub struct Parser<'a>
 {
     path: Arc<String>,
@@ -37,17 +43,17 @@ pub struct Parser<'a>
 
 impl<'a> Parser<'a>
 {
-    pub fn new_with_doc_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
+    pub fn new_with_doc_root_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
     {
         let doc_env = match doc_root_mod {
-            Some(doc_root_mod) => Some(DocEnv { root_mod: doc_root_mod.clone(), current_mod: doc_root_mod, }),
+            Some(doc_root_mod) => Some(DocEnv::new(doc_root_mod.clone())),
             None => None,
         };
         Parser { path, tokens: PushbackIter::new(tokens), doc_env, }
     }
 
     pub fn new(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>) -> Self
-    { Self::new_with_doc_mod(path, tokens, None) }
+    { Self::new_with_doc_root_mod(path, tokens, None) }
     
     pub fn doc_root_mod(&self) -> Option<&Arc<RwLock<ModNode<String, Option<String>>>>>
     { 
