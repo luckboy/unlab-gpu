@@ -108,8 +108,12 @@ impl Env
     pub fn pop_local_vars(&mut self)
     { self.stack.pop(); }
     
-    pub fn clear_stack(&mut self)
-    { self.stack.clear(); }
+    pub fn reset(&mut self)
+    {
+        self.current_mod = self.root_mod.clone();
+        self.mod_idents.clear();
+        self.stack.clear();
+    }
     
     fn mod_pair_for_name<'a>(&self, name: &'a Name, is_var: &mut bool) -> Result<(Option<Arc<RwLock<ModNode<Value, ()>>>>, &'a String)>
     {
