@@ -1052,14 +1052,14 @@ impl Value
 
     fn fmt_with_indent(&self, f: &mut fmt::Formatter<'_>, indent: usize, is_width: bool) -> fmt::Result
     {
-        let width = if is_width { 10 } else { 0 };
+        let width = if is_width { 11 } else { 0 };
         match self {
             Value::None => write!(f, "{:>width$}", "none")?,
             Value::Bool(false) => write!(f, "{:>width$}", "false")?,
             Value::Bool(true) => write!(f, "{:>width$}", "true")?,
             Value::Int(n) => write!(f, "{:>width$}", n)?,
             Value::Float(n) => {
-                if format!("{:.4}", n).len() > 10 {
+                if format!("{:.4}", n).len() > 11 {
                     write!(f, "{:>width$.4e}", n)?;
                 } else {
                     write!(f, "{:>width$.4}", n)?;
