@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use std::cmp::Ordering;
 use std::fmt;
 use std::ops::Neg;
+use std::ops::Not;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Sub;
@@ -1194,6 +1195,22 @@ impl Neg for &Value
     
     fn neg(self) -> Self::Output
     { self.unary_op(UnaryOp::Neg).unwrap() }
+}
+
+impl Not for Value
+{
+    type Output = Self;
+    
+    fn not(self) -> Self::Output
+    { self.unary_op(UnaryOp::Not).unwrap() }
+}
+
+impl Not for &Value
+{
+    type Output = Value;
+    
+    fn not(self) -> Self::Output
+    { self.unary_op(UnaryOp::Not).unwrap() }
 }
 
 impl Add for Value
