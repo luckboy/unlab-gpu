@@ -1471,8 +1471,8 @@ impl Object
                 }
                 Ok(true)
             },
-            (Object::MatrixRowSlice(a, ai), Object::MatrixRowSlice(b, bi)) => {
-                match (&**a, &**b) {
+            (Object::MatrixRowSlice(matrix_array, ai), Object::MatrixRowSlice(matrix_array2, bi)) => {
+                match (&**matrix_array, &**matrix_array2) {
                     (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
                         if a_col_count != b_col_count {
                             return Ok(false);
