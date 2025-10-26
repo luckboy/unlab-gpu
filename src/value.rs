@@ -462,16 +462,16 @@ impl Value
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
                     },
                     (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
-                        let idents: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
-                        let idents2: BTreeSet<String> = fields2.keys().map(|s| s.clone()).collect();
+                        let idents: BTreeSet<&String> = fields.keys().collect();
+                        let idents2: BTreeSet<&String> = fields2.keys().collect();
                         if idents != idents2 {
                             return Err(Error::Interp(String::from("field names of two structures aren't equal")));
                         }
                         let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
                         for ident in &idents {
-                            match (fields.get(ident), fields2.get(ident)) {
+                            match (fields.get(*ident), fields2.get(*ident)) {
                                 (Some(field), Some(field2)) => {
-                                    new_fields.insert(ident.clone(), field.apply_dot_fun2_for_elem_with_fun_ref(field2, err_msg, f)?);
+                                    new_fields.insert((*ident).clone(), field.apply_dot_fun2_for_elem_with_fun_ref(field2, err_msg, f)?);
                                 },
                                 (_, _) => return Err(Error::Interp(String::from("no field value"))),
                             }
@@ -876,18 +876,18 @@ impl Value
                             },
                             (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
                                 let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
-                                let idents: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
-                                let idents2: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
-                                let idents3: Vec<String> = idents.union(&idents2).map(|s| s.clone()).collect();
+                                let idents: BTreeSet<&String> = fields.keys().collect();
+                                let idents2: BTreeSet<&String> = fields.keys().collect();
+                                let idents3: Vec<&String> = idents.union(&idents2).map(|s| *s).collect();
                                 for ident in &idents3 {
-                                    match fields.get(ident) {
+                                    match fields.get(*ident) {
                                         Some(field) => {
-                                            new_fields.insert(ident.clone(), field.clone());
+                                            new_fields.insert((*ident).clone(), field.clone());
                                         },
                                         None => {
-                                            match fields2.get(ident) {
+                                            match fields2.get(*ident) {
                                                 Some(field2) => {
-                                                    new_fields.insert(ident.clone(), field2.clone());
+                                                    new_fields.insert((*ident).clone(), field2.clone());
                                                 },
                                                 None => (),
                                             }
@@ -1518,13 +1518,13 @@ impl MutObject
                 Ok(true)
             },
             (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
-                let idents: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
-                let idents2: BTreeSet<String> = fields2.keys().map(|s| s.clone()).collect();
+                let idents: BTreeSet<&String> = fields.keys().collect();
+                let idents2: BTreeSet<&String> = fields2.keys().collect();
                 if idents != idents2 {
                     return Ok(false);
                 }
                 for ident in &idents {
-                    match (fields.get(ident), fields2.get(ident)) {
+                    match (fields.get(*ident), fields2.get(*ident)) {
                         (Some(field), Some(field2)) => {
                             if !f(field, field2)? {
                                 return Ok(false);
