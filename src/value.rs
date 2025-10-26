@@ -1561,16 +1561,34 @@ impl<'a> Iterator for Iter<'a>
         match &mut self.iter_enum {
             IterEnum::IntRange(from, to, step, is_stopped) => {
                 if !*is_stopped {
-                    let current = if *from <= *to {
-                        Some(*from)
-                    } else {
-                        None
-                    };
-                    if *from < *to {
-                        *from += *step;
+                    let current = if *step > 0 {
+                        let tmp_current = if *from <= *to {
+                            Some(*from)
+                        } else {
+                            None
+                        };
+                        if *from < *to {
+                            *from += *step;
+                        } else {
+                            *is_stopped = true;
+                        }
+                        tmp_current
+                    } else if *step < 0 {
+                        let tmp_current = if *from >= *to {
+                            Some(*from)
+                        } else {
+                            None
+                        };
+                        if *from > *to {
+                            *from += *step;
+                        } else {
+                            *is_stopped = true;
+                        }
+                        tmp_current
                     } else {
                         *is_stopped = true;
-                    }
+                        return Some(Err(Error::Interp(String::from("range step is zero"))));
+                    };
                     match current {
                         Some(current) => Some(Ok(Value::Int(current))),
                         None => None,
@@ -1581,16 +1599,34 @@ impl<'a> Iterator for Iter<'a>
             },
             IterEnum::FloatRange(from, to, step, is_stopped) => {
                 if !*is_stopped {
-                    let current = if *from <= *to {
-                        Some(*from)
-                    } else {
-                        None
-                    };
-                    if *from < *to {
-                        *from += *step;
+                    let current = if *step > 0.0 {
+                        let tmp_current = if *from <= *to {
+                            Some(*from)
+                        } else {
+                            None
+                        };
+                        if *from < *to {
+                            *from += *step;
+                        } else {
+                            *is_stopped = true;
+                        }
+                        tmp_current
+                    } else if *step < 0.0 {
+                        let tmp_current = if *from >= *to {
+                            Some(*from)
+                        } else {
+                            None
+                        };
+                        if *from > *to {
+                            *from += *step;
+                        } else {
+                            *is_stopped = true;
+                        }
+                        tmp_current
                     } else {
                         *is_stopped = true;
-                    }
+                        return Some(Err(Error::Interp(String::from("range step is zero"))));
+                    };
                     match current {
                         Some(current) => Some(Ok(Value::Float(current))),
                         None => None,
