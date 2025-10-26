@@ -392,19 +392,19 @@ impl Value
             Value::Ref(object) => {
                 let object_g = rw_lock_read(&**object)?;
                 match &*object_g {
-                    MutObject::Array(xs) => {
-                        let mut ys: Vec<Value> = Vec::new();
-                        for x in xs {
-                            ys.push(x.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
+                    MutObject::Array(elems) => {
+                        let mut new_elems: Vec<Value> = Vec::new();
+                        for elem in elems {
+                            new_elems.push(elem.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
                         }
-                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(ys)))))
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
                     },
-                    MutObject::Struct(xs) => {
-                        let mut ys: BTreeMap<String, Value> = BTreeMap::new();
-                        for (ident, x) in xs {
-                            ys.insert(ident.clone(), x.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
+                    MutObject::Struct(fields) => {
+                        let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
+                        for (ident, field) in fields {
+                            new_fields.insert(ident.clone(), field.apply_dot_fun1_for_elem_with_fun_ref(err_msg, f)?);
                         }
-                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(ys)))))
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(new_fields)))))
                     },
                 }
             },
@@ -451,32 +451,32 @@ impl Value
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
                 match (&*object_g, &*object2_g) {
-                    (MutObject::Array(xs), MutObject::Array(ys)) => {
-                        if xs.len() != ys.len() {
+                    (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                        if elems.len() != elems2.len() {
                             return Err(Error::Interp(String::from("lengths of two arrays aren't equal")));
                         }
-                        let mut zs: Vec<Value> = Vec::new();
-                        for (x, y) in xs.iter().zip(ys.iter()) {
-                            zs.push(x.apply_dot_fun2_for_elem_with_fun_ref(y, err_msg, f)?);
+                        let mut new_elems: Vec<Value> = Vec::new();
+                        for (elem, elem2) in elems.iter().zip(elems2.iter()) {
+                            new_elems.push(elem.apply_dot_fun2_for_elem_with_fun_ref(elem2, err_msg, f)?);
                         }
-                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(zs)))))
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
                     },
-                    (MutObject::Struct(xs), MutObject::Struct(ys)) => {
-                        let idents: BTreeSet<String> = xs.keys().map(|s| s.clone()).collect();
-                        let idents2: BTreeSet<String> = ys.keys().map(|s| s.clone()).collect();
+                    (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
+                        let idents: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
+                        let idents2: BTreeSet<String> = fields2.keys().map(|s| s.clone()).collect();
                         if idents != idents2 {
                             return Err(Error::Interp(String::from("field names of two structures aren't equal")));
                         }
-                        let mut zs: BTreeMap<String, Value> = BTreeMap::new();
+                        let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
                         for ident in &idents {
-                            match (xs.get(ident), ys.get(ident)) {
-                                (Some(x), Some(y)) => {
-                                    zs.insert(ident.clone(), x.apply_dot_fun2_for_elem_with_fun_ref(y, err_msg, f)?);
+                            match (fields.get(ident), fields2.get(ident)) {
+                                (Some(field), Some(field2)) => {
+                                    new_fields.insert(ident.clone(), field.apply_dot_fun2_for_elem_with_fun_ref(field2, err_msg, f)?);
                                 },
                                 (_, _) => return Err(Error::Interp(String::from("no field value"))),
                             }
                         }
-                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(zs)))))
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(new_fields)))))
                     },
                     (_, _) => Err(Error::Interp(String::from("two object types aren't equal"))),
                 }
@@ -555,28 +555,28 @@ impl Value
             Value::Ref(object) => {
                 let object_g = rw_lock_read(&**object)?;
                 match &*object_g {
-                    MutObject::Array(xs) => {
+                    MutObject::Array(elems) => {
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
                                 let i = idx_value.to_i64();
-                                if i >= 1 && i <= (xs.len() as i64) {
+                                if i >= 1 && i <= (elems.len() as i64) {
                                     return Err(Error::Interp(String::from("index out of bounds")));
                                 }
-                                match xs.get((i - 1) as usize) { 
-                                    Some(x) => Ok(x.clone()),
+                                match elems.get((i - 1) as usize) { 
+                                    Some(elem) => Ok(elem.clone()),
                                     None => Err(Error::Interp(String::from("no element"))),
                                 }
                             },
                             _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
                         }
                     },
-                    MutObject::Struct(xs) => {
+                    MutObject::Struct(fields) => {
                         match idx_value {
                             Value::Object(idx_object) => {
                                 match &**idx_object {
                                     Object::String(ident) => {
-                                        match xs.get(ident) {
-                                            Some(x) => Ok(x.clone()),
+                                        match fields.get(ident) {
+                                            Some(field) => Ok(field.clone()),
                                             None => Err(Error::Interp(String::from("not found key")))
                                         }
                                     },
@@ -598,16 +598,16 @@ impl Value
             Value::Ref(object) => {
                 let mut object_g = rw_lock_write(&**object)?;
                 match &mut *object_g {
-                    MutObject::Array(xs) => {
+                    MutObject::Array(elems) => {
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
                                 let i = idx_value.to_i64();
-                                if i >= 1 && i <= (xs.len() as i64) {
+                                if i >= 1 && i <= (elems.len() as i64) {
                                     return Err(Error::Interp(String::from("index out of bounds")));
                                 }
-                                match xs.get_mut((i - 1) as usize) {
-                                    Some(x) => {
-                                        *x = value;
+                                match elems.get_mut((i - 1) as usize) {
+                                    Some(elem) => {
+                                        *elem = value;
                                         Ok(())
                                     }
                                     None => Err(Error::Interp(String::from("no element"))),
@@ -616,12 +616,12 @@ impl Value
                             _ => Err(Error::Interp(String::from("unsupported index value type for mutable indexing"))),
                         }
                     },
-                    MutObject::Struct(xs) => {
+                    MutObject::Struct(fields) => {
                         match idx_value {
                             Value::Object(idx_object) => {
                                 match &**idx_object {
                                     Object::String(ident) => {
-                                        xs.insert(ident.clone(), value);
+                                        fields.insert(ident.clone(), value);
                                         Ok(())
                                     },
                                     _ => Err(Error::Interp(String::from("unsupported index object type"))),
@@ -642,9 +642,9 @@ impl Value
             Value::Ref(object) => {
                 let object_g = rw_lock_read(&**object)?;
                 match &*object_g {
-                    MutObject::Struct(xs) => {
-                        match xs.get(ident) {
-                            Some(x) => Ok(x.clone()),
+                    MutObject::Struct(fields) => {
+                        match fields.get(ident) {
+                            Some(field) => Ok(field.clone()),
                             None => Err(Error::Interp(format!("structure hasn't field {}", ident))),
                         }
                     },
@@ -661,8 +661,8 @@ impl Value
             Value::Ref(object) => {
                 let mut object_g = rw_lock_write(&**object)?;
                 match &mut *object_g {
-                    MutObject::Struct(xs) => {
-                        xs.insert(ident.clone(), value);
+                    MutObject::Struct(fields) => {
+                        fields.insert(ident.clone(), value);
                         Ok(())
                     },
                     _ => Err(Error::Interp(format!("unsupported object type for mutable field {}", ident))),
@@ -869,32 +869,32 @@ impl Value
                         let object_g = rw_lock_read(&**object)?;
                         let object2_g = rw_lock_read(&**object2)?;
                         match (&*object_g, &*object2_g) {
-                            (MutObject::Array(xs), MutObject::Array(ys)) => {
-                                let mut zs = xs.clone();
-                                zs.extend_from_slice(ys.as_slice());
-                                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(zs)))))
+                            (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                                let mut new_elems = elems.clone();
+                                new_elems.extend_from_slice(elems2.as_slice());
+                                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
                             },
-                            (MutObject::Struct(xs), MutObject::Struct(ys)) => {
-                                let mut zs: BTreeMap<String, Value> = BTreeMap::new();
-                                let idents: BTreeSet<String> = xs.keys().map(|s| s.clone()).collect();
-                                let idents2: BTreeSet<String> = ys.keys().map(|s| s.clone()).collect();
+                            (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
+                                let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
+                                let idents: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
+                                let idents2: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
                                 let idents3: Vec<String> = idents.union(&idents2).map(|s| s.clone()).collect();
                                 for ident in &idents3 {
-                                    match xs.get(ident) {
-                                        Some(x) => {
-                                            zs.insert(ident.clone(), x.clone());
+                                    match fields.get(ident) {
+                                        Some(field) => {
+                                            new_fields.insert(ident.clone(), field.clone());
                                         },
                                         None => {
-                                            match ys.get(ident) {
-                                                Some(y) => {
-                                                    zs.insert(ident.clone(), y.clone());
+                                            match fields2.get(ident) {
+                                                Some(field2) => {
+                                                    new_fields.insert(ident.clone(), field2.clone());
                                                 },
                                                 None => (),
                                             }
                                         },
                                     }
                                 }
-                                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(zs)))))
+                                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(new_fields)))))
                             },
                             _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
                         }
@@ -1140,26 +1140,26 @@ impl Value
             Value::Ref(object) => {
                 let object_g = rw_lock_read(&**object).unwrap();
                 match &*object_g {
-                    MutObject::Array(xs) => {
-                        if !xs.is_empty() {
+                    MutObject::Array(elems) => {
+                        if !elems.is_empty() {
                             let new_indent = indent + 4;
                             write!(f, ".[")?;
-                            for x in xs {
+                            for elem in elems {
                                 write!(f, " ")?;
-                                x.fmt_with_indent(f, new_indent, is_width)?;
+                                elem.fmt_with_indent(f, new_indent, is_width)?;
                             }
                             write!(f, " .]")?;
                         } else {
                             write!(f, ".[.]")?;
                         }
                     },
-                    MutObject::Struct(xs) => {
-                        if !xs.is_empty() {
+                    MutObject::Struct(fields) => {
+                        if !fields.is_empty() {
                             let new_indent = indent + 4;
                             writeln!(f, "{{")?;
-                            for (ident, x) in xs {
+                            for (ident, field) in fields {
                                 write!(f, "{}: ", ident)?;
-                                x.fmt_with_indent(f, new_indent, is_width)?;
+                                field.fmt_with_indent(f, new_indent, is_width)?;
                                 writeln!(f, "")?;
                             }
                             write!(f, "}}")?;
@@ -1509,24 +1509,24 @@ impl MutObject
         where F: FnMut(&Value, &Value) -> Result<bool>
     {
         match (self, object) {
-            (MutObject::Array(xs), MutObject::Array(ys)) => {
-                for (x, y) in xs.iter().zip(ys.iter()) {
-                    if !f(x, y)? {
+            (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                for (elem, elem2) in elems.iter().zip(elems2.iter()) {
+                    if !f(elem, elem2)? {
                         return Ok(false);
                     }
                 }
                 Ok(true)
             },
-            (MutObject::Struct(xs), MutObject::Struct(ys)) => {
-                let idents: BTreeSet<String> = xs.keys().map(|s| s.clone()).collect();
-                let idents2: BTreeSet<String> = ys.keys().map(|s| s.clone()).collect();
+            (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
+                let idents: BTreeSet<String> = fields.keys().map(|s| s.clone()).collect();
+                let idents2: BTreeSet<String> = fields2.keys().map(|s| s.clone()).collect();
                 if idents != idents2 {
                     return Ok(false);
                 }
                 for ident in &idents {
-                    match (xs.get(ident), ys.get(ident)) {
-                        (Some(x), Some(y)) => {
-                            if !f(x, y)? {
+                    match (fields.get(ident), fields2.get(ident)) {
+                        (Some(field), Some(field2)) => {
+                            if !f(field, field2)? {
                                 return Ok(false);
                             }
                         },
@@ -1664,12 +1664,12 @@ impl<'a> Iterator for Iter<'a>
                     match rw_lock_read(&**array) {
                         Ok(array_g) => {
                             match &*array_g {
-                                MutObject::Array(xs) => {
-                                    if *i < xs.len() {
+                                MutObject::Array(elems) => {
+                                    if *i < elems.len() {
                                         let j = *i;
                                         *i += 1;
-                                        match xs.get(j) {
-                                            Some(x) => Some(Ok(x.clone())),
+                                        match elems.get(j) {
+                                            Some(elem) => Some(Ok(elem.clone())),
                                             None => {
                                                 *is_stopped = true;
                                                 Some(Err(Error::Interp(String::from("invalid index"))))
