@@ -116,7 +116,9 @@ impl Interp
     {
         self.ret_value = Value::None;
         for node in nodes {
-            self.interpret_node(env, node)?;
+            let res = self.interpret_node(env, node);
+            self.ret_value = Value::None;
+            res?;
         }
         Ok(())
     }
