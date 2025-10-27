@@ -11,6 +11,20 @@ use crate::matrix::Matrix;
 use crate::error::*;
 use crate::value::*;
 
+fn matrix_res_create_and_set_elems(row_count: usize, col_count: usize, elems: &[f32]) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    Ok(frontend.create_matrix_and_set_elems(row_count, col_count, elems)?)
+}
+
+pub(crate) fn matrix_create_and_set_elems(row_count: usize, col_count: usize, elems: &[f32]) -> Result<Matrix>
+{
+    match matrix_res_create_and_set_elems(row_count, col_count, elems) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
 fn matrix_res_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;

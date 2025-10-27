@@ -5,9 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::collections::BTreeMap;
 use std::sync::Arc;
+use std::sync::RwLock;
 use crate::env::*;
 use crate::error::*;
+use crate::private::*;
 use crate::tree::*;
 use crate::value::*;
 
@@ -45,7 +48,7 @@ impl Interp
                                     Ok(()) => Ok(self.ret_value.clone()),
                                     Err(Error::Stop(Stop::Break)) => Err(Error::Interp(String::from("break isn't in loop"))),
                                     Err(Error::Stop(Stop::Continue)) => Err(Error::Interp(String::from("continue isn't in loop"))),
-                                    Err(Error::Stop(Stop::Break)) => {
+                                    Err(Error::Stop(Stop::Return)) => {
                                         self.stack_trace.clear();
                                         Ok(self.ret_value.clone())
                                     },
@@ -273,7 +276,7 @@ impl Interp
                 let fun_value = self.interpret_expr(env, &**expr2)?;
                 let mut arg_values: Vec<Value> = Vec::new();
                 for expr3 in exprs {
-                    arg_values.push(self.interpret_expr(env, &**expr2)?);
+                    arg_values.push(self.interpret_expr(env, &**expr3)?);
                 }
                 match self.apply_fun(env, &fun_value, arg_values.as_slice()) {
                     Ok(value) => Ok(value),
@@ -377,6 +380,174 @@ impl Interp
         }
     }
 
+    fn interpret_matrix_row(&mut self, env: &mut Env, matrix_row: &MatrixRow) -> Result<Vec<f32>>
+    {
+        match matrix_row {
+            MatrixRow::Row(exprs) => {
+                let mut xs: Vec<f32> = Vec::new();
+                for expr in exprs {
+                    let value = self.interpret_expr(env, &**expr)?;
+                    match value.to_opt_f32() {
+                        Some(x) => xs.push(x),
+                        None => {
+                            self.stack_trace.push((None, expr.pos().clone()));
+                            self.ret_value = Value::None;
+                            return Err(Error::Interp(String::from("can't convert value to floating-point number")));
+                        },
+                    }
+                }
+                Ok(xs)
+            },
+            MatrixRow::FilledRow(expr, expr2) => {
+                let value2 = self.interpret_expr(env, &**expr2)?;
+                match value2.to_opt_i64() {
+                    Some(n) => {
+                        let mut xs: Vec<f32> = Vec::new();
+                        for _ in 0..n {
+                            let value = self.interpret_expr(env, &**expr)?;
+                            match value.to_opt_f32() {
+                                Some(x) => xs.push(x),
+                                None => {
+                                    self.stack_trace.push((None, expr.pos().clone()));
+                                    self.ret_value = Value::None;
+                                    return Err(Error::Interp(String::from("can't convert value to floating-point number")));
+                                },
+                            }
+                        }
+                        Ok(xs)
+                    },
+                    None => {
+                        self.stack_trace.push((None, expr2.pos().clone()));
+                        self.ret_value = Value::None;
+                        Err(Error::Interp(String::from("can't convert value to integer")))
+                    },
+                }
+            },
+        }
+    }
+
     fn interpret_lit(&mut self, env: &mut Env, lit: &Lit, pos: &Pos) -> Result<Value>
-    { Ok(Value::None) }
+    {
+        match lit {
+            Lit::None => Ok(Value::None),
+            Lit::Bool(b) => Ok(Value::Bool(*b)),
+            Lit::Int(n) => Ok(Value::Int(*n)),
+            Lit::Float(n) => Ok(Value::Float(*n)),
+            Lit::String(s) => Ok(Value::Object(Arc::new(Object::String(s.clone())))),
+            Lit::Matrix(matrix_rows) => {
+                let mut xs: Vec<f32> = Vec::new();
+                let mut row_count = 0usize;
+                let mut col_count: Option<usize> = None;
+                for matrix_row in matrix_rows {
+                    let ys = self.interpret_matrix_row(env, matrix_row)?;
+                    if col_count.map(|n| n != ys.len()).unwrap_or(true) {
+                        xs.extend_from_slice(ys.as_slice());
+                        col_count = Some(ys.len());
+                    } else {
+                        self.stack_trace.push((None, pos.clone()));
+                        self.ret_value = Value::None;
+                        return Err(Error::Interp(String::from("number of columns of matrix rows aren't equal")));
+                    }
+                    match row_count.checked_add(1) {
+                        Some(new_row_count) => row_count = new_row_count,
+                        None => {
+                            self.stack_trace.push((None, pos.clone()));
+                            self.ret_value = Value::None;
+                            return Err(Error::Interp(String::from("too many matrix rows")));
+                        },
+                    }
+                }
+                match matrix_create_and_set_elems(row_count, col_count.unwrap_or(0), xs.as_slice()) {
+                    Ok(a) => Ok(Value::Object(Arc::new(Object::Matrix(a)))),
+                    Err(err) => {
+                        self.stack_trace.push((None, pos.clone()));
+                        self.ret_value = Value::None;
+                        Err(err)
+                    },
+                }
+            },
+            Lit::FilledMatrix(matrix_row, expr) => {
+                let value = self.interpret_expr(env, &**expr)?;
+                match value.to_opt_i64() {
+                    Some(n) => {
+                        let mut  xs: Vec<f32> = Vec::new();
+                        let mut row_count = 0usize;
+                        let mut col_count: Option<usize> = None;
+                        for _ in 0..n {
+                            let ys = self.interpret_matrix_row(env, matrix_row)?;
+                            if col_count.map(|n| n != ys.len()).unwrap_or(true) {
+                                xs.extend_from_slice(ys.as_slice());
+                                col_count = Some(ys.len());
+                            } else {
+                                self.stack_trace.push((None, pos.clone()));
+                                self.ret_value = Value::None;
+                                return Err(Error::Interp(String::from("number of columns of matrix rows aren't equal")));
+                            }
+                            match row_count.checked_add(1) {
+                                Some(new_row_count) => row_count = new_row_count,
+                                None => {
+                                    self.stack_trace.push((None, pos.clone()));
+                                    self.ret_value = Value::None;
+                                    return Err(Error::Interp(String::from("too many matrix rows")));
+                                },
+                            }
+                        }
+                        match matrix_create_and_set_elems(row_count, col_count.unwrap_or(0), xs.as_slice()) {
+                            Ok(a) => Ok(Value::Object(Arc::new(Object::Matrix(a)))),
+                            Err(err) => {
+                                self.stack_trace.push((None, pos.clone()));
+                                self.ret_value = Value::None;
+                                Err(err)
+                            },
+                        }
+                    },
+                    None => {
+                        self.stack_trace.push((None, expr.pos().clone()));
+                        self.ret_value = Value::None;
+                        Err(Error::Interp(String::from("can't convert value to integer")))
+                    },
+                }
+            },
+            Lit::Array(exprs) => {
+                let mut elems: Vec<Value> = Vec::new();
+                for expr in exprs {
+                    elems.push(self.interpret_expr(env, &**expr)?);
+                }
+                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+            },
+            Lit::FilledArray(expr, expr2) => {
+                let value2 = self.interpret_expr(env, &**expr2)?;
+                match value2.to_opt_i64() {
+                    Some(n) => {
+                        let mut elems: Vec<Value> = Vec::new();
+                        for _ in 0..n {
+                            elems.push(self.interpret_expr(env, &**expr)?);
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                    },
+                    None => {
+                        self.stack_trace.push((None, expr2.pos().clone()));
+                        self.ret_value = Value::None;
+                        Err(Error::Interp(String::from("can't convert value to integer")))
+                    },
+                }
+            },
+            Lit::Struct(field_pairs) => {
+                let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+                for field_pair in field_pairs {
+                    match field_pair {
+                        FieldPair(ident, expr, pos2) => {
+                            if fields.contains_key(ident) {
+                                self.stack_trace.push((None, pos2.clone()));
+                                self.ret_value = Value::None;
+                                return Err(Error::Interp(format!("already defined field {}", ident)));
+                            }
+                            fields.insert(ident.clone(), self.interpret_expr(env, &**expr)?);
+                        },
+                    }
+                }
+                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields)))))
+            },
+        }
+    }
 }
