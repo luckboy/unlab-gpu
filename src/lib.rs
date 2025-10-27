@@ -10,6 +10,7 @@ pub use unmtx_gpu as matrix;
 pub mod doc;
 pub mod env;
 pub mod error;
+pub mod interp;
 pub mod lexer;
 pub mod mod_node;
 pub mod parser;

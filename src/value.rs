@@ -26,6 +26,7 @@ use std::sync::Weak;
 use crate::matrix::Matrix;
 use crate::env::*;
 use crate::error::*;
+use crate::interp::*;
 use crate::private::*;
 use crate::tree::*;
 use crate::utils::*;
@@ -1227,7 +1228,7 @@ pub enum Object
     FloatRange(f32, f32, f32),
     Matrix(Matrix),
     Fun(Vec<String>, String, Arc<Fun>),
-    BuiltinFun(String, fn(&mut Env, Vec<Value>) -> Result<Value>),
+    BuiltinFun(String, fn(&mut Interp, &mut Env, Vec<Value>) -> Result<Value>),
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
     MatrixRowSlice(Arc<Object>, usize),
     Error(String, String),

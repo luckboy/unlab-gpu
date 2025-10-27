@@ -33,6 +33,15 @@ pub enum ParserEofFlag
     Repetition,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+pub enum Stop
+{
+    Break,
+    Continue,
+    Return,
+    Quit,
+}
+
 #[derive(Debug)]
 pub enum Error
 {
@@ -44,6 +53,7 @@ pub enum Error
     RwLockRead,
     RwLockWrite,
     AlreadyAddedModNode,
+    Stop(Stop),
 }
 
 impl error::Error for Error
@@ -62,6 +72,10 @@ impl fmt::Display for Error
             Error::RwLockRead => write!(f, "can't read r/w lock"),
             Error::RwLockWrite => write!(f, "can't write r/w lock"),
             Error::AlreadyAddedModNode => write!(f, "already added module node"),
+            Error::Stop(Stop::Break) => write!(f, "stopped by break"),
+            Error::Stop(Stop::Continue) => write!(f, "stopped by continue"),
+            Error::Stop(Stop::Return) => write!(f, "stopped by return"),
+            Error::Stop(Stop::Quit) => write!(f, "stopped by quit"),
         }
     }
 }

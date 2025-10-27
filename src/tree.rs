@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::fmt;
 use std::sync::Arc;
 use crate::error::*;
 
@@ -231,4 +232,27 @@ pub enum Name
     Abs(Vec<String>, String),
     Rel(Vec<String>, String),
     Var(String),
+}
+
+impl fmt::Display for Name
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        match self {
+            Name::Abs(idents, ident) => {
+                write!(f, "::root")?;
+                for ident2 in idents {
+                    write!(f, "::{}", ident2)?;
+                }
+                write!(f, "::{}", ident)
+            },
+            Name::Rel(idents, ident) => {
+                for ident2 in idents {
+                    write!(f, "::{}", ident2)?;
+                }
+                write!(f, "::{}", ident)
+            },
+            Name::Var(ident) => write!(f, "{}", ident),
+        }
+    }
 }
