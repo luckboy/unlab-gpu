@@ -131,9 +131,9 @@ impl Interp
                     Mod(nodes) => {
                         match env.add_and_push_mod(ident.clone()) {
                             Ok(true) => {
-                                let res = self.interpret_nodes(env, nodes.as_slice());
+                                self.interpret_nodes(env, nodes.as_slice())?;
                                 match env.pop_mod() {
-                                    Ok(true) => return res,
+                                    Ok(true) => (),
                                     Ok(false) => {
                                         self.stack_trace.push((None, pos.clone()));
                                         self.ret_value = Value::None;
