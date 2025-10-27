@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::RwLock;
 use crate::env::*;
@@ -33,7 +34,26 @@ impl Interp
     { self.stack_trace.clear(); }
     
     pub fn interpret(&mut self, env: &mut Env, tree: &Tree) -> Result<()>
-    { Ok(()) }
+    { 
+        match tree {
+            Tree(nodes) => {
+                let res = match self.interpret_nodes(env, nodes) {
+                    Ok(()) => Ok(()),
+                    Err(Error::Stop(Stop::Break)) => Err(Error::Interp(String::from("break isn't in loop"))),
+                    Err(Error::Stop(Stop::Continue)) => Err(Error::Interp(String::from("continue isn't in loop"))),
+                    Err(Error::Stop(Stop::Return)) => Err(Error::Interp(String::from("return isn't function"))),
+                    Err(err) => Err(err),
+                };
+                match res {
+                    Ok(()) => Ok(()),
+                    Err(err) => {
+                        env.reset()?;
+                        Err(err)
+                    },
+                }
+            },
+        }
+    }
 
     pub fn apply_fun(&mut self, env: &mut Env, fun_value: &Value, arg_values: &[Value]) -> Result<Value>
     {
@@ -84,6 +104,96 @@ impl Interp
         }
     }
 
+    fn interpret_node(&mut self, env: &mut Env, node: &Node) -> Result<()>
+    {
+        match node {
+            Node::Def(def) => self.interpret_def(env, &**def),
+            Node::Stat(stat) => self.interpret_stat(env, &**stat),
+        }
+    }
+
+    fn interpret_nodes(&mut self, env: &mut Env, nodes: &[Node]) -> Result<()>
+    {
+        self.ret_value = Value::None;
+        for node in nodes {
+            self.interpret_node(env, node)?;
+        }
+        Ok(())
+    }
+    
+    fn interpret_def(&mut self, env: &mut Env, def: &Def) -> Result<()>
+    {
+        match def {
+            Def::Mod(ident, mod1, pos) => {
+                match &**mod1 {
+                    Mod(nodes) => {
+                        match env.add_and_push_mod(ident.clone()) {
+                            Ok(true) => {
+                                let res = self.interpret_nodes(env, nodes.as_slice());
+                                match env.pop_mod() {
+                                    Ok(true) => return res,
+                                    Ok(false) => {
+                                        self.stack_trace.push((None, pos.clone()));
+                                        self.ret_value = Value::None;
+                                        return Err(Error::Interp(format!("can't pop module {}", ident)));
+                                    },
+                                    Err(err) => {
+                                        self.stack_trace.push((None, pos.clone()));
+                                        self.ret_value = Value::None;
+                                        return Err(err);
+                                    },
+                                }
+                            },
+                            Ok(false) => {
+                                self.stack_trace.push((None, pos.clone()));
+                                self.ret_value = Value::None;
+                                return Err(Error::Interp(format!("already defined module {}", ident)));
+                            },
+                            Err(err) => {
+                                self.stack_trace.push((None, pos.clone()));
+                                self.ret_value = Value::None;
+                                return Err(err);
+                            },
+                        }
+                    },
+                }
+            },
+            Def::Fun(ident, fun, pos) => {
+                match &**fun {
+                    Fun(args, _) => {
+                        let mut idents: BTreeSet<&String> = BTreeSet::new();
+                        for arg in args {
+                            match arg {
+                                Arg(ident, pos2) => {
+                                    if idents.contains(&ident) {
+                                        self.stack_trace.push((None, pos2.clone()));
+                                        self.ret_value = Value::None;
+                                        return Err(Error::Interp(format!("already defined argument {}", ident)));
+                                    }
+                                    idents.insert(ident);
+                                },
+                            }
+                        }
+                        match env.add_fun(ident.clone(), fun.clone()) {
+                            Ok(true) => (),
+                            Ok(false) => {
+                                self.stack_trace.push((None, pos.clone()));
+                                self.ret_value = Value::None;
+                                return Err(Error::Interp(format!("already variable {} is set", ident)));
+                            },
+                            Err(err) => {
+                                self.stack_trace.push((None, pos.clone()));
+                                self.ret_value = Value::None;
+                                return Err(err);
+                            },
+                        }
+                    },
+                }
+            },
+        }
+        Ok(())
+    }
+    
     fn interpret_stat(&mut self, env: &mut Env, stat: &Stat) -> Result<()>
     {
         match stat {
