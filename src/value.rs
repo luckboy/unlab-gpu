@@ -290,6 +290,9 @@ impl Value
         where F: FnMut(&Value, &Value) -> Result<Value>
     { self.dot2_with_fun_ref(value, err_msg, &mut f) }
 
+    pub fn apply(&self, interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+    { interp.apply_fun(env, self, arg_values) }
+    
     pub fn elem(&self, idx_value: &Value) -> Result<Value>
     {
         match self {
