@@ -479,7 +479,7 @@ impl Value
                         }
                         Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(new_fields)))))
                     },
-                    (_, _) => Err(Error::Interp(String::from("two object types aren't equal"))),
+                    (_, _) => Err(Error::Interp(String::from("two types aren't equal"))),
                 }
             },
             (_, _) => Err(Error::Interp(String::from(err_msg))),
@@ -511,7 +511,7 @@ impl Value
                                     None => Err(Error::Interp(String::from("no character"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
                     Object::MatrixArray(row_count, _, _, _) => {
@@ -523,7 +523,7 @@ impl Value
                                 }
                                 Ok(Value::Object(Arc::new(Object::MatrixRowSlice(object.clone(), (i - 1) as usize))))
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
                     Object::MatrixRowSlice(matrix_array, i) => {
@@ -544,13 +544,13 @@ impl Value
                                             None => Err(Error::Interp(String::from("no element"))),
                                         }
                                     },
-                                    _ => Err(Error::Interp(String::from("unsupported object type"))),
+                                    _ => Err(Error::Interp(String::from("invalid matrix array type"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
-                    _ => Err(Error::Interp(String::from("unsupported object type for indexing"))),
+                    _ => Err(Error::Interp(String::from("unsupported type for indexing"))),
                 }
             },
             Value::Ref(object) => {
@@ -568,7 +568,7 @@ impl Value
                                     None => Err(Error::Interp(String::from("no element"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
                     MutObject::Struct(fields) => {
@@ -581,15 +581,15 @@ impl Value
                                             None => Err(Error::Interp(String::from("not found key")))
                                         }
                                     },
-                                    _ => Err(Error::Interp(String::from("unsupported index object type for indexing"))),
+                                    _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type for indexing"))),
+            _ => Err(Error::Interp(String::from("unsupported type for indexing"))),
         }
     }
 
@@ -614,7 +614,7 @@ impl Value
                                     None => Err(Error::Interp(String::from("no element"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for mutable indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
                     MutObject::Struct(fields) => {
@@ -625,15 +625,15 @@ impl Value
                                         fields.insert(ident.clone(), value);
                                         Ok(())
                                     },
-                                    _ => Err(Error::Interp(String::from("unsupported index object type"))),
+                                    _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                                 }
                             },
-                            _ => Err(Error::Interp(String::from("unsupported index value type for mutable indexing"))),
+                            _ => Err(Error::Interp(String::from("unsupported index type for indexing"))),
                         }
                     },
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type for mutable indexing"))),
+            _ => Err(Error::Interp(String::from("unsupported type for indexing"))),
         }
     }
 
@@ -649,10 +649,10 @@ impl Value
                             None => Err(Error::Interp(format!("structure hasn't field {}", ident))),
                         }
                     },
-                    _ => Err(Error::Interp(format!("unsupported object type for field {}", ident))),
+                    _ => Err(Error::Interp(format!("unsupported type for field {}", ident))),
                 }
             },
-            _ => Err(Error::Interp(format!("unsupported value type for field {}", ident))),
+            _ => Err(Error::Interp(format!("unsupported type for field {}", ident))),
         }
     }
 
@@ -666,10 +666,10 @@ impl Value
                         fields.insert(ident.clone(), value);
                         Ok(())
                     },
-                    _ => Err(Error::Interp(format!("unsupported object type for mutable field {}", ident))),
+                    _ => Err(Error::Interp(format!("unsupported type for mutable field {}", ident))),
                 }
             },
-            _ => Err(Error::Interp(format!("unsupported value type for mutable field {}", ident))),
+            _ => Err(Error::Interp(format!("unsupported type for mutable field {}", ident))),
         }
     }
 
@@ -681,17 +681,17 @@ impl Value
                     Value::Int(a) => {
                         match a.checked_neg() {
                             Some(b) => Ok(Value::Int(b)),
-                            None => Err(Error::Interp(String::from("overflow"))),
+                            None => Err(Error::Interp(String::from("overflow in negation"))),
                         }
                     },
                     Value::Float(a) => Ok(Value::Float(-a)),
                     Value::Object(object) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(a, 0.0)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object type for negation"))),
+                            _ => Err(Error::Interp(String::from("unsupported type for negation"))),
                         }
                     },
-                    _ => Err(Error::Interp(String::from("unsupported value type for negation"))),
+                    _ => Err(Error::Interp(String::from("unsupported type for negation"))),
                 }
             },
             UnaryOp::DotNeg => {
@@ -700,10 +700,10 @@ impl Value
                     Value::Object(object) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(a, 0.0)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object type for dot negation"))),
+                            _ => Err(Error::Interp(String::from("unsupported type for dot negation"))),
                         }
                     },
-                    _ => self.dot1("unsupported object type for dot negation", |v| v.unary_op(op)),
+                    _ => self.dot1("unsupported type for dot negation", |v| v.unary_op(op)),
                 }
             },
             UnaryOp::Not => Ok(Value::Bool(!self.to_bool())),
@@ -713,10 +713,10 @@ impl Value
                     Value::Object(object) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(a.transpose())))),
-                            _ => Err(Error::Interp(String::from("unsupported object type for transpose"))),
+                            _ => Err(Error::Interp(String::from("unsupported type for transpose"))),
                         }
                     },
-                    _ => Err(Error::Interp(String::from("unsupported value type for transpose"))),
+                    _ => Err(Error::Interp(String::from("unsupported type for transpose"))),
                 }
             },
         }
@@ -731,29 +731,29 @@ impl Value
                     (Value::Int(a), Value::Int(b)) => {
                         match a.checked_mul(*b) {
                             Some(c) => Ok(Value::Int(c)),
-                            None => Err(Error::Interp(String::from("overflow"))),
+                            None => Err(Error::Interp(String::from("overflow in multiplication"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() * value.to_f32())),
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for multiplication"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for multiplication"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for multiplication"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for multiplication"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for multiplication"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for multiplication"))),
                         }
                     },
-                    _ => Err(Error::Interp(String::from("unsupported value types for multiplication"))),
+                    _ => Err(Error::Interp(String::from("unsupported types for multiplication"))),
                 }
             },
             BinOp::DotMul => {
@@ -762,24 +762,24 @@ impl Value
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot multiplication"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot multiplication"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_elems(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot multiplication"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot multiplication"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot multiplication", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot multiplication", |v| self.bin_op(op, v)),
-                    _ => self.dot2(value, "unsupported value types for dot multiplication", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported types for dot multiplication", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported types for dot multiplication", |v| self.bin_op(op, v)),
+                    _ => self.dot2(value, "unsupported types for dot multiplication", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Div => {
@@ -791,7 +791,7 @@ impl Value
                                 if *b == 0 {
                                     Err(Error::Interp(String::from("division by zero")))
                                 } else {
-                                    Err(Error::Interp(String::from("overflow")))
+                                    Err(Error::Interp(String::from("overflow in division")))
                                 }
                             },
                         }
@@ -800,16 +800,16 @@ impl Value
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_div_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for division"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for division"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rdiv_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for division"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for division"))),
                         }
                     },
-                    (_, _) => Err(Error::Interp(String::from("unsupported value types for division"))),
+                    (_, _) => Err(Error::Interp(String::from("unsupported types for division"))),
                 }
             },
             BinOp::DotDiv => {
@@ -818,24 +818,24 @@ impl Value
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot division"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot division"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot division"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot division"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_div_elems(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot divistion"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot divistion"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot division", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot division", |v| self.bin_op(op, v)),
-                    (_, _) => self.dot2(value, "unsupported value types for dot division", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported types for dot division", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported types for dot division", |v| self.bin_op(op, v)),
+                    (_, _) => self.dot2(value, "unsupported types for dot division", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Add => {
@@ -843,27 +843,27 @@ impl Value
                     (Value::Int(a), Value::Int(b)) => {
                         match a.checked_add(*b) {
                             Some(c) => Ok(Value::Int(c)),
-                            None => Err(Error::Interp(String::from("overflow"))),
+                            None => Err(Error::Interp(String::from("overflow in addition"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() + value.to_f32())),
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for addition"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for addition"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::String(s), Object::String(t)) => Ok(Value::Object(Arc::new(Object::String(s.clone() + t.as_str())))),
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for addition"))),
                         }
                     },
                     (Value::Ref(object), Value::Ref(object2)) => {
@@ -897,10 +897,10 @@ impl Value
                                 }
                                 Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(new_fields)))))
                             },
-                            _ => Err(Error::Interp(String::from("unsupported object types for addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for addition"))),
                         }
                     },
-                    (_, _) => Err(Error::Interp(String::from("unsupported value types for addition"))),
+                    (_, _) => Err(Error::Interp(String::from("unsupported types for addition"))),
                 }
             },
             BinOp::DotAdd => {
@@ -915,24 +915,24 @@ impl Value
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot addition"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot addition"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot addition"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot addition"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot addition", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot addition", |v| self.bin_op(op, v)),
-                    (_, _) => self.dot2(value, "unsupported value types for dot addition", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported types for dot addition", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported types for dot addition", |v| self.bin_op(op, v)),
+                    (_, _) => self.dot2(value, "unsupported types for dot addition", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Sub => {
@@ -940,29 +940,29 @@ impl Value
                     (Value::Int(a), Value::Int(b)) => {
                         match a.checked_sub(*b) {
                             Some(c) => Ok(Value::Int(c)),
-                            None => Err(Error::Interp(String::from("overflow"))),
+                            None => Err(Error::Interp(String::from("overflow in subtraction"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() - value.to_f32())),
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for subtraction"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for subtraction"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for subtraction"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for subtraction"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for subtraction"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for subtraction"))),
                         }
                     },
-                    (_, _) => Err(Error::Interp(String::from("unsupported value types for subtraction"))),
+                    (_, _) => Err(Error::Interp(String::from("unsupported types for subtraction"))),
                 }
             },
             BinOp::DotSub => {
@@ -971,24 +971,24 @@ impl Value
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub_for_scalar(a, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot subtraction"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
                             Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, value.to_f32())?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot subtraction"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_sub(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported object types for dot subtraction"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot subtraction"))),
                         }
                     },
-                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported value types for dot subtraction", |v| v.bin_op(op, value)),
-                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported value types for dot subtraction", |v| self.bin_op(op, v)),
-                    (_, _) => self.dot2(value, "unsupported value types for dot subtraction", |v, w| v.bin_op(op, w)),
+                    (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported types for dot subtraction", |v| v.bin_op(op, value)),
+                    (Value::Int(_) | Value::Float(_), Value::Ref(_)) => value.dot1("unsupported types for dot subtraction", |v| self.bin_op(op, v)),
+                    (_, _) => self.dot2(value, "unsupported types for dot subtraction", |v, w| v.bin_op(op, w)),
                 }
             },
             BinOp::Lt => {
@@ -999,10 +999,10 @@ impl Value
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::String(s), Object::String(t)) => Ok(Value::Bool(s < t)),
-                            (_, _) => Err(Error::Interp(String::from("unsupported object types for comparation"))),
+                            (_, _) => Err(Error::Interp(String::from("unsupported types for comparation"))),
                         }
                     },
-                    (_, _) => Err(Error::Interp(String::from("unsupported value types for subtraction"))),
+                    (_, _) => Err(Error::Interp(String::from("unsupported types for comparation"))),
                 }
             },
             BinOp::Ge => Ok(Value::Bool(!self.bin_op(BinOp::Lt, value)?.to_bool())),
@@ -1043,10 +1043,10 @@ impl Value
             Value::Object(object) => {
                 match &**object {
                     Object::Matrix(a) => Ok(Value::Object(Arc::new(matrix_to_matrix_array(a)?))),
-                    _ => Err(Error::Interp(String::from("unsupported object type for conversion to matrix array"))),
+                    _ => Err(Error::Interp(String::from("unsupported type for conversion to matrix array"))),
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported value type for conversion to matrix array"))),
+            _ => Err(Error::Interp(String::from("unsupported type for conversion to matrix array"))),
         }
     }
 
@@ -1497,7 +1497,7 @@ impl Object
                         }
                         Ok(true)
                     },
-                    (_, _) => return Err(Error::Interp(String::from("invalid object type")))
+                    (_, _) => return Err(Error::Interp(String::from("invalid matrix array type")))
                 }
             },
             (Object::Error(kind, msg), Object::Error(kind2, msg2)) => Ok(kind == kind2 && msg == msg2),
@@ -1675,7 +1675,7 @@ impl<'a> Iterator for Iter<'a>
                         },
                         _ => {
                             *is_stopped = true;
-                            Some(Err(Error::Interp(String::from("invalid object type"))))
+                            Some(Err(Error::Interp(String::from("invalid matrix array type"))))
                         },
                     }
                 } else {
@@ -1705,7 +1705,7 @@ impl<'a> Iterator for Iter<'a>
                         },
                         _ => {
                             *is_stopped = true;
-                            Some(Err(Error::Interp(String::from("invalid object type"))))
+                            Some(Err(Error::Interp(String::from("invalid matrix array type"))))
                         },
                     }
                 } else {
@@ -1734,7 +1734,7 @@ impl<'a> Iterator for Iter<'a>
                                 },
                                 _ => {
                                     *is_stopped = true;
-                                    Some(Err(Error::Interp(String::from("invalid object type"))))
+                                    Some(Err(Error::Interp(String::from("invalid array type"))))
                                 },
                             }
                         },
