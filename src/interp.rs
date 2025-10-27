@@ -41,7 +41,7 @@ impl Interp
                     Ok(()) => Ok(()),
                     Err(Error::Stop(Stop::Break)) => Err(Error::Interp(String::from("break isn't in loop"))),
                     Err(Error::Stop(Stop::Continue)) => Err(Error::Interp(String::from("continue isn't in loop"))),
-                    Err(Error::Stop(Stop::Return)) => Err(Error::Interp(String::from("return isn't function"))),
+                    Err(Error::Stop(Stop::Return)) => Err(Error::Interp(String::from("return isn't in function"))),
                     Err(err) => Err(err),
                 };
                 match res {
