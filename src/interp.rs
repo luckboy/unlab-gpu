@@ -562,7 +562,7 @@ impl Interp
                     } else {
                         self.stack_trace.push((None, pos.clone()));
                         self.ret_value = Value::None;
-                        return Err(Error::Interp(String::from("number of columns of matrix rows aren't equal")));
+                        return Err(Error::Interp(String::from("numbers of columns of matrix rows aren't equal")));
                     }
                     match row_count.checked_add(1) {
                         Some(new_row_count) => row_count = new_row_count,
@@ -597,7 +597,7 @@ impl Interp
                             } else {
                                 self.stack_trace.push((None, pos.clone()));
                                 self.ret_value = Value::None;
-                                return Err(Error::Interp(String::from("number of columns of matrix rows aren't equal")));
+                                return Err(Error::Interp(String::from("numbers of columns of matrix rows aren't equal")));
                             }
                             match row_count.checked_add(1) {
                                 Some(new_row_count) => row_count = new_row_count,
