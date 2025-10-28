@@ -154,7 +154,10 @@ impl Env
             },
             Name::Var(ident) => {
                 *is_var = true;
-                Ok((Some(self.current_mod.clone()), ident))
+                match self.stack.last() {
+                    Some((fun_mod, _)) => Ok((Some(fun_mod.clone()), ident)),
+                    None => Ok((Some(self.current_mod.clone()), ident)),
+                }
             },
         }
     }
