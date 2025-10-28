@@ -556,7 +556,7 @@ impl Interp
                 let mut col_count: Option<usize> = None;
                 for matrix_row in matrix_rows {
                     let ys = self.interpret_matrix_row(env, matrix_row)?;
-                    if col_count.map(|n| n != ys.len()).unwrap_or(true) {
+                    if col_count.map(|n| n == ys.len()).unwrap_or(true) {
                         xs.extend_from_slice(ys.as_slice());
                         col_count = Some(ys.len());
                     } else {
@@ -591,7 +591,7 @@ impl Interp
                         let mut col_count: Option<usize> = None;
                         for _ in 0..n {
                             let ys = self.interpret_matrix_row(env, matrix_row)?;
-                            if col_count.map(|n| n != ys.len()).unwrap_or(true) {
+                            if col_count.map(|n| n == ys.len()).unwrap_or(true) {
                                 xs.extend_from_slice(ys.as_slice());
                                 col_count = Some(ys.len());
                             } else {
