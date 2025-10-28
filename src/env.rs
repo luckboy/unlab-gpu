@@ -208,4 +208,15 @@ impl Env
             None => Ok(false),
         }
     }
+    
+    pub fn remove_local_var(&mut self, ident: &String) -> bool
+    {
+        match self.stack.last_mut() {
+            Some((_, local_vars)) => {
+                local_vars.remove(ident);
+                true
+            },
+            None => false,
+        }
+    }
 }
