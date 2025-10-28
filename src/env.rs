@@ -20,7 +20,7 @@ pub struct Env
     root_mod: Arc<RwLock<ModNode<Value, ()>>>,
     current_mod: Arc<RwLock<ModNode<Value, ()>>>,
     mod_idents: Vec<String>,
-    stack: Vec<BTreeMap<String, Value>>,
+    stack: Vec<(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)>,
 }
 
 impl Env
@@ -44,7 +44,7 @@ impl Env
     pub fn mod_idents(&self) -> &[String]
     { self.mod_idents.as_slice() }
     
-    pub fn stack(&self) -> &[BTreeMap<String, Value>]
+    pub fn stack(&self) -> &[(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)]
     { self.stack.as_slice() }
     
     pub fn add_and_push_mod(&mut self, ident: String) -> Result<bool>
@@ -88,10 +88,14 @@ impl Env
         Ok(true)
     }
     
-    pub fn push_local_vars(&mut self, args: &[Arg], arg_values: &[Value]) -> bool
+    pub fn push_fun_mod_and_local_vars(&mut self, fun_mod_idents: &[String], args: &[Arg], arg_values: &[Value]) -> Result<bool>
     {
+        let fun_mod = match ModNode::mod_from(&self.current_mod, fun_mod_idents)? {
+            Some(tmp_fun_mod) => tmp_fun_mod,
+            None => return Err(Error::NoFunMod),
+        };
         if args.len() != arg_values.len() {
-            return false;
+            return Ok(false);
         }
         let mut local_vars: BTreeMap<String, Value> = BTreeMap::new();
         for (arg, value) in args.iter().zip(arg_values.iter()) {
@@ -101,11 +105,11 @@ impl Env
                 },
             }
         }
-        self.stack.push(local_vars);
-        true
+        self.stack.push((fun_mod, local_vars));
+        Ok(true)
     }
     
-    pub fn pop_local_vars(&mut self)
+    pub fn pop_fun_mod_and_local_vars(&mut self)
     { self.stack.pop(); }
     
     pub fn reset(&mut self) -> Result<()>
@@ -134,7 +138,11 @@ impl Env
                 }
             },
             Name::Rel(idents, ident) => {
-                match ModNode::mod_from(&self.current_mod, idents.as_slice())? {
+                let mod1 = match self.stack.last() {
+                    Some((fun_mod, _)) => fun_mod.clone(),
+                    None => self.current_mod.clone(),
+                };
+                match ModNode::mod_from(&mod1, idents.as_slice())? {
                     Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
                     None => {
                         match ModNode::mod_from(&self.root_mod, idents.as_slice())? {
@@ -157,7 +165,7 @@ impl Env
         let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var)?;
         if is_var {
             match self.stack.last() {
-                Some(local_vars) => {
+                Some((_, local_vars)) => {
                     match local_vars.get(ident) {
                         Some(value) => return Ok(Some(value.clone())),
                         None => (),
@@ -184,7 +192,7 @@ impl Env
         let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var)?;
         if is_var {
             match self.stack.last_mut() {
-                Some(local_vars) => {
+                Some((_, local_vars)) => {
                     local_vars.insert(ident.clone(), value);
                     return Ok(true)
                 },

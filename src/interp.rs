@@ -60,10 +60,14 @@ impl Interp
         match fun_value {
             Value::Object(fun_object) => {
                 match &**fun_object {
-                    Object::Fun(_, _, fun) => {
+                    Object::Fun(fun_mod_idents, _, fun) => {
                         match &**fun {
                             Fun(args, stats) => {
-                                env.push_local_vars(args, arg_values);
+                                match env.push_fun_mod_and_local_vars(fun_mod_idents.as_slice(), args, arg_values) {
+                                    Ok(true) => (),
+                                    Ok(false) => return Err(Error::Interp(String::from("invalid number of arguments"))),
+                                    Err(err) => return Err(err),
+                                }
                                 let res = match self.interpret_stats(env, stats.as_slice()) {
                                     Ok(()) => Ok(self.ret_value.clone()),
                                     Err(Error::Stop(Stop::Break)) => Err(Error::Interp(String::from("break isn't in loop"))),
@@ -74,7 +78,7 @@ impl Interp
                                     },
                                     Err(err) => Err(err),
                                 };
-                                env.pop_local_vars();
+                                env.pop_fun_mod_and_local_vars();
                                 match res {
                                     Ok(value) => Ok(value),
                                     Err(err) => {
