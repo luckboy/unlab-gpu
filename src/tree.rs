@@ -240,15 +240,21 @@ impl fmt::Display for Name
     {
         match self {
             Name::Abs(idents, ident) => {
-                write!(f, "::root")?;
+                write!(f, "root")?;
                 for ident2 in idents {
                     write!(f, "::{}", ident2)?;
                 }
                 write!(f, "::{}", ident)
             },
             Name::Rel(idents, ident) => {
+                let mut is_first = true;
                 for ident2 in idents {
-                    write!(f, "::{}", ident2)?;
+                    if !is_first {
+                        write!(f, "::{}", ident2)?;
+                    } else {
+                        write!(f, "{}", ident2)?;
+                    }
+                    is_first = false;
                 }
                 write!(f, "::{}", ident)
             },
