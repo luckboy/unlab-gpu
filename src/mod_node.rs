@@ -45,6 +45,7 @@ impl<T, U> ModNode<T, U>
             child_g.parent = Some(Arc::downgrade(&parent));
         }
         let mut parent_g = rw_lock_write(&**parent)?;
+        parent_g.remove_mod(&ident)?;
         parent_g.mods.insert(ident, child);
         Ok(())
     }
@@ -107,3 +108,6 @@ impl<T, U> ModNode<T, U>
         Ok(Some(node))
     }
 }
+
+#[cfg(test)]
+mod tests;
