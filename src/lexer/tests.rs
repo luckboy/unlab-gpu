@@ -636,6 +636,103 @@ abc_def
 }
 
 #[test]
+fn test_lexer_take_doc_returns_documentation()
+{
+    let s = "
+## first text
+##second text
+%% third text
++
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    match lexer.take_doc() {
+        Some(t) => assert_eq!(String::from("first text\nsecond text\nthird text\n"), t),
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_take_doc_does_not_return_documentation()
+{
+    let s = "+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    lexer.next();
+    match lexer.take_doc() {
+        None => assert!(true),
+        Some(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_take_doc_returns_second_documentation()
+{
+    let s = "
+## first text
+##second text
+%% third text
++
+## fourth text
+-
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    match lexer.take_doc() {
+        Some(t) => assert_eq!(String::from("first text\nsecond text\nthird text\n"), t),
+        None => assert!(false),
+    }
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    match lexer.take_doc() {
+        Some(t) => assert_eq!(String::from("fourth text\n"), t),
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_lexer_take_doc_does_not_return_second_documentation()
+{
+    let s = "
+## first text
+##second text
+%% third text
++
+-
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    lexer.next();
+    match lexer.take_doc() {
+        Some(t) => assert_eq!(String::from("first text\nsecond text\nthird text\n"), t),
+        None => assert!(false),
+    }
+    lexer.next();
+    lexer.next();
+    match lexer.take_doc() {
+        None => assert!(true),
+        Some(_) => assert!(false),
+    }
+}
+
+
+#[test]
 fn test_lexer_next_complains_on_unexpected_character()
 {
     let s = "@";
