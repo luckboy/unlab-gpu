@@ -5,9 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::cmp::Ordering;
 use std::fmt;
 use std::ops::Neg;
 use std::ops::Not;
@@ -1282,12 +1282,12 @@ impl Object
                         }
                         for j in 0..(*a_col_count) {
                             let ak = match a_transpose_flag {
-                                TransposeFlag::NoTranspose => ai * (*a_col_count) + j,
-                                TransposeFlag::Transpose => j * (*a_row_count) + ai,
+                                TransposeFlag::NoTranspose => (*ai) * (*a_col_count) + j,
+                                TransposeFlag::Transpose => j * (*a_row_count) + (*ai),
                             };
                             let bk = match b_transpose_flag {
-                                TransposeFlag::NoTranspose => bi * (*b_col_count) + j,
-                                TransposeFlag::Transpose => j * (*b_row_count) + bi,
+                                TransposeFlag::NoTranspose => (*bi) * (*b_col_count) + j,
+                                TransposeFlag::Transpose => j * (*b_row_count) + (*bi),
                             };
                             match (xs.get(ak), ys.get(bk)) {
                                 (Some(x), Some(y)) => {
