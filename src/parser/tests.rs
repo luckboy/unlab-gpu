@@ -3373,6 +3373,117 @@ X = 1
 }
 
 #[test]
+fn test_parser_doc_root_mod_returns_documentation()
+{
+    let s = "
+## module text
+module a
+    ## f function text
+    function f(X)
+        X + 1
+    end
+
+    ## X text
+    X = 1
+end
+
+## g function text
+function g(X)
+    X + 2
+end
+
+## Y text
+Y = 2
+";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new_with_doc_root_mod(path, tokens, Some(Arc::new(RwLock::new(ModNode::new(None)))));
+    match parser.parse() {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match parser.doc_root_mod().clone() {
+        Some(doc_root_mod) => {
+            let doc_root_mod_g = doc_root_mod.read().unwrap();
+            assert_eq!(None, *doc_root_mod_g.value());
+            match doc_root_mod_g.mod1(&String::from("a")) {
+                Some(doc_mod) => {
+                    let doc_mod_g = doc_mod.read().unwrap();
+                    assert_eq!(Some(String::from("module text\n")), *doc_mod_g.value());
+                    assert_eq!(Some(&String::from("f function text\n")), doc_mod_g.var(&String::from("f")));
+                    assert_eq!(Some(&String::from("X text\n")), doc_mod_g.var(&String::from("X")));
+                },
+                None => assert!(false),
+            }
+            assert_eq!(Some(&String::from("g function text\n")), doc_root_mod_g.var(&String::from("g")));
+            assert_eq!(Some(&String::from("Y text\n")), doc_root_mod_g.var(&String::from("Y")));
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_parser_doc_root_mod_returns_documentation_for_undocumented_nodes()
+{
+    let s = "
+module a
+    ## X text
+    X = 1
+    
+    Y = 2
+
+    ## Z text
+    Z = 1
+end
+
+## f function text
+function f(X)
+    X + 1
+end
+
+function g(X)
+    X + 2
+end
+
+## h function text
+function h(X)
+    X + 3
+end
+";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new_with_doc_root_mod(path, tokens, Some(Arc::new(RwLock::new(ModNode::new(None)))));
+    match parser.parse() {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match parser.doc_root_mod().clone() {
+        Some(doc_root_mod) => {
+            let doc_root_mod_g = doc_root_mod.read().unwrap();
+            assert_eq!(None, *doc_root_mod_g.value());
+            match doc_root_mod_g.mod1(&String::from("a")) {
+                Some(doc_mod) => {
+                    let doc_mod_g = doc_mod.read().unwrap();
+                    assert_eq!(None, *doc_mod_g.value());
+                    assert_eq!(Some(&String::from("X text\n")), doc_mod_g.var(&String::from("X")));
+                    assert_eq!(None, doc_mod_g.var(&String::from("Y")));
+                    assert_eq!(Some(&String::from("Z text\n")), doc_mod_g.var(&String::from("Z")));
+                },
+                None => assert!(false),
+            }
+            assert_eq!(Some(&String::from("f function text\n")), doc_root_mod_g.var(&String::from("f")));
+            assert_eq!(None, doc_root_mod_g.var(&String::from("g")));
+            assert_eq!(Some(&String::from("h function text\n")), doc_root_mod_g.var(&String::from("h")));
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_parser_parse_complains_on_unexpected_token()
 {
     let s = "
