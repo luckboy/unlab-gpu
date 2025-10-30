@@ -889,7 +889,7 @@ fn test_value_eq_without_types_returns_false_for_different_types()
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
-    match value.eq_with_types(&value2) {
+    match value.eq_without_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -899,10 +899,102 @@ fn test_value_eq_without_types_returns_false_for_different_types()
     fields.insert(String::from("b"), Value::Float(2.0));
     fields.insert(String::from("c"), Value::Bool(false));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
-    match value.eq_with_types(&value2) {
+    match value.eq_without_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+}
+
+#[test]
+fn test_value_bin_op_calculates_result_for_equal_operator()
+{
+    match Value::Int(1234).bin_op(BinOp::Eq, &Value::Int(1234)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1234).bin_op(BinOp::Eq, &Value::Float(1234.0)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1234.0).bin_op(BinOp::Eq, &Value::Int(1234)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(12.34).bin_op(BinOp::Eq, &Value::Float(12.34)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1234).bin_op(BinOp::Eq, &Value::Int(4567)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1234).bin_op(BinOp::Eq, &Value::Float(4567.0)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1234.0).bin_op(BinOp::Eq, &Value::Int(4567)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(12.34).bin_op(BinOp::Eq, &Value::Float(45.67)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_calculates_result_for_not_equal_operator()
+{
+    match Value::Int(1234).bin_op(BinOp::Ne, &Value::Int(1234)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1234).bin_op(BinOp::Ne, &Value::Float(1234.0)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1234.0).bin_op(BinOp::Ne, &Value::Int(1234)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(12.34).bin_op(BinOp::Ne, &Value::Float(12.34)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1234).bin_op(BinOp::Ne, &Value::Int(4567)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1234).bin_op(BinOp::Ne, &Value::Float(4567.0)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1234.0).bin_op(BinOp::Ne, &Value::Int(4567)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(12.34).bin_op(BinOp::Ne, &Value::Float(45.67)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_eq_returns_true()
+{
+    assert_eq!(true, Value::Int(1234) == Value::Int(1234));
+    assert_eq!(true, Value::Int(1234) == Value::Float(1234.0));
+    assert_eq!(true, Value::Float(1234.0) == Value::Int(1234));
+    assert_eq!(true, Value::Float(12.34) == Value::Float(12.34));
+}
+
+#[test]
+fn test_value_eq_returns_false()
+{
+    assert_eq!(false, Value::Int(1234) == Value::Int(4567));
+    assert_eq!(false, Value::Int(1234) == Value::Float(4567.0));
+    assert_eq!(false, Value::Float(1234.0) == Value::Int(4567));
+    assert_eq!(false, Value::Float(12.34) == Value::Float(45.67));
 }
 
 #[test]
@@ -1251,6 +1343,24 @@ fn test_value_dot2_complains_on_field_names_of_two_structures_are_not_equal()
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
     match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("field names of two structures aren't equal"), *msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_dot2_complains_on_value_is_weak_reference()
+{
+    let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Weak(Arc::downgrade(&object))]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+    match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("value is weak reference"), *msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Weak(Arc::downgrade(&object))]))));
+    match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("value is weak reference"), *msg),
         _ => assert!(false),
     }
 }
