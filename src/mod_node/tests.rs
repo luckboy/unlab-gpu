@@ -63,7 +63,7 @@ fn test_mod_node_add_mod_adds_module_nodes_to_module_node()
 }
 
 #[test]
-fn test_mod_node_add_mod_adds_replaces_module_node()
+fn test_mod_node_add_mod_replaces_module_node()
 {
     let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
     let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
