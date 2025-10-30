@@ -1330,6 +1330,9 @@ impl MutObject
     {
         match (self, object) {
             (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                if elems.len() != elems2.len() {
+                    return Ok(false);
+                }
                 for (elem, elem2) in elems.iter().zip(elems2.iter()) {
                     if !f(elem, elem2)? {
                         return Ok(false);
@@ -1564,3 +1567,6 @@ enum IterEnum<'a>
     MatrixRowSlice(Arc<Object>, usize, usize, bool),
     Array(Arc<RwLock<MutObject>>, usize, bool),
 }
+
+#[cfg(test)]
+mod tests;

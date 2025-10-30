@@ -18,3 +18,6 @@ pub(crate) mod private;
 pub mod tree;
 pub mod utils;
 pub mod value;
+
+#[cfg(test)]
+pub(crate) mod test_helpers;
