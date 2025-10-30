@@ -906,7 +906,7 @@ fn test_value_eq_without_types_returns_false_for_different_types()
 }
 
 #[test]
-fn test_value_bin_op_calculates_result_for_equal_operator()
+fn test_value_bin_op_compares_values_for_eq_operator()
 {
     match Value::Int(1234).bin_op(BinOp::Eq, &Value::Int(1234)) {
         Ok(Value::Bool(true)) => assert!(true),
@@ -943,7 +943,7 @@ fn test_value_bin_op_calculates_result_for_equal_operator()
 }
 
 #[test]
-fn test_value_bin_op_calculates_result_for_not_equal_operator()
+fn test_value_bin_op_compares_values_for_ne_operator()
 {
     match Value::Int(1234).bin_op(BinOp::Ne, &Value::Int(1234)) {
         Ok(Value::Bool(false)) => assert!(true),
