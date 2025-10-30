@@ -499,7 +499,7 @@ impl Value
             },
             UnaryOp::DotNeg => {
                 match self {
-                    Value::Int(_) | Value::Float(_) => Ok(Value::Float(self.to_f32())),
+                    Value::Int(_) | Value::Float(_) => Ok(Value::Float(-self.to_f32())),
                     Value::Object(object) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(a, 0.0)?)))),

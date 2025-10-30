@@ -208,8 +208,8 @@ pub(crate) fn matrix_rdiv_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 fn matrix_res_to_matrix_array(a: &Matrix) -> matrix::Result<Object>
 {
     let frontend = Frontend::new()?;
-    let (xs, is_transposed) = frontend.elems_and_transpose_flag(a)?;
-    let transpose_flag = if is_transposed {
+    let xs = frontend.elems_and_transpose_flag(a)?.0;
+    let transpose_flag = if a.is_transposed() {
         TransposeFlag::Transpose
     } else {
         TransposeFlag::NoTranspose
