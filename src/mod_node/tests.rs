@@ -96,6 +96,33 @@ fn test_mod_node_add_mod_replaces_module_node()
 }
 
 #[test]
+fn test_mod_node_add_mod_complains_on_already_module_node()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_mod(&mod1, String::from("b"), mod2.clone()) {
+        Err(Error::AlreadyAddedModNode) => assert!(true),
+        _ => assert!(false),
+    }
+    let mod1_g = mod1.read().unwrap();
+    match mod1_g.mod1(&String::from("a")) {
+        Some(child) => {
+            assert!(Arc::ptr_eq(&mod2, &child));
+            let mod2_g = mod2.read().unwrap();
+            match mod2_g.parent() {
+                Some(parent) => assert!(Arc::ptr_eq(&mod1, &parent)),
+                None => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_mod_node_remove_mod_removes_module_node_from_module_node()
 {
     let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
@@ -247,32 +274,5 @@ fn test_mod_node_mod_from_does_not_returns_nested_module_for_identifiers()
     match ModNode::mod_from(&mod1, &[String::from("b"), String::from("c")]) {
         Ok(None) => assert!(true),
         _ => assert!(false),
-    }
-}
-
-#[test]
-fn test_mod_node_add_mod_complains_on_already_module_node()
-{
-    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
-    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
-    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
-        Ok(()) => assert!(true),
-        Err(_) => assert!(false),
-    }
-    match ModNode::add_mod(&mod1, String::from("b"), mod2.clone()) {
-        Err(Error::AlreadyAddedModNode) => assert!(true),
-        _ => assert!(false),
-    }
-    let mod1_g = mod1.read().unwrap();
-    match mod1_g.mod1(&String::from("a")) {
-        Some(child) => {
-            assert!(Arc::ptr_eq(&mod2, &child));
-            let mod2_g = mod2.read().unwrap();
-            match mod2_g.parent() {
-                Some(parent) => assert!(Arc::ptr_eq(&mod1, &parent)),
-                None => assert!(false),
-            }
-        },
-        None => assert!(false),
     }
 }
