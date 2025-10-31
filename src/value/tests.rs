@@ -1363,19 +1363,13 @@ fn test_value_dot2_complains_on_field_names_of_two_structures_are_not_equal()
 }
 
 #[test]
-fn test_value_dot2_complains_on_value_is_weak_reference()
+fn test_value_dot2_complains_on_two_values_are_weak_references()
 {
     let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Weak(Arc::downgrade(&object))]))));
-    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
-    match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
-        Err(Error::Interp(msg)) => assert_eq!(String::from("value is weak reference"), *msg),
-        _ => assert!(false),
-    }
-    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Weak(Arc::downgrade(&object))]))));
     match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
-        Err(Error::Interp(msg)) => assert_eq!(String::from("value is weak reference"), *msg),
+        Err(Error::Interp(msg)) => assert_eq!(String::from("two values are weak references"), *msg),
         _ => assert!(false),
     }
 }

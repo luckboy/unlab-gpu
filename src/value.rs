@@ -234,7 +234,7 @@ impl Value
                 }
             },
             (Value::Ref(_), Value::Ref(_)) => self.dot2_with_fun_ref(value, err_msg, f),
-            (Value::Weak(_), _) | (_, Value::Weak(_)) => Err(Error::Interp(String::from("value is weak reference"))),
+            (Value::Weak(_), Value::Weak(_)) => Err(Error::Interp(String::from("two values are weak references"))),
             (_, _) => {
                 if !self.eq_with_types(value)? {
                     return Err(Error::Interp(String::from("two values aren't equal")))
