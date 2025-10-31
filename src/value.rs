@@ -302,7 +302,7 @@ impl Value
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
                                 let i = idx_value.to_i64();
-                                if i >= 1 && i <= (s.chars().count() as i64) {
+                                if i < 1 || i > (s.chars().count() as i64) {
                                     return Err(Error::Interp(String::from("index out of bounds")));
                                 }
                                 match s.chars().nth((i - 1) as usize) {
@@ -321,7 +321,7 @@ impl Value
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
                                 let i = idx_value.to_i64();
-                                if i >= 1 && i <= (*row_count as i64) {
+                                if i < 1 || i > (*row_count as i64) {
                                     return Err(Error::Interp(String::from("index out of bounds")));
                                 }
                                 Ok(Value::Object(Arc::new(Object::MatrixRowSlice(object.clone(), (i - 1) as usize))))
@@ -335,7 +335,7 @@ impl Value
                                 let j = idx_value.to_i64();
                                 match &**matrix_array {
                                     Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
-                                        if j >= 1 && j <= (*col_count as i64) {
+                                        if j < 1 || j > (*col_count as i64) {
                                             return Err(Error::Interp(String::from("index out of bounds")));
                                         }
                                         let k = match transpose_flag {
@@ -363,7 +363,7 @@ impl Value
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
                                 let i = idx_value.to_i64();
-                                if i >= 1 && i <= (elems.len() as i64) {
+                                if i < 1 || i > (elems.len() as i64) {
                                     return Err(Error::Interp(String::from("index out of bounds")));
                                 }
                                 match elems.get((i - 1) as usize) { 
@@ -406,7 +406,7 @@ impl Value
                         match idx_value {
                             Value::Int(_) | Value::Float(_) => {
                                 let i = idx_value.to_i64();
-                                if i >= 1 && i <= (elems.len() as i64) {
+                                if i < 1 || i > (elems.len() as i64) {
                                     return Err(Error::Interp(String::from("index out of bounds")));
                                 }
                                 match elems.get_mut((i - 1) as usize) {

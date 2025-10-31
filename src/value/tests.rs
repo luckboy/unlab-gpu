@@ -1364,3 +1364,367 @@ fn test_value_dot2_complains_on_value_is_weak_reference()
         _ => assert!(false),
     }
 }
+
+#[test]
+fn test_value_elem_returns_elements()
+{
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.elem(&Value::Int(1)) {
+        Ok(elem) => {
+            let expected_elem = Value::Object(Arc::new(Object::String(String::from("a"))));
+            assert_eq!(expected_elem, elem);
+        },
+        Err(_) => assert!(false),
+    }
+    match value.elem(&Value::Int(3)) {
+        Ok(elem) => {
+            let expected_elem = Value::Object(Arc::new(Object::String(String::from("c"))));
+            assert_eq!(expected_elem, elem);
+        },
+        Err(_) => assert!(false),
+    }
+    match value.elem(&Value::Float(2.5)) {
+        Ok(elem) => {
+            let expected_elem = Value::Object(Arc::new(Object::String(String::from("b"))));
+            assert_eq!(expected_elem, elem);
+        },
+        Err(_) => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0, 3.0,
+        4.0, 5.0, 6.0,
+        7.0, 8.0, 9.0,
+        10.0, 11.0, 12.0
+    ];
+    let b = vec![
+        2.0, 5.0, 8.0, 11.0,
+        3.0, 6.0, 9.0, 12.0,
+        4.0, 7.0, 10.0, 13.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    let matrix_array2 = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::Transpose, b.clone()));
+    let value2 = Value::Object(matrix_array2.clone());
+    match value.elem(&Value::Int(1)) {
+        Ok(elem) => {
+            let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 0));
+            assert_eq!(Value::Object(matrix_row_slice), elem);
+        },
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(4)) {
+        Ok(elem) => {
+            let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 3));
+            assert_eq!(Value::Object(matrix_row_slice), elem);
+        },
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Float(2.5)) {
+        Ok(elem) => {
+            let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 1));
+            assert_eq!(Value::Object(matrix_row_slice), elem);
+        },
+        _ => assert!(false),
+    }
+    match value2.elem(&Value::Int(2)) {
+        Ok(elem) => {
+            let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array2.clone(), 1));
+            assert_eq!(Value::Object(matrix_row_slice), elem);
+        },
+        _ => assert!(false),
+    }
+    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 1));
+    let value = Value::Object(matrix_row_slice);
+    let matrix_row_slice2 = Arc::new(Object::MatrixRowSlice(matrix_array2.clone(), 1));
+    let value2 = Value::Object(matrix_row_slice2);
+    match value.elem(&Value::Int(1)) {
+        Ok(Value::Float(n)) => assert_eq!(4.0, n),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(6.0, n),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Float(2.5)) {
+        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+        _ => assert!(false),
+    }
+    match value2.elem(&Value::Int(2)) {
+        Ok(Value::Float(n)) => assert_eq!(6.0, n),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.elem(&Value::Int(1)) {
+        Ok(Value::Int(1)) => assert!(true),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(3)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Float(2.5)) {
+        Ok(Value::Float(n)) => assert_eq!(2.0, n),
+        _ => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    let idx_value = Value::Object(Arc::new(Object::String(String::from("b"))));
+    match value.elem(&idx_value) {
+        Ok(Value::Float(n)) => assert_eq!(2.0, n),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_elem_complains_on_unsupported_type_for_indexing()
+{
+    match Value::Int(1).elem(&Value::Int(1)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.elem(&Value::Int(1)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for indexing"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_elem_complains_on_unsupported_index_type_for_indexing()
+{
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.elem(&Value::Bool(true)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0, 3.0,
+        4.0, 5.0, 6.0,
+        7.0, 8.0, 9.0,
+        10.0, 11.0, 12.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    match value.elem(&Value::Bool(true)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 1));
+    let value = Value::Object(matrix_row_slice);
+    match value.elem(&Value::Bool(true)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.elem(&Value::Bool(true)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match value.elem(&Value::Int(1)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let idx_value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.elem(&idx_value) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_elem_complains_on_index_out_of_bounds()
+{
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.elem(&Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(4)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0, 3.0,
+        4.0, 5.0, 6.0,
+        7.0, 8.0, 9.0,
+        10.0, 11.0, 12.0
+    ];
+    let b = vec![
+        2.0, 5.0, 8.0, 11.0,
+        3.0, 6.0, 9.0, 12.0,
+        4.0, 7.0, 10.0, 13.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    let matrix_array2 = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::Transpose, b.clone()));
+    let value2 = Value::Object(matrix_array2.clone());
+    match value.elem(&Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(5)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value2.elem(&Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value2.elem(&Value::Int(5)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 1));
+    let value = Value::Object(matrix_row_slice);
+    let matrix_row_slice2 = Arc::new(Object::MatrixRowSlice(matrix_array2.clone(), 1));
+    let value2 = Value::Object(matrix_row_slice2);
+    match value.elem(&Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(4)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value2.elem(&Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value2.elem(&Value::Int(4)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.elem(&Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    match value.elem(&Value::Int(4)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_elem_complains_on_not_found_key()
+{
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    let idx_value = Value::Object(Arc::new(Object::String(String::from("d"))));
+    match value.elem(&idx_value) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("not found key"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_set_elem_sets_elements()
+{
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_elem(&Value::Int(1), Value::Float(2.5)) {
+        Ok(()) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(2.5), Value::Float(2.0), Value::Bool(false)])))), value),
+        Err(_) => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_elem(&Value::Int(3), Value::Float(2.5)) {
+        Ok(()) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Float(2.5)])))), value),
+        Err(_) => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_elem(&Value::Float(2.5), Value::Int(3)) {
+        Ok(()) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Bool(false)])))), value),
+        Err(_) => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    let idx_value = Value::Object(Arc::new(Object::String(String::from("b"))));
+    match value.set_elem(&idx_value, Value::Int(3)) {
+        Ok(()) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::Int(1));
+            expected_fields.insert(String::from("b"), Value::Int(3));
+            expected_fields.insert(String::from("c"), Value::Bool(false));
+            assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields)))), value);
+        },
+        Err(_) => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    let idx_value = Value::Object(Arc::new(Object::String(String::from("d"))));
+    match value.set_elem(&idx_value, Value::Int(3)) {
+        Ok(()) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::Int(1));
+            expected_fields.insert(String::from("b"), Value::Float(2.0));
+            expected_fields.insert(String::from("c"), Value::Bool(false));
+            expected_fields.insert(String::from("d"), Value::Int(3));
+            assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields)))), value);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_set_elem_complains_on_unsupported_type_for_indexing()
+{
+    match Value::Int(1).set_elem(&Value::Int(1), Value::Int(2)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for indexing"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_set_elem_complains_on_unsupported_index_type_for_indexing()
+{
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_elem(&Value::Bool(true), Value::Float(2.5)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match value.set_elem(&Value::Int(1), Value::Int(3)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+    let idx_value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.set_elem(&idx_value, Value::Int(3)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported index type for indexing"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_set_elem_complains_on_index_out_of_bounds()
+{
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_elem(&Value::Int(0), Value::Float(2.5)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_elem(&Value::Int(4), Value::Float(2.5)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+        _ => assert!(false),
+    }
+}
