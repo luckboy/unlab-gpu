@@ -49,9 +49,9 @@ impl Value
     {
         match self {
             Value::None => false,
-            Value::Bool(b) => *b,
-            Value::Int(n) => *n != 0,
-            Value::Float(n) => *n != 0.0,
+            Value::Bool(a) => *a,
+            Value::Int(a) => *a != 0,
+            Value::Float(a) => *a != 0.0,
             Value::Object(object) => {
                 match &**object {
                     Object::Error(_, _) => false,
@@ -66,9 +66,9 @@ impl Value
     {
         match self {
             Value::None => 0,
-            Value::Bool(b) => if *b { 1 } else { 0 },
-            Value::Int(n) => *n,
-            Value::Float(n) => *n as i64,
+            Value::Bool(a) => if *a { 1 } else { 0 },
+            Value::Int(a) => *a,
+            Value::Float(a) => *a as i64,
             Value::Object(object) => {
                 match &**object {
                     Object::Error(_, _) => 0,
@@ -83,9 +83,9 @@ impl Value
     {
         match self {
             Value::None => 0.0,
-            Value::Bool(b) => if *b { 1.0 } else { 0.0 },
-            Value::Int(n) => *n as f32,
-            Value::Float(n) => *n,
+            Value::Bool(a) => if *a { 1.0 } else { 0.0 },
+            Value::Int(a) => *a as f32,
+            Value::Float(a) => *a,
             Value::Object(object) => {
                 match &**object {
                     Object::Error(_, _) => 0.0,
@@ -99,7 +99,7 @@ impl Value
     pub fn to_opt_bool(&self) -> Option<bool>
     {
         match self {
-            Value::Bool(b) => Some(*b),
+            Value::Bool(a) => Some(*a),
             _ => None,
         }
     }
@@ -107,8 +107,8 @@ impl Value
     pub fn to_opt_i64(&self) -> Option<i64>
     {
         match self {
-            Value::Int(n) => Some(*n),
-            Value::Float(n) => Some(*n as i64),
+            Value::Int(a) => Some(*a),
+            Value::Float(a) => Some(*a as i64),
             _ => None,
         }
     }
@@ -116,8 +116,8 @@ impl Value
     pub fn to_opt_f32(&self) -> Option<f32>
     {
         match self {
-            Value::Int(n) => Some(*n as f32),
-            Value::Float(n) => Some(*n),
+            Value::Int(a) => Some(*a as f32),
+            Value::Float(a) => Some(*a),
             _ => None,
         }
     }
