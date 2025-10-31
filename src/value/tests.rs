@@ -1010,7 +1010,7 @@ fn test_value_dot1_calculates_result_for_values()
     ];
     let matrix_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, a.as_slice()))));
     let matrix_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, b.as_slice()))));
-    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![matrix_value, matrix_value2, Value::Float(1.0)]))));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![matrix_value, matrix_value2, Value::Float(1.0), Value::Int(1)]))));
     match value.dot1("some message", |v| v.unary_op(UnaryOp::DotNeg)) {
         Ok(value2) => {
             match &value2 {
@@ -1018,12 +1018,13 @@ fn test_value_dot1_calculates_result_for_values()
                     let object_g = object.read().unwrap();
                     match &*object_g {
                         MutObject::Array(elems) => {
-                            assert_eq!(3, elems.len());
+                            assert_eq!(4, elems.len());
                             let matrix_array = Arc::new(Object::MatrixArray(2, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 2, 2, f32::neg)));
                             assert_eq!(Value::Object(matrix_array), elems[0].to_matrix_array().unwrap());
                             let matrix_array = Arc::new(Object::MatrixArray(2, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 2, f32::neg)));
                             assert_eq!(Value::Object(matrix_array), elems[1].to_matrix_array().unwrap());
                             assert_eq!(Value::Float(-1.0), elems[2]);
+                            assert_eq!(Value::Int(1), elems[3]);
                         },
                         _ => assert!(false),
                     }
@@ -1039,6 +1040,7 @@ fn test_value_dot1_calculates_result_for_values()
     let mut fields: BTreeMap<String, Value> = BTreeMap::new();
     fields.insert(String::from("a"), array_value);
     fields.insert(String::from("b"), Value::Float(1.0));
+    fields.insert(String::from("c"), Value::Int(1));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     match value.dot1("some message", |v| v.unary_op(UnaryOp::DotNeg)) {
         Ok(value2) => {
@@ -1067,6 +1069,10 @@ fn test_value_dot1_calculates_result_for_values()
                                 Some(Value::Float(n)) => assert_eq!(-1.0, *n),
                                 _ => assert!(false),
                             }
+                            match fields.get(&String::from("c")) {
+                                Some(Value::Int(1)) => assert!(true),
+                                _ => assert!(false),
+                            }
                         },
                         _ => assert!(false),
                     }
@@ -1082,7 +1088,7 @@ fn test_value_dot1_calculates_result_for_values()
     fields.insert(String::from("a"), matrix_value);
     fields.insert(String::from("b"), matrix_value2);
     let struct_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
-    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![struct_value, Value::Float(1.0)]))));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![struct_value, Value::Float(1.0), Value::Int(1)]))));
     match value.dot1("some message", |v| v.unary_op(UnaryOp::DotNeg)) {
         Ok(value2) => {
             match &value2 {
@@ -1090,7 +1096,7 @@ fn test_value_dot1_calculates_result_for_values()
                     let object_g = object.read().unwrap();
                     match &*object_g {
                         MutObject::Array(elems) => {
-                            assert_eq!(2, elems.len());
+                            assert_eq!(3, elems.len());
                             match &elems[0] {
                                 Value::Ref(object2) => {
                                     let object2_g = object2.read().unwrap();
@@ -1117,6 +1123,7 @@ fn test_value_dot1_calculates_result_for_values()
                                 _ => assert!(false),
                             }
                             assert_eq!(Value::Float(-1.0), elems[1]);
+                            assert_eq!(Value::Int(1), elems[2]);
                         },
                         _ => assert!(false),
                     }
@@ -1158,10 +1165,10 @@ fn test_value_dot2_calculates_result_for_values()
     ];
     let matrix_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, a.as_slice()))));
     let matrix_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, b.as_slice()))));
-    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![matrix_value, matrix_value2, Value::Float(1.0)]))));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![matrix_value, matrix_value2, Value::Float(1.0), Value::Int(1)]))));
     let matrix_value3 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, c.as_slice()))));
     let matrix_value4 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, d.as_slice()))));
-    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![matrix_value3, matrix_value4, Value::Float(2.0)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![matrix_value3, matrix_value4, Value::Float(2.0), Value::Int(1)]))));
     match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
         Ok(value3) => {
             match &value3 {
@@ -1169,12 +1176,13 @@ fn test_value_dot2_calculates_result_for_values()
                     let object_g = object.read().unwrap();
                     match &*object_g {
                         MutObject::Array(elems) => {
-                            assert_eq!(3, elems.len());
+                            assert_eq!(4, elems.len());
                             let matrix_array = Arc::new(Object::MatrixArray(2, 2, TransposeFlag::NoTranspose, expected_bin_op(a.as_slice(), c.as_slice(), 2, 2, f32::add)));
                             assert_eq!(Value::Object(matrix_array), elems[0].to_matrix_array().unwrap());
                             let matrix_array = Arc::new(Object::MatrixArray(2, 2, TransposeFlag::NoTranspose, expected_bin_op(b.as_slice(), d.as_slice(), 2, 2, f32::add)));
                             assert_eq!(Value::Object(matrix_array), elems[1].to_matrix_array().unwrap());
                             assert_eq!(Value::Float(3.0), elems[2]);
+                            assert_eq!(Value::Int(1), elems[3]);
                         },
                         _ => assert!(false),
                     }
@@ -1190,6 +1198,7 @@ fn test_value_dot2_calculates_result_for_values()
     let mut fields: BTreeMap<String, Value> = BTreeMap::new();
     fields.insert(String::from("a"), array_value);
     fields.insert(String::from("b"), Value::Float(1.0));
+    fields.insert(String::from("c"), Value::Int(1));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let matrix_value3 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, c.as_slice()))));
     let matrix_value4 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, d.as_slice()))));
@@ -1197,6 +1206,7 @@ fn test_value_dot2_calculates_result_for_values()
     let mut fields2: BTreeMap<String, Value> = BTreeMap::new();
     fields2.insert(String::from("a"), array_value2);
     fields2.insert(String::from("b"), Value::Float(2.0));
+    fields2.insert(String::from("c"), Value::Int(1));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
     match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
         Ok(value3) => {
@@ -1225,6 +1235,10 @@ fn test_value_dot2_calculates_result_for_values()
                                 Some(Value::Float(n)) => assert_eq!(3.0, *n),
                                 _ => assert!(false),
                             }
+                            match fields.get(&String::from("c")) {
+                                Some(Value::Int(1)) => assert!(true),
+                                _ => assert!(false),
+                            }
                         },
                         _ => assert!(false),
                     }
@@ -1240,14 +1254,14 @@ fn test_value_dot2_calculates_result_for_values()
     fields.insert(String::from("a"), matrix_value);
     fields.insert(String::from("b"), matrix_value2);
     let struct_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
-    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![struct_value, Value::Float(1.0)]))));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![struct_value, Value::Float(1.0), Value::Int(1)]))));
     let matrix_value3 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, c.as_slice()))));
     let matrix_value4 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(2, 2, d.as_slice()))));
     let mut fields2: BTreeMap<String, Value> = BTreeMap::new();
     fields2.insert(String::from("a"), matrix_value3);
     fields2.insert(String::from("b"), matrix_value4);
     let struct_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![struct_value2, Value::Float(2.0)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![struct_value2, Value::Float(2.0), Value::Int(1)]))));
     match value.dot2(&value2, "some message", |v, w| v.bin_op(BinOp::DotAdd, w)) {
         Ok(value3) => {
             match &value3 {
@@ -1255,7 +1269,7 @@ fn test_value_dot2_calculates_result_for_values()
                     let object_g = object.read().unwrap();
                     match &*object_g {
                         MutObject::Array(elems) => {
-                            assert_eq!(2, elems.len());
+                            assert_eq!(3, elems.len());
                             match &elems[0] {
                                 Value::Ref(object2) => {
                                     let object2_g = object2.read().unwrap();
@@ -1282,6 +1296,7 @@ fn test_value_dot2_calculates_result_for_values()
                                 _ => assert!(false),
                             }
                             assert_eq!(Value::Float(3.0), elems[1]);
+                            assert_eq!(Value::Int(1), elems[2]);
                         },
                         _ => assert!(false),
                     }
