@@ -1728,3 +1728,357 @@ fn test_value_set_elem_complains_on_index_out_of_bounds()
         _ => assert!(false),
     }
 }
+
+#[test]
+fn test_value_field_returns_field()
+{
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match value.field(&String::from("b")) {
+        Ok(Value::Float(n)) => assert_eq!(2.0, n),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_field_complains_on_unsupported_type_for_field()
+{
+    match Value::Int(1).field(&String::from("a")) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for field a"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.field(&String::from("b")) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for field b"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_field_complains_on_structure_has_not_field()
+{
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match value.field(&String::from("d")) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("structure hasn't field d"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_set_field_sets_fields()
+{
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match value.set_field(String::from("b"), Value::Int(3)) {
+        Ok(()) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::Int(1));
+            expected_fields.insert(String::from("b"), Value::Int(3));
+            expected_fields.insert(String::from("c"), Value::Bool(false));
+            assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields)))), value);
+        },
+        Err(_) => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match value.set_field(String::from("d"), Value::Int(3)) {
+        Ok(()) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::Int(1));
+            expected_fields.insert(String::from("b"), Value::Float(2.0));
+            expected_fields.insert(String::from("c"), Value::Bool(false));
+            expected_fields.insert(String::from("d"), Value::Int(3));
+            assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields)))), value);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_set_field_complains_on_unsupported_type_for_field()
+{
+    match Value::Int(1).set_field(String::from("a"), Value::Int(2)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for field a"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.set_field(String::from("b"), Value::Int(2)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for field b"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_negates_values_for_neg_operator()
+{
+    match Value::Int(2).unary_op(UnaryOp::Neg) {
+        Ok(Value::Int(-2)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).unary_op(UnaryOp::Neg) {
+        Ok(Value::Float(n)) => assert_eq!(-2.0, n),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.unary_op(UnaryOp::Neg) {
+        Ok(value2) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, f32::neg)));
+            assert_eq!(Value::Object(matrix_array), value2.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_complains_on_unsupported_type_for_negation_for_neg_operator()
+{
+    match Value::Bool(true).unary_op(UnaryOp::Neg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.unary_op(UnaryOp::Neg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.unary_op(UnaryOp::Neg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_complains_on_overflow_in_negation_for_neg_operator()
+{
+    match Value::Int(i64::MIN).unary_op(UnaryOp::Neg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("overflow in negation"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_negates_values_for_dot_neg_operator()
+{
+    match Value::Int(2).unary_op(UnaryOp::DotNeg) {
+        Ok(Value::Float(n)) => assert_eq!(-2.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).unary_op(UnaryOp::DotNeg) {
+        Ok(Value::Float(n)) => assert_eq!(-2.0, n),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.unary_op(UnaryOp::DotNeg) {
+        Ok(value2) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, f32::neg)));
+            assert_eq!(Value::Object(matrix_array), value2.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+    match value.unary_op(UnaryOp::DotNeg) {
+        Ok(value2) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(-2.0)])))), value2),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_complains_on_unsupported_type_for_dot_negation_for_dot_neg_operator()
+{
+    match Value::Bool(true).unary_op(UnaryOp::DotNeg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for dot negation"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.unary_op(UnaryOp::DotNeg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for dot negation"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_negates_values_for_not_operator()
+{
+    match Value::None.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Bool(true).unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Bool(false).unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1).unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(0).unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1.0).unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(0.0).unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let a = matrix![[1.0, 2.0], [3.0, 4.0]];
+    let value = Value::Object(Arc::new(Object::Matrix(a.clone())));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 1.0,
+        2.0, 3.0,
+        1.0, 1.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    let value = Value::Weak(Arc::downgrade(&object));
+    match value.unary_op(UnaryOp::Not) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_transposes_values_for_transpose_operator()
+{
+    match Value::Int(1).unary_op(UnaryOp::Transpose) {
+        Ok(Value::Int(1)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1.0).unary_op(UnaryOp::Transpose) {
+        Ok(Value::Float(n)) => assert_eq!(1.0, n),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.unary_op(UnaryOp::Transpose) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::Matrix(b) => {
+                    assert_eq!(2, b.row_count());
+                    assert_eq!(3, b.col_count());
+                    assert_eq!(true, b.is_transposed());
+                    assert_eq!(a, b.elems());
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_unary_op_complains_on_unsupported_type_for_transpose_for_transpose_operator()
+{
+    match Value::Bool(true).unary_op(UnaryOp::Transpose) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for transpose"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.unary_op(UnaryOp::Transpose) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for transpose"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.unary_op(UnaryOp::Transpose) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for transpose"), msg),
+        _ => assert!(false),
+    }
+}

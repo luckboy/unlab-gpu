@@ -469,10 +469,10 @@ impl Value
                         fields.insert(ident.clone(), value);
                         Ok(())
                     },
-                    _ => Err(Error::Interp(format!("unsupported type for mutable field {}", ident))),
+                    _ => Err(Error::Interp(format!("unsupported type for field {}", ident))),
                 }
             },
-            _ => Err(Error::Interp(format!("unsupported type for mutable field {}", ident))),
+            _ => Err(Error::Interp(format!("unsupported type for field {}", ident))),
         }
     }
 
