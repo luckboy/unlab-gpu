@@ -1863,6 +1863,11 @@ fn test_value_unary_op_complains_on_unsupported_type_for_negation_for_neg_operat
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.unary_op(UnaryOp::Neg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     match value.unary_op(UnaryOp::Neg) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
@@ -1919,6 +1924,11 @@ fn test_value_unary_op_negates_values_for_dot_neg_operator()
 fn test_value_unary_op_complains_on_unsupported_type_for_dot_negation_for_dot_neg_operator()
 {
     match Value::Bool(true).unary_op(UnaryOp::DotNeg) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for dot negation"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.unary_op(UnaryOp::DotNeg) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for dot negation"), msg),
         _ => assert!(false),
     }
@@ -2080,6 +2090,11 @@ fn test_value_unary_op_complains_on_unsupported_type_for_transpose_for_transpose
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for transpose"), msg),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.unary_op(UnaryOp::Transpose) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for transpose"), msg),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     match value.unary_op(UnaryOp::Transpose) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for transpose"), msg),
@@ -2173,6 +2188,12 @@ fn test_value_bin_op_multiplies_values_for_mul_operator()
 fn test_value_bin_op_complains_on_unsupported_types_for_multiplication_for_mul_operator()
 {
     match Value::Bool(true).bin_op(BinOp::Mul, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for multiplication"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::Mul, &value2) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for multiplication"), msg),
         _ => assert!(false),
     }
@@ -2288,6 +2309,12 @@ fn test_value_bin_op_complains_on_unsupported_types_for_dot_multiplication_for_d
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot multiplication"), msg),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::DotMul, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot multiplication"), msg),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
     match value.bin_op(BinOp::DotMul, &value2) {
@@ -2361,6 +2388,12 @@ fn test_value_bin_op_divides_values_for_div_operator()
 fn test_value_bin_op_complains_on_unsupported_types_for_division_for_div_operator()
 {
     match Value::Bool(true).bin_op(BinOp::Div, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for division"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::Div, &value2) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for division"), msg),
         _ => assert!(false),
     }
@@ -2502,6 +2535,12 @@ fn test_value_bin_op_divides_values_for_dot_div_operator()
 fn test_value_bin_op_complains_on_unsupported_types_for_dot_division_for_dot_div_operator()
 {
     match Value::Bool(true).bin_op(BinOp::DotDiv, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot division"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::DotDiv, &value2) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot division"), msg),
         _ => assert!(false),
     }
@@ -2729,6 +2768,12 @@ fn test_value_bin_op_complains_on_unsupported_types_for_dot_addition_for_dot_add
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot addition"), msg),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::DotAdd, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot addition"), msg),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
     match value.bin_op(BinOp::DotAdd, &value2) {
@@ -2809,6 +2854,12 @@ fn test_value_bin_op_subtracts_values_for_sub_operator()
 fn test_value_bin_op_complains_on_unsupported_types_for_subtraction_for_sub_operator()
 {
     match Value::Bool(true).bin_op(BinOp::Sub, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for subtraction"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::Sub, &value2) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for subtraction"), msg),
         _ => assert!(false),
     }
@@ -2921,6 +2972,12 @@ fn test_value_bin_adds_values_for_dot_sub_operator()
 fn test_value_bin_op_complains_on_unsupported_types_for_dot_subtraction_for_dot_sub_operator()
 {
     match Value::Bool(true).bin_op(BinOp::DotSub, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot subtraction"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::DotSub, &value2) {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot subtraction"), msg),
         _ => assert!(false),
     }
