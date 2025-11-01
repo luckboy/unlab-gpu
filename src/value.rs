@@ -546,7 +546,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for multiplication"))),
                         }
                     },
@@ -570,7 +570,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for dot multiplication"))),
                         }
                     },
@@ -608,7 +608,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rdiv_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rdiv_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for division"))),
                         }
                     },
@@ -617,7 +617,7 @@ impl Value
             },
             BinOp::DotDiv => {
                 match (self, value) {
-                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() * value.to_f32())),
+                    (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() / value.to_f32())),
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
                             Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
@@ -626,14 +626,14 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for dot division"))),
                         }
                     },
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_div_elems(a, b)?)))),
-                            _ => Err(Error::Interp(String::from("unsupported types for dot divistion"))),
+                            _ => Err(Error::Interp(String::from("unsupported types for dot division"))),
                         }
                     },
                     (Value::Ref(_), Value::Int(_) | Value::Float(_)) => self.dot1("unsupported types for dot division", |v| v.bin_op(op, value)),
@@ -658,7 +658,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for addition"))),
                         }
                     },
@@ -723,7 +723,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_add_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for dot addition"))),
                         }
                     },
@@ -755,7 +755,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for subtraction"))),
                         }
                     },
@@ -779,7 +779,7 @@ impl Value
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, value.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rsub_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for dot subtraction"))),
                         }
                     },
