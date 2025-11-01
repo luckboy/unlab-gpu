@@ -2206,7 +2206,7 @@ fn test_value_bin_op_multiplies_values_for_dot_mul_operator()
         Ok(Value::Float(n)) => assert_eq!(6.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Mul, &Value::Float(3.0)) {
+    match Value::Float(2.0).bin_op(BinOp::DotMul, &Value::Float(3.0)) {
         Ok(Value::Float(n)) => assert_eq!(6.0, n),
         _ => assert!(false),
     }
@@ -2387,6 +2387,15 @@ fn test_value_bin_op_complains_on_unsupported_types_for_division_for_div_operato
 }
 
 #[test]
+fn test_value_bin_op_complains_on_division_by_zero_for_div_operator()
+{
+    match Value::Int(2).bin_op(BinOp::Div, &Value::Int(0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
 fn test_value_bin_op_complains_on_overflow_in_division_for_div_operator()
 {
     match Value::Int(i64::MIN).bin_op(BinOp::Div, &Value::Int(-1)) {
@@ -2502,4 +2511,640 @@ fn test_value_bin_op_complains_on_unsupported_types_for_dot_division_for_dot_div
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot division"), msg),
         _ => assert!(false),
     }
+}
+
+#[test]
+fn test_value_bin_op_adds_values_for_add_operator()
+{
+    match Value::Int(2).bin_op(BinOp::Add, &Value::Int(3)) {
+        Ok(Value::Int(5)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Add, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Add, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Add, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::Add, &value2) {
+        Ok(value3) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("abcdef")))), value3),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let b = vec![
+        3.0, 4.0,
+        5.0, 6.0,
+        7.0, 8.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.bin_op(BinOp::Add, &Value::Int(3)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::Add, &Value::Float(3.0)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, b.as_slice()))));
+    match Value::Int(2).bin_op(BinOp::Add, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 + y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Add, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 + y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::Add, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_bin_op(a.as_slice(), b.as_slice(), 3, 2, f32::add)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Float(4.0)]))));
+    match value.bin_op(BinOp::Add, &value2) {
+        Ok(value3) => {
+            let array = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Int(3), Value::Float(4.0)])));
+            assert_eq!(Value::Ref(array), value3);
+        },
+        _ => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    let mut fields2: BTreeMap<String, Value> = BTreeMap::new();
+    fields2.insert(String::from("a"), Value::Int(3));
+    fields2.insert(String::from("d"), Value::Float(4.0));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
+    match value.bin_op(BinOp::Add, &value2) {
+        Ok(value3) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::Int(1));
+            expected_fields.insert(String::from("b"), Value::Float(2.0));
+            expected_fields.insert(String::from("c"), Value::Bool(false));
+            expected_fields.insert(String::from("d"), Value::Float(4.0));
+            assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields)))), value3);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_unsupported_types_for_addition_for_add_operator()
+{
+    match Value::Bool(true).bin_op(BinOp::Add, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for addition"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
+    match value.bin_op(BinOp::Add, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for addition"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_overflow_in_addition_for_add_operator()
+{
+    match Value::Int(i64::MAX).bin_op(BinOp::Add, &Value::Int(1)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("overflow in addition"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_adds_values_for_dot_add_operator()
+{
+    match Value::Int(2).bin_op(BinOp::DotAdd, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::DotAdd, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let b = vec![
+        3.0, 4.0,
+        5.0, 6.0,
+        7.0, 8.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.bin_op(BinOp::DotAdd, &Value::Int(3)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotAdd, &Value::Float(3.0)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, b.as_slice()))));
+    match Value::Int(2).bin_op(BinOp::DotAdd, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 + y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::DotAdd, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 + y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotAdd, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_bin_op(a.as_slice(), b.as_slice(), 3, 2, f32::add)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(3.0)]))));
+    match value.bin_op(BinOp::DotAdd, &Value::Int(3)) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(5.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotAdd, &Value::Float(3.0)) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(5.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::DotAdd, &value2) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(5.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::DotAdd, &value2) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(5.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotAdd, &value2) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(5.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_unsupported_types_for_dot_addition_for_dot_add_operator()
+{
+    match Value::Bool(true).bin_op(BinOp::DotAdd, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot addition"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
+    match value.bin_op(BinOp::DotAdd, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot addition"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_subtracts_values_for_sub_operator()
+{
+    match Value::Int(2).bin_op(BinOp::Sub, &Value::Int(3)) {
+        Ok(Value::Int(-1)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Sub, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Sub, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Sub, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let b = vec![
+        3.0, 4.0,
+        5.0, 6.0,
+        7.0, 8.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.bin_op(BinOp::Sub, &Value::Int(3)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::Sub, &Value::Float(3.0)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, b.as_slice()))));
+    match Value::Int(2).bin_op(BinOp::Sub, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 - y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Sub, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 - y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::Sub, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_bin_op(a.as_slice(), b.as_slice(), 3, 2, f32::sub)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_unsupported_types_for_subtraction_for_sub_operator()
+{
+    match Value::Bool(true).bin_op(BinOp::Sub, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for subtraction"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
+    match value.bin_op(BinOp::Sub, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for subtraction"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2), Value::Float(1.0), Value::Bool(true)]))));
+    match value.bin_op(BinOp::Sub, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for subtraction"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_overflow_in_subtraction_for_sub_operator()
+{
+    match Value::Int(i64::MIN).bin_op(BinOp::Sub, &Value::Int(1)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("overflow in subtraction"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_adds_values_for_dot_sub_operator()
+{
+    match Value::Int(2).bin_op(BinOp::DotSub, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::DotSub, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let b = vec![
+        3.0, 4.0,
+        5.0, 6.0,
+        7.0, 8.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.bin_op(BinOp::DotSub, &Value::Int(3)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotSub, &Value::Float(3.0)) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.0)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, b.as_slice()))));
+    match Value::Int(2).bin_op(BinOp::DotSub, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 - y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::DotSub, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 - y)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotSub, &value2) {
+        Ok(value3) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_bin_op(a.as_slice(), b.as_slice(), 3, 2, f32::sub)));
+            assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
+        },
+        Err(_) => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(3.0)]))));
+    match value.bin_op(BinOp::DotSub, &Value::Int(3)) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(-1.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotSub, &Value::Float(3.0)) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(-1.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::DotSub, &value2) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(-1.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::DotSub, &value2) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(-1.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+    match value.bin_op(BinOp::DotSub, &value2) {
+        Ok(value3) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(-1.0)])))), value3),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_unsupported_types_for_dot_subtraction_for_dot_sub_operator()
+{
+    match Value::Bool(true).bin_op(BinOp::DotSub, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot subtraction"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
+    match value.bin_op(BinOp::DotSub, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for dot subtraction"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_compares_values_for_lt_operator()
+{
+    match Value::Bool(false).bin_op(BinOp::Lt, &Value::Bool(true)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Bool(false).bin_op(BinOp::Lt, &Value::Bool(false)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Int(3)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(3.0)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.0)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Int(3)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Float(3.0)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Float(2.0)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    match value.bin_op(BinOp::Lt, &value2) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.bin_op(BinOp::Lt, &value2) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_op_complains_on_unsupported_types_for_comparison_for_lt_operator()
+{
+    match Value::Bool(true).bin_op(BinOp::Lt, &Value::Int(1)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for comparison"), msg),
+        _ => assert!(false),
+    }
+    match Value::Bool(true).bin_op(BinOp::Lt, &Value::Float(1.0)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for comparison"), msg),
+        _ => assert!(false),
+    }
+    match Value::Int(1).bin_op(BinOp::Lt, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for comparison"), msg),
+        _ => assert!(false),
+    }
+    match Value::Float(1.0).bin_op(BinOp::Lt, &Value::Bool(false)) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for comparison"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
+    match value.bin_op(BinOp::Lt, &value2) {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for comparison"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_compares_values_for_ge_operator()
+{
+    match Value::Int(2).bin_op(BinOp::Ge, &Value::Int(3)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Ge, &Value::Int(2)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_compares_values_for_gt_operator()
+{
+    match Value::Int(3).bin_op(BinOp::Gt, &Value::Int(2)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Gt, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_bin_compares_values_for_le_operator()
+{
+    match Value::Int(3).bin_op(BinOp::Le, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Le, &Value::Int(2)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_neg_negates_values()
+{
+    assert!(Value::Int(-2).eq_with_types(&(-Value::Int(2))).unwrap());
+    assert!(Value::Int(-2).eq_with_types(&(-&Value::Int(2))).unwrap());
+}
+
+#[test]
+fn test_value_not_negates_values()
+{
+    assert_eq!(Value::Bool(false), !Value::Bool(true));
+    assert_eq!(Value::Bool(true), !Value::Bool(false));
+}
+
+#[test]
+fn test_value_add_adds_values()
+{
+    assert!(Value::Int(5).eq_with_types(&(Value::Int(2) + Value::Int(3))).unwrap());
+    assert!(Value::Int(5).eq_with_types(&(Value::Int(2) + &Value::Int(3))).unwrap());
+    assert!(Value::Int(5).eq_with_types(&(&Value::Int(2) + Value::Int(3))).unwrap());
+    assert!(Value::Int(5).eq_with_types(&(&Value::Int(2) + &Value::Int(3))).unwrap());
+}
+
+#[test]
+fn test_value_add_assign_adds_values()
+{
+    let mut value = Value::Int(2);
+    value += Value::Int(3);
+    assert!(Value::Int(5).eq_with_types(&value).unwrap());
+    let mut value = Value::Int(2);
+    value += &Value::Int(3);
+    assert!(Value::Int(5).eq_with_types(&value).unwrap());
+}
+
+#[test]
+fn test_value_sub_subtracts_values()
+{
+    assert!(Value::Int(-1).eq_with_types(&(Value::Int(2) - Value::Int(3))).unwrap());
+    assert!(Value::Int(-1).eq_with_types(&(Value::Int(2) - &Value::Int(3))).unwrap());
+    assert!(Value::Int(-1).eq_with_types(&(&Value::Int(2) - Value::Int(3))).unwrap());
+    assert!(Value::Int(-1).eq_with_types(&(&Value::Int(2) - &Value::Int(3))).unwrap());
+}
+
+#[test]
+fn test_value_sub_assign_subtracts_values()
+{
+    let mut value = Value::Int(2);
+    value -= Value::Int(3);
+    assert!(Value::Int(-1).eq_with_types(&value).unwrap());
+    let mut value = Value::Int(2);
+    value -= &Value::Int(3);
+    assert!(Value::Int(-1).eq_with_types(&value).unwrap());
+}
+
+#[test]
+fn test_value_mul_multiplies_values()
+{
+    assert!(Value::Int(6).eq_with_types(&(Value::Int(2) * Value::Int(3))).unwrap());
+    assert!(Value::Int(6).eq_with_types(&(Value::Int(2) * &Value::Int(3))).unwrap());
+    assert!(Value::Int(6).eq_with_types(&(&Value::Int(2) * Value::Int(3))).unwrap());
+    assert!(Value::Int(6).eq_with_types(&(&Value::Int(2) * &Value::Int(3))).unwrap());
+}
+
+#[test]
+fn test_value_mul_assign_mutliplies_values()
+{
+    let mut value = Value::Int(2);
+    value *= Value::Int(3);
+    assert!(Value::Int(6).eq_with_types(&value).unwrap());
+    let mut value = Value::Int(2);
+    value *= &Value::Int(3);
+    assert!(Value::Int(6).eq_with_types(&value).unwrap());
+}
+
+#[test]
+fn test_value_div_divides_values()
+{
+    assert!(Value::Int(2).eq_with_types(&(Value::Int(2 * 3) / Value::Int(3))).unwrap());
+    assert!(Value::Int(2).eq_with_types(&(Value::Int(2 * 3) / &Value::Int(3))).unwrap());
+    assert!(Value::Int(2).eq_with_types(&(&Value::Int(2 * 3) / Value::Int(3))).unwrap());
+    assert!(Value::Int(2).eq_with_types(&(&Value::Int(2 * 3) / &Value::Int(3))).unwrap());
+}
+
+#[test]
+fn test_value_div_assign_divides_values()
+{
+    let mut value = Value::Int(2 * 3);
+    value /= Value::Int(3);
+    assert!(Value::Int(2).eq_with_types(&value).unwrap());
+    let mut value = Value::Int(2 * 3);
+    value /= &Value::Int(3);
+    assert!(Value::Int(2).eq_with_types(&value).unwrap());
 }

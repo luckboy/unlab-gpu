@@ -681,7 +681,7 @@ impl Value
                             (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
                                 let mut new_fields: BTreeMap<String, Value> = BTreeMap::new();
                                 let idents: BTreeSet<&String> = fields.keys().collect();
-                                let idents2: BTreeSet<&String> = fields.keys().collect();
+                                let idents2: BTreeSet<&String> = fields2.keys().collect();
                                 let idents3: Vec<&String> = idents.union(&idents2).map(|s| *s).collect();
                                 for ident in &idents3 {
                                     match fields.get(*ident) {
@@ -708,12 +708,6 @@ impl Value
             },
             BinOp::DotAdd => {
                 match (self, value) {
-                    (Value::Int(a), Value::Int(b)) => {
-                        match a.checked_add(*b) {
-                            Some(c) => Ok(Value::Int(c)),
-                            None => Err(Error::Interp(String::from("overflow"))),
-                        }
-                    },
                     (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() + value.to_f32())),
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
@@ -802,10 +796,10 @@ impl Value
                     (Value::Object(object), Value::Object(object2)) => {
                         match (&**object, &**object2) {
                             (Object::String(s), Object::String(t)) => Ok(Value::Bool(s < t)),
-                            (_, _) => Err(Error::Interp(String::from("unsupported types for comparation"))),
+                            (_, _) => Err(Error::Interp(String::from("unsupported types for comparison"))),
                         }
                     },
-                    (_, _) => Err(Error::Interp(String::from("unsupported types for comparation"))),
+                    (_, _) => Err(Error::Interp(String::from("unsupported types for comparison"))),
                 }
             },
             BinOp::Ge => Ok(Value::Bool(!self.bin_op(BinOp::Lt, value)?.to_bool())),
