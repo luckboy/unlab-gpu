@@ -1384,7 +1384,13 @@ impl<'a> Iterator for Iter<'a>
                             None
                         };
                         if *from < *to {
-                            *from += *step;
+                            match from.checked_add(*step) {
+                                Some(tmp_from) => *from = tmp_from,
+                                None => {
+                                    *is_stopped = true;
+                                    return Some(Err(Error::Interp(String::from("overflow in iteration"))));
+                                },
+                            }
                         } else {
                             *is_stopped = true;
                         }
@@ -1396,7 +1402,13 @@ impl<'a> Iterator for Iter<'a>
                             None
                         };
                         if *from > *to {
-                            *from += *step;
+                            match from.checked_add(*step) {
+                                Some(tmp_from) => *from = tmp_from,
+                                None => {
+                                    *is_stopped = true;
+                                    return Some(Err(Error::Interp(String::from("overflow in iteration"))));
+                                },
+                            }
                         } else {
                             *is_stopped = true;
                         }
