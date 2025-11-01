@@ -2680,7 +2680,7 @@ fn test_value_bin_op_complains_on_overflow_in_addition_for_add_operator()
 }
 
 #[test]
-fn test_value_bin_adds_values_for_dot_add_operator()
+fn test_value_bin_op_adds_values_for_dot_add_operator()
 {
     match Value::Int(2).bin_op(BinOp::DotAdd, &Value::Int(3)) {
         Ok(Value::Float(n)) => assert_eq!(5.0, n),
@@ -2887,7 +2887,7 @@ fn test_value_bin_op_complains_on_overflow_in_subtraction_for_sub_operator()
 }
 
 #[test]
-fn test_value_bin_adds_values_for_dot_sub_operator()
+fn test_value_bin_op_subtracts_values_for_dot_sub_operator()
 {
     match Value::Int(2).bin_op(BinOp::DotSub, &Value::Int(3)) {
         Ok(Value::Float(n)) => assert_eq!(-1.0, n),
@@ -2990,7 +2990,7 @@ fn test_value_bin_op_complains_on_unsupported_types_for_dot_subtraction_for_dot_
 }
 
 #[test]
-fn test_value_bin_compares_values_for_lt_operator()
+fn test_value_bin_op_compares_values_for_lt_operator()
 {
     match Value::Bool(false).bin_op(BinOp::Lt, &Value::Bool(true)) {
         Ok(Value::Bool(true)) => assert!(true),
@@ -3074,7 +3074,7 @@ fn test_value_bin_op_complains_on_unsupported_types_for_comparison_for_lt_operat
 }
 
 #[test]
-fn test_value_bin_compares_values_for_ge_operator()
+fn test_value_bin_op_compares_values_for_ge_operator()
 {
     match Value::Int(2).bin_op(BinOp::Ge, &Value::Int(3)) {
         Ok(Value::Bool(false)) => assert!(true),
@@ -3087,7 +3087,7 @@ fn test_value_bin_compares_values_for_ge_operator()
 }
 
 #[test]
-fn test_value_bin_compares_values_for_gt_operator()
+fn test_value_bin_op_compares_values_for_gt_operator()
 {
     match Value::Int(3).bin_op(BinOp::Gt, &Value::Int(2)) {
         Ok(Value::Bool(true)) => assert!(true),
@@ -3100,7 +3100,7 @@ fn test_value_bin_compares_values_for_gt_operator()
 }
 
 #[test]
-fn test_value_bin_compares_values_for_le_operator()
+fn test_value_bin_op_compares_values_for_le_operator()
 {
     match Value::Int(3).bin_op(BinOp::Le, &Value::Int(2)) {
         Ok(Value::Bool(false)) => assert!(true),
