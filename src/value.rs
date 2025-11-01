@@ -815,9 +815,9 @@ impl Value
         match self {
             Value::Object(object) => {
                 match &**object {
+                    Object::String(s) => Ok(Some(Iter::new(IterEnum::String(s.chars())))),
                     Object::IntRange(a, b, c) => Ok(Some(Iter::new(IterEnum::IntRange(*a, *b, *c, false)))),
                     Object::FloatRange(a, b, c) => Ok(Some(Iter::new(IterEnum::FloatRange(*a, *b, *c, false)))),
-                    Object::String(s) => Ok(Some(Iter::new(IterEnum::String(s.chars())))),
                     Object::MatrixArray(_, _, _, _) => Ok(Some(Iter::new(IterEnum::MatrixArray(object.clone(), 0, false)))), 
                     Object::MatrixRowSlice(matrix_array, i) => Ok(Some(Iter::new(IterEnum::MatrixRowSlice(matrix_array.clone(), *i, 0, false)))),
                     _ => Ok(None),
@@ -1375,6 +1375,16 @@ impl<'a> Iterator for Iter<'a>
     fn next(&mut self) -> Option<Self::Item>
     {
         match &mut self.iter_enum {
+            IterEnum::String(cs) => {
+                match cs.next() {
+                    Some(c) => {
+                        let mut s = String::new();
+                        s.push(c);
+                        Some(Ok(Value::Object(Arc::new(Object::String(s)))))
+                    },
+                    None => None,
+                }
+            },
             IterEnum::IntRange(from, to, step, is_stopped) => {
                 if !*is_stopped {
                     let current = if *step > 0 {
@@ -1461,16 +1471,6 @@ impl<'a> Iterator for Iter<'a>
                     }
                 } else {
                     None
-                }
-            },
-            IterEnum::String(cs) => {
-                match cs.next() {
-                    Some(c) => {
-                        let mut s = String::new();
-                        s.push(c);
-                        Some(Ok(Value::Object(Arc::new(Object::String(s)))))
-                    },
-                    None => None,
                 }
             },
             IterEnum::MatrixArray(matrix_array, i, is_stopped) => {
@@ -1565,9 +1565,9 @@ impl<'a> Iterator for Iter<'a>
 #[derive(Clone, Debug)]
 enum IterEnum<'a>
 {
+    String(Chars<'a>),
     IntRange(i64, i64, i64, bool),
     FloatRange(f32, f32, f32, bool),
-    String(Chars<'a>),
     MatrixArray(Arc<Object>, usize, bool),
     MatrixRowSlice(Arc<Object>, usize, usize, bool),
     Array(Arc<RwLock<MutObject>>, usize, bool),
