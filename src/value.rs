@@ -124,7 +124,7 @@ impl Value
 
     pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
-        match (&self, value) {
+        match (self, value) {
             (Value::None, Value::None) => Ok(true),
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
@@ -148,7 +148,7 @@ impl Value
 
     pub fn eq_without_types(&self, value: &Value) -> Result<bool>
     {
-        match (&self, value) {
+        match (self, value) {
             (Value::None, Value::None) => Ok(true),
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
