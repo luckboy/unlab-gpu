@@ -856,10 +856,18 @@ impl Value
             Value::Bool(true) => write!(f, "{:>width$}", "true")?,
             Value::Int(n) => write!(f, "{:>width$}", n)?,
             Value::Float(n) => {
-                if format!("{:.4}", n).len() > 11 {
-                    write!(f, "{:>width$.4e}", n)?;
+                if n.floor() == *n {
+                    if format!("{}", n).len() > 11 {
+                        write!(f, "{:>width$.4e}", n)?;
+                    } else {
+                        write!(f, "{:>width$}", n)?;
+                    }
                 } else {
-                    write!(f, "{:>width$.4}", n)?;
+                    if format!("{:.4}", n).len() > 11 {
+                        write!(f, "{:>width$.4e}", n)?;
+                    } else {
+                        write!(f, "{:>width$.4}", n)?;
+                    }
                 }
             },
             Value::Object(object) => {
