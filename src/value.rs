@@ -854,19 +854,19 @@ impl Value
             Value::None => write!(f, "{:>width$}", "none")?,
             Value::Bool(false) => write!(f, "{:>width$}", "false")?,
             Value::Bool(true) => write!(f, "{:>width$}", "true")?,
-            Value::Int(n) => write!(f, "{:>width$}", n)?,
-            Value::Float(n) => {
-                if n.floor() == *n {
-                    if format!("{}", n).len() > 11 {
-                        write!(f, "{:>width$.4e}", n)?;
+            Value::Int(a) => write!(f, "{:>width$}", a)?,
+            Value::Float(a) => {
+                if a.floor() == *a {
+                    if format!("{}", a).len() > 11 {
+                        write!(f, "{:>width$.4e}", a)?;
                     } else {
-                        write!(f, "{:>width$}", n)?;
+                        write!(f, "{:>width$}", a)?;
                     }
                 } else {
-                    if format!("{:.4}", n).len() > 11 {
-                        write!(f, "{:>width$.4e}", n)?;
+                    if format!("{:.4}", a).len() > 11 {
+                        write!(f, "{:>width$.4e}", a)?;
                     } else {
-                        write!(f, "{:>width$.4}", n)?;
+                        write!(f, "{:>width$.4}", a)?;
                     }
                 }
             },
