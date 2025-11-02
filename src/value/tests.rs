@@ -1837,8 +1837,8 @@ fn test_value_unary_op_negates_values_for_neg_operator()
         Ok(Value::Int(-2)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(2.0).unary_op(UnaryOp::Neg) {
-        Ok(Value::Float(n)) => assert_eq!(-2.0, n),
+    match Value::Float(2.5).unary_op(UnaryOp::Neg) {
+        Ok(Value::Float(n)) => assert_eq!(-2.5, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -1896,8 +1896,8 @@ fn test_value_unary_op_negates_values_for_dot_neg_operator()
         Ok(Value::Float(n)) => assert_eq!(-2.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).unary_op(UnaryOp::DotNeg) {
-        Ok(Value::Float(n)) => assert_eq!(-2.0, n),
+    match Value::Float(2.5).unary_op(UnaryOp::DotNeg) {
+        Ok(Value::Float(n)) => assert_eq!(-2.5, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2124,16 +2124,16 @@ fn test_value_bin_op_multiplies_values_for_mul_operator()
         Ok(Value::Int(6)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Mul, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(6.0, n),
+    match Value::Int(2).bin_op(BinOp::Mul, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(7.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Mul, &Value::Int(3)) {
-        Ok(Value::Float(n)) => assert_eq!(6.0, n),
+    match Value::Float(2.5).bin_op(BinOp::Mul, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(7.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Mul, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(6.0, n),
+    match Value::Float(2.5).bin_op(BinOp::Mul, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(8.75, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2153,9 +2153,9 @@ fn test_value_bin_op_multiplies_values_for_mul_operator()
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::Mul, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::Mul, &Value::Float(3.5)) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x * 3.0)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x * 3.5)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2168,9 +2168,9 @@ fn test_value_bin_op_multiplies_values_for_mul_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Mul, &value2) {
+    match Value::Float(2.5).bin_op(BinOp::Mul, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(2, 3, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 * y)));
+            let matrix_array = Arc::new(Object::MatrixArray(2, 3, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.5 * y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2227,8 +2227,8 @@ fn test_value_bin_op_multiplies_values_for_dot_mul_operator()
         Ok(Value::Float(n)) => assert_eq!(6.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::DotMul, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(6.0, n),
+    match Value::Float(2.5).bin_op(BinOp::DotMul, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(8.75, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2249,9 +2249,9 @@ fn test_value_bin_op_multiplies_values_for_dot_mul_operator()
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::DotMul, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::DotMul, &Value::Float(3.5)) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x * 3.0)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x * 3.5)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2264,9 +2264,9 @@ fn test_value_bin_op_multiplies_values_for_dot_mul_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::DotMul, &value2) {
+    match Value::Float(2.5).bin_op(BinOp::DotMul, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 * y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.5 * y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2334,12 +2334,12 @@ fn test_value_bin_op_divides_values_for_div_operator()
         Ok(Value::Float(n)) => assert_eq!(2.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0 * 3.0).bin_op(BinOp::Div, &Value::Int(3)) {
-        Ok(Value::Float(n)) => assert_eq!(2.0, n),
+    match Value::Float(2.5 * 3.0).bin_op(BinOp::Div, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(2.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0 * 3.0).bin_op(BinOp::Div, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(2.0, n),
+    match Value::Float(2.5 * 3.5).bin_op(BinOp::Div, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(2.5, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2375,9 +2375,9 @@ fn test_value_bin_op_divides_values_for_div_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0).bin_op(BinOp::Div, &value2) {
+    match Value::Float((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0).bin_op(BinOp::Div, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| (1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| ((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0) / y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2444,8 +2444,8 @@ fn test_value_bin_op_divides_values_for_dot_div_operator()
         Ok(Value::Float(n)) => assert_eq!(2.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0 * 3.0).bin_op(BinOp::DotDiv, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(2.0, n),
+    match Value::Float(2.5 * 3.5).bin_op(BinOp::DotDiv, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(2.5, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2491,9 +2491,9 @@ fn test_value_bin_op_divides_values_for_dot_div_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0).bin_op(BinOp::Div, &value2) {
+    match Value::Float((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0).bin_op(BinOp::Div, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(d.as_slice(), 2, 3, |y| (1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(d.as_slice(), 2, 3, |y| ((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0) / y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2559,16 +2559,16 @@ fn test_value_bin_op_adds_values_for_add_operator()
         Ok(Value::Int(5)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Add, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+    match Value::Int(2).bin_op(BinOp::Add, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(5.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Add, &Value::Int(3)) {
-        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+    match Value::Float(2.5).bin_op(BinOp::Add, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(5.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Add, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+    match Value::Float(2.5).bin_op(BinOp::Add, &Value::Float(3.25)) {
+        Ok(Value::Float(n)) => assert_eq!(5.75, n),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
@@ -2595,9 +2595,9 @@ fn test_value_bin_op_adds_values_for_add_operator()
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::Add, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::Add, &Value::Float(3.5)) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.0)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.5)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2610,9 +2610,9 @@ fn test_value_bin_op_adds_values_for_add_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Add, &value2) {
+    match Value::Float(2.5).bin_op(BinOp::Add, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 + y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.5 + y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2686,8 +2686,8 @@ fn test_value_bin_op_adds_values_for_dot_add_operator()
         Ok(Value::Float(n)) => assert_eq!(5.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::DotAdd, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(5.0, n),
+    match Value::Float(2.5).bin_op(BinOp::DotAdd, &Value::Float(3.25)) {
+        Ok(Value::Float(n)) => assert_eq!(5.75, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2708,9 +2708,9 @@ fn test_value_bin_op_adds_values_for_dot_add_operator()
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::DotAdd, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::DotAdd, &Value::Float(3.5)) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.0)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x + 3.5)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2723,9 +2723,9 @@ fn test_value_bin_op_adds_values_for_dot_add_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::DotAdd, &value2) {
+    match Value::Float(2.5).bin_op(BinOp::DotAdd, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 + y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.5 + y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2789,16 +2789,16 @@ fn test_value_bin_op_subtracts_values_for_sub_operator()
         Ok(Value::Int(-1)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Sub, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+    match Value::Int(2).bin_op(BinOp::Sub, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Sub, &Value::Int(3)) {
-        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+    match Value::Float(2.5).bin_op(BinOp::Sub, &Value::Int(3)) {
+        Ok(Value::Float(n)) => assert_eq!(-0.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Sub, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+    match Value::Float(2.5).bin_op(BinOp::Sub, &Value::Float(3.25)) {
+        Ok(Value::Float(n)) => assert_eq!(-0.75, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2819,9 +2819,9 @@ fn test_value_bin_op_subtracts_values_for_sub_operator()
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::Sub, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::Sub, &Value::Float(3.5)) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.0)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.5)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2834,9 +2834,9 @@ fn test_value_bin_op_subtracts_values_for_sub_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Sub, &value2) {
+    match Value::Float(2.5).bin_op(BinOp::Sub, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 - y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.5 - y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2893,8 +2893,8 @@ fn test_value_bin_op_subtracts_values_for_dot_sub_operator()
         Ok(Value::Float(n)) => assert_eq!(-1.0, n),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::DotSub, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(-1.0, n),
+    match Value::Float(2.5).bin_op(BinOp::DotSub, &Value::Float(3.25)) {
+        Ok(Value::Float(n)) => assert_eq!(-0.75, n),
         _ => assert!(false),
     }
     let a = vec![
@@ -2915,9 +2915,9 @@ fn test_value_bin_op_subtracts_values_for_dot_sub_operator()
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::DotSub, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::DotSub, &Value::Float(3.5)) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.0)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(a.as_slice(), 3, 2, |x| x - 3.5)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -2930,9 +2930,9 @@ fn test_value_bin_op_subtracts_values_for_dot_sub_operator()
         },
         Err(_) => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::DotSub, &value2) {
+    match Value::Float(2.5).bin_op(BinOp::DotSub, &value2) {
         Ok(value3) => {
-            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.0 - y)));
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(b.as_slice(), 2, 3, |y| 2.5 - y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
@@ -3008,7 +3008,7 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(3.0)) {
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.5)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
@@ -3024,11 +3024,11 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Float(3.0)) {
+    match Value::Float(2.5).bin_op(BinOp::Lt, &Value::Float(3.5)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Float(2.0)) {
+    match Value::Float(2.5).bin_op(BinOp::Lt, &Value::Float(2.5)) {
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
