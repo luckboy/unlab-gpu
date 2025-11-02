@@ -466,11 +466,11 @@ fn test_value_eq_without_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).eq_without_types(&Value::Float(1234.0)) {
+    match Value::Float(1234.0).eq_without_types(&Value::Int(1234)) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1234.0).eq_without_types(&Value::Int(1234)) {
+    match Value::Int(1234).eq_without_types(&Value::Float(1234.0)) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -621,11 +621,11 @@ fn test_value_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).eq_without_types(&Value::Float(4567.0)) {
+    match Value::Float(1234.0).eq_without_types(&Value::Int(4567)) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1234.0).eq_without_types(&Value::Int(4567)) {
+    match Value::Int(1234).eq_without_types(&Value::Float(4567.0)) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -912,11 +912,11 @@ fn test_value_bin_op_compares_values_for_eq_operator()
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).bin_op(BinOp::Eq, &Value::Float(1234.0)) {
+    match Value::Float(1234.0).bin_op(BinOp::Eq, &Value::Int(1234)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1234.0).bin_op(BinOp::Eq, &Value::Int(1234)) {
+    match Value::Int(1234).bin_op(BinOp::Eq, &Value::Float(1234.0)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
@@ -949,11 +949,11 @@ fn test_value_bin_op_compares_values_for_ne_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).bin_op(BinOp::Ne, &Value::Float(1234.0)) {
+    match Value::Float(1234.0).bin_op(BinOp::Ne, &Value::Int(1234)) {
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1234.0).bin_op(BinOp::Ne, &Value::Int(1234)) {
+    match Value::Int(1234).bin_op(BinOp::Ne, &Value::Float(1234.0)) {
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
@@ -2124,12 +2124,12 @@ fn test_value_bin_op_multiplies_values_for_mul_operator()
         Ok(Value::Int(6)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Mul, &Value::Float(3.5)) {
-        Ok(Value::Float(n)) => assert_eq!(7.0, n),
-        _ => assert!(false),
-    }
     match Value::Float(2.5).bin_op(BinOp::Mul, &Value::Int(3)) {
         Ok(Value::Float(n)) => assert_eq!(7.5, n),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Mul, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(7.0, n),
         _ => assert!(false),
     }
     match Value::Float(2.5).bin_op(BinOp::Mul, &Value::Float(3.5)) {
@@ -2330,12 +2330,12 @@ fn test_value_bin_op_divides_values_for_div_operator()
         Ok(Value::Int(2)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2 * 3).bin_op(BinOp::Div, &Value::Float(3.0)) {
-        Ok(Value::Float(n)) => assert_eq!(2.0, n),
-        _ => assert!(false),
-    }
     match Value::Float(2.5 * 3.0).bin_op(BinOp::Div, &Value::Int(3)) {
         Ok(Value::Float(n)) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    match Value::Int(2 * 3).bin_op(BinOp::Div, &Value::Float(3.0)) {
+        Ok(Value::Float(n)) => assert_eq!(2.0, n),
         _ => assert!(false),
     }
     match Value::Float(2.5 * 3.5).bin_op(BinOp::Div, &Value::Float(3.5)) {
@@ -2559,11 +2559,11 @@ fn test_value_bin_op_adds_values_for_add_operator()
         Ok(Value::Int(5)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Add, &Value::Float(3.5)) {
+    match Value::Float(2.5).bin_op(BinOp::Add, &Value::Int(3)) {
         Ok(Value::Float(n)) => assert_eq!(5.5, n),
         _ => assert!(false),
     }
-    match Value::Float(2.5).bin_op(BinOp::Add, &Value::Int(3)) {
+    match Value::Int(2).bin_op(BinOp::Add, &Value::Float(3.5)) {
         Ok(Value::Float(n)) => assert_eq!(5.5, n),
         _ => assert!(false),
     }
@@ -2789,12 +2789,12 @@ fn test_value_bin_op_subtracts_values_for_sub_operator()
         Ok(Value::Int(-1)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Sub, &Value::Float(3.5)) {
-        Ok(Value::Float(n)) => assert_eq!(-1.5, n),
-        _ => assert!(false),
-    }
     match Value::Float(2.5).bin_op(BinOp::Sub, &Value::Int(3)) {
         Ok(Value::Float(n)) => assert_eq!(-0.5, n),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Sub, &Value::Float(3.5)) {
+        Ok(Value::Float(n)) => assert_eq!(-1.5, n),
         _ => assert!(false),
     }
     match Value::Float(2.5).bin_op(BinOp::Sub, &Value::Float(3.25)) {
@@ -3008,19 +3008,19 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.5)) {
-        Ok(Value::Bool(true)) => assert!(true),
-        _ => assert!(false),
-    }
-    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.0)) {
-        Ok(Value::Bool(false)) => assert!(true),
-        _ => assert!(false),
-    }
     match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Int(3)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
     match Value::Float(2.0).bin_op(BinOp::Lt, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.5)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.0)) {
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
