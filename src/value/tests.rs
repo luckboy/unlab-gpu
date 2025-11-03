@@ -3170,8 +3170,8 @@ fn test_value_not_negates_values()
 fn test_value_add_adds_values()
 {
     assert!(Value::Int(5).eq_with_types(&(Value::Int(2) + Value::Int(3))).unwrap());
-    assert!(Value::Int(5).eq_with_types(&(Value::Int(2) + &Value::Int(3))).unwrap());
     assert!(Value::Int(5).eq_with_types(&(&Value::Int(2) + Value::Int(3))).unwrap());
+    assert!(Value::Int(5).eq_with_types(&(Value::Int(2) + &Value::Int(3))).unwrap());
     assert!(Value::Int(5).eq_with_types(&(&Value::Int(2) + &Value::Int(3))).unwrap());
 }
 
@@ -3190,8 +3190,8 @@ fn test_value_add_assign_adds_values()
 fn test_value_sub_subtracts_values()
 {
     assert!(Value::Int(-1).eq_with_types(&(Value::Int(2) - Value::Int(3))).unwrap());
-    assert!(Value::Int(-1).eq_with_types(&(Value::Int(2) - &Value::Int(3))).unwrap());
     assert!(Value::Int(-1).eq_with_types(&(&Value::Int(2) - Value::Int(3))).unwrap());
+    assert!(Value::Int(-1).eq_with_types(&(Value::Int(2) - &Value::Int(3))).unwrap());
     assert!(Value::Int(-1).eq_with_types(&(&Value::Int(2) - &Value::Int(3))).unwrap());
 }
 
@@ -3210,8 +3210,8 @@ fn test_value_sub_assign_subtracts_values()
 fn test_value_mul_multiplies_values()
 {
     assert!(Value::Int(6).eq_with_types(&(Value::Int(2) * Value::Int(3))).unwrap());
-    assert!(Value::Int(6).eq_with_types(&(Value::Int(2) * &Value::Int(3))).unwrap());
     assert!(Value::Int(6).eq_with_types(&(&Value::Int(2) * Value::Int(3))).unwrap());
+    assert!(Value::Int(6).eq_with_types(&(Value::Int(2) * &Value::Int(3))).unwrap());
     assert!(Value::Int(6).eq_with_types(&(&Value::Int(2) * &Value::Int(3))).unwrap());
 }
 
@@ -3230,8 +3230,8 @@ fn test_value_mul_assign_mutliplies_values()
 fn test_value_div_divides_values()
 {
     assert!(Value::Int(2).eq_with_types(&(Value::Int(2 * 3) / Value::Int(3))).unwrap());
-    assert!(Value::Int(2).eq_with_types(&(Value::Int(2 * 3) / &Value::Int(3))).unwrap());
     assert!(Value::Int(2).eq_with_types(&(&Value::Int(2 * 3) / Value::Int(3))).unwrap());
+    assert!(Value::Int(2).eq_with_types(&(Value::Int(2 * 3) / &Value::Int(3))).unwrap());
     assert!(Value::Int(2).eq_with_types(&(&Value::Int(2 * 3) / &Value::Int(3))).unwrap());
 }
 
