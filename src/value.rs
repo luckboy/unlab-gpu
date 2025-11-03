@@ -129,8 +129,16 @@ impl Value
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
             (Value::Float(a), Value::Float(b)) => Ok(a == b),
-            (Value::Object(object), Value::Object(object2)) => object.priv_eq(&**object2),
+            (Value::Object(object), Value::Object(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
+                object.priv_eq(&**object2)
+            },
             (Value::Ref(object), Value::Ref(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
                 object_g.priv_eq(&*object2_g, Self::eq_with_types)
@@ -153,8 +161,16 @@ impl Value
             (Value::Bool(a), Value::Bool(b)) => Ok(a == b),
             (Value::Int(a), Value::Int(b)) => Ok(a == b),
             (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(self.to_f32() == value.to_f32()),
-            (Value::Object(object), Value::Object(object2)) => object.priv_eq(&**object2),
+            (Value::Object(object), Value::Object(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
+                object.priv_eq(&**object2)
+            },
             (Value::Ref(object), Value::Ref(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
                 object_g.priv_eq(&*object2_g, Self::eq_without_types)
