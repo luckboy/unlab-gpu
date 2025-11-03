@@ -863,7 +863,7 @@ impl Value
                         write!(f, "{:>width$}", a)?;
                     }
                 } else {
-                    if format!("{:.4}", a).len() > 11 {
+                    if format!("{:.4}", a).len() > 11 || (a.abs() < 0.0001 && *a != 0.0) {
                         write!(f, "{:>width$.4e}", a)?;
                     } else {
                         write!(f, "{:>width$.4}", a)?;
@@ -896,7 +896,7 @@ impl Value
                     },
                     Object::BuiltinFun(ident, _) => write!(f, "{}", ident)?,
                     Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
-                        if *row_count > 0 { 
+                        if *row_count > 0 && *col_count > 0 { 
                             let new_indent = indent + 4;
                             writeln!(f, "[")?;
                             for i in 0..*row_count {
@@ -964,11 +964,11 @@ impl Value
                             let new_indent = indent + 4;
                             writeln!(f, "{{")?;
                             for (ident, field) in fields {
-                                write!(f, "{}: ", ident)?;
+                                write!(f, "{:new_indent$}{}: ", "", ident)?;
                                 field.fmt_with_indent(f, new_indent, is_width)?;
                                 writeln!(f, "")?;
                             }
-                            write!(f, "}}")?;
+                            write!(f, "{:indent$}}}", "")?;
                         } else {
                             write!(f, "{{}}")?;
                         }

@@ -998,6 +998,46 @@ fn test_value_eq_returns_false()
 }
 
 #[test]
+fn test_value_to_matrix_array_converts_matrix_to_matrix_array()
+{
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    match value.to_matrix_array() {
+        Ok(value2) => {
+            let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+            assert_eq!(Value::Object(matrix_array), value2);
+        },
+        Err(_) => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()).transpose())));
+    match value.to_matrix_array() {
+        Ok(value2) => {
+            let matrix_array = Arc::new(Object::MatrixArray(2, 3, TransposeFlag::Transpose, a.clone()));
+            assert_eq!(Value::Object(matrix_array), value2);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_to_matrix_array_complains_on_unsupported_type_for_conversion_to_matrix_array()
+{
+    match Value::Int(1).to_matrix_array() {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for conversion to matrix array"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.to_matrix_array() {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for conversion to matrix array"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
 fn test_value_dot1_calculates_result_for_values()
 {
     let a = vec![
@@ -3204,4 +3244,309 @@ fn test_value_div_assign_divides_values()
     let mut value = Value::Int(2 * 3);
     value /= &Value::Int(3);
     assert!(Value::Int(2).eq_with_types(&value).unwrap());
+}
+
+#[test]
+fn test_value_partial_cmp_returns_orderings()
+{
+    assert_eq!(Some(Ordering::Less), Value::Bool(false).partial_cmp(&Value::Bool(true)));
+    assert_eq!(Some(Ordering::Equal), Value::Bool(false).partial_cmp(&Value::Bool(false)));
+    assert_eq!(Some(Ordering::Greater), Value::Bool(true).partial_cmp(&Value::Bool(false)));
+    assert_eq!(Some(Ordering::Less), Value::Int(2).partial_cmp(&Value::Int(3)));
+    assert_eq!(Some(Ordering::Equal), Value::Int(2).partial_cmp(&Value::Int(2)));
+    assert_eq!(Some(Ordering::Greater), Value::Int(3).partial_cmp(&Value::Int(2)));
+    assert_eq!(Some(Ordering::Less), Value::Float(2.0).partial_cmp(&Value::Int(3)));
+    assert_eq!(Some(Ordering::Equal), Value::Float(2.0).partial_cmp(&Value::Int(2)));
+    assert_eq!(Some(Ordering::Greater), Value::Float(3.0).partial_cmp(&Value::Int(2)));
+    assert_eq!(Some(Ordering::Less), Value::Int(2).partial_cmp(&Value::Float(2.5)));
+    assert_eq!(Some(Ordering::Equal), Value::Int(2).partial_cmp(&Value::Float(2.0)));
+    assert_eq!(Some(Ordering::Greater), Value::Int(3).partial_cmp(&Value::Float(2.0)));
+    assert_eq!(Some(Ordering::Less), Value::Float(2.5).partial_cmp(&Value::Float(3.5)));
+    assert_eq!(Some(Ordering::Equal), Value::Float(2.5).partial_cmp(&Value::Float(2.5)));
+    assert_eq!(Some(Ordering::Greater), Value::Float(3.5).partial_cmp(&Value::Float(2.5)));
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
+    assert_eq!(Some(Ordering::Less), value.partial_cmp(&value2));
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    assert_eq!(Some(Ordering::Equal), value.partial_cmp(&value2));
+    let value = Value::Object(Arc::new(Object::String(String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    assert_eq!(Some(Ordering::Greater), value.partial_cmp(&value2));
+}
+
+#[test]
+fn test_value_partial_cmp_does_not_return_orderings()
+{
+    assert_eq!(None, Value::Bool(true).partial_cmp(&Value::Int(1)));
+    assert_eq!(None, Value::Bool(true).partial_cmp(&Value::Float(1.0)));
+    assert_eq!(None, Value::Int(1).partial_cmp(&Value::Bool(false)));
+    assert_eq!(None, Value::Float(1.0).partial_cmp(&Value::Bool(false)));
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
+    assert_eq!(None, value.partial_cmp(&value2));
+}
+
+#[test]
+fn test_value_iter_returns_iterators()
+{
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.iter() {
+        Ok(Some(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
+    match value.iter() {
+        Ok(Some(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
+    match value.iter() {
+        Ok(Some(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    match value.iter() {
+        Ok(Some(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 1.0,
+        2.0, 3.0,
+        1.0, 1.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    match value.iter() {
+        Ok(Some(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.iter() {
+        Ok(Some(_)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_iter_does_not_return_iterator()
+{
+    match Value::None.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Bool(true).iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(1).iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Float(1.0).iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    let a = matrix![[1.0, 2.0], [3.0, 4.0]];
+    let value = Value::Object(Arc::new(Object::Matrix(a.clone())));
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    let value = Value::Weak(Arc::downgrade(&object));
+    match value.iter() {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_fmt_formats_values()
+{
+    assert_eq!(String::from("none"), format!("{}", Value::None));
+    assert_eq!(String::from("true"), format!("{}", Value::Bool(true)));
+    assert_eq!(String::from("false"), format!("{}", Value::Bool(false)));
+    assert_eq!(String::from("1234"), format!("{}", Value::Int(1234)));
+    assert_eq!(String::from("0"), format!("{}", Value::Int(0)));
+    assert_eq!(String::from("-1234"), format!("{}", Value::Int(-1234)));
+    assert_eq!(String::from("1234"), format!("{}", Value::Float(1234.0)));
+    assert_eq!(String::from("1.5000e20"), format!("{}", Value::Float(1.5e20)));
+    assert_eq!(String::from("12.3400"), format!("{}", Value::Float(12.34)));
+    assert_eq!(String::from("1.5000e-20"), format!("{}", Value::Float(1.5e-20)));
+    assert_eq!(String::from("0"), format!("{}", Value::Float(0.0)));
+    assert_eq!(String::from("-1234"), format!("{}", Value::Float(-1234.0)));
+    assert_eq!(String::from("-1.5000e20"), format!("{}", Value::Float(-1.5e20)));
+    assert_eq!(String::from("-12.3400"), format!("{}", Value::Float(-12.34)));
+    assert_eq!(String::from("-1.5000e-20"), format!("{}", Value::Float(-1.5e-20)));
+    assert_eq!(String::from("inf"), format!("{}", Value::Float(f32::INFINITY)));
+    assert_eq!(String::from("-inf"), format!("{}", Value::Float(-f32::INFINITY)));
+    assert_eq!(String::from("NaN"), format!("{}", Value::Float(f32::NAN)));
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    assert_eq!(String::from("abc"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
+    assert_eq!(String::from("2 to 4 by 1"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
+    assert_eq!(String::from("2 to 4.5000 by 1.5000"), format!("{}", value));
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let s = "
+[
+              1           2
+              3           4
+              5           6
+]";
+    let s2 = &s[1..];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()))));
+    assert_eq!(String::from(s2), format!("{}", value));
+    let s = "
+[
+              1           3           5
+              2           4           6
+]";
+    let s2 = &s[1..];
+    let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, a.as_slice()).transpose())));
+    assert_eq!(String::from(s2), format!("{}", value));
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
+    assert_eq!(String::from("a::b::f"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
+    assert_eq!(String::from("f"), format!("{}", value));
+    let s = "
+[
+              1           2
+              3           4
+              5           6
+]";
+    let s2 = &s[1..];
+    let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    assert_eq!(String::from(s2), format!("{}", value));
+    let s = "
+[
+              1           3           5
+              2           4           6
+]";
+    let s2 = &s[1..];
+    let value = Value::Object(Arc::new(Object::MatrixArray(2, 3, TransposeFlag::Transpose, a.clone())));
+    assert_eq!(String::from(s2), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::MatrixArray(2, 0, TransposeFlag::NoTranspose, Vec::new())));
+    assert_eq!(String::from("[]"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::MatrixArray(0, 2, TransposeFlag::NoTranspose, Vec::new())));
+    assert_eq!(String::from("[]"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::MatrixArray(0, 0, TransposeFlag::NoTranspose, Vec::new())));
+    assert_eq!(String::from("[]"), format!("{}", value));
+    let a = vec![
+        1.0, 1.0,
+        2.0, 3.0,
+        1.0, 1.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    assert_eq!(String::from("[ 2 3 ]"), format!("{}", value));
+    let a = vec![
+        1.0, 2.0, 1.0,
+        1.0, 3.0, 1.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, a.clone()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    assert_eq!(String::from("[ 2 3 ]"), format!("{}", value));
+    let matrix_array = Arc::new(Object::MatrixArray(3, 0, TransposeFlag::NoTranspose, Vec::new()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    assert_eq!(String::from("[]"), format!("{}", value));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)]))));
+    assert_eq!(String::from(".[ 1 2.5000 false .]"), format!("{}", value));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+    assert_eq!(String::from(".[.]"), format!("{}", value));
+    let s = "
+{
+    a: 1
+    b: 2.5000
+    c: false
+}";
+    let s2 = &s[1..];
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.5));
+    fields.insert(String::from("c"), Value::Bool(false));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
+    assert_eq!(String::from(s2), format!("{}", value));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(BTreeMap::new()))));
+    assert_eq!(String::from("{}"), format!("{}", value));
+    let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    let value = Value::Weak(Arc::downgrade(&object));
+    assert_eq!(String::from("weak(...)"), format!("{}", value));
+    let value = Value::Weak(Weak::new());
+    assert_eq!(String::from("weak()"), format!("{}", value));
+}
+
+#[test]
+fn test_value_fmt_formats_values_for_indent()
+{
+    let s = "
+{
+    a: [
+                  1           2
+                  3           4
+                  5           6
+    ]
+    b: {
+        a: 1
+        b: 2.5000
+        c: false
+    }
+}";
+    let s2 = &s[1..];
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    let mut struct_fields: BTreeMap<String, Value> = BTreeMap::new();
+    struct_fields.insert(String::from("a"), Value::Int(1));
+    struct_fields.insert(String::from("b"), Value::Float(2.5));
+    struct_fields.insert(String::from("c"), Value::Bool(false));
+    let struct_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(struct_fields.clone()))));
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), matrix_value);
+    fields.insert(String::from("b"), struct_value);
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
+    assert_eq!(String::from(s2), format!("{}", value));
 }
