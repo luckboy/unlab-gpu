@@ -1486,8 +1486,9 @@ impl<'a> Iterator for Iter<'a>
                     match &**matrix_array {
                         Object::MatrixArray(row_count, _, _, _) => {
                             if *i < *row_count {
+                                let j = *i;
                                 *i += 1;
-                                Some(Ok(Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array.clone(), *i)))))
+                                Some(Ok(Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array.clone(), j)))))
                             } else {
                                 None
                             }

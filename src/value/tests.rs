@@ -3550,3 +3550,438 @@ fn test_value_fmt_formats_values_for_indent()
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
     assert_eq!(String::from(s2), format!("{}", value));
 }
+
+#[test]
+fn test_iter_next_returns_values_for_string_iterator()
+{
+    let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(value2)) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("a")))), value2),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(value2)) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("b")))), value2),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(value2)) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("c")))), value2),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_returns_values_for_int_range_iterator()
+{
+    let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Int(2))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Int(3))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Int(4))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::IntRange(1, 4, 2)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Int(1))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Int(3))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::IntRange(4, 2, -1)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Int(4))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Int(3))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Int(2))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::IntRange(4, 1, -2)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Int(4))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Int(2))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_complains_on_range_step_is_zero_for_int_range_iterator()
+{
+    let value = Value::Object(Arc::new(Object::IntRange(2, 4, 0)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Err(Error::Interp(msg))) => assert_eq!(String::from("range step is zero"), msg),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_complains_on_overflow_in_iteration_for_int_range_iterator()
+{
+    let value = Value::Object(Arc::new(Object::IntRange(2, 4, i64::MAX)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Err(Error::Interp(msg))) => assert_eq!(String::from("overflow in iteration"), msg),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::IntRange(-2, -4, i64::MIN)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Err(Error::Interp(msg))) => assert_eq!(String::from("overflow in iteration"), msg),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_returns_values_for_float_range_iterator()
+{
+    let value = Value::Object(Arc::new(Object::FloatRange(2.5, 4.5, 1.0)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(2.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(3.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(4.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::FloatRange(1.5, 4.5, 2.0)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(1.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(3.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::FloatRange(4.5, 2.5, -1.0)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(4.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(3.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(2.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::FloatRange(4.5, 1.5, -2.0)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(4.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(2.5, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_complains_on_range_step_is_zero_for_float_range_iterator()
+{
+    let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.0, 0.0)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Err(Error::Interp(msg))) => assert_eq!(String::from("range step is zero"), msg),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_returns_values_for_matrix_array_iterator()
+{
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(value2)) => {
+                    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 0));
+                    assert_eq!(Value::Object(matrix_row_slice), value2);
+                },
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(value2)) => {
+                    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 1));
+                    assert_eq!(Value::Object(matrix_row_slice), value2);
+                },
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(value2)) => {
+                    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 2));
+                    assert_eq!(Value::Object(matrix_row_slice), value2);
+                },
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 3.0, 5.0,
+        2.0, 4.0, 6.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(value2)) => {
+                    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 0));
+                    assert_eq!(Value::Object(matrix_row_slice), value2);
+                },
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(value2)) => {
+                    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 1));
+                    assert_eq!(Value::Object(matrix_row_slice), value2);
+                },
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(value2)) => {
+                    let matrix_row_slice = Arc::new(Object::MatrixRowSlice(matrix_array.clone(), 2));
+                    assert_eq!(Value::Object(matrix_row_slice), value2);
+                },
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_returns_values_for_matrix_row_slice_iterator()
+{
+    let a = vec![
+        1.0, 1.0, 1.0,
+        2.0, 3.0, 4.0, 
+        1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(2.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(3.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(4.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    let a = vec![
+        1.0, 2.0, 1.0, 1.0,
+        1.0, 3.0, 1.0, 1.0,
+        1.0, 4.0, 1.0, 1.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(4, 3, TransposeFlag::Transpose, a.clone()));
+    let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(2.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(3.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(4.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_iter_next_returns_values_for_array_iterator()
+{
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    match value.iter() {
+        Ok(Some(mut iter)) => {
+            match iter.next() {
+                Some(Ok(Value::Int(1))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Float(n))) => assert_eq!(2.0, n),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                Some(Ok(Value::Bool(false))) => assert!(true),
+                _ => assert!(false),
+            }
+            match iter.next() {
+                None => assert!(true),
+                Some(_) => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
