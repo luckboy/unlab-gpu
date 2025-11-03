@@ -3490,6 +3490,8 @@ fn test_value_fmt_formats_values()
     let matrix_array = Arc::new(Object::MatrixArray(3, 0, TransposeFlag::NoTranspose, Vec::new()));
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     assert_eq!(String::from("[]"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    assert_eq!(String::from("def"), format!("{}", value));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)]))));
     assert_eq!(String::from(".[ 1 2.5000 false .]"), format!("{}", value));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
