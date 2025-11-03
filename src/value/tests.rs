@@ -32,6 +32,13 @@ fn test_value_eq_with_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let string = Arc::new(Object::String(String::from("abc")));
+    let value = Value::Object(string.clone());
+    let value2 = Value::Object(string);
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
     match value.eq_with_types(&value2) {
@@ -135,6 +142,13 @@ fn test_value_eq_with_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let array = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    let value = Value::Ref(array.clone());
+    let value2 = Value::Ref(array);
     match value.eq_with_types(&value2) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -478,6 +492,13 @@ fn test_value_eq_without_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let string = Arc::new(Object::String(String::from("abc")));
+    let value = Value::Object(string.clone());
+    let value2 = Value::Object(string);
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
     match value.eq_without_types(&value2) {
@@ -581,6 +602,13 @@ fn test_value_eq_without_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let array = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    let value = Value::Ref(array.clone());
+    let value2 = Value::Ref(array);
     match value.eq_without_types(&value2) {
         Ok(true) => assert!(true),
         _ => assert!(false),
