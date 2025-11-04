@@ -90,7 +90,7 @@ impl Env
     
     pub fn push_fun_mod_and_local_vars(&mut self, fun_mod_idents: &[String], args: &[Arg], arg_values: &[Value]) -> Result<bool>
     {
-        let fun_mod = match ModNode::mod_from(&self.current_mod, fun_mod_idents)? {
+        let fun_mod = match ModNode::mod_from(&self.root_mod, fun_mod_idents)? {
             Some(tmp_fun_mod) => tmp_fun_mod,
             None => return Err(Error::NoFunMod),
         };

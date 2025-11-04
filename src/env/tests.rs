@@ -119,7 +119,7 @@ fn test_env_add_and_push_mod_does_not_add_and_push_module()
 }
 
 #[test]
-fn test_env_add_fun_adds_function()
+fn test_env_add_fun_adds_functions()
 {
     let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
     let mut env = Env::new(root_mod.clone());
@@ -164,64 +164,1168 @@ fn test_env_add_fun_adds_function()
         Some(a_mod) => {
             let a_mod_g = a_mod.read().unwrap();
             match a_mod_g.var(&String::from("f")) {
-                Some(Value::Object(object)) => {
-                    match &**object {
-                        Object::Fun(idents, ident, f_fun) => {
-                            assert_eq!(vec![String::from("a")], *idents);
-                            assert_eq!(String::from("f"), *ident);
-                            assert!(Arc::ptr_eq(&fun, f_fun));
-                        },
-                        _ => assert!(false),
-                    }
-                },
-                _ => assert!(false),
+                Some(value) => assert_eq!(Value::Object(Arc::new(Object::Fun(vec![String::from("a")], String::from("f"), fun.clone()))), *value),
+                None => assert!(false),
             }
             match a_mod_g.mod1(&String::from("b")) {
                 Some(a_b_mod) => {
                     let a_b_mod_g = a_b_mod.read().unwrap();
                     match a_b_mod_g.var(&String::from("g")) {
-                        Some(Value::Object(object)) => {
-                            match &**object {
-                                Object::Fun(idents, ident, g_fun) => {
-                                    assert_eq!(vec![String::from("a"), String::from("b")], *idents);
-                                    assert_eq!(String::from("g"), *ident);
-                                    assert!(Arc::ptr_eq(&fun2, g_fun));
-                                },
-                                _ => assert!(false),
-                            }
-                        },
-                        _ => assert!(false),
+                        Some(value) => assert_eq!(Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("g"), fun2.clone()))), *value),
+                        None => assert!(false),
                     }
                 },
                 None => assert!(false),
             }
             match a_mod_g.var(&String::from("h")) {
-                Some(Value::Object(object)) => {
-                    match &**object {
-                        Object::Fun(idents, ident, h_fun) => {
-                            assert_eq!(vec![String::from("a")], *idents);
-                            assert_eq!(String::from("h"), *ident);
-                            assert!(Arc::ptr_eq(&fun3, h_fun));
-                        },
-                        _ => assert!(false),
-                    }
-                },
-                _ => assert!(false),
+                Some(value) => assert_eq!(Value::Object(Arc::new(Object::Fun(vec![String::from("a")], String::from("h"), fun3.clone()))), *value),
+                None => assert!(false),
             }
         },
         None => assert!(false),
     }
     match root_mod_g.var(&String::from("i")) {
-        Some(Value::Object(object)) => {
-            match &**object {
-                Object::Fun(idents, ident, i_fun) => {
-                    assert_eq!(true, idents.is_empty());
-                    assert_eq!(String::from("i"), *ident);
-                    assert!(Arc::ptr_eq(&fun4, i_fun));
+        Some(value) => assert_eq!(Value::Object(Arc::new(Object::Fun(Vec::new(), String::from("i"), fun4.clone()))), *value),
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_add_fun_does_not_add_function()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_fun(String::from("f"), fun.clone()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_fun(String::from("f"), fun2.clone()) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_push_fun_mod_and_local_vars_pushes_function_module_and_local_variables()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("c")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Int(1), Value::Float(2.5)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a"), String::from("b")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    assert_eq!(1, env.stack().len());
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    let a_mod_g = a_mod.read().unwrap();
+                    match a_mod_g.mod1(&String::from("b")) {
+                        Some(a_b_mod) => assert!(Arc::ptr_eq(a_b_mod, fun_mod)),
+                        None => assert!(false),
+                    }
                 },
+                None => assert!(false),
+            }
+            match local_vars.get(&String::from("X")) {
+                Some(Value::Int(1)) => assert!(true),
+                _ => assert!(false),
+            }
+            match local_vars.get(&String::from("Y")) {
+                Some(Value::Float(n)) => assert_eq!(2.5, *n),
                 _ => assert!(false),
             }
         },
+        None => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Z"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Bool(true), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
         _ => assert!(false),
+    }
+    assert_eq!(2, env.stack().len());
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => assert!(Arc::ptr_eq(a_mod, fun_mod)),
+                None => assert!(false),
+            }
+            match local_vars.get(&String::from("X")) {
+                Some(Value::Bool(true)) => assert!(true),
+                _ => assert!(false),
+            }
+            match local_vars.get(&String::from("Z")) {
+                Some(Value::Int(2)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    assert_eq!(1, env.stack().len());
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    let a_mod_g = a_mod.read().unwrap();
+                    match a_mod_g.mod1(&String::from("b")) {
+                        Some(a_b_mod) => assert!(Arc::ptr_eq(a_b_mod, fun_mod)),
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match local_vars.get(&String::from("X")) {
+                Some(Value::Int(1)) => assert!(true),
+                _ => assert!(false),
+            }
+            match local_vars.get(&String::from("Y")) {
+                Some(Value::Float(n)) => assert_eq!(2.5, *n),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    assert_eq!(true, env.stack().is_empty());
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.push_fun_mod_and_local_vars(&[String::from("c")], &[], &[]) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    assert_eq!(1, env.stack().len());
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("c")) {
+                Some(c_mod) => assert!(Arc::ptr_eq(c_mod, fun_mod)),
+                None => assert!(false),
+            }
+            assert_eq!(true, local_vars.is_empty());
+        },
+        None => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    assert_eq!(true, env.stack().is_empty());
+}
+
+#[test]
+fn test_env_push_fun_mod_and_local_vars_does_not_push_function_module_and_local_variables()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Int(1)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], args.as_slice(), arg_values.as_slice()) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    assert_eq!(true, env.stack().is_empty());
+}
+
+#[test]
+fn test_env_push_fun_mod_and_local_vars_complains_on_no_function_module()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Int(1), Value::Float(2.5)];
+    match env.push_fun_mod_and_local_vars(&[String::from("c")], args.as_slice(), arg_values.as_slice()) {
+        Err(Error::NoFunMod) => assert!(true),
+        _ => assert!(false),
+    }
+    assert_eq!(true, env.stack().is_empty());
+}
+
+#[test]
+fn test_env_reset_resets_environment()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("c")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Int(1), Value::Float(2.5)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a"), String::from("b")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Z"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Bool(true), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.reset() {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.mod1(&String::from("a")) {
+        Some(a_mod) => {
+            let a_mod_g = a_mod.read().unwrap();    
+            assert_eq!(true, a_mod_g.has_mod(&String::from("b")));
+        },
+        None => assert!(false),
+    }
+    assert_eq!(false, root_mod_g.has_mod(&String::from("c")));
+    assert!(Arc::ptr_eq(env.root_mod(), env.current_mod()));
+    assert_eq!(true, env.mod_idents().is_empty());
+    assert_eq!(true, env.stack().is_empty());
+}
+
+#[test]
+fn test_env_var_returns_values_for_variable_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.var(&Name::Var(String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.var(&Name::Var(String::from("X"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(1.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Y"))) {
+        Ok(Some(Value::Int(2))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_does_not_return_value_for_variable_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.var(&Name::Var(String::from("Z"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_returns_values_for_relative_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("b")], String::from("X"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(1.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("b")], String::from("Y"))) {
+        Ok(Some(Value::Int(2))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("a")], String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("a")], String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_does_not_return_values_for_relative_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("b")], String::from("Z"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("c")], String::from("X"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("a")], String::from("Z"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("c")], String::from("X"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_returns_values_for_absolute_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_does_not_returns_values_for_absolute_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("Z"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("Z"))) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_returns_values_for_variable_names_and_local_variables()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+        current_mod_g.add_var(String::from("Z"), Value::Bool(false));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("c")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(1.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a"), String::from("b")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("X"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(1.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Y"))) {
+        Ok(Some(Value::Int(2))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Z"))) {
+        Ok(Some(Value::Bool(false))) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Int(3), Value::Float(1.5)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("X"))) {
+        Ok(Some(Value::Int(3))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(1.5, n),
+        _ => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    env.pop_fun_mod_and_local_vars();
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_var_returns_values_for_relative_names_and_local_variables()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("c")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(1.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a"), String::from("b")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(Vec::new(), String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(Vec::new(), String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(1.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("b")], String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Rel(vec![String::from("b")], String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+}
+
+#[test]
+fn test_env_var_returns_values_for_absolute_names_and_local_variables()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Bool(true));
+        current_mod_g.add_var(String::from("Y"), Value::Int(3));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("c")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(1.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("X"))) {
+        Ok(Some(Value::Int(1))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Abs(vec![String::from("a")], String::from("Y"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_set_var_sets_values_for_variable_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.set_var(&Name::Var(String::from("X")), Value::Int(3)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Var(String::from("Z")), Value::Bool(false)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Var(String::from("X")), Value::Bool(true)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Var(String::from("Z")), Value::Float(3.5)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.mod1(&String::from("a")) {
+        Some(a_mod) => {
+            let a_mod_g = a_mod.read().unwrap();
+            match a_mod_g.mod1(&String::from("b")) {
+                Some(a_b_mod) => {
+                    let a_b_mod_g = a_b_mod.read().unwrap();
+                    match a_b_mod_g.var(&String::from("X")) {
+                        Some(Value::Int(3)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Y")) {
+                        Some(Value::Int(2)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Z")) {
+                        Some(Value::Bool(false)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match a_mod_g.var(&String::from("X")) {
+                Some(Value::Bool(true)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Y")) {
+                Some(Value::Float(n)) => assert_eq!(2.5, *n),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Z")) {
+                Some(Value::Float(n)) => assert_eq!(3.5, *n),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_set_var_sets_values_for_relative_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Rel(vec![String::from("b")], String::from("X")), Value::Int(3)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Rel(vec![String::from("b")], String::from("Z")), Value::Bool(false)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Rel(vec![String::from("a")], String::from("X")), Value::Bool(true)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Rel(vec![String::from("a")], String::from("Z")), Value::Float(3.5)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.mod1(&String::from("a")) {
+        Some(a_mod) => {
+            let a_mod_g = a_mod.read().unwrap();
+            match a_mod_g.mod1(&String::from("b")) {
+                Some(a_b_mod) => {
+                    let a_b_mod_g = a_b_mod.read().unwrap();
+                    match a_b_mod_g.var(&String::from("X")) {
+                        Some(Value::Int(3)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Y")) {
+                        Some(Value::Int(2)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Z")) {
+                        Some(Value::Bool(false)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match a_mod_g.var(&String::from("X")) {
+                Some(Value::Bool(true)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Y")) {
+                Some(Value::Float(n)) => assert_eq!(2.5, *n),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Z")) {
+                Some(Value::Float(n)) => assert_eq!(3.5, *n),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_set_var_does_not_set_values_for_relative_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Rel(vec![String::from("c")], String::from("X")), Value::Bool(true)) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Rel(vec![String::from("c")], String::from("X")), Value::Int(1)) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.mod1(&String::from("a")) {
+        Some(a_mod) => {
+            let a_mod_g = a_mod.read().unwrap();
+            match a_mod_g.mod1(&String::from("b")) {
+                Some(a_b_mod) => {
+                    let a_b_mod_g = a_b_mod.read().unwrap();
+                    match a_b_mod_g.var(&String::from("X")) {
+                        Some(Value::Float(n)) => assert_eq!(1.5, *n),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Y")) {
+                        Some(Value::Int(2)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match a_mod_g.var(&String::from("X")) {
+                Some(Value::Int(1)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Y")) {
+                Some(Value::Float(n)) => assert_eq!(2.5, *n),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_set_var_sets_values_for_absolute_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Abs(vec![String::from("a")], String::from("X")), Value::Int(3)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Abs(vec![String::from("a")], String::from("Z")), Value::Bool(false)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Abs(vec![String::from("a")], String::from("Y")), Value::Bool(true)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Abs(vec![String::from("a")], String::from("W")), Value::Float(3.5)) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.mod1(&String::from("a")) {
+        Some(a_mod) => {
+            let a_mod_g = a_mod.read().unwrap();
+            match a_mod_g.mod1(&String::from("a")) {
+                Some(a_b_mod) => {
+                    let a_b_mod_g = a_b_mod.read().unwrap();
+                    match a_b_mod_g.var(&String::from("X")) {
+                        Some(Value::Float(n)) => assert_eq!(1.5, *n),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Y")) {
+                        Some(Value::Int(2)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    assert_eq!(false, a_b_mod_g.has_var(&String::from("Z")));
+                    assert_eq!(false, a_b_mod_g.has_var(&String::from("W")));
+                },
+                None => assert!(false),
+            }
+            match a_mod_g.var(&String::from("X")) {
+                Some(Value::Int(3)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Y")) {
+                Some(Value::Bool(true)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Z")) {
+                Some(Value::Bool(false)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("W")) {
+                Some(Value::Float(n)) => assert_eq!(3.5, *n),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_set_var_does_not_returns_values_for_absolute_names()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Float(1.5));
+        current_mod_g.add_var(String::from("Y"), Value::Int(2));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Abs(vec![String::from("c")], String::from("X")), Value::Bool(true)) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.set_var(&Name::Abs(vec![String::from("c")], String::from("X")), Value::Int(1)) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.mod1(&String::from("a")) {
+        Some(a_mod) => {
+            let a_mod_g = a_mod.read().unwrap();
+            match a_mod_g.mod1(&String::from("a")) {
+                Some(a_b_mod) => {
+                    let a_b_mod_g = a_b_mod.read().unwrap();
+                    match a_b_mod_g.var(&String::from("X")) {
+                        Some(Value::Float(n)) => assert_eq!(1.5, *n),
+                        _ => assert!(false),
+                    }
+                    match a_b_mod_g.var(&String::from("Y")) {
+                        Some(Value::Int(2)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match a_mod_g.var(&String::from("X")) {
+                Some(Value::Int(1)) => assert!(true),
+                _ => assert!(false),
+            }
+            match a_mod_g.var(&String::from("Y")) {
+                Some(Value::Float(n)) => assert_eq!(2.5, *n),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
     }
 }
