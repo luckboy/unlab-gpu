@@ -1840,3 +1840,78 @@ fn test_env_set_var_sets_values_for_absolute_names_and_local_variables()
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_env_remove_local_var_removes_local_variable()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(1.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            assert!(Arc::ptr_eq(&root_mod, fun_mod));
+            match local_vars.get(&String::from("X")) {
+                Some(Value::Float(n)) => assert_eq!(1.5, *n),
+                _ => assert!(false),
+            }
+            match local_vars.get(&String::from("Y")) {
+                Some(Value::Int(2)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(1.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    assert_eq!(true, env.remove_local_var(&String::from("X")));
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            assert!(Arc::ptr_eq(&root_mod, fun_mod));
+            assert_eq!(false, local_vars.contains_key(&String::from("X")));
+            match local_vars.get(&String::from("Y")) {
+                Some(Value::Int(2)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    match env.stack().last() {
+        Some((fun_mod, local_vars)) => {
+            assert!(Arc::ptr_eq(&root_mod, fun_mod));
+            match local_vars.get(&String::from("X")) {
+                Some(Value::Float(n)) => assert_eq!(1.5, *n),
+                _ => assert!(false),
+            }
+            match local_vars.get(&String::from("Y")) {
+                Some(Value::Int(2)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+}
+
+#[test]
+fn test_env_remove_local_var_does_not_remove_local_variable()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    assert_eq!(false, env.remove_local_var(&String::from("X")));
+}
