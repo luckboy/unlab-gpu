@@ -239,6 +239,7 @@ impl Interp
                         match value.set_field(ident.clone(), value2) {
                             Ok(()) => (),
                             Err(err) => {
+                                self.stack_trace.push((None, pos.clone()));
                                 self.ret_value = Value::None;
                                 return Err(err);
                             },
@@ -535,7 +536,7 @@ impl Interp
                     None => {
                         self.stack_trace.push((None, expr2.pos().clone()));
                         self.ret_value = Value::None;
-                        Err(Error::Interp(String::from("can't convert value to integer")))
+                        Err(Error::Interp(String::from("can't convert value to integer number")))
                     },
                 }
             },
@@ -620,7 +621,7 @@ impl Interp
                     None => {
                         self.stack_trace.push((None, expr.pos().clone()));
                         self.ret_value = Value::None;
-                        Err(Error::Interp(String::from("can't convert value to integer")))
+                        Err(Error::Interp(String::from("can't convert value to integer number")))
                     },
                 }
             },
@@ -644,7 +645,7 @@ impl Interp
                     None => {
                         self.stack_trace.push((None, expr2.pos().clone()));
                         self.ret_value = Value::None;
-                        Err(Error::Interp(String::from("can't convert value to integer")))
+                        Err(Error::Interp(String::from("can't convert value to integer number")))
                     },
                 }
             },

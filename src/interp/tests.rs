@@ -2414,3 +2414,1275 @@ X = [
         Err(_) => assert!(false),
     }
 }
+
+#[test]
+fn test_interp_interpret_complains_on_variable_is_not_set()
+{
+    let s = "
+X = Y
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("variable Y isn't set"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_invalid_number_of_arguments()
+{
+    let s = "
+function f(X, Y)
+    X + Y
+end
+X = f(1, 2, 3)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("invalid number of arguments"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_value_is_not_function_for_number()
+{
+    let s = "
+X = 1(1, 2, 3)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("value isn't function"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_value_is_not_function_for_string()
+{
+    let s = "
+X = \"abc\"(1, 2, 3)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("value isn't function"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_unsupported_type_for_negation_for_string()
+{
+    let s = "
+X = -\"abc\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for negation"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_unsupported_types_for_subtraction_for_strings()
+{
+    let s = "
+X = \"abc\" - \"def\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for subtraction"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero()
+{
+    let s = "
+X = 1 / 0
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_structure_has_not_field()
+{
+    let s = "
+Y = { a: 1; b: 2.5; c: false; }
+X = Y.d
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("structure hasn't field d"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_unsupported_types_for_range_creation()
+{
+    let s = "
+X = true to false
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for range creation"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_unsupported_types_for_range_creation_for_second_case()
+{
+    let s = "
+X = 1 to 2.5 by false
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported types for range creation"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_can_not_convert_value_to_floating_point_number()
+{
+    let s = "
+X = [
+    1, true, 2
+    3, 4, 5
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("can't convert value to floating-point number"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 8), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_can_not_convert_value_to_floating_point_number_for_filled_matrix_row()
+{
+    let s = "
+X = [
+    true fill 3
+    3, 4, 5
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("can't convert value to floating-point number"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_can_not_convert_value_to_integer_number_for_filled_matrix_row()
+{
+    let s = "
+X = [
+    1 fill true
+    3, 4, 5
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("can't convert value to integer number"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 12), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_can_not_convert_value_to_integer_number_for_filled_matrix()
+{
+    let s = "
+X = [
+    1, 2, 3
+    fill true
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("can't convert value to integer number"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 3, 10), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_numbers_of_columns_of_matrix_rows_are_not_equal()
+{
+    let s = "
+X = [
+    1, 2, 3
+    4, 5, 6, 7
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("numbers of columns of matrix rows aren't equal"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_numbers_of_columns_of_matrix_rows_are_not_equal_for_filled_matrix()
+{
+    let s = "
+X = 2
+function f()
+    ::X = ::X + 1
+    ::X
+end
+X = [1 fill f(); fill 4]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("numbers of columns of matrix rows aren't equal"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 5), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_can_not_convert_value_to_integer_number_for_filled_array()
+{
+    let s = "
+X = .[ 1 fill true .]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("can't convert value to integer number"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 15), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_already_defined_field()
+{
+    let s = "
+X = { a: 1; a: 2.5; c: false; }
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("already defined field a"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 13), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_expression_is_not_assignable()
+{
+    let s = "
+1 = 2
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("expression isn't assignable"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_index_out_of_bounds()
+{
+    let s = "
+X = .[ 1, 2.5, false .]
+X[4] = 2
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("index out of bounds"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_unsupprted_type_for_field()
+{
+    let s = "
+X = 1
+X.a = 2
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for field a"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_undefined_module_for_variable()
+{
+    let s = "
+a::X = 2
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("undefined module for variable a::X"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_break_is_not_in_loop()
+{
+    let s = "
+break
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("break isn't in loop"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_break_is_not_in_loop_in_function()
+{
+    let s = "
+function f()
+    break
+end
+f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("break isn't in loop"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(2, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (Some(fun_value), pos) => {
+                    assert_eq!(String::from("f"), format!("{}", fun_value));
+                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                },
+                (_, _) => assert!(false),
+            }
+            match &interp.stack_trace()[1] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_continue_is_not_in_loop()
+{
+    let s = "
+continue
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("continue isn't in loop"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_continue_is_not_in_loop_in_function()
+{
+    let s = "
+function f()
+    continue
+end
+f()
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("continue isn't in loop"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(2, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (Some(fun_value), pos) => {
+                    assert_eq!(String::from("f"), format!("{}", fun_value));
+                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                },
+                (_, _) => assert!(false),
+            }
+            match &interp.stack_trace()[1] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_return_or_error_propagation_is_not_in_function()
+{
+    let s = "
+return
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("return or error propagation isn't in function"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_return_or_error_propagation_is_not_in_function_for_error_propagation()
+{
+    let s = "
+none?
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("return or error propagation isn't in function"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_already_defined_module()
+{
+    let s = "
+module a
+    X = 1
+end
+module a
+    Y = 1
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("already defined module a"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 4, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_already_variable_is_set()
+{
+    let s = "
+f = 1
+function f(X)
+    X + 1
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("already variable f is set"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_already_defined_argument()
+{
+    let s = "
+function f(X, Y, Y)
+    X + Y
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("already defined argument Y"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 18), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero_in_nested_function()
+{
+    let s = "
+function f(X)
+    X / 0
+end
+function g(X)
+    f(X)
+end
+g(1)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(3, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (Some(fun_value), pos) => {
+                    assert_eq!(String::from("f"), format!("{}", fun_value));
+                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 5), *pos);
+                },
+                (_, _) => assert!(false),
+            }
+            match &interp.stack_trace()[1] {
+                (Some(fun_value), pos) => {
+                    assert_eq!(String::from("g"), format!("{}", fun_value));
+                    assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 5), *pos);
+                },
+                (_, _) => assert!(false),
+            }
+            match &interp.stack_trace()[2] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 7, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero_after_for_statement_with_break()
+{
+    let s = "
+for I in 1 to 3
+    if true
+        break
+    end
+end
+1 / 0
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero_after_for_statement_with_continue()
+{
+    let s = "
+for I in 1 to 3
+    if true
+        continue
+    end
+end
+1 / 0
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 6, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero_after_while_statement_with_break()
+{
+    let s = "
+I = 1
+while I <= 3
+    if true
+        break
+    end
+    I = I + 1
+end
+1 / 0
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero_after_while_statement_with_continue()
+{
+    let s = "
+I = 1
+while I <= 3
+    I = I + 1
+    if true
+        continue
+    end
+end
+1 / 0
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 8, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_division_by_zero_after_application_with_return()
+{
+    let s = "
+function f()
+    return
+end
+f()
+1 / 0
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("division by zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 5, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_apply_fun_applies_function()
+{
+    let s = "
+function f(X)
+    X + 1
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let fun_value ={
+                let root_mod_g = env.root_mod().read().unwrap();
+                match root_mod_g.var(&String::from("f")) {
+                    Some(tmp_fun_value) => tmp_fun_value.clone(),
+                    None => {
+                        assert!(false);
+                        return;
+                    },
+                }
+            };
+            match interp.apply_fun(&mut env, &fun_value, &[Value::Int(2)]) {
+                Ok(Value::Int(3)) => assert_eq!(true, interp.stack_trace().is_empty()),
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_apply_fun_applies_builtin_function()
+{
+    let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+    let mut interp = Interp::new();
+    let fun_value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
+    match interp.apply_fun(&mut env, &fun_value, &[Value::Int(1), Value::Float(2.5), Value::Bool(false)]) {
+        Ok(value) => {
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)]))));
+            assert_eq!(expected_value, value);
+        },
+        Err(_) => assert!(false),
+    }
+}
