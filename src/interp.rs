@@ -667,3 +667,6 @@ impl Interp
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
