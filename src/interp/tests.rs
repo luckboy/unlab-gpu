@@ -2328,3 +2328,89 @@ Y = f(true)
         Err(_) => assert!(false),
     }
 }
+
+#[test]
+fn test_interp_interprets_matrix_with_floating_point_numbers()
+{
+    let s = "
+X = [
+    1.5, 2.5, 3.5
+    4.5, 5.5, 6.5
+    7.5, 8.5, 9.5
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(value) => {
+                    let a = vec![
+                        1.5, 2.5, 3.5,
+                        4.5, 5.5, 6.5,
+                        7.5, 8.5, 9.5
+                    ];
+                    let matrix_array = Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, a.clone()));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_matrix_with_filled_rows_and_floating_point_numbers()
+{
+    let s = "
+X = [
+    1.5 fill 3
+    7.5, 8.5, 9.5
+    2.5 fill 3
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(value) => {
+                    let a = vec![
+                        1.5, 1.5, 1.5,
+                        7.5, 8.5, 9.5,
+                        2.5, 2.5, 2.5
+                    ];
+                    let matrix_array = Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, a.clone()));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
