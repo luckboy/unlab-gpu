@@ -17,7 +17,7 @@ fn f(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value
 { Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(arg_values.to_vec()))))) }
 
 #[test]
-fn test_interp_interprets_expression()
+fn test_interp_interpret_interprets_expression()
 {
     let s = "X = 1 + 2";
     let mut cursor = Cursor::new(s.as_bytes());
@@ -45,7 +45,7 @@ fn test_interp_interprets_expression()
 }
 
 #[test]
-fn test_interp_interprets_variable_expression()
+fn test_interp_interpret_interprets_variable_expression()
 {
     let s = "
 X = 1
@@ -81,7 +81,7 @@ Y = X + 2
 }
 
 #[test]
-fn test_interp_interprets_application_expressions()
+fn test_interp_interpret_interprets_application_expressions()
 {
     let s = "
 function f()
@@ -131,7 +131,7 @@ Z = h(1, 2, 3)
 }
 
 #[test]
-fn test_interp_interprets_application_expressions_for_builtin_function()
+fn test_interp_interpret_interprets_application_expressions_for_builtin_function()
 {
     let s = "
 X = f()
@@ -183,7 +183,7 @@ Z = f(1, 2.5, false)
 }
 
 #[test]
-fn test_interp_interprets_unary_operator_expressions()
+fn test_interp_interpret_interprets_unary_operator_expressions()
 {
     let s = "
 X = -1
@@ -219,7 +219,7 @@ Y = not true
 }
 
 #[test]
-fn test_interp_interprets_binary_operator_expressions()
+fn test_interp_interpret_interprets_binary_operator_expressions()
 {
     let s = "
 X = 1 + 2
@@ -255,7 +255,7 @@ Y = 2 * 3 + 4
 }
 
 #[test]
-fn test_interp_interprets_and_expressions()
+fn test_interp_interpret_interprets_and_expressions()
 {
     let s = "
 A = false
@@ -309,7 +309,7 @@ Y = false and g()
 }
 
 #[test]
-fn test_interp_interprets_or_expressions()
+fn test_interp_interpret_interprets_or_expressions()
 {
     let s = "
 A = false
@@ -363,7 +363,7 @@ Y = false or g()
 }
 
 #[test]
-fn test_interp_interprets_field_expressions()
+fn test_interp_interpret_interprets_field_expressions()
 {
     let s = "
 X = { a: 1; b: 2.5; c: false; }
@@ -411,7 +411,7 @@ Z = X.c
 }
 
 #[test]
-fn test_interp_interprets_range_expressions()
+fn test_interp_interpret_interprets_range_expressions()
 {
     let s = "
 X = 2 to 3
@@ -469,7 +469,7 @@ W = 1 to 2.5 by 0.5
 }
 
 #[test]
-fn test_interp_interprets_error_propagation_expressions()
+fn test_interp_interpret_interprets_error_propagation_expressions()
 {
     let s = "
 function f(X)
@@ -521,7 +521,7 @@ Z = f(C)
 }
 
 #[test]
-fn test_interp_interprets_simple_literals()
+fn test_interp_interpret_interprets_simple_literals()
 {
     let s = "
 A = none
@@ -575,7 +575,7 @@ E = \"abcdef\"
 }
 
 #[test]
-fn test_interp_interprets_matrix_literal()
+fn test_interp_interpret_interprets_matrix_literal()
 {
     let s = "
 X = [
@@ -618,7 +618,7 @@ X = [
 }
 
 #[test]
-fn test_interp_interprets_matrix_literal_with_filled_rows()
+fn test_interp_interpret_interprets_matrix_literal_with_filled_rows()
 {
     let s = "
 I = 0
@@ -670,7 +670,7 @@ X = [
 }
 
 #[test]
-fn test_interp_interprets_filled_matrix_literal()
+fn test_interp_interpret_interprets_filled_matrix_literal()
 {
     let s = "
 I = 0
@@ -719,7 +719,7 @@ X = [1, f(), 1; fill 4]
 }
 
 #[test]
-fn test_interp_interprets_filled_matrix_literal_with_filled_rows()
+fn test_interp_interpret_interprets_filled_matrix_literal_with_filled_rows()
 {
     let s = "
 I = 0
@@ -768,7 +768,7 @@ X = [f() fill 3; fill 4]
 }
 
 #[test]
-fn test_interp_interprets_array_literal()
+fn test_interp_interpret_interprets_array_literal()
 {
     let s = "
 X = .[ 1, 2.5, false .]
@@ -802,7 +802,7 @@ X = .[ 1, 2.5, false .]
 }
 
 #[test]
-fn test_interp_interprets_filled_array_literal()
+fn test_interp_interpret_interprets_filled_array_literal()
 {
     let s = "
 I = 0
@@ -841,7 +841,7 @@ X = .[ f() fill 3 .]
 }
 
 #[test]
-fn test_interp_interprets_structure_literal()
+fn test_interp_interpret_interprets_structure_literal()
 {
     let s = "
 X = { a: 1; b: 2.5; c: false; }
@@ -879,7 +879,7 @@ X = { a: 1; b: 2.5; c: false; }
 }
 
 #[test]
-fn test_interp_interprets_expression_statement()
+fn test_interp_interpret_interprets_expression_statement()
 {
     let s = "
 function f()
@@ -913,7 +913,7 @@ X = f()
 }
 
 #[test]
-fn test_interp_interprets_assignment_statement()
+fn test_interp_interpret_interprets_assignment_statement()
 {
     let s = "
 X = 1
@@ -967,7 +967,7 @@ Z.b = 4
 }
 
 #[test]
-fn test_interp_interprets_if_statement_for_if_condition_that_is_true()
+fn test_interp_interpret_interprets_if_statement_for_if_condition_that_is_true()
 {
     let s = "
 X = 1
@@ -1007,7 +1007,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_for_if_condition_that_is_false()
+fn test_interp_interpret_interprets_if_statement_for_if_condition_that_is_false()
 {
     let s = "
 X = 1
@@ -1047,7 +1047,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_for_if_condition_that_is_true()
+fn test_interp_interpret_interprets_if_statement_with_else_for_if_condition_that_is_true()
 {
     let s = "
 X = 1
@@ -1090,7 +1090,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_for_if_condition_that_is_false()
+fn test_interp_interpret_interprets_if_statement_with_else_for_if_condition_that_is_false()
 {
     let s = "
 X = 1
@@ -1133,7 +1133,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_if_pairs_for_if_condition_that_is_true()
+fn test_interp_interpret_interprets_if_statement_with_else_if_pairs_for_if_condition_that_is_true()
 {
     let s = "
 X = 1
@@ -1182,7 +1182,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_if_pairs_for_else_if_condition_that_is_true()
+fn test_interp_interpret_interprets_if_statement_with_else_if_pairs_for_else_if_condition_that_is_true()
 {
     let s = "
 X = 1
@@ -1231,7 +1231,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_if_pairs_and_else_for_if_condition_that_is_true()
+fn test_interp_interpret_interprets_if_statement_with_else_if_pairs_and_else_for_if_condition_that_is_true()
 {
     let s = "
 X = 1
@@ -1283,7 +1283,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_if_pairs_and_else_for_else_if_condition_that_is_true()
+fn test_interp_interpret_interprets_if_statement_with_else_if_pairs_and_else_for_else_if_condition_that_is_true()
 {
     let s = "
 X = 1
@@ -1335,7 +1335,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_if_statement_with_else_if_pairs_and_else_for_all_conditions_are_false()
+fn test_interp_interpret_interprets_if_statement_with_else_if_pairs_and_else_for_all_conditions_are_false()
 {
     let s = "
 X = 1
@@ -1387,7 +1387,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_for_statement()
+fn test_interp_interpret_interprets_for_statement()
 {
     let s = "
 X = 1
@@ -1431,7 +1431,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_for_statement_with_break()
+fn test_interp_interpret_interprets_for_statement_with_break()
 {
     let s = "
 X = 1
@@ -1478,7 +1478,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_for_statement_with_continue()
+fn test_interp_interpret_interprets_for_statement_with_continue()
 {
     let s = "
 X = 1
@@ -1525,7 +1525,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_while_statement()
+fn test_interp_interpret_interprets_while_statement()
 {
     let s = "
 X = 1
@@ -1565,7 +1565,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_while_statement_with_break()
+fn test_interp_interpret_interprets_while_statement_with_break()
 {
     let s = "
 X = 1
@@ -1608,7 +1608,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_while_statement_with_continue()
+fn test_interp_interpret_interprets_while_statement_with_continue()
 {
     let s = "
 X = 1
@@ -1651,7 +1651,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_return_statement()
+fn test_interp_interpret_interprets_return_statement()
 {
     let s = "
 function f(X)
@@ -1691,7 +1691,7 @@ Y = f(2)
 }
 
 #[test]
-fn test_interp_interprets_return_statement_without_value()
+fn test_interp_interpret_interprets_return_statement_without_value()
 {
     let s = "
 function f(X)
@@ -1731,7 +1731,7 @@ Y = f(2)
 }
 
 #[test]
-fn test_interp_interprets_quit_statement()
+fn test_interp_interpret_interprets_quit_statement()
 {
     let s = "
 X = 1
@@ -1774,7 +1774,7 @@ Z = 3
 }
 
 #[test]
-fn test_interp_interprets_quit_statement_in_function()
+fn test_interp_interpret_interprets_quit_statement_in_function()
 {
     let s = "
 function q()
@@ -1827,7 +1827,7 @@ Z = 3
 }
 
 #[test]
-fn test_interp_interprets_definition()
+fn test_interp_interpret_interprets_definition()
 {
     let s = "
 function f(X)
@@ -1869,7 +1869,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_module_definitions()
+fn test_interp_interpret_interprets_module_definitions()
 {
     let s = "
 module a
@@ -1959,7 +1959,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_function_definitions()
+fn test_interp_interpret_interprets_function_definitions()
 {
     let s = "
 function f(X)
@@ -2017,7 +2017,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_tree()
+fn test_interp_interpret_interprets_tree()
 {
     let s = "
 function f(X)
@@ -2064,7 +2064,7 @@ X = f(2)
 }
 
 #[test]
-fn test_interp_interprets_operation_on_matrices()
+fn test_interp_interpret_interprets_operation_on_matrices()
 {
     let s = "
 X = [
@@ -2130,7 +2130,7 @@ Z = X * Y
 }
 
 #[test]
-fn test_interp_interprets_nested_application()
+fn test_interp_interpret_interprets_nested_application()
 {
     let s = "
 function f(X)
@@ -2170,7 +2170,7 @@ X = g(3)
 }
 
 #[test]
-fn test_interp_interprets_recursion()
+fn test_interp_interpret_interprets_recursion()
 {
     let s = "
 function fib(X)
@@ -2210,7 +2210,7 @@ X = fib(10)
 }
 
 #[test]
-fn test_interp_interprets_functions_with_variable_in_module()
+fn test_interp_interpret_interprets_functions_with_variable_in_module()
 {
     let s = "
 module a
@@ -2288,7 +2288,7 @@ end
 }
 
 #[test]
-fn test_interp_interprets_empty_statements_in_if_statement()
+fn test_interp_interpret_interprets_empty_statements_in_if_statement()
 {
     let s = "
 function f(X)
@@ -2330,7 +2330,7 @@ Y = f(true)
 }
 
 #[test]
-fn test_interp_interprets_matrix_with_floating_point_numbers()
+fn test_interp_interpret_interprets_matrix_with_floating_point_numbers()
 {
     let s = "
 X = [
@@ -2373,7 +2373,7 @@ X = [
 }
 
 #[test]
-fn test_interp_interprets_matrix_with_filled_rows_and_floating_point_numbers()
+fn test_interp_interpret_interprets_matrix_with_filled_rows_and_floating_point_numbers()
 {
     let s = "
 X = [
