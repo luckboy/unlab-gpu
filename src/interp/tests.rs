@@ -10,6 +10,7 @@ use crate::doc::*;
 use crate::lexer::*;
 use crate::mod_node::*;
 use crate::parser::*;
+use crate::test_helpers::*;
 use super::*;
 
 fn f(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
@@ -1951,6 +1952,377 @@ end
                     }
                 },
                 None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_function_definitions()
+{
+    let s = "
+function f(X)
+    Y = 1
+    X + Y
+end
+function g(Y)
+    X = 2
+    Y + X
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("f")) {
+                Some(Value::Object(object)) => {
+                    match &**object {
+                        Object::Fun(idents, ident, _) => {
+                            assert_eq!(true, idents.is_empty());
+                            assert_eq!(String::from("f"), *ident);
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("g")) {
+                Some(Value::Object(object)) => {
+                    match &**object {
+                        Object::Fun(idents, ident, _) => {
+                            assert_eq!(true, idents.is_empty());
+                            assert_eq!(String::from("g"), *ident);
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_tree()
+{
+    let s = "
+function f(X)
+    Y = 1
+    X + Y
+end
+X = f(2)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("f")) {
+                Some(Value::Object(object)) => {
+                    match &**object {
+                        Object::Fun(idents, ident, _) => {
+                            assert_eq!(true, idents.is_empty());
+                            assert_eq!(String::from("f"), *ident);
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("X")) {
+                Some(Value::Int(3)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_operation_on_matrices()
+{
+    let s = "
+X = [
+    1, 2
+    3, 4
+    5, 6
+]
+Y = [
+    1, 2, 3
+    4, 5, 6
+]
+Z = X * Y
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                1.0, 2.0, 3.0,
+                4.0, 5.0, 6.0
+            ];
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(value) => {
+                    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Y")) {
+                Some(value) => {
+                    let matrix_array = Arc::new(Object::MatrixArray(2, 3, TransposeFlag::NoTranspose, b.clone()));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Z")) {
+                Some(value) => {
+                    let matrix_array = Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, expected_mul(a.as_slice(), b.as_slice(), 3, 3, 2)));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_nested_application()
+{
+    let s = "
+function f(X)
+    Y = 1
+    X + Y
+end
+function g(X)
+    Y = 2
+    Z = f(X)
+    X * Y + Z
+end
+X = g(3)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(Value::Int(10)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_recursion()
+{
+    let s = "
+function fib(X)
+    if X == 0
+        0
+    else if X == 1
+        1
+    else
+        fib(X - 1) + fib(X - 2)
+    end
+end
+X = fib(10)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(Value::Int(55)) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_functions_with_variable_in_module()
+{
+    let s = "
+module a
+    I = 1
+    function f(X)
+        ::I = I + 1
+        X + I
+    end
+end
+module b
+    I = 10
+    X = a::f(1)
+    Y = a::f(2)
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    let a_mod_g = a_mod.read().unwrap();
+                    match a_mod_g.var(&String::from("f")) {
+                        Some(Value::Object(object)) => {
+                            match &**object {
+                                Object::Fun(idents, ident, _) => {
+                                    assert_eq!(vec![String::from("a")], *idents);
+                                    assert_eq!(String::from("f"), *ident);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                    match a_mod_g.var(&String::from("I")) {
+                        Some(Value::Int(3)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match root_mod_g.mod1(&String::from("b")) {
+                Some(b_mod) => {
+                    let b_mod_g = b_mod.read().unwrap();
+                    match b_mod_g.var(&String::from("I")) {
+                        Some(Value::Int(10)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    match b_mod_g.var(&String::from("X")) {
+                        Some(Value::Int(3)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                    match b_mod_g.var(&String::from("Y")) {
+                        Some(Value::Int(5)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interprets_empty_statements_in_if_statement()
+{
+    let s = "
+function f(X)
+    if X
+        1
+    else
+    end
+end
+X = f(false)
+Y = f(true)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Y")) {
+                Some(Value::Int(1)) => assert!(true),
+                _ => assert!(false),
             }
         },
         Err(_) => assert!(false),
