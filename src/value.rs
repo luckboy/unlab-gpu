@@ -27,7 +27,6 @@ use crate::matrix::Matrix;
 use crate::env::*;
 use crate::error::*;
 use crate::interp::*;
-use crate::private::*;
 use crate::tree::*;
 use crate::utils::*;
 

@@ -11,8 +11,8 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use crate::env::*;
 use crate::error::*;
-use crate::private::*;
 use crate::tree::*;
+use crate::utils::*;
 use crate::value::*;
 
 #[derive(Clone, Debug)]

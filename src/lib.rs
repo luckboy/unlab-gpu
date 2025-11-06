@@ -14,7 +14,6 @@ pub mod interp;
 pub mod lexer;
 pub mod mod_node;
 pub mod parser;
-pub(crate) mod private;
 pub mod tree;
 pub mod utils;
 pub mod value;
