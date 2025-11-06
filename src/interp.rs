@@ -315,7 +315,16 @@ impl Interp
                             }
                         }
                     },
-                    _ => (),
+                    Ok(None) => {
+                        self.stack_trace.push((None, expr.pos().clone()));
+                        self.ret_value = Value::None;
+                        return Err(Error::Interp(String::from("value isn't iterable")));
+                    },
+                    Err(err) => {
+                        self.stack_trace.push((None, expr.pos().clone()));
+                        self.ret_value = Value::None;
+                        return Err(err);
+                    },
                 }
             },
             Stat::While(expr, stats, _) => {

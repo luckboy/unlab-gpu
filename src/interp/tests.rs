@@ -3102,6 +3102,72 @@ a::X = 2
 }
 
 #[test]
+fn test_interp_interpret_complains_on_value_is_not_iterable()
+{
+    let s = "
+X = 1
+for I in true
+    X = X + 1    
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("value isn't iterable"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 10), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_complains_on_range_step_is_zero()
+{
+    let s = "
+X = 1
+for I in 1 to 3 by 0
+    X = X + 1    
+end
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Interp(msg)) => assert_eq!(String::from("range step is zero"), msg),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 2, 1), *pos),
+                (_, _) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
 fn test_interp_interpret_complains_on_break_is_not_in_loop()
 {
     let s = "
