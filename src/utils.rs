@@ -79,6 +79,20 @@ pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
     }
 }
 
+fn matrix_res_create_and_set_zeros(row_count: usize, col_count: usize) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    Ok(frontend.create_matrix_and_set_zeros(row_count, col_count)?)
+}
+
+pub fn matrix_create_and_set_zeros(row_count: usize, col_count: usize) -> Result<Matrix>
+{
+    match matrix_res_create_and_set_zeros(row_count, col_count) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
 fn matrix_res_create_and_set_elems(row_count: usize, col_count: usize, elems: &[f32]) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;

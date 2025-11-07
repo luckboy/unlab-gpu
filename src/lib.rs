@@ -7,6 +7,7 @@
 //
 pub use unmtx_gpu as matrix;
 
+pub mod builtins;
 pub mod doc;
 pub mod env;
 pub mod error;
