@@ -7,6 +7,7 @@
 //
 use std::mem::size_of;
 use std::sync::Arc;
+use std::sync::RwLock;
 use crate::mod_node::*;
 use crate::env::*;
 use crate::error::*;
@@ -14,8 +15,8 @@ use crate::interp::*;
 use crate::utils::*;
 use crate::value::*;
 
-fn fun1<F>(arg_values: &[Value], mut f: F) -> Result<Value>
-    where F: FnMut(&Value) -> Result<Value>
+fn fun1<F>(arg_values: &[Value], f: F) -> Result<Value>
+    where F: FnOnce(&Value) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -26,8 +27,8 @@ fn fun1<F>(arg_values: &[Value], mut f: F) -> Result<Value>
     }
 }
 
-fn fun2<F>(arg_values: &[Value], mut f: F) -> Result<Value>
-    where F: FnMut(&Value, &Value) -> Result<Value>
+fn fun2<F>(arg_values: &[Value], f: F) -> Result<Value>
+    where F: FnOnce(&Value, &Value) -> Result<Value>
 {
     if arg_values.len() != 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -376,6 +377,134 @@ pub fn columns(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+pub fn get(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 || arg_values.len() > 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(Value::Object(object)), Some(i_value @ (Value::Int(_) | Value::Float(_))), None)  => {
+            match &**object {
+                Object::String(s) => {
+                    let i = i_value.to_i64();
+                    if i < 1 || i > (s.chars().count() as i64) {
+                        return Ok(Value::None);
+                    }
+                    match s.chars().nth((i - 1) as usize) {
+                        Some(c) => {
+                            let mut t = String::new();
+                            t.push(c);
+                            Ok(Value::Object(Arc::new(Object::String(t))))
+                        }
+                        None => Ok(Value::None),
+                    }
+                },
+                Object::MatrixArray(row_count, _, _, _) => {
+                    let i = i_value.to_i64();
+                    if i < 1 || i > (*row_count as i64) {
+                        return Ok(Value::None);
+                    }
+                    Ok(Value::Object(Arc::new(Object::MatrixRowSlice(object.clone(), (i - 1) as usize))))
+                },
+                Object::MatrixRowSlice(matrix_array, i) => {
+                    let j = i_value.to_i64();
+                    match &**matrix_array {
+                        Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+                            if j < 1 || j > (*col_count as i64) {
+                                return Ok(Value::None);
+                            }
+                            let k = match transpose_flag {
+                                TransposeFlag::NoTranspose => i * (*col_count) + ((j - 1) as usize),
+                                TransposeFlag::Transpose => ((j - 1) as usize) * (*row_count) + i,
+                            };
+                            Ok(xs.get(k).map(|x| Value::Float(*x)).unwrap_or(Value::None))
+                        },
+                        _ => Err(Error::Interp(String::from("invalid matrix array type"))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function get"))),
+            }
+        },
+        (Some(Value::Ref(object)), Some(i_value @ (Value::Int(_) | Value::Float(_))), None)  => {
+            let object_g = rw_lock_read(&**object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    match i_value {
+                        Value::Int(_) | Value::Float(_) => {
+                            let i = i_value.to_i64();
+                            if i < 1 || i > (elems.len() as i64) {
+                                return Ok(Value::None);
+                            }
+                            Ok(elems.get((i - 1) as usize).map(|x| x.clone()).unwrap_or(Value::None))
+                        },
+                        _ => Err(Error::Interp(String::from("unsupported types for function get"))),
+                    }
+                },
+                MutObject::Struct(fields) => {
+                    match i_value {
+                        Value::Object(i_object) => {
+                            match &**i_object {
+                                Object::String(ident) => Ok(fields.get(ident).map(|x| x.clone()).unwrap_or(Value::None)),
+                                _ => Err(Error::Interp(String::from("unsupported types for function get"))),
+                            }
+                        },
+                        _ => Err(Error::Interp(String::from("unsupported types for function get"))),
+                    }
+                },
+            }
+        },
+        (Some(Value::Object(object)), Some(i_value @ (Value::Int(_) | Value::Float(_))), Some(j_value @ (Value::Int(_) | Value::Float(_))))  => {
+            match &**object {
+                Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+                    let i = i_value.to_i64();
+                    let j = j_value.to_i64();
+                    if i < 1 || i > (*row_count as i64) {
+                        return Ok(Value::None);
+                    }
+                    if j < 1 || j > (*col_count as i64) {
+                        return Ok(Value::None);
+                    }
+                    let k = match transpose_flag {
+                        TransposeFlag::NoTranspose => ((i - 1) as usize) * (*col_count) + ((j - 1) as usize),
+                        TransposeFlag::Transpose => ((j - 1) as usize) * (*row_count) + ((i - 1) as usize),
+                    };
+                    Ok(xs.get(k).map(|x| Value::Float(*x)).unwrap_or(Value::None))
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function get"))),
+            }
+        },
+        (Some(_), Some(_), _)  => Err(Error::Interp(String::from("unsupported types for function get"))),
+        (_, _, _) => Err(Error::Interp(String::from("no argument")))
+    }
+}
+
+pub fn getdiag(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(i_value @ (Value::Int(_) | Value::Float(_))))  => {
+            match &**object {
+                Object::MatrixArray(row_count, col_count, _, xs) => {
+                    if *row_count != *col_count {
+                        return Err(Error::Interp(String::from("number of rows isn't equal to number of columns")));
+                    }
+                    let i = i_value.to_i64();
+                    if i < 1 || i > (*row_count as i64) {
+                        return Ok(Value::None);
+                    }
+                    let k = ((i - 1) as usize) * (*col_count) + ((i - 1) as usize);
+                    Ok(xs.get(k).map(|x| Value::Float(*x)).unwrap_or(Value::None))
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function getdiag"))),
+            }
+        },
+        (Some(_), Some(_))  => Err(Error::Interp(String::from("unsupported types for function getdiag"))),
+        (_, _) => Err(Error::Interp(String::from("no argument")))
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum SortType
 {
@@ -430,6 +559,133 @@ pub fn sort(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn any(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(data_value), Some(fun_value)) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                if fun_value.apply(interp, env, &[data_value.clone(), elem])?.to_bool() {
+                                    return Ok(Value::Bool(true));
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(Value::Bool(false))
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn all(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(data_value), Some(fun_value)) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                if !fun_value.apply(interp, env, &[data_value.clone(), elem])?.to_bool() {
+                                    return Ok(Value::Bool(false));
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(Value::Bool(true))
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn find(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(data_value), Some(fun_value)) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    let mut i = 1i64;
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                if fun_value.apply(interp, env, &[data_value.clone(), elem])?.to_bool() {
+                                    return Ok(Value::Int(i));
+                                }
+                                match i.checked_add(1) {
+                                    Some(j) => i = j,
+                                    None => return Err(Error::Interp(String::from("too large index"))),
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(Value::None)
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(data_value), Some(fun_value)) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    let mut i_values: Vec<Value> = Vec::new();
+                    let mut i = 1i64;
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                if fun_value.apply(interp, env, &[data_value.clone(), elem])?.to_bool() {
+                                    i_values.push(Value::Int(i));
+                                }
+                                match i.checked_add(1) {
+                                    Some(j) => i = j,
+                                    None => return Err(Error::Interp(String::from("too large index"))),
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(i_values)))))
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -447,5 +703,11 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("length"), length);
     add_builtin_fun(root_mod, String::from("rows"), rows);
     add_builtin_fun(root_mod, String::from("columns"), columns);
+    add_builtin_fun(root_mod, String::from("get"), get);
+    add_builtin_fun(root_mod, String::from("getdiag"), getdiag);
     add_builtin_fun(root_mod, String::from("sort"), sort);
+    add_builtin_fun(root_mod, String::from("any"), any);
+    add_builtin_fun(root_mod, String::from("all"), all);
+    add_builtin_fun(root_mod, String::from("find"), find);
+    add_builtin_fun(root_mod, String::from("filter"), filter);
 }
