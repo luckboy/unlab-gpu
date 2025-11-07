@@ -121,6 +121,19 @@ impl Value
         }
     }
 
+    pub fn to_opt_string(&self) -> Option<String>
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::String(s) => Some(s.clone()),
+                    _ => None,
+                }
+            },
+            _ => None,
+        }
+    }
+    
     pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
         match (self, value) {
