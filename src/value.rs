@@ -868,6 +868,7 @@ impl Value
             Value::Object(object) => {
                 match &**object {
                     Object::Matrix(a) => Ok(Value::Object(Arc::new(matrix_to_matrix_array(a)?))),
+                    Object::MatrixArray(_, _, _, _) => Ok(self.clone()),
                     _ => Err(Error::Interp(String::from("unsupported type for conversion to matrix array"))),
                 }
             },

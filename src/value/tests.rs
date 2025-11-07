@@ -1049,6 +1049,18 @@ fn test_value_to_matrix_array_converts_matrix_to_matrix_array()
         },
         Err(_) => assert!(false),
     }
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    match value.to_matrix_array() {
+        Ok(value2) => assert_eq!(Value::Object(matrix_array), value2),
+        Err(_) => assert!(false),
+    }
+    let matrix_array = Arc::new(Object::MatrixArray(2, 3, TransposeFlag::Transpose, a.clone()));
+    let value = Value::Object(matrix_array.clone());
+    match value.to_matrix_array() {
+        Ok(value2) => assert_eq!(Value::Object(matrix_array), value2),
+        Err(_) => assert!(false),
+    }
 }
 
 #[test]
