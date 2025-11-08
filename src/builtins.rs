@@ -8,6 +8,7 @@
 use std::mem::size_of;
 use std::sync::Arc;
 use std::sync::RwLock;
+use std::sync::Weak;
 use crate::mod_node::*;
 use crate::env::*;
 use crate::error::*;
@@ -38,6 +39,52 @@ fn fun2<F>(arg_values: &[Value], f: F) -> Result<Value>
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
+
+pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::None) => Ok(Value::Object(Arc::new(Object::String(String::from("none"))))),
+        Some(Value::Bool(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("bool"))))),
+        Some(Value::Int(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("int"))))),
+        Some(Value::Float(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("float"))))),
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(_) => Ok(Value::Object(Arc::new(Object::String(String::from("string"))))),
+                Object::IntRange(_, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("intrange"))))),
+                Object::FloatRange(_, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("floatrange"))))),
+                Object::Matrix(_) => Ok(Value::Object(Arc::new(Object::String(String::from("matrix"))))),
+                Object::Fun(_, _, _) | Object::BuiltinFun(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("function"))))),
+                Object::MatrixArray(_, _, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixarray"))))),
+                Object::MatrixRowSlice(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixrowslice"))))),
+                Object::Error(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("error"))))),
+            }
+        },
+        Some(Value::Ref(object)) => {
+            let object_g = rw_lock_read(object)?;
+            match &*object_g {
+                MutObject::Array(_) => Ok(Value::Object(Arc::new(Object::String(String::from("array"))))),
+                MutObject::Struct(_) => Ok(Value::Object(Arc::new(Object::String(String::from("struct"))))),
+            }
+        },
+        Some(Value::Weak(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("weak"))))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn boolean(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1(arg_values, |a| Ok(Value::Bool(a.to_bool()))) }
+
+pub fn int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1(arg_values, |a| Ok(Value::Int(a.to_i64()))) }
+
+pub fn float(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1(arg_values, |a| Ok(Value::Float(a.to_f32()))) }
+
+pub fn string(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1(arg_values, |a| Ok(Value::Object(Arc::new(Object::String(format!("{}", a)))))) }
 
 fn checked_mul_row_count_and_col_count(row_count: i64, col_count: i64) -> Result<usize>
 {
@@ -304,6 +351,54 @@ pub fn colvector(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
 pub fn matrixarray(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, Value::to_matrix_array) }
 
+pub fn error(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(kind_object)), Some(Value::Object(msg_object))) => {
+            match (&**kind_object, &**msg_object) {
+                (Object::String(kind), Object::String(msg)) => Ok(Value::Object(Arc::new(Object::Error(kind.clone(), msg.clone())))),
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function error"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function error"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn strong(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value @ Value::Ref(_)) => Ok(value.clone()),
+        Some(Value::Weak(object)) => {
+            match object.upgrade() {
+                Some(object) => Ok(Value::Ref(object)),
+                None => Ok(Value::None),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function strong"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn weak(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() > 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Ref(object)) => Ok(Value::Weak(Arc::downgrade(object))),
+        Some(value @ Value::Weak(_)) => Ok(value.clone()),
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function weak"))),
+        None => Ok(Value::Weak(Weak::new())),
+    }
+}
+
 pub fn length(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -559,14 +654,35 @@ pub fn sort(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn reverse(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Ref(object)) => {
+            let mut object_g = rw_lock_write(object)?;
+            match &mut *object_g {
+                MutObject::Array(elems) => {
+                    elems.reverse();
+                    Ok(Value::None)
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function reverse"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function reverse"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn any(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
-        (Some(value), Some(data_value), Some(fun_value)) => {
-            match value.iter()? {
+        (Some(a_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
                 Some(mut iter) => {
                     loop {
                         match iter.next() {
@@ -594,8 +710,8 @@ pub fn all(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
-        (Some(value), Some(data_value), Some(fun_value)) => {
-            match value.iter()? {
+        (Some(a_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
                 Some(mut iter) => {
                     loop {
                         match iter.next() {
@@ -623,8 +739,8 @@ pub fn find(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
-        (Some(value), Some(data_value), Some(fun_value)) => {
-            match value.iter()? {
+        (Some(a_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
                 Some(mut iter) => {
                     let mut i = 1i64;
                     loop {
@@ -657,8 +773,8 @@ pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
-        (Some(value), Some(data_value), Some(fun_value)) => {
-            match value.iter()? {
+        (Some(a_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
                 Some(mut iter) => {
                     let mut i_values: Vec<Value> = Vec::new();
                     let mut i = 1i64;
@@ -686,11 +802,213 @@ pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn push(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Ref(a_object)), Some(value)) => {
+            let mut a_object_g = rw_lock_write(a_object)?;
+            match &mut *a_object_g {
+                MutObject::Array(elems) => {
+                    elems.push(value.clone());
+                    Ok(Value::None)
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function push"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function push"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn pop(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Ref(a_object)) => {
+            let mut a_object_g = rw_lock_write(a_object)?;
+            match &mut *a_object_g {
+                MutObject::Array(elems) => {
+                    match elems.pop() {
+                        Some(value) => Ok(value),
+                        None => Ok(Value::None),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function pop"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function pop"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Ref(a_object)), Some(Value::Ref(b_object))) => {
+            let mut a_object_g = rw_lock_write(a_object)?;
+            let b_object_g = rw_lock_read(b_object)?;
+            match (&mut *a_object_g, &*b_object_g) {
+                (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                    elems.extend_from_slice(elems2.as_slice());
+                    Ok(Value::None)
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function append"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function append"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn insert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(Value::Ref(a_object)), Some(i_value @ (Value::Int(_) | Value::Float(_) | Value::Object(_))), Some(value)) => {
+            let mut a_object_g = rw_lock_write(a_object)?;
+            match &mut *a_object_g {
+                MutObject::Array(elems) => {
+                    match i_value {
+                        Value::Int(_) | Value::Float(_) => {
+                            let i = i_value.to_i64();
+                            if i < 1 || i > (elems.len() as i64).saturating_add(1) {
+                                return Err(Error::Interp(String::from("index out of bounds")));
+                            }
+                            elems.insert((i - 1) as usize, value.clone());
+                            Ok(Value::None)
+                        },
+                        _ => Err(Error::Interp(String::from("unsupported type for function insert"))),
+                    }
+                },
+                MutObject::Struct(fields) => {
+                    match i_value {
+                        Value::Object(i_object) => {
+                            match &**i_object {
+                                Object::String(ident) => Ok(fields.insert(ident.clone(), value.clone()).unwrap_or(Value::None)),
+                                _ => Err(Error::Interp(String::from("unsupported type for function insert"))),
+                            }
+                        },
+                        _ => Err(Error::Interp(String::from("unsupported type for function insert"))),
+                    }
+                },
+            }
+        },
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function insert"))),
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn remove(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Ref(a_object)), Some(i_value @ (Value::Int(_) | Value::Float(_) | Value::Object(_)))) => {
+            let mut a_object_g = rw_lock_write(a_object)?;
+            match &mut *a_object_g {
+                MutObject::Array(elems) => {
+                    match i_value {
+                        Value::Int(_) | Value::Float(_) => {
+                            let i = i_value.to_i64();
+                            if i < 1 || i > (elems.len() as i64) {
+                                return Ok(Value::None);
+                            }
+                            Ok(elems.remove((i - 1) as usize))
+                        },
+                        _ => Err(Error::Interp(String::from("unsupported type for function remove"))),
+                    }
+                },
+                MutObject::Struct(fields) => {
+                    match i_value {
+                        Value::Object(i_object) => {
+                            match &**i_object {
+                                Object::String(ident) => Ok(fields.remove(ident).unwrap_or(Value::None)),
+                                _ => Err(Error::Interp(String::from("unsupported type for function remove"))),
+                            }
+                        },
+                        _ => Err(Error::Interp(String::from("unsupported type for function remove"))),
+                    }
+                },
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function insert"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn errorkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::Error(kind, _) => Ok(Value::Object(Arc::new(Object::String(kind.clone())))),
+                _ => Err(Error::Interp(String::from("unsupported types for function errorkind"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function errorkind"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn errormsg(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::Error(_, msg) => Ok(Value::Object(Arc::new(Object::String(msg.clone())))),
+                _ => Err(Error::Interp(String::from("unsupported types for function errormsg"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function errormsg"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn isequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2(arg_values, |a, b| Ok(Value::Bool(a.eq_with_types(b)?))) }
+
+pub fn isnotequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2(arg_values, |a, b| Ok(Value::Bool(!a.eq_with_types(b)?))) }
+
+pub fn isless(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2(arg_values, |a, b| Ok(Value::Bool(a < b))) }
+
+pub fn isgreaterequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2(arg_values, |a, b| Ok(Value::Bool(a >= b))) }
+
+pub fn isgreater(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2(arg_values, |a, b| Ok(Value::Bool(a > b))) }
+
+pub fn islessequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2(arg_values, |a, b| Ok(Value::Bool(a <= b))) }
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
 pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
 {
+    add_builtin_fun(root_mod, String::from("type"), typ);
+    add_builtin_fun(root_mod, String::from("bool"), boolean);
+    add_builtin_fun(root_mod, String::from("int"), int);
+    add_builtin_fun(root_mod, String::from("float"), float);
+    add_builtin_fun(root_mod, String::from("string"), string);
     add_builtin_fun(root_mod, String::from("zeros"), zeros);
     add_builtin_fun(root_mod, String::from("ones"), ones);
     add_builtin_fun(root_mod, String::from("eye"), eye);
@@ -700,14 +1018,31 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("rowvector"), rowvector);
     add_builtin_fun(root_mod, String::from("colvector"), colvector);
     add_builtin_fun(root_mod, String::from("matrixarray"), matrixarray);
+    add_builtin_fun(root_mod, String::from("error"), error);
+    add_builtin_fun(root_mod, String::from("strong"), strong);
+    add_builtin_fun(root_mod, String::from("weak"), weak);
     add_builtin_fun(root_mod, String::from("length"), length);
     add_builtin_fun(root_mod, String::from("rows"), rows);
     add_builtin_fun(root_mod, String::from("columns"), columns);
     add_builtin_fun(root_mod, String::from("get"), get);
     add_builtin_fun(root_mod, String::from("getdiag"), getdiag);
     add_builtin_fun(root_mod, String::from("sort"), sort);
+    add_builtin_fun(root_mod, String::from("reverse"), reverse);
     add_builtin_fun(root_mod, String::from("any"), any);
     add_builtin_fun(root_mod, String::from("all"), all);
     add_builtin_fun(root_mod, String::from("find"), find);
     add_builtin_fun(root_mod, String::from("filter"), filter);
+    add_builtin_fun(root_mod, String::from("psuh"), push);
+    add_builtin_fun(root_mod, String::from("pop"), pop);
+    add_builtin_fun(root_mod, String::from("append"), append);
+    add_builtin_fun(root_mod, String::from("insert"), insert);
+    add_builtin_fun(root_mod, String::from("remove"), remove);
+    add_builtin_fun(root_mod, String::from("errorkind"), errorkind);
+    add_builtin_fun(root_mod, String::from("errormsg"), errormsg);
+    add_builtin_fun(root_mod, String::from("isequal"), isequal);
+    add_builtin_fun(root_mod, String::from("isnotequal"), isnotequal);
+    add_builtin_fun(root_mod, String::from("isless"), isless);
+    add_builtin_fun(root_mod, String::from("isgreaterequal"), isgreaterequal);
+    add_builtin_fun(root_mod, String::from("isgreater"), isgreater);
+    add_builtin_fun(root_mod, String::from("islessequal"), islessequal);
 }
