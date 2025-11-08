@@ -1732,7 +1732,12 @@ pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     let cmd_name = match arg_values.get(0) {
-        Some(name_value) => format!("{}", name_value),
+        Some(name_value) => {
+            match name_value.to_opt_string() {
+                Some(tmp_cmd_name) => tmp_cmd_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function spawn"))),
+            }
+        },
         None => return Err(Error::Interp(String::from("no argument"))),
     };
     let mut cmd_args: Vec<String> = Vec::new();
