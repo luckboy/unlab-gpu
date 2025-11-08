@@ -5,10 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::f32;
 use std::mem::size_of;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
+use rand::random;
+use rand::random_range;
 use crate::matrix::Matrix;
 use crate::env::*;
 use crate::error::*;
@@ -489,6 +492,37 @@ pub fn weak(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn isempty(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => Ok(Value::Bool(s.is_empty())),
+                Object::MatrixArray(row_count, _, _, _) => Ok(Value::Bool(*row_count == 0)),
+                Object::MatrixRowSlice(matrix_array, _) => {
+                    match &**matrix_array {
+                        Object::MatrixArray(_, col_count, _, _) => Ok(Value::Bool(*col_count == 0)),
+                        _ => Err(Error::Interp(String::from("invalid matrix array type"))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function isempty"))),
+            }
+        },
+        Some(Value::Ref(object)) => {
+            let object_g = rw_lock_read(object)?;
+            match &*object_g {
+                MutObject::Array(elems) => Ok(Value::Bool(elems.is_empty())),
+                _ => Err(Error::Interp(String::from("unsupported type for function isempty"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function isempty"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn length(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -505,17 +539,17 @@ pub fn length(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                         _ => Err(Error::Interp(String::from("invalid matrix array type"))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported types for function length"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function length"))),
             }
         },
         Some(Value::Ref(object)) => {
             let object_g = rw_lock_read(object)?;
             match &*object_g {
                 MutObject::Array(elems) => Ok(Value::Int(elems.len() as i64)),
-                _ => Err(Error::Interp(String::from("unsupported types for function length"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function length"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported types for function length"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function length"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -530,10 +564,10 @@ pub fn rows(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
             match &**object {
                 Object::Matrix(a) => Ok(Value::Int(a.row_count() as i64)),
                 Object::MatrixArray(row_count, _, _, _) => Ok(Value::Int(*row_count as i64)),
-                _ => Err(Error::Interp(String::from("unsupported types for function rows"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function rows"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported types for function rows"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function rows"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -554,10 +588,10 @@ pub fn columns(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
                         _ => Err(Error::Interp(String::from("invalid matrix array type"))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported types for function columns"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function columns"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported types for function columns"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function columns"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -607,7 +641,7 @@ pub fn get(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                         _ => Err(Error::Interp(String::from("invalid matrix array type"))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function get"))),
+                _ => Err(Error::Interp(String::from("unsupported types for function get"))),
             }
         },
         (Some(Value::Ref(object)), Some(i_value @ (Value::Int(_) | Value::Float(_))), None)  => {
@@ -655,7 +689,7 @@ pub fn get(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                     };
                     Ok(xs.get(k).map(|x| Value::Float(*x)).unwrap_or(Value::None))
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function get"))),
+                _ => Err(Error::Interp(String::from("unsupported types for function get"))),
             }
         },
         (Some(_), Some(_), _)  => Err(Error::Interp(String::from("unsupported types for function get"))),
@@ -1449,6 +1483,246 @@ pub fn round(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
 pub fn trunc(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32(arg_values, "unsupported type for function trunc", f32::round) }
 
+pub fn rand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    Ok(Value::Float(random()))
+}
+
+pub fn randi(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(max_value @ (Value::Int(_) | Value::Float(_))), None) => {
+            let max = max_value.to_i64();
+            Ok(Value::Int(random_range(1..=max)))
+        }
+        (Some(min_value @ (Value::Int(_) | Value::Float(_))), Some(max_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let min = min_value.to_i64();
+            let max = max_value.to_i64();
+            Ok(Value::Int(random_range(min..=max)))
+        },
+        (Some(_), None) => Err(Error::Interp(String::from("unsupported type for function randi"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function randi"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn str2int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    match s.parse::<i64>() {
+                        Ok(n) => Ok(Value::Int(n)),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("parseint"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function str2int"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function str2int"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn str2float(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    match s.parse::<f32>() {
+                        Ok(n) => Ok(Value::Float(n)),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("parsefloat"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function str2float"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function str2float"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn hex2dec(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    let s2 = if s.starts_with("0X") || s.starts_with("0x") {
+                        &s[2..]
+                    } else {
+                        s
+                    };
+                    match i64::from_str_radix(s2, 16) {
+                        Ok(n) => Ok(Value::Int(n)),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("parseint"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function hex2dec"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function hex2dec"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn char2int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    match s.chars().next() {
+                        Some(c) => Ok(Value::Int((c as u32) as i64)),
+                        None => Ok(Value::None),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function char2int"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function char2int"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn num2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value @ (Value::Int(_) | Value::Float(_))) => {
+            let n = value.to_i64();
+            if n < 0 || n > (u32::MAX as i64) {
+                return Ok(Value::None);
+            }
+            match char::from_u32(n as u32) {
+                Some(c) => {
+                    let mut s = String::new();
+                    s.push(c);
+                    Ok(Value::Object(Arc::new(Object::String(s))))
+                },
+                None => Ok(Value::None),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function num2char"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn print(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    for arg_value in arg_values {
+        print!("{}", arg_value);
+    }
+    Ok(Value::None)
+}
+
+pub fn println(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    for arg_value in arg_values {
+        print!("{}", arg_value);
+    }
+    println!("");
+    Ok(Value::None)
+}
+
+pub fn eprint(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    for arg_value in arg_values {
+        eprint!("{}", arg_value);
+    }
+    Ok(Value::None)
+}
+
+pub fn eprintln(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    for arg_value in arg_values {
+        eprint!("{}", arg_value);
+    }
+    eprintln!("");
+    Ok(Value::None)
+}
+
+pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(ident) => {
+                    let mut current_mod_g = rw_lock_write(env.current_mod())?;
+                    current_mod_g.remove_mod(ident)?;
+                    Ok(Value::None)
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function removemod"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function removemod"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn removevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(ident) => {
+                    let mut current_mod_g = rw_lock_write(env.current_mod())?;
+                    current_mod_g.remove_var(ident);
+                    Ok(Value::None)
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function removevar"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function removevar"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn removelocalvar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(ident) => Ok(Value::Bool(env.remove_local_var(ident))),
+                _ => Err(Error::Interp(String::from("unsupported type for function removelocalvar"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function removelocalvar"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -1462,6 +1736,9 @@ pub fn add_alias(root_mod: &mut ModNode<Value, ()>, new_ident: String, old_ident
 
 pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
 {
+    root_mod.add_var(String::from("pi"), Value::Float(f32::consts::PI));
+    root_mod.add_var(String::from("e"), Value::Float(f32::consts::E));
+    root_mod.add_var(String::from("eps"), Value::Float(f32::EPSILON));
     add_builtin_fun(root_mod, String::from("type"), typ);
     add_builtin_fun(root_mod, String::from("bool"), boolean);
     add_builtin_fun(root_mod, String::from("int"), int);
@@ -1480,6 +1757,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("array"), array);
     add_builtin_fun(root_mod, String::from("strong"), strong);
     add_builtin_fun(root_mod, String::from("weak"), weak);
+    add_builtin_fun(root_mod, String::from("isempty"), isempty);
     add_builtin_fun(root_mod, String::from("length"), length);
     add_builtin_fun(root_mod, String::from("rows"), rows);
     add_builtin_fun(root_mod, String::from("columns"), columns);
@@ -1540,4 +1818,18 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("floor"), floor);
     add_builtin_fun(root_mod, String::from("round"), round);
     add_builtin_fun(root_mod, String::from("trunc"), trunc);
+    add_builtin_fun(root_mod, String::from("rand"), rand);
+    add_builtin_fun(root_mod, String::from("randi"), randi);
+    add_builtin_fun(root_mod, String::from("str2int"), str2int);
+    add_builtin_fun(root_mod, String::from("str2float"), str2float);
+    add_builtin_fun(root_mod, String::from("hex2dec"), hex2dec);
+    add_builtin_fun(root_mod, String::from("char2int"), char2int);
+    add_builtin_fun(root_mod, String::from("num2char"), num2char);
+    add_builtin_fun(root_mod, String::from("print"), print);
+    add_builtin_fun(root_mod, String::from("println"), println);
+    add_builtin_fun(root_mod, String::from("eprint"), eprint);
+    add_builtin_fun(root_mod, String::from("eprintln"), eprintln);
+    add_builtin_fun(root_mod, String::from("removemod"), removemod);
+    add_builtin_fun(root_mod, String::from("removevar"), removevar);
+    add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
 }
