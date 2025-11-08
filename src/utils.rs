@@ -287,6 +287,125 @@ pub fn matrix_rdiv_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
     }
 }
 
+fn matrix_res_sigmoid(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.sigmoid(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_sigmoid(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_sigmoid(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_tanh(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.tanh(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_tanh(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_tanh(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_swish(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.swish(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_swish(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_swish(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_softmax(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.softmax(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_softmax(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_softmax(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_sqrt(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.sqrt(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_sqrt(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_sqrt(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_really_transpose(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.really_transpose(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_really_transpose(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_really_transpose(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_repeat(a: &Matrix, n: usize) -> matrix::Result<Option<Matrix>>
+{
+    if a.col_count() != 1 && a.row_count() != 1 {
+        return Ok(None);
+    }
+    let frontend = Frontend::new()?;
+    let b = if a.col_count() == 1 {
+        unsafe { frontend.create_matrix(a.row_count(), n)? }
+    } else {
+        unsafe { frontend.create_matrix(n, a.col_count())? }
+    };
+    frontend.repeat(a, &b)?;
+    Ok(Some(b))
+}
+
+pub fn matrix_repeat(a: &Matrix, n: usize) -> Result<Option<Matrix>>
+{
+    match matrix_res_repeat(a, n) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
 fn matrix_res_to_matrix_array(a: &Matrix) -> matrix::Result<Object>
 {
     let frontend = Frontend::new()?;
