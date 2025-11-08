@@ -140,15 +140,21 @@ pub fn string(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
 
 fn checked_mul_row_count_and_col_count(row_count: i64, col_count: i64) -> Result<usize>
 {
-    if row_count >= (isize::MAX as i64) {
+    if row_count < 0 {
+        return Err(Error::Interp(String::from("number of rows is negative")));
+    }
+    if col_count < 0 {
+        return Err(Error::Interp(String::from("number of columns is negative")));
+    }
+    if row_count > (isize::MAX as i64) {
         return Err(Error::Interp(String::from("too large number of rows")));
     }
-    if col_count >= (isize::MAX as i64) {
+    if col_count > (isize::MAX as i64) {
         return Err(Error::Interp(String::from("too large number of columns")));
     }
     match row_count.checked_mul(col_count) {
         Some(len) => {
-            if len >= (isize::MAX as i64) {
+            if len > (isize::MAX as i64) {
                 return Err(Error::Interp(String::from("too large number of matrix elements")));
             }
             match (len as isize).checked_mul(size_of::<f32>() as isize) {
