@@ -8,6 +8,7 @@
 use std::f32;
 use std::io::stdin;
 use std::mem::size_of;
+use std::process::Command;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
@@ -1725,6 +1726,35 @@ pub fn eprintln(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     Ok(Value::None)
 }
 
+pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let cmd_name = match arg_values.get(0) {
+        Some(name_value) => format!("{}", name_value),
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let mut cmd_args: Vec<String> = Vec::new();
+    for arg_value in &arg_values[1..] {
+        cmd_args.push(format!("{}", arg_value));
+    }
+    match Command::new(cmd_name).args(cmd_args).spawn() {
+        Ok(mut child) => {
+            match child.wait() {
+                Ok(exit_status) => {
+                    match exit_status.code() {
+                        Some(code) => Ok(Value::Int(code as i64)),
+                        None => Ok(Value::Object(Arc::new(Object::Error(String::from("exitstatus"), String::from("process terminated by signal"))))),
+                    }
+                },
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1894,6 +1924,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("println"), println);
     add_builtin_fun(root_mod, String::from("eprint"), eprint);
     add_builtin_fun(root_mod, String::from("eprintln"), eprintln);
+    add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
