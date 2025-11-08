@@ -1670,6 +1670,18 @@ pub fn num2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let mut line = String::new();
+    match stdin().read_line(&mut line) {
+        Ok(_) => Ok(Value::Object(Arc::new(Object::String(line)))),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn format(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     let mut s = String::new();
@@ -1711,18 +1723,6 @@ pub fn eprintln(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
     eprintln!("");
     Ok(Value::None)
-}
-
-pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{
-    if arg_values.len() != 0 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    let mut line = String::new();
-    match stdin().read_line(&mut line) {
-        Ok(_) => Ok(Value::Object(Arc::new(Object::String(line)))),
-        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
-    }
 }
 
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
@@ -1888,12 +1888,12 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("hex2dec"), hex2dec);
     add_builtin_fun(root_mod, String::from("char2int"), char2int);
     add_builtin_fun(root_mod, String::from("num2char"), num2char);
+    add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("format"), format);
     add_builtin_fun(root_mod, String::from("print"), print);
     add_builtin_fun(root_mod, String::from("println"), println);
     add_builtin_fun(root_mod, String::from("eprint"), eprint);
     add_builtin_fun(root_mod, String::from("eprintln"), eprintln);
-    add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
