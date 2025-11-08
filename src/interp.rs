@@ -33,6 +33,9 @@ impl Interp
     pub fn clear_stack_trace(&mut self)
     { self.stack_trace.clear(); }
     
+    pub fn ret_value(&self) -> &Value
+    { &self.ret_value }
+    
     pub fn interpret(&mut self, env: &mut Env, tree: &Tree) -> Result<()>
     { 
         match tree {
@@ -41,7 +44,7 @@ impl Interp
                     Ok(()) => Ok(()),
                     Err(Error::Stop(Stop::Break)) => Err(Error::Interp(String::from("break isn't in loop"))),
                     Err(Error::Stop(Stop::Continue)) => Err(Error::Interp(String::from("continue isn't in loop"))),
-                    Err(Error::Stop(Stop::Return)) => Err(Error::Interp(String::from("return or error propagation isn't in function"))),
+                    Err(Error::Stop(Stop::Return)) => Err(Error::Interp(String::from("return isn't in function"))),
                     Err(err) => Err(err),
                 };
                 match res {
@@ -72,7 +75,7 @@ impl Interp
                                     Ok(()) => Ok(self.ret_value.clone()),
                                     Err(Error::Stop(Stop::Break)) => Err(Error::Interp(String::from("break isn't in loop"))),
                                     Err(Error::Stop(Stop::Continue)) => Err(Error::Interp(String::from("continue isn't in loop"))),
-                                    Err(Error::Stop(Stop::Return)) => {
+                                    Err(Error::Stop(Stop::Return | Stop::ErrorPropagation)) => {
                                         self.stack_trace.clear();
                                         Ok(self.ret_value.clone())
                                     },
@@ -121,7 +124,10 @@ impl Interp
         self.ret_value = Value::None;
         for node in nodes {
             let res = self.interpret_node(env, node);
-            self.ret_value = Value::None;
+            match res {
+                Err(Error::Stop(Stop::ErrorPropagation)) => (),
+                _ => self.ret_value = Value::None,
+            }
             res?;
         }
         Ok(())
@@ -488,14 +494,14 @@ impl Interp
                     Value::None => {
                         self.stack_trace.push((None, pos.clone()));
                         self.ret_value = value2.clone();
-                        Err(Error::Stop(Stop::Return))
+                        Err(Error::Stop(Stop::ErrorPropagation))
                     },
                     Value::Object(object2) => {
                         match &**object2 {
                             Object::Error(_, _) => {
                                 self.stack_trace.push((None, pos.clone()));
                                 self.ret_value = value2.clone();
-                                Err(Error::Stop(Stop::Return))
+                                Err(Error::Stop(Stop::ErrorPropagation))
                             },
                             _ => Ok(value2),
                         }

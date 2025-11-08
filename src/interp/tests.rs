@@ -521,6 +521,67 @@ Z = f(C)
 }
 
 #[test]
+fn test_interp_interpret_interprets_error_propagation_expression_outside_function_for_none()
+{
+    let s = "X?";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut root_mod = ModNode::new(());
+            root_mod.add_var(String::from("X"), Value::None);
+            let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Stop(Stop::ErrorPropagation)) => assert!(true),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+            assert_eq!(Value::None, *interp.ret_value());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_interprets_error_propagation_expression_outside_function_for_error()
+{
+    let s = "X?";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut root_mod = ModNode::new(());
+            root_mod.add_var(String::from("X"), Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def")))));
+            let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Err(Error::Stop(Stop::ErrorPropagation)) => assert!(true),
+                _ => assert!(false),
+            }
+            assert_eq!(1, interp.stack_trace().len());
+            match &interp.stack_trace()[0] {
+                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
+                (_, _) => assert!(false),
+            }
+            let expected_value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+            assert_eq!(expected_value, *interp.ret_value());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
 fn test_interp_interpret_interprets_simple_literals()
 {
     let s = "
@@ -3308,7 +3369,7 @@ f()
 }
 
 #[test]
-fn test_interp_interpret_complains_on_return_or_error_propagation_is_not_in_function()
+fn test_interp_interpret_complains_on_return_is_not_in_function()
 {
     let s = "
 return
@@ -3324,37 +3385,7 @@ return
             let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
             let mut interp = Interp::new();
             match interp.interpret(&mut env, &tree) {
-                Err(Error::Interp(msg)) => assert_eq!(String::from("return or error propagation isn't in function"), msg),
-                _ => assert!(false),
-            }
-            assert_eq!(1, interp.stack_trace().len());
-            match &interp.stack_trace()[0] {
-                (None, pos) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 1), *pos),
-                (_, _) => assert!(false),
-            }
-        },
-        Err(_) => assert!(false),
-    }
-}
-
-#[test]
-fn test_interp_interpret_complains_on_return_or_error_propagation_is_not_in_function_for_error_propagation()
-{
-    let s = "
-none?
-";
-    let s2 = &s[1..];
-    let mut cursor = Cursor::new(s2.as_bytes());
-    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
-    let path = lexer.path().clone();
-    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
-    let mut parser = Parser::new(path, tokens);
-    match parser.parse() {
-        Ok(tree) => {
-            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
-            let mut interp = Interp::new();
-            match interp.interpret(&mut env, &tree) {
-                Err(Error::Interp(msg)) => assert_eq!(String::from("return or error propagation isn't in function"), msg),
+                Err(Error::Interp(msg)) => assert_eq!(String::from("return isn't in function"), msg),
                 _ => assert!(false),
             }
             assert_eq!(1, interp.stack_trace().len());

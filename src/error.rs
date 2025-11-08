@@ -40,6 +40,7 @@ pub enum Stop
     Continue,
     Return,
     Quit,
+    ErrorPropagation,
 }
 
 #[derive(Debug)]
@@ -78,6 +79,7 @@ impl fmt::Display for Error
             Error::Stop(Stop::Continue) => write!(f, "stopped by continue"),
             Error::Stop(Stop::Return) => write!(f, "stopped by return"),
             Error::Stop(Stop::Quit) => write!(f, "stopped by quit"),
+            Error::Stop(Stop::ErrorPropagation) => write!(f, "stopped by error propagation"),
         }
     }
 }
