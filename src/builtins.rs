@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::f32;
+use std::io::stdin;
 use std::mem::size_of;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -723,6 +724,45 @@ pub fn getdiag(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
         (_, _) => Err(Error::Interp(String::from("no argument")))
     }
 }
+
+pub fn split(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    let ss = s.split_whitespace();
+                    let elems: Vec<Value> = ss.map(|t| Value::Object(Arc::new(Object::String(String::from(t))))).collect();
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function split"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function split"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn trim(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => Ok(Value::Object(Arc::new(Object::String(String::from(s.trim()))))),
+                _ => Err(Error::Interp(String::from("unsupported type for function trim"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function trim"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum SortType
@@ -1630,6 +1670,15 @@ pub fn num2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+pub fn format(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    let mut s = String::new();
+    for arg_value in arg_values {
+        s.push_str(format!("{}", arg_value).as_str());
+    }
+    Ok(Value::Object(Arc::new(Object::String(s))))
+}
+
 pub fn print(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     for arg_value in arg_values {
@@ -1662,6 +1711,18 @@ pub fn eprintln(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
     eprintln!("");
     Ok(Value::None)
+}
+
+pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let mut line = String::new();
+    match stdin().read_line(&mut line) {
+        Ok(_) => Ok(Value::Object(Arc::new(Object::String(line)))),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
 }
 
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
@@ -1763,6 +1824,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("columns"), columns);
     add_builtin_fun(root_mod, String::from("get"), get);
     add_builtin_fun(root_mod, String::from("getdiag"), getdiag);
+    add_builtin_fun(root_mod, String::from("split"), split);
+    add_builtin_fun(root_mod, String::from("trim"), trim);
     add_builtin_fun(root_mod, String::from("sort"), sort);
     add_builtin_fun(root_mod, String::from("reverse"), reverse);
     add_builtin_fun(root_mod, String::from("any"), any);
@@ -1825,10 +1888,12 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("hex2dec"), hex2dec);
     add_builtin_fun(root_mod, String::from("char2int"), char2int);
     add_builtin_fun(root_mod, String::from("num2char"), num2char);
+    add_builtin_fun(root_mod, String::from("format"), format);
     add_builtin_fun(root_mod, String::from("print"), print);
     add_builtin_fun(root_mod, String::from("println"), println);
     add_builtin_fun(root_mod, String::from("eprint"), eprint);
     add_builtin_fun(root_mod, String::from("eprintln"), eprintln);
+    add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
