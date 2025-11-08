@@ -6,7 +6,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::f32;
+use std::io::Write;
 use std::io::stdin;
+use std::io::stdout;
+use std::io::stderr;
 use std::mem::size_of;
 use std::process::Command;
 use std::sync::Arc;
@@ -1726,6 +1729,28 @@ pub fn eprintln(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     Ok(Value::None)
 }
 
+pub fn flush(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match stdout().flush() {
+        Ok(()) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn eflush(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match stderr().flush() {
+        Ok(()) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -1929,6 +1954,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("println"), println);
     add_builtin_fun(root_mod, String::from("eprint"), eprint);
     add_builtin_fun(root_mod, String::from("eprintln"), eprintln);
+    add_builtin_fun(root_mod, String::from("flush"), flush);
+    add_builtin_fun(root_mod, String::from("eflush"), eflush);
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
