@@ -892,6 +892,180 @@ pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn max(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value), None) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    let mut max_elem = Value::None;
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                match max_elem {
+                                    Value::None => max_elem = elem,
+                                    _ => {
+                                        if elem > max_elem {
+                                            max_elem = elem;
+                                        }
+                                    },
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(max_elem)
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (Some(value), Some(value2)) => {
+            if value2 > value {
+                Ok(value2.clone())
+            } else {
+                Ok(value.clone())
+            }
+        },
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn min(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value), None) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    let mut min_elem = Value::None;
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                match min_elem {
+                                    Value::None => min_elem = elem,
+                                    _ => {
+                                        if elem < min_elem {
+                                            min_elem = elem;
+                                        }
+                                    },
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(min_elem)
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (Some(value), Some(value2)) => {
+            if value2 < value {
+                Ok(value2.clone())
+            } else {
+                Ok(value.clone())
+            }
+        },
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn imax(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    let mut max_elem = Value::None;
+                    let mut i: Option<i64> = None;
+                    let mut j = 1i64;
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                match max_elem {
+                                    Value::None => {
+                                        max_elem = elem;
+                                        i = Some(j);
+                                    },
+                                    _ => {
+                                        if elem > max_elem {
+                                            max_elem = elem;
+                                            i = Some(j);
+                                        }
+                                    },
+                                }
+                                match j.checked_add(1) {
+                                    Some(k) => j = k,
+                                    None => return Err(Error::Interp(String::from("too large index"))),
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(i.map(|i| Value::Int(i)).unwrap_or(Value::None))
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn imin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => {
+            match value.iter()? {
+                Some(mut iter) => {
+                    let mut min_elem = Value::None;
+                    let mut i: Option<i64> = None;
+                    let mut j = 1i64;
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => {
+                                match min_elem {
+                                    Value::None => {
+                                        min_elem = elem;
+                                        i = Some(j);
+                                    },
+                                    _ => {
+                                        if elem < min_elem {
+                                            min_elem = elem;
+                                            i = Some(j);
+                                        }
+                                    },
+                                }
+                                match j.checked_add(1) {
+                                    Some(k) => j = k,
+                                    None => return Err(Error::Interp(String::from("too large index"))),
+                                }
+                            },
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(i.map(|i| Value::Int(i)).unwrap_or(Value::None))
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn push(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1172,6 +1346,109 @@ pub fn repeat(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+pub fn modulo(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Int(a)), Some(Value::Int(b))) => {
+            match a.checked_rem(*b) {
+                Some(c) => Ok(Value::Int(c)),
+                None => {
+                    if *b == 0 {
+                        Err(Error::Interp(String::from("division by zero")))
+                    } else {
+                        Err(Error::Interp(String::from("overflow in function mod")))
+                    }
+                },
+            }
+        },
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(value.to_f32() % value2.to_f32())),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function mod"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn abs(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Int(a)) => Ok(Value::Int(a.abs())),
+        Some(Value::Float(a)) => Ok(Value::Float(a.abs())),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function abs"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn pow(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2_for_f32(arg_values, "unsupported types for function pow", f32::powf) }
+
+pub fn exp(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function exp", f32::exp) }
+
+pub fn log(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function log", f32::ln) }
+
+pub fn log2(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function log2", f32::log2) }
+
+pub fn log10(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function log10", f32::log10) }
+
+pub fn sin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function sin", f32::sin) }
+
+pub fn cos(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function cos", f32::cos) }
+
+pub fn tan(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function tan", f32::tan) }
+
+pub fn asin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function asin", f32::asin) }
+
+pub fn acos(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function acos", f32::acos) }
+
+pub fn atan(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function atan", f32::atan) }
+
+pub fn atan2(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun2_for_f32(arg_values, "unsupported types for function atan2", f32::atan2) }
+
+pub fn sinh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function sinh", f32::sinh) }
+
+pub fn cosh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function cosh", f32::cosh) }
+
+pub fn asinh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function asinh", f32::asinh) }
+
+pub fn acosh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function acosh", f32::acosh) }
+
+pub fn atanh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function atanh", f32::atanh) }
+
+pub fn sign(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function sign", f32::signum) }
+
+pub fn ceil(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function ceil", f32::ceil) }
+
+pub fn floor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function floor", f32::floor) }
+
+pub fn round(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function round", f32::round) }
+
+pub fn trunc(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1_for_f32(arg_values, "unsupported type for function trunc", f32::round) }
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -1214,6 +1491,10 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("all"), all);
     add_builtin_fun(root_mod, String::from("find"), find);
     add_builtin_fun(root_mod, String::from("filter"), filter);
+    add_builtin_fun(root_mod, String::from("max"), max);
+    add_builtin_fun(root_mod, String::from("min"), min);
+    add_builtin_fun(root_mod, String::from("imax"), imax);
+    add_builtin_fun(root_mod, String::from("imin"), imin);
     add_builtin_fun(root_mod, String::from("psuh"), push);
     add_builtin_fun(root_mod, String::from("pop"), pop);
     add_builtin_fun(root_mod, String::from("append"), append);
@@ -1235,4 +1516,28 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("reallytranspose"), reallytranspose);
     add_alias(root_mod, String::from("rt"), &String::from("reallytranspose"));
     add_builtin_fun(root_mod, String::from("repeat"), repeat);
+    add_builtin_fun(root_mod, String::from("mod"), modulo);
+    add_builtin_fun(root_mod, String::from("abs"), abs);
+    add_builtin_fun(root_mod, String::from("pow"), pow);
+    add_builtin_fun(root_mod, String::from("exp"), exp);
+    add_builtin_fun(root_mod, String::from("log"), log);
+    add_builtin_fun(root_mod, String::from("log2"), log2);
+    add_builtin_fun(root_mod, String::from("log10"), log10);
+    add_builtin_fun(root_mod, String::from("sin"), sin);
+    add_builtin_fun(root_mod, String::from("cos"), cos);
+    add_builtin_fun(root_mod, String::from("tan"), tan);
+    add_builtin_fun(root_mod, String::from("asin"), asin);
+    add_builtin_fun(root_mod, String::from("acos"), acos);
+    add_builtin_fun(root_mod, String::from("atan"), atan);
+    add_builtin_fun(root_mod, String::from("atan2"), atan2);
+    add_builtin_fun(root_mod, String::from("sinh"), sinh);
+    add_builtin_fun(root_mod, String::from("cosh"), cosh);
+    add_builtin_fun(root_mod, String::from("asinh"), asinh);
+    add_builtin_fun(root_mod, String::from("acosh"), acosh);
+    add_builtin_fun(root_mod, String::from("atanh"), atanh);
+    add_builtin_fun(root_mod, String::from("sign"), sign);
+    add_builtin_fun(root_mod, String::from("ceil"), ceil);
+    add_builtin_fun(root_mod, String::from("floor"), floor);
+    add_builtin_fun(root_mod, String::from("round"), round);
+    add_builtin_fun(root_mod, String::from("trunc"), trunc);
 }
