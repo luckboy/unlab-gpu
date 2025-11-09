@@ -1195,17 +1195,29 @@ pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
     match (arg_values.get(0), arg_values.get(1)) {
         (Some(Value::Ref(a_object)), Some(Value::Ref(b_object))) => {
-            let mut a_object_g = rw_lock_write(a_object)?;
-            let b_object_g = rw_lock_read(b_object)?;
-            match (&mut *a_object_g, &*b_object_g) {
-                (MutObject::Array(elems), MutObject::Array(elems2)) => {
-                    elems.extend_from_slice(elems2.as_slice());
-                    Ok(Value::None)
-                },
-                _ => Err(Error::Interp(String::from("unsupported type for function append"))),
+            if !Arc::ptr_eq(a_object, b_object) {
+                let mut a_object_g = rw_lock_write(a_object)?;
+                let b_object_g = rw_lock_read(b_object)?;
+                match (&mut *a_object_g, &*b_object_g) {
+                    (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                        elems.extend_from_slice(elems2.as_slice());
+                        Ok(Value::None)
+                    },
+                    (_, _) => Err(Error::Interp(String::from("unsupported types for function append"))),
+                }
+            } else {
+                let mut a_object_g = rw_lock_write(a_object)?;
+                match &mut *a_object_g {
+                    MutObject::Array(elems) => {
+                        let elems2 = elems.clone();
+                        elems.extend_from_slice(elems2.as_slice());
+                        Ok(Value::None)
+                    },
+                    _ => Err(Error::Interp(String::from("unsupported types for function append"))),
+                }
             }
         },
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function append"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function append"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
