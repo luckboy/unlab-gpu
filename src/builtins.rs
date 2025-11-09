@@ -768,7 +768,7 @@ pub fn trim(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
 }
 
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 enum SortType
 {
     Bool,
