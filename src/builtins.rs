@@ -1157,10 +1157,10 @@ pub fn push(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
                     elems.push(value.clone());
                     Ok(Value::None)
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function push"))),
+                _ => Err(Error::Interp(String::from("unsupported types for function push"))),
             }
         },
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function push"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function push"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -1241,7 +1241,7 @@ pub fn insert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                             elems.insert((i - 1) as usize, value.clone());
                             Ok(Value::None)
                         },
-                        _ => Err(Error::Interp(String::from("unsupported type for function insert"))),
+                        _ => Err(Error::Interp(String::from("unsupported types for function insert"))),
                     }
                 },
                 MutObject::Struct(fields) => {
@@ -1249,15 +1249,15 @@ pub fn insert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                         Value::Object(i_object) => {
                             match &**i_object {
                                 Object::String(ident) => Ok(fields.insert(ident.clone(), value.clone()).unwrap_or(Value::None)),
-                                _ => Err(Error::Interp(String::from("unsupported type for function insert"))),
+                                _ => Err(Error::Interp(String::from("unsupported types for function insert"))),
                             }
                         },
-                        _ => Err(Error::Interp(String::from("unsupported type for function insert"))),
+                        _ => Err(Error::Interp(String::from("unsupported types for function insert"))),
                     }
                 },
             }
         },
-        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function insert"))),
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function insert"))),
         (_, _, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -1280,7 +1280,7 @@ pub fn remove(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                             }
                             Ok(elems.remove((i - 1) as usize))
                         },
-                        _ => Err(Error::Interp(String::from("unsupported type for function remove"))),
+                        _ => Err(Error::Interp(String::from("unsupported types for function remove"))),
                     }
                 },
                 MutObject::Struct(fields) => {
@@ -1288,15 +1288,15 @@ pub fn remove(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                         Value::Object(i_object) => {
                             match &**i_object {
                                 Object::String(ident) => Ok(fields.remove(ident).unwrap_or(Value::None)),
-                                _ => Err(Error::Interp(String::from("unsupported type for function remove"))),
+                                _ => Err(Error::Interp(String::from("unsupported types for function remove"))),
                             }
                         },
-                        _ => Err(Error::Interp(String::from("unsupported type for function remove"))),
+                        _ => Err(Error::Interp(String::from("unsupported types for function remove"))),
                     }
                 },
             }
         },
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function insert"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function remove"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
