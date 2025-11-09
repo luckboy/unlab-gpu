@@ -1203,6 +1203,18 @@ pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                         elems.extend_from_slice(elems2.as_slice());
                         Ok(Value::None)
                     },
+                    (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
+                        let idents2 = fields2.keys();
+                        for ident2 in idents2 {
+                            match fields2.get(ident2) {
+                                Some(field2) => {
+                                    fields.insert(ident2.clone(), field2.clone());
+                                },
+                                None => return Err(Error::Interp(String::from("no element"))),
+                            }
+                        }
+                        Ok(Value::None)
+                    },
                     (_, _) => Err(Error::Interp(String::from("unsupported types for function append"))),
                 }
             } else {
@@ -1213,7 +1225,7 @@ pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                         elems.extend_from_slice(elems2.as_slice());
                         Ok(Value::None)
                     },
-                    _ => Err(Error::Interp(String::from("unsupported types for function append"))),
+                    MutObject::Struct(_) => Ok(Value::None),
                 }
             }
         },
