@@ -1751,6 +1751,41 @@ pub fn eflush(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+pub fn cd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let new_dir_name = match arg_values.get(0) {
+        Some(new_dir_name_value) => {
+            match new_dir_name_value.to_opt_string() {
+                Some(tmp_new_dir_name) => tmp_new_dir_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function cd"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let old_dir_name = match std::env::current_dir() {
+        Ok(path) => path.to_string_lossy().into_owned(),
+        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    };
+    match std::env::set_current_dir(new_dir_name) {
+        Ok(()) => Ok(Value::Object(Arc::new(Object::String(old_dir_name)))),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn pwd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match std::env::current_dir() {
+        Ok(path) => Ok(Value::Object(Arc::new(Object::String(path.to_string_lossy().into_owned())))),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -1956,6 +1991,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("eprintln"), eprintln);
     add_builtin_fun(root_mod, String::from("flush"), flush);
     add_builtin_fun(root_mod, String::from("eflush"), eflush);
+    add_builtin_fun(root_mod, String::from("cd"), cd);
+    add_builtin_fun(root_mod, String::from("pwd"), pwd);
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
