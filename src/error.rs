@@ -12,7 +12,7 @@ use std::result;
 use std::sync::Arc;
 use crate::matrix;
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Pos
 {
     pub path: Arc<String>,
@@ -26,14 +26,14 @@ impl Pos
     { Pos { path, line, column, } }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ParserEofFlag
 {
     NoRepetition,
     Repetition,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Stop
 {
     Break,

@@ -197,7 +197,7 @@ impl FieldPair
 }
 
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum UnaryOp
 {
     Neg,
@@ -206,7 +206,7 @@ pub enum UnaryOp
     Transpose,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum BinOp
 {
     Index,

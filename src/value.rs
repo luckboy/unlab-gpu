@@ -1339,7 +1339,7 @@ impl Object
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum TransposeFlag
 {
     NoTranspose,
