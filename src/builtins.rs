@@ -1204,14 +1204,8 @@ pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                         Ok(Value::None)
                     },
                     (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
-                        let idents2 = fields2.keys();
-                        for ident2 in idents2 {
-                            match fields2.get(ident2) {
-                                Some(field2) => {
-                                    fields.insert(ident2.clone(), field2.clone());
-                                },
-                                None => return Err(Error::Interp(String::from("no element"))),
-                            }
+                        for (ident2, field2) in fields2 {
+                            fields.insert(ident2.clone(), field2.clone());
                         }
                         Ok(Value::None)
                     },
