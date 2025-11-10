@@ -21,6 +21,7 @@ use crate::matrix::Matrix;
 use crate::env::*;
 use crate::error::*;
 use crate::interp::*;
+use crate::io::*;
 use crate::mod_node::*;
 use crate::utils::*;
 use crate::value::*;
@@ -1838,6 +1839,48 @@ pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+pub fn load(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = match arg_values.get(0) {
+        Some(file_name_value) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => tmp_file_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function load"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match load_values(file_name.as_str(), env) {
+        Ok(values) => Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(values))))),
+        Err(Error::Io(err)) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+        Err(err) => Err(err),
+    }
+}
+
+pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = match arg_values.get(0) {
+        Some(file_name_value) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => tmp_file_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function save"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match save_values(file_name.as_str(), &arg_values[1..]) {
+        Ok(()) => Ok(Value::Bool(true)),
+        Err(Error::Io(err)) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+        Err(err) => Err(err),
+    }
+}
+
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2012,6 +2055,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("cd"), cd);
     add_builtin_fun(root_mod, String::from("pwd"), pwd);
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
+    add_builtin_fun(root_mod, String::from("load"), load);
+    add_builtin_fun(root_mod, String::from("save"), save);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);

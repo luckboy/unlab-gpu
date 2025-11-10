@@ -107,6 +107,20 @@ pub fn matrix_create_and_set_elems(row_count: usize, col_count: usize, elems: &[
     }
 }
 
+fn matrix_res_elems_and_transpose_flag(a: &Matrix) -> matrix::Result<(Vec<f32>, bool)>
+{
+    let frontend = Frontend::new()?;
+    Ok(frontend.elems_and_transpose_flag(a)?)
+}
+
+pub fn matrix_elems_and_transpose_flag(a: &Matrix) -> Result<(Vec<f32>, bool)>
+{
+    match matrix_res_elems_and_transpose_flag(a) {
+        Ok(pair) => Ok(pair),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
 fn matrix_res_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;

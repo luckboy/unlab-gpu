@@ -7,8 +7,10 @@
 //
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::collections::HashSet;
+use std::fs::File;
 use std::io;
+use std::io::BufReader;
+use std::io::BufWriter;
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Write;
@@ -187,7 +189,7 @@ const OBJECT_MATRIX_ROW_SLICE: u8 = 7;
 const OBJECT_ERROR: u8 = 8;
 
 const MUT_OBJECT_ARRAY: u8 = 0;
-const MUT_OBJECT_STRUCT: u8 = 0;
+const MUT_OBJECT_STRUCT: u8 = 1;
 
 const MATRIX_ARRAY_OBJECT: u8 = 0;
 const MATRIX_ARRAY_INDEX: u8 = 1;
@@ -205,7 +207,7 @@ impl<T> ObjectTab<T>
     { ObjectTab { indices: HashMap::new(), objects: HashMap::new(), count: 0, } }
     
     fn index(&self, object: &Arc<T>) -> Option<usize>
-    { self.indices.get(&Arc::as_ptr(object)).map(|n| *n) }
+    { self.indices.get(&Arc::as_ptr(object)).map(|i| *i) }
     
     fn object(&self, idx: usize) -> Option<&Arc<T>>
     { self.objects.get(&idx) }
@@ -381,7 +383,7 @@ fn read_value(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>, m
         VALUE_OBJECT => Ok(Value::Object(read_object(r, env, object_tab)?)),
         VALUE_REF => Ok(Value::Ref(read_mut_object(r, env, object_tab, mut_object_tab)?)),
         VALUE_WEAK => Ok(Value::Weak(Arc::downgrade(&read_mut_object(r, env, object_tab, mut_object_tab)?))),
-        VALUE_WEAK => Ok(Value::Weak(Weak::new())),
+        VALUE_WEAK_NONE => Ok(Value::Weak(Weak::new())),
         VALUE_OBJECT_INDEX => {
             match object_tab.object(read_usize(r)?) {
                 Some(object) => Ok(Value::Object(object.clone())),
@@ -415,4 +417,201 @@ pub fn read_values(r: &mut dyn Read, env: &Env) -> Result<Vec<Value>>
         values.push(read_value(r, env, &mut object_tab, &mut mut_object_tab)?);
     }
     Ok(values)
+}
+
+fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut ObjectTab<Object>) -> Result<()>
+{
+    match &**object {
+        Object::String(s) => {
+            write_u8(w, OBJECT_STRING)?;
+            write_str(w, s.as_str())?;
+        },
+        Object::IntRange(from, to, step) => {
+            write_u8(w, OBJECT_INT_RANGE)?;
+            write_i64(w, *from)?;
+            write_i64(w, *to)?;
+            write_i64(w, *step)?;
+        },
+        Object::FloatRange(from, to, step) => {
+            write_u8(w, OBJECT_FLOAT_RANGE)?;
+            write_f32(w, *from)?;
+            write_f32(w, *to)?;
+            write_f32(w, *step)?;
+        },
+        Object::Matrix(a) => {
+            let xs = matrix_elems_and_transpose_flag(a)?.0;
+            write_u8(w, OBJECT_MATRIX)?;
+            write_usize(w, a.row_count())?;
+            write_usize(w, a.col_count())?;
+            write_bool(w, a.is_transposed())?;
+            for x in &xs {
+                write_f32(w, *x)?;
+            }
+        },
+        Object::Fun(idents, ident, _) => {
+            write_u8(w, OBJECT_FUN)?;
+            write_usize(w, idents.len())?;
+            for ident2 in idents {
+                write_str(w, ident2.as_str())?;
+            }
+            write_str(w, ident.as_str())?;
+        },
+        Object::BuiltinFun(ident, _) => {
+            write_u8(w, OBJECT_FUN)?;
+            write_str(w, ident.as_str())?;
+        },
+        Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
+            write_u8(w, OBJECT_MATRIX_ARRAY)?;
+            write_usize(w, *row_count)?;
+            write_usize(w, *col_count)?;
+            write_bool(w, *transpose_flag == TransposeFlag::Transpose)?;
+            for x in xs {
+                write_f32(w, *x)?;
+            }
+        },
+        Object::MatrixRowSlice(matrix_array, i) => {
+            write_u8(w, OBJECT_MATRIX_ROW_SLICE)?;
+            match object_tab.index(object) {
+                Some(idx) => {
+                    write_u8(w, MATRIX_ARRAY_INDEX)?;
+                    write_usize(w, idx)?;
+                },
+                None => {
+                    write_u8(w, MATRIX_ARRAY_OBJECT)?;
+                    write_object(w, matrix_array, object_tab)?;
+                },
+            }
+            write_usize(w, *i)?;
+        },
+        Object::Error(kind, msg) => {
+            write_u8(w, OBJECT_ERROR)?;
+            write_str(w, kind.as_str())?;
+            write_str(w, msg.as_str())?;
+        },
+    }
+    if !object_tab.add_object(object.clone()) {
+        return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "too large index")));
+    }
+    Ok(())
+}
+
+fn write_mut_object(w: &mut dyn Write, object: &Arc<RwLock<MutObject>>, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
+{
+    if !mut_object_tab.add_object(object.clone()) {
+        return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "too large index")));
+    }
+    let object_g = rw_lock_read(object)?;
+    match &*object_g {
+        MutObject::Array(elems) => {
+            write_u8(w, MUT_OBJECT_ARRAY)?;
+            write_usize(w, elems.len())?;
+            for elem in elems {
+                write_value(w, elem, object_tab, mut_object_tab)?;
+            }
+        },
+        MutObject::Struct(fields) => {
+            write_u8(w, MUT_OBJECT_STRUCT)?;
+            write_usize(w, fields.len())?;
+            for (ident, field) in fields {
+                write_str(w, ident.as_str())?;
+                write_value(w, field, object_tab, mut_object_tab)?;
+            }
+        },
+    }
+    Ok(())
+}
+
+fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
+{
+    match value {
+        Value::None => write_u8(w, VALUE_NONE)?,
+        Value::Bool(b) => {
+            write_u8(w, VALUE_BOOL)?;
+            write_bool(w, *b)?;
+        },
+        Value::Int(n) => {
+            write_u8(w, VALUE_INT)?;
+            write_i64(w, *n)?;
+        },
+        Value::Float(n) => {
+            write_u8(w, VALUE_FLOAT)?;
+            write_f32(w, *n)?;
+        },
+        Value::Object(object) => {
+            match object_tab.index(object) {
+                Some(idx) => {
+                    write_u8(w, VALUE_OBJECT_INDEX)?;
+                    write_usize(w, idx)?;
+                },
+                None => {
+                    write_u8(w, VALUE_OBJECT)?;
+                    write_object(w, object, object_tab)?;
+                },
+            }
+        },
+        Value::Ref(object) => {
+            match mut_object_tab.index(object) {
+                Some(idx) => {
+                    write_u8(w, VALUE_REF_INDEX)?;
+                    write_usize(w, idx)?;
+                },
+                None => {
+                    write_u8(w, VALUE_REF)?;
+                    write_mut_object(w, object, object_tab, mut_object_tab)?;
+                },
+            }
+        },
+        Value::Weak(object) => {
+            match object.upgrade() {
+                Some(object) => {
+                    match mut_object_tab.index(&object) {
+                        Some(idx) => {
+                            write_u8(w, VALUE_WEAK_INDEX)?;
+                            write_usize(w, idx)?;
+                        },
+                        None => {
+                            write_u8(w, VALUE_WEAK)?;
+                            write_mut_object(w, &object, object_tab, mut_object_tab)?;
+                        },
+                    }
+                },
+                None => write_u8(w, VALUE_WEAK_NONE)?,
+            }
+        },
+    }
+    Ok(())
+}
+
+pub fn write_values(w: &mut dyn Write, values: &[Value]) -> Result<()>
+{ 
+    let mut object_tab: ObjectTab<Object> = ObjectTab::new();
+    let mut mut_object_tab: ObjectTab<RwLock<MutObject>> = ObjectTab::new();
+    write_magic(w)?;
+    write_usize(w, values.len())?;
+    for value in values {
+        write_value(w, value, &mut object_tab, &mut mut_object_tab)?;
+    }
+    Ok(())
+}
+
+pub fn load_values(path: &str, env: &Env) -> Result<Vec<Value>>
+{
+    match File::open(path) {
+        Ok(file) => {
+            let mut r = BufReader::new(file);
+            read_values(&mut r, env)
+        },
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn save_values(path: &str, values: &[Value]) -> Result<()>
+{
+    match File::create(path) {
+        Ok(file) => {
+            let mut w = BufWriter::new(file);
+            write_values(&mut w, values)
+        },
+        Err(err) => Err(Error::Io(err)),
+    }
 }
