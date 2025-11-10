@@ -721,7 +721,7 @@ impl Value
                                                 Some(field2) => {
                                                     new_fields.insert((*ident).clone(), field2.clone());
                                                 },
-                                                None => (),
+                                                None => return Err(Error::Interp(String::from("no field"))),
                                             }
                                         },
                                     }
@@ -1383,7 +1383,7 @@ impl MutObject
                                 return Ok(false);
                             }
                         },
-                        (_, _) => return Err(Error::Interp(String::from("no field value"))),
+                        (_, _) => return Err(Error::Interp(String::from("no field"))),
                     }
                 }
                 Ok(true)
