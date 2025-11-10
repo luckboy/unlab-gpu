@@ -12,6 +12,7 @@ pub mod doc;
 pub mod env;
 pub mod error;
 pub mod interp;
+pub mod io;
 pub mod lexer;
 pub mod mod_node;
 pub mod parser;

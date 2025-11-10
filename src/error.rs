@@ -55,6 +55,7 @@ pub enum Error
     RwLockWrite,
     AlreadyAddedModNode,
     NoFunMod,
+    Io(io::Error),
     Stop(Stop),
 }
 
@@ -75,6 +76,7 @@ impl fmt::Display for Error
             Error::RwLockWrite => write!(f, "can't write r/w lock"),
             Error::AlreadyAddedModNode => write!(f, "already added module node"),
             Error::NoFunMod => write!(f, "no function module"),
+            Error::Io(err) => write!(f, "i/o error: {}", err),
             Error::Stop(Stop::Break) => write!(f, "stopped by break"),
             Error::Stop(Stop::Continue) => write!(f, "stopped by continue"),
             Error::Stop(Stop::Return) => write!(f, "stopped by return"),
