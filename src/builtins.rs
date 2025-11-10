@@ -184,10 +184,8 @@ pub fn zeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
         (Some(n_value @ (Value::Int(_) | Value::Float(_))), Some(m_value @ (Value::Int(_) | Value::Float(_)))) => {
             let n = n_value.to_i64();
             let m = m_value.to_i64();
-            match checked_mul_row_count_and_col_count(n, m) {
-                Ok(_) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_zeros(n as usize, m as usize)?)))),
-                Err(err) => Err(err), 
-            }
+            checked_mul_row_count_and_col_count(n, m)?;
+            Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_zeros(n as usize, m as usize)?))))
         },
         (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function zeros"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
@@ -203,13 +201,9 @@ pub fn ones(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
         (Some(n_value @ (Value::Int(_) | Value::Float(_))), Some(m_value @ (Value::Int(_) | Value::Float(_)))) => {
             let n = n_value.to_i64();
             let m = m_value.to_i64();
-            match checked_mul_row_count_and_col_count(n, m) {
-                Ok(len) => {
-                    let xs = vec![1.0f32; len];
-                    Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, m as usize, xs.as_slice())?))))
-                },
-                Err(err) => Err(err), 
-            }
+            let len = checked_mul_row_count_and_col_count(n, m)?;
+            let xs = vec![1.0f32; len];
+            Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, m as usize, xs.as_slice())?))))
         },
         (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function ones"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
@@ -224,16 +218,12 @@ pub fn eye(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     match arg_values.get(0) {
         Some(n_value @ (Value::Int(_) | Value::Float(_))) => {
             let n = n_value.to_i64();
-            match checked_mul_row_count_and_col_count(n, n) {
-                Ok(len) => {
-                    let mut xs = vec![0.0f32; len];
-                    for i in 0..(n as usize) {
-                        xs[i * (n as usize) + i] = 1.0;
-                    }
-                    Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, n as usize, xs.as_slice())?))))
-                },
-                Err(err) => Err(err), 
+            let len = checked_mul_row_count_and_col_count(n, n)?;
+            let mut xs = vec![0.0f32; len];
+            for i in 0..(n as usize) {
+                xs[i * (n as usize) + i] = 1.0;
             }
+            Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, n as usize, xs.as_slice())?))))
         },
         Some(_) => Err(Error::Interp(String::from("unsupported type for function eye"))),
         None => Err(Error::Interp(String::from("no argument"))),
@@ -249,21 +239,17 @@ pub fn init(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
         (Some(n_value @ (Value::Int(_) | Value::Float(_))), Some(m_value @ (Value::Int(_) | Value::Float(_))), Some(data_value), Some(fun_value)) => {
             let n = n_value.to_i64();
             let m = m_value.to_i64();
-            match checked_mul_row_count_and_col_count(n, m) {
-                Ok(len) => {
-                    let mut xs = vec![0.0f32; len];
-                    for i in 0..(n as usize) {
-                        for j in 0..(m as usize) {
-                            match fun_value.apply(interp, env, &[data_value.clone(), Value::Int(i as i64), Value::Int(j as i64)])?.to_opt_f32() {
-                                Some(x) => xs[i * (m as usize) + j] = x,
-                                None => return Err(Error::Interp(String::from("can't convert value to floating-point number"))),
-                            }
-                        }
+            let len = checked_mul_row_count_and_col_count(n, m)?;
+            let mut xs = vec![0.0f32; len];
+            for i in 0..(n as usize) {
+                for j in 0..(m as usize) {
+                    match fun_value.apply(interp, env, &[data_value.clone(), Value::Int(i as i64), Value::Int(j as i64)])?.to_opt_f32() {
+                        Some(x) => xs[i * (m as usize) + j] = x,
+                        None => return Err(Error::Interp(String::from("can't convert value to floating-point number"))),
                     }
-                    Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, m as usize, xs.as_slice())?))))
-                },
-                Err(err) => Err(err), 
+                }
             }
+            Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, m as usize, xs.as_slice())?))))
         },
         (Some(_), Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function init"))),
         (_, _, _, _) => Err(Error::Interp(String::from("no argument"))),
@@ -278,19 +264,15 @@ pub fn initdiag(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
         (Some(n_value @ (Value::Int(_) | Value::Float(_))), Some(data_value), Some(fun_value)) => {
             let n = n_value.to_i64();
-            match checked_mul_row_count_and_col_count(n, n) {
-                Ok(len) => {
-                    let mut xs = vec![0.0f32; len];
-                    for i in 0..(n as usize) {
-                        match fun_value.apply(interp, env, &[data_value.clone(), Value::Int(i as i64)])?.to_opt_f32() {
-                            Some(x) => xs[i * (n as usize) + i] = x,
-                            None => return Err(Error::Interp(String::from("can't convert value to floating-point number"))),
-                        }
-                    }
-                    Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, n as usize, xs.as_slice())?))))
-                },
-                Err(err) => Err(err), 
+            let len = checked_mul_row_count_and_col_count(n, n)?;
+            let mut xs = vec![0.0f32; len];
+            for i in 0..(n as usize) {
+                match fun_value.apply(interp, env, &[data_value.clone(), Value::Int(i as i64)])?.to_opt_f32() {
+                    Some(x) => xs[i * (n as usize) + i] = x,
+                    None => return Err(Error::Interp(String::from("can't convert value to floating-point number"))),
+                }
             }
+            Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(n as usize, n as usize, xs.as_slice())?))))
         },
         (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function init"))),
         (_, _, _) => Err(Error::Interp(String::from("no argument"))),
@@ -1425,14 +1407,10 @@ pub fn repeat(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                     } else {
                         return Err(Error::Interp(String::from("number of columns or rows isn't one")));
                     };
-                    match checked_mul_row_count_and_col_count(m, l) {
-                        Ok(_) => {
-                            match matrix_repeat(a, n as usize)? {
-                                Some(b) => Ok(Value::Object(Arc::new(Object::Matrix(b)))),
-                                None => return Err(Error::Interp(String::from("number of columns or rows isn't one"))),
-                            }
-                        },
-                        Err(err) => Err(err),
+                    checked_mul_row_count_and_col_count(m, l)?;
+                    match matrix_repeat(a, n as usize)? {
+                        Some(b) => Ok(Value::Object(Arc::new(Object::Matrix(b)))),
+                        None => return Err(Error::Interp(String::from("number of columns or rows isn't one"))),
                     }
                 },
                 _ => Err(Error::Interp(String::from("unsupported types for function repeat"))),
