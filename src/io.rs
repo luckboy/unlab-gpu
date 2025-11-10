@@ -356,13 +356,13 @@ fn read_mut_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Objec
         match &mut *object_g {
             MutObject::Array(elems) => {
                 for _ in 0..len {
-                    elems.push(read_value_from(r, env, object_tab, mut_object_tab)?);
+                    elems.push(read_value(r, env, object_tab, mut_object_tab)?);
                 }
             },
             MutObject::Struct(fields) => {
                 for _ in 0..len {
                     let ident = read_string(r)?;
-                    let field = read_value_from(r, env, object_tab, mut_object_tab)?;
+                    let field = read_value(r, env, object_tab, mut_object_tab)?;
                     fields.insert(ident, field);
                 }
             },
@@ -371,7 +371,7 @@ fn read_mut_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Objec
     Ok(object)
 }
 
-fn read_value_from(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Value>
+fn read_value(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Value>
 {
     match read_u8(r)? {
         VALUE_NONE => Ok(Value::None),
@@ -404,10 +404,15 @@ fn read_value_from(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Objec
     }
 }
 
-pub fn read_value(r: &mut dyn Read, env: &Env) -> Result<Value>
+pub fn read_values(r: &mut dyn Read, env: &Env) -> Result<Vec<Value>>
 { 
     let mut object_tab: ObjectTab<Object> = ObjectTab::new();
     let mut mut_object_tab: ObjectTab<RwLock<MutObject>> = ObjectTab::new();
     read_magic(r)?;
-    read_value_from(r, env, &mut object_tab, &mut mut_object_tab)
+    let count = read_usize(r)?;
+    let mut values: Vec<Value> = Vec::new();
+    for _ in 0..count {
+        values.push(read_value(r, env, &mut object_tab, &mut mut_object_tab)?);
+    }
+    Ok(values)
 }
