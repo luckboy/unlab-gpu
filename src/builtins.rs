@@ -1624,7 +1624,7 @@ pub fn hex2dec(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
-pub fn char2int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn char2code(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -1638,15 +1638,15 @@ pub fn char2int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                         None => Ok(Value::None),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function char2int"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function char2code"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function char2int"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function char2code"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
-pub fn num2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn code2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -1666,7 +1666,7 @@ pub fn num2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                 None => Ok(Value::None),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function num2char"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function code2char"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -2020,8 +2020,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("str2int"), str2int);
     add_builtin_fun(root_mod, String::from("str2float"), str2float);
     add_builtin_fun(root_mod, String::from("hex2dec"), hex2dec);
-    add_builtin_fun(root_mod, String::from("char2int"), char2int);
-    add_builtin_fun(root_mod, String::from("num2char"), num2char);
+    add_builtin_fun(root_mod, String::from("char2code"), char2code);
+    add_builtin_fun(root_mod, String::from("code2char"), code2char);
     add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("format"), format);
     add_builtin_fun(root_mod, String::from("print"), print);
