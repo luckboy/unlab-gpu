@@ -834,6 +834,40 @@ pub fn replace(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+pub fn upper(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => Ok(Value::Object(Arc::new(Object::String(s.to_uppercase())))),
+                _ => Err(Error::Interp(String::from("unsupported type for function upper"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function upper"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn lower(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => Ok(Value::Object(Arc::new(Object::String(s.to_lowercase())))),
+                _ => Err(Error::Interp(String::from("unsupported type for function lower"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function lower"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 enum SortType
 {
@@ -2211,6 +2245,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("startswith"), startswith);
     add_builtin_fun(root_mod, String::from("endswith"), endswith);
     add_builtin_fun(root_mod, String::from("replace"), replace);
+    add_builtin_fun(root_mod, String::from("upper"), upper);
+    add_builtin_fun(root_mod, String::from("lower"), lower);
     add_builtin_fun(root_mod, String::from("sort"), sort);
     add_builtin_fun(root_mod, String::from("reverse"), reverse);
     add_builtin_fun(root_mod, String::from("any"), any);
