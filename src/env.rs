@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::collections::BTreeMap;
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::RwLock;
 use crate::error::*;
@@ -15,25 +16,64 @@ use crate::utils::*;
 use crate::value::*;
 
 #[derive(Clone, Debug)]
+pub struct SharedEnv
+{
+    lib_path: String,
+    args: Vec<String>,
+    used_libs: HashSet<String>,
+}
+
+impl SharedEnv
+{
+    pub fn new(lib_path: String, args: Vec<String>) -> Self
+    { SharedEnv { lib_path, args, used_libs: HashSet::new(), } }
+    
+    pub fn lib_path(&self) -> &str
+    { self.lib_path.as_str() }
+    
+    pub fn args(&self) -> &[String]
+    { self.args.as_slice() }
+
+    pub fn used_libs(&self) -> &HashSet<String>
+    { &self.used_libs }
+
+    pub fn has_used_lib(&self, lib: &String) -> bool
+    { self.used_libs.contains(lib) }
+
+    pub fn add_used_lib(&mut self, lib: String)
+    { self.used_libs.insert(lib); }
+
+    pub fn remove_used_lib(&mut self, lib: &String)
+    { self.used_libs.remove(lib); }
+}
+
+#[derive(Clone, Debug)]
 pub struct Env
 {
     root_mod: Arc<RwLock<ModNode<Value, ()>>>,
     current_mod: Arc<RwLock<ModNode<Value, ()>>>,
     mod_idents: Vec<String>,
     stack: Vec<(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)>,
+    run_path: String,
+    shared_env: Arc<RwLock<SharedEnv>>,
 }
 
 impl Env
 {
-    pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>) -> Self
+    pub fn new_with_run_path_and_shared_env(root_mod: Arc<RwLock<ModNode<Value, ()>>>, run_path: String, shared_env: Arc<RwLock<SharedEnv>>) -> Self
     {
         Env {
             root_mod: root_mod.clone(),
             current_mod: root_mod,
             mod_idents: Vec::new(),
             stack: Vec::new(),
+            run_path,
+            shared_env,
         }
     }
+
+    pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>) -> Self
+    { Self::new_with_run_path_and_shared_env(root_mod, String::from("."), Arc::new(RwLock::new(SharedEnv::new(String::from("."), Vec::new())))) }
     
     pub fn root_mod(&self) -> &Arc<RwLock<ModNode<Value, ()>>>
     { &self.root_mod }
@@ -46,6 +86,12 @@ impl Env
     
     pub fn stack(&self) -> &[(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)]
     { self.stack.as_slice() }
+
+    pub fn run_path(&self) -> &str
+    { self.run_path.as_str() }
+
+    pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
+    { &self.shared_env }
     
     pub fn add_and_push_mod(&mut self, ident: String) -> Result<bool>
     {
