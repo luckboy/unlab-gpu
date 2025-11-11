@@ -5,6 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::fs::File;
+use std::io::BufReader;
 use std::sync::Arc;
 use std::sync::RwLock;
 use crate::doc::*;
@@ -855,6 +857,24 @@ impl<'a> Parser<'a>
         }
     }
 }
+
+pub fn parse_with_doc_root_mod(path: &str, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
+{
+    match File::open(path) {
+        Ok(file) => {
+            let mut r = BufReader::new(file);
+            let mut lexer = Lexer::new(Arc::new(String::from(path)), &mut r);
+            let parser_path = lexer.path().clone();
+            let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+            let mut parser = Parser::new_with_doc_root_mod(parser_path, tokens, doc_root_mod);
+            parser.parse()
+        },
+        Err(err) => Err(Error::ParserIo(Arc::new(String::from(path)), err)),
+    }
+}
+
+pub fn parse(path: &str) -> Result<Tree>
+{ parse_with_doc_root_mod(path, None) }
 
 #[cfg(test)]
 mod tests;
