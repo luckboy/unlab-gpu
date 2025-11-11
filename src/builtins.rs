@@ -1898,15 +1898,15 @@ fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
     };
     let mut res: Result<()> = Ok(());
     for os_path in std::env::split_paths(lib_path.as_str()) {
-        let mut os_run_path = os_path.clone();
-        os_run_path.push(lib_name);
-        let mut os_path = os_run_path.clone();
+        let mut os_script_path = os_path.clone();
+        os_script_path.push(lib_name);
+        let mut os_path = os_script_path.clone();
         os_path.push("lib.un");
-        let run_path = os_run_path.to_string_lossy().into_owned();
+        let script_path = os_script_path.to_string_lossy().into_owned();
         let path = os_path.to_string_lossy().into_owned();
         match parse(path.as_str()) {
             Ok(tree) => {
-                let mut new_env = Env::new_with_run_path_and_shared_env(env.root_mod().clone(), run_path.clone(), env.shared_env().clone());
+                let mut new_env = Env::new_with_script_path_and_shared_env(env.root_mod().clone(), script_path.clone(), env.shared_env().clone());
                 interp.interpret(&mut new_env, &tree)?;
                 {
                     let mut shared_env_g = rw_lock_write(env.shared_env())?;
@@ -1977,7 +1977,7 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
         },
         None => return Err(Error::Interp(String::from("no argument"))),
     };
-    let mut path_buf = PathBuf::from(env.run_path());
+    let mut path_buf = PathBuf::from(env.script_path());
     path_buf.push(script_name.as_str());
     let path = path_buf.to_string_lossy().into_owned();
     let tree = parse(path.as_str())?;
