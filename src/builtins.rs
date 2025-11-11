@@ -7,6 +7,7 @@
 //
 use std::f32;
 use std::fs::File;
+use std::io::BufWriter;
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Write;
@@ -2017,9 +2018,10 @@ pub fn savestr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
         (_, _) => return Err(Error::Interp(String::from("no argument"))),
     };
     match File::create(file_name.as_str()) {
-        Ok(mut file) => {
-            match file.write_all(format!("{}", str_value).as_bytes()) {
-                Ok(_) => Ok(Value::Bool(true)),
+        Ok(file) => {
+            let mut w = BufWriter::new(file);
+            match write!(&mut w, "{}", str_value) {
+                Ok(()) => Ok(Value::Bool(true)),
                 Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
             }
         },
