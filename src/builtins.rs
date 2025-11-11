@@ -1862,6 +1862,23 @@ pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn args(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let shared_env_g = rw_lock_read(env.shared_env())?;
+    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(shared_env_g.args().iter().map(|s| Value::Object(Arc::new(Object::String(s.clone())))).collect())))))
+}
+
+pub fn env(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(std::env::vars().map(|p| Value::Object(Arc::new(Object::String(format!("{}={}", p.0, p.1))))).collect())))))
+}
+
 fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
 {
     let lib_path = {
@@ -2134,6 +2151,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("load"), load);
     add_builtin_fun(root_mod, String::from("save"), save);
+    add_builtin_fun(root_mod, String::from("args"), args);
+    add_builtin_fun(root_mod, String::from("env"), env);
     add_builtin_fun(root_mod, String::from("uselib"), uselib);
     add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
     add_builtin_fun(root_mod, String::from("run"), run);
