@@ -115,6 +115,9 @@ impl CtrlCIntrChecker
         unsafe { signal(SIGINT, signal_handler.signal_handler as sighandler_t); }
         Ok(())        
     }
+    
+    pub fn reset()
+    { unsafe { INTR_FLAG = false; } }
 }
 
 impl IntrCheck for CtrlCIntrChecker
