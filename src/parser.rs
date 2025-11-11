@@ -863,7 +863,7 @@ pub fn parse_with_doc_root_mod(path: &str, doc_root_mod: Option<Arc<RwLock<ModNo
     match File::open(path) {
         Ok(file) => {
             let mut r = BufReader::new(file);
-            let mut lexer = Lexer::new(Arc::new(String::from(path)), &mut r);
+            let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from(path)), &mut r, doc_root_mod.is_some());
             let parser_path = lexer.path().clone();
             let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
             let mut parser = Parser::new_with_doc_root_mod(parser_path, tokens, doc_root_mod);

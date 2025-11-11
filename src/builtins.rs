@@ -1878,12 +1878,12 @@ fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
         let path = os_path.to_string_lossy().into_owned();
         match parse(path.as_str()) {
             Ok(tree) => {
+                let mut new_env = Env::new_with_run_path_and_shared_env(env.root_mod().clone(), run_path.clone(), env.shared_env().clone());
+                interp.interpret(&mut new_env, &tree)?;
                 {
                     let mut shared_env_g = rw_lock_write(env.shared_env())?;
                     shared_env_g.add_used_lib(String::from(lib_name));
                 }
-                let mut new_env = Env::new_with_run_path_and_shared_env(env.root_mod().clone(), run_path.clone(), env.shared_env().clone());
-                interp.interpret(&mut new_env, &tree)?;
                 return Ok(());
             },
             Err(Error::ParserIo(path, err)) if err.kind() == ErrorKind::NotFound => res = Err(Error::ParserIo(path, err)),
@@ -1949,8 +1949,7 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
         },
         None => return Err(Error::Interp(String::from("no argument"))),
     };
-    let mut path_buf = PathBuf::new();
-    path_buf.push(env.run_path());
+    let mut path_buf = PathBuf::from(env.run_path());
     path_buf.push(script_name.as_str());
     let path = path_buf.to_string_lossy().into_owned();
     let tree = parse(path.as_str())?;
