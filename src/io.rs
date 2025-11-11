@@ -286,18 +286,20 @@ fn read_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>) 
                 idents.push(read_string(r)?);
             }
             let ident = read_string(r)?;
-            match env.var(&Name::Abs(idents, ident))? {
+            let name = Name::Abs(idents, ident);
+            match env.var(&name)? {
                 Some(Value::Object(object)) => object.clone(),
-                Some(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid function type"))),
-                None => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "undefined function"))),
+                Some(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, format!("invalid function type {}", name).as_str()))),
+                None => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, format!("undefined function {}", name).as_str()))),
             }
         },
         OBJECT_BUILTIN_FUN => {
             let ident = read_string(r)?;
-            match env.var(&Name::Abs(Vec::new(), ident))? {
+            let name = Name::Abs(Vec::new(), ident);
+            match env.var(&name)? {
                 Some(Value::Object(object)) => object.clone(),
-                Some(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid built-in function type"))),
-                None => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "undefined built-in function"))),
+                Some(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, format!("invalid built-in function type {}", name).as_str()))),
+                None => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, format!("undefined built-in function {}", name).as_str()))),
             }
         },
         OBJECT_MATRIX_ARRAY => {
