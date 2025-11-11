@@ -717,11 +717,11 @@ pub fn getdiag(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
 
 pub fn split(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    if arg_values.len() != 1 {
+    if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    match arg_values.get(0) {
-        Some(Value::Object(object)) => {
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), None) => {
             match &**object {
                 Object::String(s) => {
                     let ss = s.split_whitespace();
@@ -731,8 +731,19 @@ pub fn split(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
                 _ => Err(Error::Interp(String::from("unsupported type for function split"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function split"))),
-        None => Err(Error::Interp(String::from("no argument"))),
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => {
+                    let ss = s.split(t.as_str());
+                    let elems: Vec<Value> = ss.map(|u| Value::Object(Arc::new(Object::String(String::from(u))))).collect();
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                },
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function split"))),
+            }
+        },
+        (Some(_), None) => Err(Error::Interp(String::from("unsupported type for function split"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function split"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
