@@ -808,7 +808,7 @@ pub fn endswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     match (arg_values.get(0), arg_values.get(1)) {
         (Some(Value::Object(object)), Some(Value::Object(object2))) => {
             match (&**object, &**object2) {
-                (Object::String(s), Object::String(t)) => Ok(Value::Bool(s.starts_with(t.as_str()))),
+                (Object::String(s), Object::String(t)) => Ok(Value::Bool(s.ends_with(t.as_str()))),
                 (_, _) => Err(Error::Interp(String::from("unsupported types for function endswith"))),
             }
         },
