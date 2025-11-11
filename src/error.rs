@@ -57,6 +57,7 @@ pub enum Error
     NoFunMod,
     Io(io::Error),
     Stop(Stop),
+    Intr,
 }
 
 impl error::Error for Error
@@ -82,6 +83,7 @@ impl fmt::Display for Error
             Error::Stop(Stop::Return) => write!(f, "stopped by return"),
             Error::Stop(Stop::Quit) => write!(f, "stopped by quit"),
             Error::Stop(Stop::ErrorPropagation) => write!(f, "stopped by error propagation"),
+            Error::Intr => write!(f, "interrupted"),
         }
     }
 }

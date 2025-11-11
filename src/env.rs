@@ -10,23 +10,28 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::RwLock;
 use crate::error::*;
+use crate::intr::*;
 use crate::mod_node::*;
 use crate::tree::*;
 use crate::utils::*;
 use crate::value::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SharedEnv
 {
     lib_path: String,
     args: Vec<String>,
     used_libs: HashSet<String>,
+    intr_checker: Arc<dyn IntrCheck + Send + Sync>,
 }
 
 impl SharedEnv
 {
+    pub fn new_with_intr_checker(lib_path: String, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>) -> Self
+    { SharedEnv { lib_path, args, used_libs: HashSet::new(), intr_checker, } }
+
     pub fn new(lib_path: String, args: Vec<String>) -> Self
-    { SharedEnv { lib_path, args, used_libs: HashSet::new(), } }
+    { Self::new_with_intr_checker(lib_path, args, Arc::new(EmptyIntrChecker::new())) }
     
     pub fn lib_path(&self) -> &str
     { self.lib_path.as_str() }
@@ -45,9 +50,12 @@ impl SharedEnv
 
     pub fn remove_used_lib(&mut self, lib: &String)
     { self.used_libs.remove(lib); }
+    
+    pub fn intr_checker(&self) -> &Arc<dyn IntrCheck + Send + Sync>
+    { &self.intr_checker }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Env
 {
     root_mod: Arc<RwLock<ModNode<Value, ()>>>,

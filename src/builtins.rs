@@ -2201,6 +2201,19 @@ pub fn removelocalvar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value])
     }
 }
 
+pub fn checkintr(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let intr_checker = {
+        let shared_env_g = rw_lock_read(env.shared_env())?;
+        shared_env_g.intr_checker().clone()
+    };
+    intr_checker.check()?;
+    Ok(Value::None)
+}
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -2334,4 +2347,5 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
+    add_builtin_fun(root_mod, String::from("checkintr"), checkintr);
 }
