@@ -74,6 +74,18 @@ impl Env
 
     pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>) -> Self
     { Self::new_with_run_path_and_shared_env(root_mod, String::from("."), Arc::new(RwLock::new(SharedEnv::new(String::from("."), Vec::new())))) }
+
+    pub fn clone_without_stack(&self) -> Self
+    {
+        Env {
+            root_mod: self.root_mod.clone(),
+            current_mod: self.current_mod.clone(),
+            mod_idents: self.mod_idents.clone(),
+            stack: Vec::new(),
+            run_path: self.run_path.clone(),
+            shared_env: self.shared_env.clone(),
+        }
+    }
     
     pub fn root_mod(&self) -> &Arc<RwLock<ModNode<Value, ()>>>
     { &self.root_mod }

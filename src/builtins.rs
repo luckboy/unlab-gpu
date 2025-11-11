@@ -6,11 +6,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::f32;
+use std::io::ErrorKind;
 use std::io::Write;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::stderr;
 use std::mem::size_of;
+use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -23,6 +25,7 @@ use crate::error::*;
 use crate::interp::*;
 use crate::io::*;
 use crate::mod_node::*;
+use crate::parser::*;
 use crate::utils::*;
 use crate::value::*;
 
@@ -1859,6 +1862,103 @@ pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
+{
+    let lib_path = {
+        let shared_env_g = rw_lock_read(env.shared_env())?;
+        String::from(shared_env_g.lib_path())
+    };
+    let mut res: Result<()> = Ok(());
+    for os_path in std::env::split_paths(lib_path.as_str()) {
+        let mut os_run_path = os_path.clone();
+        os_run_path.push(lib_name);
+        let mut os_path = os_run_path.clone();
+        os_path.push("lib.un");
+        let run_path = os_run_path.to_string_lossy().into_owned();
+        let path = os_path.to_string_lossy().into_owned();
+        match parse(path.as_str()) {
+            Ok(tree) => {
+                {
+                    let mut shared_env_g = rw_lock_write(env.shared_env())?;
+                    shared_env_g.add_used_lib(String::from(lib_name));
+                }
+                let mut new_env = Env::new_with_run_path_and_shared_env(env.root_mod().clone(), run_path.clone(), env.shared_env().clone());
+                interp.interpret(&mut new_env, &tree)?;
+                return Ok(());
+            },
+            Err(Error::ParserIo(path, err)) if err.kind() == ErrorKind::NotFound => res = Err(Error::ParserIo(path, err)),
+            Err(err) => return Err(err),
+        }
+    }
+    res
+}
+
+pub fn uselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let lib_name = match arg_values.get(0) {
+        Some(lib_name_value) => {
+            match lib_name_value.to_opt_string() {
+                Some(tmp_lib_name) => tmp_lib_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function uselib"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let is_used_lib = {
+        let shared_env_g = rw_lock_read(env.shared_env())?;
+        shared_env_g.has_used_lib(&lib_name)
+    };
+    if !is_used_lib {
+        use_lib(interp, env, lib_name.as_str())?;
+    }
+    Ok(Value::None)
+}
+
+pub fn reuselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let lib_name = match arg_values.get(0) {
+        Some(lib_name_value) => {
+            match lib_name_value.to_opt_string() {
+                Some(tmp_lib_name) => tmp_lib_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function reuselib"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    use_lib(interp, env, lib_name.as_str())?;
+    Ok(Value::None)
+}
+
+pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let script_name = match arg_values.get(0) {
+        Some(script_name_value) => {
+            match script_name_value.to_opt_string() {
+                Some(tmp_script_name) => tmp_script_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function run"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let mut path_buf = PathBuf::new();
+    path_buf.push(env.run_path());
+    path_buf.push(script_name.as_str());
+    let path = path_buf.to_string_lossy().into_owned();
+    let tree = parse(path.as_str())?;
+    let mut new_env = env.clone_without_stack();
+    interp.interpret(&mut new_env, &tree)?;
+    Ok(Value::None)
+}
+
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2035,6 +2135,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("load"), load);
     add_builtin_fun(root_mod, String::from("save"), save);
+    add_builtin_fun(root_mod, String::from("uselib"), uselib);
+    add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
+    add_builtin_fun(root_mod, String::from("run"), run);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
