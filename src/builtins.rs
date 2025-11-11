@@ -6,7 +6,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::f32;
+use std::fs::File;
 use std::io::ErrorKind;
+use std::io::Read;
 use std::io::Write;
 use std::io::stdin;
 use std::io::stdout;
@@ -764,6 +766,73 @@ pub fn trim(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn contains(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => Ok(Value::Bool(s.contains(t.as_str()))),
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function contains"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function contains"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn startswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => Ok(Value::Bool(s.starts_with(t.as_str()))),
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function startswith"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function startswith"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn endswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => Ok(Value::Bool(s.starts_with(t.as_str()))),
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function endswith"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function endswith"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn replace(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2)), Some(Value::Object(object3))) => {
+            match (&**object, &**object2, &**object3) {
+                (Object::String(s), Object::String(t), Object::String(u)) => Ok(Value::Object(Arc::new(Object::String(s.replace(t.as_str(), u.as_str()))))),
+                (_, _, _) => Err(Error::Interp(String::from("unsupported types for function replace"))),
+            }
+        },
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function replace"))),
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 enum SortType
@@ -1873,6 +1942,57 @@ pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn loadstr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = match arg_values.get(0) {
+        Some(file_name_value) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => tmp_file_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function loadstr"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match File::open(file_name.as_str()) {
+        Ok(mut file) => {
+            let mut s = String::new();
+            match file.read_to_string(&mut s) {
+                Ok(_) => Ok(Value::Object(Arc::new(Object::String(s)))),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn savestr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let (file_name, str_value) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(file_name_value), Some(str_value)) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => (tmp_file_name, str_value.clone()),
+                None => return Err(Error::Interp(String::from("unsupported type for function savestr"))),
+            }
+        },
+        (_, _) => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match File::create(file_name.as_str()) {
+        Ok(mut file) => {
+            match file.write_all(format!("{}", str_value).as_bytes()) {
+                Ok(_) => Ok(Value::Bool(true)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn args(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2087,6 +2207,10 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("getdiag"), getdiag);
     add_builtin_fun(root_mod, String::from("split"), split);
     add_builtin_fun(root_mod, String::from("trim"), trim);
+    add_builtin_fun(root_mod, String::from("contains"), contains);
+    add_builtin_fun(root_mod, String::from("startswith"), startswith);
+    add_builtin_fun(root_mod, String::from("endswith"), endswith);
+    add_builtin_fun(root_mod, String::from("replace"), replace);
     add_builtin_fun(root_mod, String::from("sort"), sort);
     add_builtin_fun(root_mod, String::from("reverse"), reverse);
     add_builtin_fun(root_mod, String::from("any"), any);
@@ -2162,6 +2286,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("load"), load);
     add_builtin_fun(root_mod, String::from("save"), save);
+    add_builtin_fun(root_mod, String::from("loadstr"), loadstr);
+    add_builtin_fun(root_mod, String::from("savestr"), savestr);
     add_builtin_fun(root_mod, String::from("args"), args);
     add_builtin_fun(root_mod, String::from("env"), env);
     add_builtin_fun(root_mod, String::from("uselib"), uselib);
