@@ -6,7 +6,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::f32;
+use std::fs;
 use std::fs::File;
+use std::fs::create_dir;
+use std::fs::read_dir;
+use std::fs::remove_dir;
+use std::fs::remove_file;
 use std::io::BufWriter;
 use std::io::ErrorKind;
 use std::io::Read;
@@ -15,6 +20,7 @@ use std::io::stdin;
 use std::io::stdout;
 use std::io::stderr;
 use std::mem::size_of;
+use std::path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
@@ -1901,6 +1907,141 @@ pub fn pwd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+pub fn filetype(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = match arg_values.get(0) {
+        Some(file_name_value) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => tmp_file_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function filetype"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => {
+            if metadata.is_dir() {
+                Ok(Value::Object(Arc::new(Object::String(String::from("dir")))))
+            } else {
+                Ok(Value::Object(Arc::new(Object::String(String::from("file")))))
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn dir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let dir_name = match arg_values.get(0) {
+        Some(dir_name_value) => {
+            match dir_name_value.to_opt_string() {
+                Some(tmp_dir_name) => tmp_dir_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function dir"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match read_dir(dir_name.as_str()) {
+        Ok(entries) => {
+            let mut name_values: Vec<Value> = Vec::new();
+            for entry in entries {
+                match entry {
+                    Ok(entry) => name_values.push(Value::Object(Arc::new(Object::String(entry.file_name().to_string_lossy().into_owned())))),
+                    Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                }
+            }
+            Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(name_values)))))
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn mkdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let dir_name = match arg_values.get(0) {
+        Some(dir_name_value) => {
+            match dir_name_value.to_opt_string() {
+                Some(tmp_dir_name) => tmp_dir_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function mkdir"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match create_dir(dir_name.as_str()) {
+        Ok(()) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn rmdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let dir_name = match arg_values.get(0) {
+        Some(dir_name_value) => {
+            match dir_name_value.to_opt_string() {
+                Some(tmp_dir_name) => tmp_dir_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function rmdir"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match remove_dir(dir_name.as_str()) {
+        Ok(()) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn rmfile(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = match arg_values.get(0) {
+        Some(file_name_value) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => tmp_file_name,
+                None => return Err(Error::Interp(String::from("unsupported type for function rmfile"))),
+            }
+        },
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match remove_file(file_name.as_str()) {
+        Ok(()) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn copy(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let (src_file_name, dst_file_name) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(src_file_name_value), Some(dst_file_name_value)) => {
+            match (src_file_name_value.to_opt_string(), dst_file_name_value.to_opt_string()) {
+                (Some(tmp_src_file_name), Some(tmp_dst_file_name)) => (tmp_src_file_name, tmp_dst_file_name),
+                (_, _) => return Err(Error::Interp(String::from("unsupported types for function copy"))),
+            }
+        },
+        (_, _) => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match fs::copy(src_file_name.as_str(), dst_file_name.as_str()) {
+        Ok(_) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -2230,6 +2371,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     root_mod.add_var(String::from("pi"), Value::Float(f32::consts::PI));
     root_mod.add_var(String::from("e"), Value::Float(f32::consts::E));
     root_mod.add_var(String::from("eps"), Value::Float(f32::EPSILON));
+    root_mod.add_var(String::from("pathsep"), Value::Object(Arc::new(Object::String(format!("{}", path::MAIN_SEPARATOR)))));
     add_builtin_fun(root_mod, String::from("type"), typ);
     add_builtin_fun(root_mod, String::from("bool"), boolean);
     add_builtin_fun(root_mod, String::from("int"), int);
@@ -2334,6 +2476,13 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("eflush"), eflush);
     add_builtin_fun(root_mod, String::from("cd"), cd);
     add_builtin_fun(root_mod, String::from("pwd"), pwd);
+    add_builtin_fun(root_mod, String::from("filetype"), filetype);
+    add_builtin_fun(root_mod, String::from("dir"), dir);
+    add_alias(root_mod, String::from("ls"), &String::from("dir"));
+    add_builtin_fun(root_mod, String::from("mkdir"), mkdir);
+    add_builtin_fun(root_mod, String::from("rmdir"), rmdir);
+    add_builtin_fun(root_mod, String::from("rmfile"), rmfile);
+    add_builtin_fun(root_mod, String::from("copy"), copy);
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("load"), load);
     add_builtin_fun(root_mod, String::from("save"), save);
