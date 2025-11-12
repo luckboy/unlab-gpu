@@ -13,6 +13,9 @@ use super::*;
 fn f(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Value>
 { Ok(Value::None) }
 
+fn g(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Value>
+{ Ok(Value::None) }
+
 #[test]
 fn test_value_eq_with_types_returns_true()
 {
@@ -270,6 +273,12 @@ fn test_value_eq_with_types_returns_false()
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("g"), f)));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
+    let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
     match value.eq_with_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -738,6 +747,12 @@ fn test_value_eq_without_types_returns_false()
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("g"), f)));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
+    let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
     match value.eq_without_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
