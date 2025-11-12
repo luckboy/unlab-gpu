@@ -1277,7 +1277,7 @@ impl Object
             (Object::IntRange(a, b, c), Object::IntRange(d, e, f)) => Ok(a == d && b == e && c == f),
             (Object::FloatRange(a, b, c), Object::FloatRange(d, e, f)) => Ok(a == d && b == e && c == f),
             (Object::Fun(idents, ident, fun), Object::Fun(idents2, ident2, fun2)) => Ok(idents == idents2 && ident == ident2 && Arc::ptr_eq(fun, fun2)),
-            (Object::BuiltinFun(ident, _), Object::BuiltinFun(ident2, _)) => Ok(ident == ident2),
+            (Object::BuiltinFun(ident, f), Object::BuiltinFun(ident2, g)) => Ok(ident == ident2 && f == g),
             (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
                 if a_row_count != b_row_count || a_col_count != b_col_count {
                     return Ok(false);
