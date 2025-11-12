@@ -1912,6 +1912,19 @@ pub fn pwd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+pub fn exist(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function filetype")?;
+    match fs::metadata(file_name.as_str()) {
+        Ok(_) => Ok(Value::Bool(true)),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(Value::Bool(false)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn filetype(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2385,6 +2398,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("eflush"), eflush);
     add_builtin_fun(root_mod, String::from("cd"), cd);
     add_builtin_fun(root_mod, String::from("pwd"), pwd);
+    add_builtin_fun(root_mod, String::from("exist"), exist);
     add_builtin_fun(root_mod, String::from("filetype"), filetype);
     add_builtin_fun(root_mod, String::from("dir"), dir);
     add_alias(root_mod, String::from("ls"), &String::from("dir"));
