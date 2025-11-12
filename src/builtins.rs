@@ -657,7 +657,7 @@ pub fn get(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                 _ => Err(Error::Interp(String::from("unsupported types for function get"))),
             }
         },
-        (Some(Value::Ref(object)), Some(i_value @ (Value::Int(_) | Value::Float(_))), None)  => {
+        (Some(Value::Ref(object)), Some(i_value @ (Value::Int(_) | Value::Float(_) | Value::Object(_))), None)  => {
             let object_g = rw_lock_read(&**object)?;
             match &*object_g {
                 MutObject::Array(elems) => {
