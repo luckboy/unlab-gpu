@@ -268,7 +268,7 @@ pub fn init(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
             let mut xs = vec![0.0f32; len];
             for i in 0..(n as usize) {
                 for j in 0..(m as usize) {
-                    match fun_value.apply(interp, env, &[data_value.clone(), Value::Int(i as i64), Value::Int(j as i64)])?.to_opt_f32() {
+                    match fun_value.apply(interp, env, &[data_value.clone(), Value::Int((i + 1) as i64), Value::Int((j + 1) as i64)])?.to_opt_f32() {
                         Some(x) => xs[i * (m as usize) + j] = x,
                         None => return Err(Error::Interp(String::from("can't convert value to floating-point number"))),
                     }
@@ -292,7 +292,7 @@ pub fn initdiag(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
             let len = checked_mul_row_count_and_col_count(n, n)?;
             let mut xs = vec![0.0f32; len];
             for i in 0..(n as usize) {
-                match fun_value.apply(interp, env, &[data_value.clone(), Value::Int(i as i64)])?.to_opt_f32() {
+                match fun_value.apply(interp, env, &[data_value.clone(), Value::Int((i + 1) as i64)])?.to_opt_f32() {
                     Some(x) => xs[i * (n as usize) + i] = x,
                     None => return Err(Error::Interp(String::from("can't convert value to floating-point number"))),
                 }
@@ -2421,3 +2421,6 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
     add_builtin_fun(root_mod, String::from("checkintr"), checkintr);
 }
+
+#[cfg(test)]
+mod tests;
