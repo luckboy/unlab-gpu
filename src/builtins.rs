@@ -1917,7 +1917,7 @@ pub fn exist(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = get_first_arg_string(arg_values, "unsupported type for function filetype")?;
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function exist")?;
     match fs::metadata(file_name.as_str()) {
         Ok(_) => Ok(Value::Bool(true)),
         Err(err) if err.kind() == ErrorKind::NotFound => Ok(Value::Bool(false)),
