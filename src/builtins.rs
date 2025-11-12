@@ -113,6 +113,19 @@ fn fun1_for_f32_and_matrix<F, G>(arg_values: &[Value], err_msg: &str, mut f: F, 
         G: FnMut(&Matrix) -> Result<Matrix>
 { fun1_for_f32_and_matrix_with_fun_refs(arg_values, err_msg, &mut f, &mut g) }
 
+fn get_first_arg_string(arg_values: &[Value], err_msg: &str) -> Result<String>
+{
+    match arg_values.get(0) {
+        Some(arg_value) => {
+            match arg_value.to_opt_string() {
+                Some(s) => Ok(s),
+                None => Err(Error::Interp(String::from(err_msg))),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1877,15 +1890,7 @@ pub fn cd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let new_dir_name = match arg_values.get(0) {
-        Some(new_dir_name_value) => {
-            match new_dir_name_value.to_opt_string() {
-                Some(tmp_new_dir_name) => tmp_new_dir_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function cd"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let new_dir_name = get_first_arg_string(arg_values, "unsupported type for function cd")?;
     let old_dir_name = match std::env::current_dir() {
         Ok(path) => path.to_string_lossy().into_owned(),
         Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
@@ -1912,15 +1917,7 @@ pub fn filetype(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = match arg_values.get(0) {
-        Some(file_name_value) => {
-            match file_name_value.to_opt_string() {
-                Some(tmp_file_name) => tmp_file_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function filetype"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function filetype")?;
     match fs::metadata(file_name.as_str()) {
         Ok(metadata) => {
             if metadata.is_dir() {
@@ -1938,15 +1935,7 @@ pub fn dir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let dir_name = match arg_values.get(0) {
-        Some(dir_name_value) => {
-            match dir_name_value.to_opt_string() {
-                Some(tmp_dir_name) => tmp_dir_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function dir"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let dir_name = get_first_arg_string(arg_values, "unsupported type for function dir")?;
     match read_dir(dir_name.as_str()) {
         Ok(entries) => {
             let mut name_values: Vec<Value> = Vec::new();
@@ -1967,15 +1956,7 @@ pub fn mkdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let dir_name = match arg_values.get(0) {
-        Some(dir_name_value) => {
-            match dir_name_value.to_opt_string() {
-                Some(tmp_dir_name) => tmp_dir_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function mkdir"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let dir_name = get_first_arg_string(arg_values, "unsupported type for function mkdir")?;
     match create_dir(dir_name.as_str()) {
         Ok(()) => Ok(Value::Bool(true)),
         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
@@ -1987,15 +1968,7 @@ pub fn rmdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let dir_name = match arg_values.get(0) {
-        Some(dir_name_value) => {
-            match dir_name_value.to_opt_string() {
-                Some(tmp_dir_name) => tmp_dir_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function rmdir"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let dir_name = get_first_arg_string(arg_values, "unsupported type for function rmdir")?;
     match remove_dir(dir_name.as_str()) {
         Ok(()) => Ok(Value::Bool(true)),
         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
@@ -2007,15 +1980,7 @@ pub fn rmfile(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = match arg_values.get(0) {
-        Some(file_name_value) => {
-            match file_name_value.to_opt_string() {
-                Some(tmp_file_name) => tmp_file_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function rmfile"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function rmfile")?;
     match remove_file(file_name.as_str()) {
         Ok(()) => Ok(Value::Bool(true)),
         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
@@ -2047,15 +2012,7 @@ pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     if arg_values.len() < 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let cmd_name = match arg_values.get(0) {
-        Some(cmd_name_value) => {
-            match cmd_name_value.to_opt_string() {
-                Some(tmp_cmd_name) => tmp_cmd_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function spawn"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let cmd_name = get_first_arg_string(arg_values, "unsupported type for function spawn")?;
     let mut cmd_args: Vec<String> = Vec::new();
     for arg_value in &arg_values[1..] {
         cmd_args.push(format!("{}", arg_value));
@@ -2081,15 +2038,7 @@ pub fn load(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = match arg_values.get(0) {
-        Some(file_name_value) => {
-            match file_name_value.to_opt_string() {
-                Some(tmp_file_name) => tmp_file_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function load"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function load")?;
     match load_values(file_name.as_str(), env) {
         Ok(values) => Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(values))))),
         Err(Error::Io(err)) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
@@ -2102,15 +2051,7 @@ pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     if arg_values.len() < 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = match arg_values.get(0) {
-        Some(file_name_value) => {
-            match file_name_value.to_opt_string() {
-                Some(tmp_file_name) => tmp_file_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function save"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function save")?;
     match save_values(file_name.as_str(), &arg_values[1..]) {
         Ok(()) => Ok(Value::Bool(true)),
         Err(Error::Io(err)) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
@@ -2123,15 +2064,7 @@ pub fn loadstr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = match arg_values.get(0) {
-        Some(file_name_value) => {
-            match file_name_value.to_opt_string() {
-                Some(tmp_file_name) => tmp_file_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function loadstr"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function loadstr")?;
     match File::open(file_name.as_str()) {
         Ok(mut file) => {
             let mut s = String::new();
@@ -2223,15 +2156,7 @@ pub fn uselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let lib_name = match arg_values.get(0) {
-        Some(lib_name_value) => {
-            match lib_name_value.to_opt_string() {
-                Some(tmp_lib_name) => tmp_lib_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function uselib"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let lib_name = get_first_arg_string(arg_values, "unsupported type for function uselib")?;
     let is_used_lib = {
         let shared_env_g = rw_lock_read(env.shared_env())?;
         shared_env_g.has_used_lib(&lib_name)
@@ -2247,15 +2172,7 @@ pub fn reuselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let lib_name = match arg_values.get(0) {
-        Some(lib_name_value) => {
-            match lib_name_value.to_opt_string() {
-                Some(tmp_lib_name) => tmp_lib_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function reuselib"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let lib_name = get_first_arg_string(arg_values, "unsupported type for function reuselib")?;
     use_lib(interp, env, lib_name.as_str())?;
     Ok(Value::None)
 }
@@ -2265,15 +2182,7 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let script_name = match arg_values.get(0) {
-        Some(script_name_value) => {
-            match script_name_value.to_opt_string() {
-                Some(tmp_script_name) => tmp_script_name,
-                None => return Err(Error::Interp(String::from("unsupported type for function run"))),
-            }
-        },
-        None => return Err(Error::Interp(String::from("no argument"))),
-    };
+    let script_name = get_first_arg_string(arg_values, "unsupported type for function run")?;
     let mut path_buf = PathBuf::from(env.script_path());
     path_buf.push(script_name.as_str());
     let path = path_buf.to_string_lossy().into_owned();
