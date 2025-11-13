@@ -1659,7 +1659,7 @@ pub fn round(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
 { fun1_for_f32(arg_values, "unsupported type for function round", f32::round) }
 
 pub fn trunc(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function trunc", f32::round) }
+{ fun1_for_f32(arg_values, "unsupported type for function trunc", f32::trunc) }
 
 pub fn rand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {

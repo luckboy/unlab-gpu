@@ -14,6 +14,39 @@ fn f(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Valu
 { Ok(Value::None) }
 
 #[test]
+fn test_pi_is_pi_constant()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match root_mod.var(&String::from("pi")) {
+        Some(value) => assert_eq!(Value::Float(f32::consts::PI), *value),
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_e_is_e_constant()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match root_mod.var(&String::from("e")) {
+        Some(value) => assert_eq!(Value::Float(f32::consts::E), *value),
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_pathsep_is_path_separator()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match root_mod.var(&String::from("pathsep")) {
+        Some(value) => assert_eq!(Value::Object(Arc::new(Object::String(format!("{}", path::MAIN_SEPARATOR)))), *value),
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_type_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -2030,6 +2063,40 @@ fn shared_test_fun1_is_applied_with_success_for_f32_and_matrix<F>(fun_name: &str
                 },
                 _ => assert!(false),
             }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(a), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, xs))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert!((f(a) - b).abs() < 0.001),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(row_count, matrix.row_count());
+                                            assert_eq!(col_count, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(row_count * col_count) {
+                                                assert!((f(xs[i]) - ys[i]).abs() < 0.001);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
         },
         None => assert!(false),
     }
@@ -2171,7 +2238,7 @@ fn test_rt_is_alias_to_reallytranspose()
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
     match (root_mod.var(&String::from("rt")), root_mod.var(&String::from("reallytranspose"))) {
-        (Some(alias_value), Some(fun_value)) => assert_eq!(alias_value, fun_value),
+        (Some(alias_value), Some(fun_value)) => assert_eq!(fun_value, alias_value),
         (_, _) => assert!(false),
     }
 }
@@ -2329,3 +2396,709 @@ fn shared_test_fun2_is_applied_with_success_for_f32<F>(fun_name: &str, a: f32, b
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_pow_is_applied_with_success()
+{ shared_test_fun2_is_applied_with_success_for_f32("pow", 3.5, 2.5, f32::powf); }
+
+#[test]
+fn test_exp_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("exp", 2.5, f32::exp); }
+
+#[test]
+fn test_log_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("log", 10.5, f32::ln); }
+
+#[test]
+fn test_log2_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("log2", 10.5, f32::log2); }
+
+#[test]
+fn test_log10_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("log10", 10.5, f32::log10); }
+
+#[test]
+fn test_sin_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("sin", 0.5, f32::sin); }
+
+#[test]
+fn test_cos_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("cos", 0.5, f32::cos); }
+
+#[test]
+fn test_tan_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("tan", 0.5, f32::tan); }
+
+#[test]
+fn test_asin_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("asin", 0.5, f32::asin); }
+
+#[test]
+fn test_acos_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("acos", 0.5, f32::acos); }
+
+#[test]
+fn test_atan_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("atan", 0.5, f32::atan); }
+
+#[test]
+fn test_atan2_is_applied_with_success()
+{ shared_test_fun2_is_applied_with_success_for_f32("atan2", 0.25, 0.5, f32::atan2); }
+
+#[test]
+fn test_sinh_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("sinh", 0.5, f32::sinh); }
+
+#[test]
+fn test_cosh_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("cosh", 0.5, f32::cosh); }
+
+#[test]
+fn test_asinh_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("asinh", 0.5, f32::asinh); }
+
+#[test]
+fn test_acosh_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("acosh", 1.5, f32::acosh); }
+
+#[test]
+fn test_atanh_is_applied_with_success()
+{ shared_test_fun1_is_applied_with_success_for_f32("atanh", 0.5, f32::atanh); }
+
+#[test]
+fn test_sign_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("sign")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(1.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(1.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-3.5)]) {
+                Ok(value) => assert_eq!(Value::Float(-1.0), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_floor_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("floor")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(2.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(0.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(-3.0), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_ceil_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("ceil")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(3.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(0.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(-2.0), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_round_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("round")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(3.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(0.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(-3.0), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_trunc_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("trunc")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(2.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(0.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(-2.0), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_rand_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rand")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(Value::Float(n)) => assert!(n >= 0.0 && n < 1.0),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_randi_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("randi")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(10)]) {
+                Ok(Value::Int(n)) => assert!(n >= 1 && n <= 10),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(12)]) {
+                Ok(Value::Int(n)) => assert!(n >= 3 && n <= 12),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_str2int_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("str2int")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("1234"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(1234), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("1234xxx"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let expected_value = Value::Object(Arc::new(Object::Error(String::from("parseint"), String::from("invalid digit found in string"))));
+                    assert_eq!(expected_value, value);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_str2float_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("str2float")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("12.34"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Float(12.34), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("12.34xxx"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let expected_value = Value::Object(Arc::new(Object::Error(String::from("parsefloat"), String::from("invalid float literal"))));
+                    assert_eq!(expected_value, value);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_hex2dec_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("hex2dec")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("123abc"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(0x123abc), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("0x123abc"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(0x123abc), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("0X123ABC"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(0x123abc), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("123abcxxx"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let expected_value = Value::Object(Arc::new(Object::Error(String::from("parseint"), String::from("invalid digit found in string"))));
+                    assert_eq!(expected_value, value);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_char2code_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("char2code")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("a"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(97), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("ą"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(261), value),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("1234"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Int(49), value),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_code2char_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("code2char")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(97)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("a")))), value),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(261)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("ą")))), value),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+fn shared_test_fun_is_existent(fun_name: &str, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match root_mod.var(&String::from(fun_name)) {
+        Some(fun_value) => {
+            let expected_fun_value = Value::Object(Arc::new(Object::BuiltinFun(String::from(fun_name), f)));
+            assert_eq!(expected_fun_value, *fun_value);
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_readline_is_existent()
+{ shared_test_fun_is_existent("readline", readline); }
+
+#[test]
+fn test_format_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("format")) {
+        Some(fun_value) => {
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from(" abc "))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), arg_value2, Value::Float(12.34)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("1234 abc 12.3400")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_print_is_existent()
+{ shared_test_fun_is_existent("print", print); }
+
+#[test]
+fn test_println_is_existent()
+{ shared_test_fun_is_existent("println", println); }
+
+#[test]
+fn test_eprint_is_existent()
+{ shared_test_fun_is_existent("eprint", eprint); }
+
+#[test]
+fn test_eprintln_is_existent()
+{ shared_test_fun_is_existent("eprintln", eprintln); }
+
+#[test]
+fn test_flush_is_existent()
+{ shared_test_fun_is_existent("flush", flush); }
+
+#[test]
+fn test_eflush_is_existent()
+{ shared_test_fun_is_existent("eflush", eflush); }
+
+#[test]
+fn test_cd_is_existent()
+{ shared_test_fun_is_existent("cd", cd); }
+
+#[test]
+fn test_pwd_is_existent()
+{ shared_test_fun_is_existent("pwd", pwd); }
+
+#[test]
+fn test_exist_is_existent()
+{ shared_test_fun_is_existent("exist", exist); }
+
+#[test]
+fn test_filetype_is_existent()
+{ shared_test_fun_is_existent("filetype", filetype); }
+
+#[test]
+fn test_dir_is_existent()
+{ shared_test_fun_is_existent("dir", dir); }
+
+#[test]
+fn test_ls_is_alias_to_dir()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match (root_mod.var(&String::from("ls")), root_mod.var(&String::from("dir"))) {
+        (Some(alias_value), Some(fun_value)) => assert_eq!(fun_value, alias_value),
+        (_, _) => assert!(false),
+    }
+}
+
+#[test]
+fn test_mkdir_is_existent()
+{ shared_test_fun_is_existent("mkdir", mkdir); }
+
+#[test]
+fn test_rmdir_is_existent()
+{ shared_test_fun_is_existent("rmdir", rmdir); }
+
+#[test]
+fn test_rmfile_is_existent()
+{ shared_test_fun_is_existent("rmfile", rmfile); }
+
+#[test]
+fn test_copy_is_existent()
+{ shared_test_fun_is_existent("copy", copy); }
+
+#[test]
+fn test_spawn_is_existent()
+{ shared_test_fun_is_existent("spawn", spawn); }
+
+#[test]
+fn test_load_is_existent()
+{ shared_test_fun_is_existent("load", load); }
+
+#[test]
+fn test_save_is_existent()
+{ shared_test_fun_is_existent("save", save); }
+
+#[test]
+fn test_loadstr_is_existent()
+{ shared_test_fun_is_existent("loadstr", loadstr); }
+
+#[test]
+fn test_savestr_is_existent()
+{ shared_test_fun_is_existent("savestr", savestr); }
+
+#[test]
+fn test_args_is_existent()
+{ shared_test_fun_is_existent("args", args); }
+
+#[test]
+fn test_env_is_existent()
+{ shared_test_fun_is_existent("env", env); }
+
+#[test]
+fn test_uselib_is_existent()
+{ shared_test_fun_is_existent("uselib", uselib); }
+
+#[test]
+fn test_reuselib_is_existent()
+{ shared_test_fun_is_existent("reuselib", reuselib); }
+
+#[test]
+fn test_run_is_existent()
+{ shared_test_fun_is_existent("run", run); }
+
+#[test]
+fn test_removemod_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("removemod")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    env.add_and_push_mod(String::from("a")).unwrap();
+    env.pop_mod().unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            assert_eq!(false, root_mod_g.has_mod(&String::from("a")));
+        },
+        Err(_) => assert!(false),
+    }
+    env.add_and_push_mod(String::from("b")).unwrap();
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("a")).unwrap();
+    env.add_and_push_mod(String::from("b")).unwrap();
+    env.pop_mod().unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("b"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    let a_mod_g = a_mod.read().unwrap();
+                    assert_eq!(false, a_mod_g.has_mod(&String::from("b")));
+                },
+                None => assert!(false),
+            }
+            assert_eq!(true, root_mod_g.has_mod(&String::from("b")));
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+}
+
+#[test]
+fn test_removevar_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("removevar")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    env.set_var(&Name::Var(String::from("X")), Value::Int(1234)).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("X"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            assert_eq!(false, root_mod_g.has_var(&String::from("X")));
+        },
+        Err(_) => assert!(false),
+    }
+    env.set_var(&Name::Var(String::from("Y")), Value::Int(1234)).unwrap();
+    env.add_and_push_mod(String::from("a")).unwrap();
+    env.set_var(&Name::Var(String::from("Y")), Value::Int(1234)).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("Y"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    let a_mod_g = a_mod.read().unwrap();
+                    assert_eq!(false, a_mod_g.has_var(&String::from("Y")));
+                },
+                None => assert!(false),
+            }
+            assert_eq!(true, root_mod_g.has_var(&String::from("Y")));
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+}
+
+#[test]
+fn test_removelocalvar_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("removelocalvar")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    let args = vec![
+        Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Int(1), Value::Float(2.5)];
+    env.push_fun_mod_and_local_vars(&[], args.as_slice(), arg_values.as_slice()).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("Y"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::Bool(true), value);
+            match env.stack().last() {
+                Some((_, local_vars)) => {
+                    assert_eq!(true, local_vars.contains_key(&String::from("X")));
+                    assert_eq!(false, local_vars.contains_key(&String::from("Y")));
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("X"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::Bool(false), value),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_checkintr_is_existent()
+{ shared_test_fun_is_existent("checkintr", checkintr); }
