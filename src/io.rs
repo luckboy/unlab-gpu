@@ -459,7 +459,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
             write_str(w, ident.as_str())?;
         },
         Object::BuiltinFun(ident, _) => {
-            write_u8(w, OBJECT_FUN)?;
+            write_u8(w, OBJECT_BUILTIN_FUN)?;
             write_str(w, ident.as_str())?;
         },
         Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
@@ -473,7 +473,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
         },
         Object::MatrixRowSlice(matrix_array, i) => {
             write_u8(w, OBJECT_MATRIX_ROW_SLICE)?;
-            match object_tab.index(object) {
+            match object_tab.index(matrix_array) {
                 Some(idx) => {
                     write_u8(w, MATRIX_ARRAY_INDEX)?;
                     write_usize(w, idx)?;
@@ -617,3 +617,6 @@ pub fn save_values(path: &str, values: &[Value]) -> Result<()>
         Err(err) => Err(Error::Io(err)),
     }
 }
+
+#[cfg(test)]
+mod tests;
