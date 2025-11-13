@@ -1507,7 +1507,7 @@ pub fn softmax(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
 }
 
 pub fn sqrt(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function sqrt", f32::tanh, matrix_sqrt) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function sqrt", f32::sqrt, matrix_sqrt) }
 
 pub fn reallytranspose(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -2336,7 +2336,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("min"), min);
     add_builtin_fun(root_mod, String::from("imax"), imax);
     add_builtin_fun(root_mod, String::from("imin"), imin);
-    add_builtin_fun(root_mod, String::from("psuh"), push);
+    add_builtin_fun(root_mod, String::from("push"), push);
     add_builtin_fun(root_mod, String::from("pop"), pop);
     add_builtin_fun(root_mod, String::from("append"), append);
     add_builtin_fun(root_mod, String::from("insert"), insert);

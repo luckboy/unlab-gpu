@@ -1231,3 +1231,1101 @@ fn test_lower_is_applied_with_success()
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_sort_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("sort")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Bool(false), Value::Bool(true)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Bool(true), Value::Bool(true)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Int(1), Value::Float(2.5)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Int(3)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let elems = vec![
+                Value::Object(Arc::new(Object::String(String::from("ghi")))),
+                Value::Object(Arc::new(Object::String(String::from("abc")))),
+                Value::Object(Arc::new(Object::String(String::from("def"))))
+            ];
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_elems = vec![
+                        Value::Object(Arc::new(Object::String(String::from("abc")))),
+                        Value::Object(Arc::new(Object::String(String::from("def")))),
+                        Value::Object(Arc::new(Object::String(String::from("ghi"))))
+                    ];
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(expected_elems))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_reverse_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("reverse")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Float(2.0), Value::Int(1)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_any_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match (root_mod_g.var(&String::from("any")), root_mod_g.var(&String::from("islessequal"))) {
+        (Some(fun_value), Some(islessequal_value)) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Int(2), Value::Int(4)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(2), Value::Int(1)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        (_, _) => assert!(false),
+    }
+}
+
+#[test]
+fn test_all_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match (root_mod_g.var(&String::from("all")), root_mod_g.var(&String::from("islessequal"))) {
+        (Some(fun_value), Some(islessequal_value)) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Int(3), Value::Int(4), Value::Int(4)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Int(2), Value::Int(4)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        (_, _) => assert!(false),
+    }
+}
+
+#[test]
+fn test_find_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match (root_mod_g.var(&String::from("find")), root_mod_g.var(&String::from("islessequal"))) {
+        (Some(fun_value), Some(islessequal_value)) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Int(2), Value::Int(4)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(2), Value::Int(1)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        (_, _) => assert!(false),
+    }
+}
+
+#[test]
+fn test_filter_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match (root_mod_g.var(&String::from("filter")), root_mod_g.var(&String::from("islessequal"))) {
+        (Some(fun_value), Some(islessequal_value)) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Int(2), Value::Int(4)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2), Value::Int(4)]))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(2), Value::Int(1)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3), islessequal_value.clone()]) {
+                Ok(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        (_, _) => assert!(false),
+    }
+}
+
+#[test]
+fn test_max_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("max")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Int(2)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(3), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1), Value::Int(2)]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(1)]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_min_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("min")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Int(1), Value::Int(2)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1), Value::Int(2)]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(1)]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_imax_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("imax")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(3), Value::Int(2)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_imin_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("imin")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Int(1), Value::Int(2)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_push_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("push")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Float(3.0)]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Float(3.0)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_pop_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("pop")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(false), value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_append_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("append")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Float(3.0)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Float(3.0)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Int(1), Value::Float(2.0)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            let mut fields2: BTreeMap<String, Value> = BTreeMap::new();
+            fields2.insert(String::from("b"), Value::Float(3.0));
+            fields2.insert(String::from("c"), Value::Bool(false));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(3.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_insert_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("insert")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Int(2), Value::Float(3.0)]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(3.0), Value::Float(2.0), Value::Bool(false)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Int(4), Value::Float(3.0)]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Float(3.0)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("b"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2, Value::Float(3.0)]) {
+                Ok(value) => {
+                    assert_eq!(Value::Float(2.0), value);
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(3.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("d"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2, Value::Float(3.0)]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    expected_fields.insert(String::from("d"), Value::Float(3.0));
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_remove_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("remove")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Int(2)]) {
+                Ok(value) => {
+                    assert_eq!(Value::Float(2.0), value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Bool(false)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Int(4)]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("b"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::Float(2.0), value);
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("d"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::None, value);
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_arg_value, arg_value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_errorkind_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("errorkind")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("abc")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_errormsg_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("errormsg")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("def")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_isequal_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("isequal")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(1234)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(4567)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_isnotequal_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("isnotequal")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(1234)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(4567)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_isless_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("isless")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_isgreatereqaul_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("isgreaterequal")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_isgreater_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("isgreater")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(2)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_islesseqaul_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("islessequal")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(2)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+fn shared_test_fun1_is_applied_with_success_for_f32_and_matrix<F>(fun_name: &str, a: f32, row_count: usize, col_count: usize, xs: &[f32], mut f: F)
+    where F: FnMut(f32) -> f32
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from(fun_name)) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a)]) {
+                Ok(Value::Float(b)) => assert!((f(a) - b).abs() < 0.001),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, xs))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(row_count, matrix.row_count());
+                            assert_eq!(col_count, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(row_count * col_count) {
+                                assert!((f(xs[i]) - ys[i]).abs() < 0.001);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_sigmoid_is_applied_with_success()
+{
+    let xs = vec![
+        -0.5, -0.25,
+        0.0, 0.25,
+        0.5, 0.75
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("sigmoid", 0.5, 3, 2, xs.as_slice(), |a| 1.0 / (1.0 + (-a).exp()));
+}
+
+#[test]
+fn test_tanh_is_applied_with_success()
+{
+    let xs = vec![
+        -0.5, -0.25,
+        0.0, 0.25,
+        0.5, 0.75
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("tanh", 0.5, 3, 2, xs.as_slice(), f32::tanh);
+}
+
+#[test]
+fn test_swish_is_applied_with_success()
+{
+    let xs = vec![
+        -0.5, -0.25,
+        0.0, 0.25,
+        0.5, 0.75
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("swish", 0.5, 3, 2, xs.as_slice(), |a| a / (1.0 + (-a).exp()));
+}
+
+#[test]
+fn test_softmax_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("softmax")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.5)]) {
+                Ok(Value::Float(b)) => assert!((((0.5f32).exp() / (0.5f32).exp()) - b).abs() < 0.001),
+                _ => assert!(false),
+            }
+            let xs: Vec<f32> = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..3 {
+                                for j in 0..2 {
+                                    let mut sum = 0.0f32;
+                                    for k in 0..3 {
+                                        sum += xs[k * 2 + j].exp();
+                                    }
+                                    assert!(((xs[i * 2 + j].exp() / sum) - ys[i * 2 + j]).abs() < 0.001);
+                                }
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_sqrt_is_applied_with_success()
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("sqrt", 2.0, 3, 2, xs.as_slice(), f32::sqrt);
+}
+
+#[test]
+fn test_reallytranspose_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("reallytranspose")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.0)]) {
+                Ok(value) => assert_eq!(Value::Float(2.0), value),
+                Err(_) => assert!(false),
+            }
+            let a = matrix![
+                [1.0, 2.0],
+                [3.0, 4.0],
+                [5.0, 6.0]
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(a)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let at = vec![
+                        1.0, 3.0, 5.0,
+                        2.0, 4.0, 6.0
+                    ];
+                    let matrix_array = Arc::new(Object::MatrixArray(2, 3, TransposeFlag::NoTranspose, at));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_rt_is_alias_to_reallytranspose()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match (root_mod.var(&String::from("rt")), root_mod.var(&String::from("reallytranspose"))) {
+        (Some(alias_value), Some(fun_value)) => assert_eq!(alias_value, fun_value),
+        (_, _) => assert!(false),
+    }
+}
+
+#[test]
+fn test_repeat_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("repeat")) {
+        Some(fun_value) => {
+            let a = matrix![
+                [1.0],
+                [2.0],
+                [3.0]
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(a)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(2)]) {
+                Ok(value) => {
+                    let b = vec![
+                        1.0, 1.0,
+                        2.0, 2.0,
+                        3.0, 3.0
+                    ];
+                    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                Err(_) => assert!(false),
+            }
+            let a = matrix![
+                [1.0, 2.0]
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(a)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(3)]) {
+                Ok(value) => {
+                    let b = vec![
+                        1.0, 2.0,
+                        1.0, 2.0,
+                        1.0, 2.0
+                    ];
+                    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b));
+                    assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("mod")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(10), Value::Int(4)]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(10.5), Value::Float(3.5)]) {
+                Ok(value) => assert_eq!(Value::Float(10.5 % 3.5), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_abs_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("abs")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Int(3), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(0)]) {
+                Ok(value) => assert_eq!(Value::Int(0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(-2)]) {
+                Ok(value) => assert_eq!(Value::Int(2), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(3.5)]) {
+                Ok(value) => assert_eq!(Value::Float(3.5), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(0.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(2.5), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+fn shared_test_fun1_is_applied_with_success_for_f32<F>(fun_name: &str, a: f32, mut f: F)
+    where F: FnMut(f32) -> f32
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from(fun_name)) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a)]) {
+                Ok(Value::Float(b)) => assert!((f(a) - b).abs() < 0.001),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+fn shared_test_fun2_is_applied_with_success_for_f32<F>(fun_name: &str, a: f32, b: f32, mut f: F)
+    where F: FnMut(f32, f32) -> f32
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from(fun_name)) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a), Value::Float(b)]) {
+                Ok(Value::Float(c)) => assert!((f(a, b) - c).abs() < 0.001),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}

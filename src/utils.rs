@@ -384,7 +384,7 @@ pub fn matrix_sqrt(a: &Matrix) -> Result<Matrix>
 fn matrix_res_really_transpose(a: &Matrix) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;
-    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    let b = unsafe { frontend.create_matrix(a.col_count(), a.row_count())? };
     frontend.really_transpose(a, &b)?;
     Ok(b)
 }
