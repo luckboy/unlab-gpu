@@ -3369,7 +3369,7 @@ fn test_value_partial_cmp_returns_orderings()
 }
 
 #[test]
-fn test_value_partial_cmp_does_not_return_ordering()
+fn test_value_partial_cmp_does_not_return_orderings()
 {
     assert_eq!(None, Value::Bool(true).partial_cmp(&Value::Int(1)));
     assert_eq!(None, Value::Bool(true).partial_cmp(&Value::Float(1.0)));
