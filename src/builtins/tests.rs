@@ -1963,7 +1963,7 @@ fn test_isless_is_applied_with_success()
 }
 
 #[test]
-fn test_isgreatereqaul_is_applied_with_success()
+fn test_isgreaterequal_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
@@ -2019,7 +2019,7 @@ fn test_isgreater_is_applied_with_success()
 }
 
 #[test]
-fn test_islesseqaul_is_applied_with_success()
+fn test_islessequal_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
