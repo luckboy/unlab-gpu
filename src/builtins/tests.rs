@@ -1953,6 +1953,10 @@ fn test_isless_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Bool(false), value),
                 Err(_) => assert!(false),
             }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(2)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
         },
         None => assert!(false),
     }
@@ -1974,6 +1978,10 @@ fn test_isgreatereqaul_is_applied_with_success()
                 Err(_) => assert!(false),
             }
             match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(2)]) {
                 Ok(value) => assert_eq!(Value::Bool(true), value),
                 Err(_) => assert!(false),
             }
@@ -2001,6 +2009,10 @@ fn test_isgreater_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Bool(false), value),
                 Err(_) => assert!(false),
             }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
         },
         None => assert!(false),
     }
@@ -2022,6 +2034,10 @@ fn test_islesseqaul_is_applied_with_success()
                 Err(_) => assert!(false),
             }
             match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(3)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(3)]) {
                 Ok(value) => assert_eq!(Value::Bool(true), value),
                 Err(_) => assert!(false),
             }

@@ -3095,11 +3095,19 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
+    match Value::Bool(true).bin_op(BinOp::Lt, &Value::Bool(false)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
     match Value::Int(2).bin_op(BinOp::Lt, &Value::Int(3)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
     match Value::Int(2).bin_op(BinOp::Lt, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(3).bin_op(BinOp::Lt, &Value::Int(2)) {
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
@@ -3111,11 +3119,19 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
+    match Value::Float(2.5).bin_op(BinOp::Lt, &Value::Int(2)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
     match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.5)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
     match Value::Int(2).bin_op(BinOp::Lt, &Value::Float(2.0)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(3).bin_op(BinOp::Lt, &Value::Float(2.0)) {
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
@@ -3127,6 +3143,10 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
+    match Value::Float(3.5).bin_op(BinOp::Lt, &Value::Float(2.5)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
     match value.bin_op(BinOp::Lt, &value2) {
@@ -3134,6 +3154,12 @@ fn test_value_bin_op_compares_values_for_lt_operator()
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
+    match value.bin_op(BinOp::Lt, &value2) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::String(String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
     match value.bin_op(BinOp::Lt, &value2) {
         Ok(Value::Bool(false)) => assert!(true),
@@ -3179,6 +3205,10 @@ fn test_value_bin_op_compares_values_for_ge_operator()
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
+    match Value::Int(3).bin_op(BinOp::Ge, &Value::Int(2)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
 }
 
 #[test]
@@ -3192,6 +3222,10 @@ fn test_value_bin_op_compares_values_for_gt_operator()
         Ok(Value::Bool(false)) => assert!(true),
         _ => assert!(false),
     }
+    match Value::Int(2).bin_op(BinOp::Gt, &Value::Int(3)) {
+        Ok(Value::Bool(false)) => assert!(true),
+        _ => assert!(false),
+    }
 }
 
 #[test]
@@ -3202,6 +3236,10 @@ fn test_value_bin_op_compares_values_for_le_operator()
         _ => assert!(false),
     }
     match Value::Int(2).bin_op(BinOp::Le, &Value::Int(2)) {
+        Ok(Value::Bool(true)) => assert!(true),
+        _ => assert!(false),
+    }
+    match Value::Int(2).bin_op(BinOp::Le, &Value::Int(3)) {
         Ok(Value::Bool(true)) => assert!(true),
         _ => assert!(false),
     }
