@@ -228,7 +228,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_mutable_
 }
 
 #[test]
-fn test_write_values_and_read_values_writes_values_and_reads_values_for_reference_cycles()
+fn test_write_values_and_read_values_writes_values_and_reads_values_for_reference_cycle()
 {
     let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
     let mut cursor = Cursor::new(Vec::<u8>::new());
