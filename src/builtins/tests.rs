@@ -2936,6 +2936,10 @@ fn test_spawn_is_existent()
 { shared_test_fun_is_existent("spawn", spawn); }
 
 #[test]
+fn test_exit_is_existent()
+{ shared_test_fun_is_existent("exit", exit); }
+
+#[test]
 fn test_load_is_existent()
 { shared_test_fun_is_existent("load", load); }
 

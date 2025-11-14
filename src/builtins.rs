@@ -2046,6 +2046,18 @@ pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+pub fn exit(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value @ (Value::Int(_) | Value::Float(_))) => Err(Error::Stop(Stop::Exit(value.to_i64() as i32))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for fuction exit"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn load(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2407,6 +2419,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("rmfile"), rmfile);
     add_builtin_fun(root_mod, String::from("copy"), copy);
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
+    add_builtin_fun(root_mod, String::from("exit"), exit);
     add_builtin_fun(root_mod, String::from("load"), load);
     add_builtin_fun(root_mod, String::from("save"), save);
     add_builtin_fun(root_mod, String::from("loadstr"), loadstr);
