@@ -10,6 +10,7 @@ use std::fmt;
 use std::io;
 use std::result;
 use std::sync::Arc;
+use crate::ctrlc;
 use crate::matrix;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -57,6 +58,7 @@ pub enum Error
     AlreadyAddedModNode,
     NoFunMod,
     Io(io::Error),
+    Ctrlc(ctrlc::Error),
     Stop(Stop),
     Intr,
 }
@@ -79,6 +81,7 @@ impl fmt::Display for Error
             Error::AlreadyAddedModNode => write!(f, "already added module node"),
             Error::NoFunMod => write!(f, "no function module"),
             Error::Io(err) => write!(f, "i/o error: {}", err),
+            Error::Ctrlc(err) => write!(f, "ctrl-c error: {}", err),
             Error::Stop(Stop::Break) => write!(f, "stopped by break"),
             Error::Stop(Stop::Continue) => write!(f, "stopped by continue"),
             Error::Stop(Stop::Return) => write!(f, "stopped by return"),
