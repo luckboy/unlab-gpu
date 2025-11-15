@@ -42,7 +42,7 @@ impl CtrlCIntrChecker
     
     pub fn initialize() -> Result<()>
     {
-        match ctrlc::set_handler(move || { INTR_FLAG.store(true, Ordering::SeqCst); }) {
+        match ctrlc::set_handler(move || INTR_FLAG.store(true, Ordering::SeqCst)) {
             Ok(()) => Ok(()),
             Err(err) => Err(Error::Ctrlc(err)),
         }
