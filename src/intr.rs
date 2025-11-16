@@ -56,8 +56,7 @@ impl IntrCheck for CtrlCIntrChecker
 {
     fn check(&self) -> Result<()>
     {
-        if INTR_FLAG.load(Ordering::SeqCst) {
-            INTR_FLAG.store(false, Ordering::SeqCst);
+        if INTR_FLAG.swap(false, Ordering::SeqCst) {
             Err(Error::Intr)
         } else {
             Ok(())
