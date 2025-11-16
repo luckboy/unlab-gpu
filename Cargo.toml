@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 ctrlc = "3.5"
+home = "<=0.5.9"
 rand = "0.9"
 unmtx-gpu = { version = "0.1.4", default-features = false }
 
