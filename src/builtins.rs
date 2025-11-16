@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::f32;
+use std::ffi::OsString;
 use std::fs;
 use std::fs::File;
 use std::fs::create_dir;
@@ -2149,17 +2150,15 @@ fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
 {
     let lib_path = {
         let shared_env_g = rw_lock_read(env.shared_env())?;
-        String::from(shared_env_g.lib_path())
+        OsString::from(shared_env_g.lib_path())
     };
     let mut res: Result<()> = Ok(());
-    for os_dir in std::env::split_paths(lib_path.as_str()) {
-        let mut os_script_dir = os_dir.clone();
-        os_script_dir.push(lib_name);
-        let mut os_path = os_script_dir.clone();
-        os_path.push("lib.un");
-        let script_dir = os_script_dir.to_string_lossy().into_owned();
-        let path = os_path.to_string_lossy().into_owned();
-        match parse(path.as_str()) {
+    for dir in std::env::split_paths(lib_path.as_os_str()) {
+        let mut script_dir = dir.clone();
+        script_dir.push(lib_name);
+        let mut path = script_dir.clone();
+        path.push("lib.un");
+        match parse(path) {
             Ok(tree) => {
                 let mut new_env = Env::new_with_script_dir_and_shared_env(env.root_mod().clone(), script_dir.clone(), env.shared_env().clone());
                 interp.interpret(&mut new_env, &tree)?;
@@ -2210,8 +2209,7 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     let script_name = get_first_arg_string(arg_values, "unsupported type for function run")?;
     let mut path_buf = PathBuf::from(env.script_dir());
     path_buf.push(script_name.as_str());
-    let path = path_buf.to_string_lossy().into_owned();
-    let tree = parse(path.as_str())?;
+    let tree = parse(path_buf)?;
     let mut new_env = env.clone_without_stack();
     interp.interpret(&mut new_env, &tree)?;
     Ok(Value::None)

@@ -7,6 +7,7 @@
 //
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::RwLock;
 use crate::doc::*;
@@ -858,22 +859,22 @@ impl<'a> Parser<'a>
     }
 }
 
-pub fn parse_with_doc_root_mod(path: &str, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
+pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 {
-    match File::open(path) {
+    match File::open(path.as_ref()) {
         Ok(file) => {
             let mut r = BufReader::new(file);
-            let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from(path)), &mut r, doc_root_mod.is_some());
+            let mut lexer = Lexer::new_with_doc_flag(Arc::new(path.as_ref().to_string_lossy().into_owned()), &mut r, doc_root_mod.is_some());
             let parser_path = lexer.path().clone();
             let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
             let mut parser = Parser::new_with_doc_root_mod(parser_path, tokens, doc_root_mod);
             parser.parse()
         },
-        Err(err) => Err(Error::ParserIo(Arc::new(String::from(path)), err)),
+        Err(err) => Err(Error::ParserIo(Arc::new(path.as_ref().to_string_lossy().into_owned()), err)),
     }
 }
 
-pub fn parse(path: &str) -> Result<Tree>
+pub fn parse<P: AsRef<Path>>(path: P) -> Result<Tree>
 { parse_with_doc_root_mod(path, None) }
 
 #[cfg(test)]

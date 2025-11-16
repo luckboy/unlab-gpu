@@ -15,6 +15,7 @@ use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Write;
 use std::mem::size_of;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
@@ -596,7 +597,7 @@ pub fn write_values(w: &mut dyn Write, values: &[Value]) -> Result<()>
     Ok(())
 }
 
-pub fn load_values(path: &str, env: &Env) -> Result<Vec<Value>>
+pub fn load_values<P: AsRef<Path>>(path: P, env: &Env) -> Result<Vec<Value>>
 {
     match File::open(path) {
         Ok(file) => {
@@ -607,7 +608,7 @@ pub fn load_values(path: &str, env: &Env) -> Result<Vec<Value>>
     }
 }
 
-pub fn save_values(path: &str, values: &[Value]) -> Result<()>
+pub fn save_values<P: AsRef<Path>>(path: P, values: &[Value]) -> Result<()>
 {
     match File::create(path) {
         Ok(file) => {
