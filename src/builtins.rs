@@ -2143,7 +2143,7 @@ pub fn env(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     if arg_values.len() != 0 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(std::env::vars().map(|p| Value::Object(Arc::new(Object::String(format!("{}={}", p.0, p.1))))).collect())))))
+    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(std::env::vars_os().map(|p| Value::Object(Arc::new(Object::String(format!("{}={}", p.0.to_string_lossy().into_owned(), p.1.to_string_lossy().into_owned()))))).collect())))))
 }
 
 fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
