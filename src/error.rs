@@ -12,6 +12,7 @@ use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
 use crate::matrix;
+use crate::toml;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Pos
@@ -59,6 +60,9 @@ pub enum Error
     NoFunMod,
     Io(io::Error),
     Ctrlc(ctrlc::Error),
+    Toml(toml::de::Error),
+    NoOpenClBackend,
+    NoCudaBackend,
     Stop(Stop),
     Intr,
 }
@@ -82,6 +86,9 @@ impl fmt::Display for Error
             Error::NoFunMod => write!(f, "no function module"),
             Error::Io(err) => write!(f, "i/o error: {}", err),
             Error::Ctrlc(err) => write!(f, "ctrl-c error: {}", err),
+            Error::Toml(err) => write!(f, "toml error: {}", err),
+            Error::NoOpenClBackend => write!(f, "no OpenCL backend"),
+            Error::NoCudaBackend => write!(f, "no CUDA backend"),
             Error::Stop(Stop::Break) => write!(f, "stopped by break"),
             Error::Stop(Stop::Continue) => write!(f, "stopped by continue"),
             Error::Stop(Stop::Return) => write!(f, "stopped by return"),

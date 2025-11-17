@@ -7,7 +7,10 @@
 //
 pub use ctrlc;
 pub use unmtx_gpu as matrix;
+pub use serde;
+pub use toml;
 
+pub mod backend;
 pub mod builtins;
 pub mod doc;
 pub mod env;
