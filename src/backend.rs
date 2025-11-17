@@ -248,3 +248,6 @@ pub fn uninitialize_backend() -> Result<()>
         Err(err) => Err(Error::Matrix(err)),        
     }
 }
+
+#[cfg(test)]
+mod tests;
