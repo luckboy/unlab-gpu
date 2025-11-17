@@ -102,6 +102,13 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
     loop {
         match editor.readline("unlab-gpu> ") {
             Ok(line) => {
+                match editor.add_history_entry(line.as_str()) {
+                    Ok(_) => (),
+                    Err(err) => {
+                        eprintln!("{}", err);
+                        return Some(1);
+                    },
+                }
                 let mut new_line_count = line_count;
                 let mut lines = line.clone();
                 lines.push('\n');
@@ -117,6 +124,13 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
                         Err(err @ Error::ParserEof(_, ParserEofFlag::Repetition)) => {
                             match editor.readline("> ") {
                                 Ok(next_line) => {
+                                    match editor.add_history_entry(next_line.as_str()) {
+                                        Ok(_) => (),
+                                        Err(err) => {
+                                            eprintln!("{}", err);
+                                            return Some(1);
+                                        },
+                                    }
                                     lines.push_str(next_line.as_str());
                                     lines.push('\n');
                                     new_line_count += 1;
