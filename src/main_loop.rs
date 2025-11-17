@@ -153,6 +153,7 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
                     }
                 };
                 line_count = new_line_count;
+                CtrlCIntrChecker::reset();
                 match tree {
                     Some(tree) => {
                         match interp.interpret(&mut env, &tree) {
