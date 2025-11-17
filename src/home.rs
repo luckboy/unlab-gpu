@@ -22,21 +22,26 @@ pub struct Home
 
 impl Home
 {
-    pub fn new(lib_path: Option<String>) -> Option<Self>
+    pub fn new(home_dir: &Option<String>, lib_path: &Option<String>) -> Option<Self>
     {
-        let home_dir = match home::home_dir() {
-            Some(user_home_dir) => {
-                let mut tmp_home_dir = user_home_dir.clone();
-                match var_os("UNLAB_GPU_HOME") {
-                    Some(tmp_home_dir2) => tmp_home_dir.push(tmp_home_dir2.as_os_str()),
-                    None => tmp_home_dir.push(".unlab-gpu"),
-                }
-                tmp_home_dir
-            },
+        let home_dir = match home_dir {
+            Some(home_dir) => PathBuf::from(home_dir.as_str()),
             None => {
-                match var_os("UNLAB_GPU_HOME") {
-                    Some(tmp_home_dir) => PathBuf::from(tmp_home_dir.as_os_str()),
-                    None => return None,
+                match home::home_dir() {
+                    Some(user_home_dir) => {
+                        let mut tmp_home_dir = user_home_dir.clone();
+                        match var_os("UNLAB_GPU_HOME") {
+                            Some(tmp_home_dir2) => tmp_home_dir.push(tmp_home_dir2.as_os_str()),
+                            None => tmp_home_dir.push(".unlab-gpu"),
+                        }
+                        tmp_home_dir
+                    },
+                    None => {
+                        match var_os("UNLAB_GPU_HOME") {
+                            Some(tmp_home_dir) => PathBuf::from(tmp_home_dir.as_os_str()),
+                            None => return None,
+                        }
+                    },
                 }
             },
         };
