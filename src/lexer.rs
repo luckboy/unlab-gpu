@@ -89,7 +89,7 @@ pub struct Lexer<'a>
 
 impl<'a> Lexer<'a>
 {
-    pub fn new_with_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, is_doc: bool) -> Self
+    pub fn new_with_line_and_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, line: u64, is_doc: bool) -> Self
     {
         let mut keywords: HashMap<String, Token> = HashMap::new();
         keywords.insert(String::from("and"), Token::And);
@@ -123,7 +123,7 @@ impl<'a> Lexer<'a>
         };
         Lexer {
             path,
-            line: 1,
+            line,
             eol_column: 0,
             reader,
             line_tokens: Vec::new(),
@@ -133,8 +133,14 @@ impl<'a> Lexer<'a>
         }
     }
 
+    pub fn new_with_line(path: Arc<String>, reader: &'a mut dyn BufRead, line: u64) -> Self
+    { Self::new_with_line_and_doc_flag(path, reader, line, false) }
+    
+    pub fn new_with_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, is_doc: bool) -> Self
+    { Self::new_with_line_and_doc_flag(path, reader, 1, is_doc) }
+    
     pub fn new(path: Arc<String>, reader: &'a mut dyn BufRead) -> Self
-    { Self::new_with_doc_flag(path, reader, true) }
+    { Self::new_with_doc_flag(path, reader, false) }
     
     pub fn path(&self) -> &Arc<String>
     { &self.path }
