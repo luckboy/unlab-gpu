@@ -19,6 +19,7 @@ pub mod interp;
 pub mod intr;
 pub mod io;
 pub mod lexer;
+pub mod main_loop;
 pub mod mod_node;
 pub mod parser;
 pub mod tree;
