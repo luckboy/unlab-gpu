@@ -28,18 +28,17 @@ use crate::matrix::cuda::CudaBackend;
 #[cfg(any(feature = "opencl", feature = "cuda"))]
 use crate::matrix::set_default_backend;
 use crate::matrix::unset_default_backend;
-use crate::serde::Deserialize;
-use crate::toml;
+use crate::ini::Ini;
 use crate::error::*;
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Deserialize)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Backend
 {
     OpenCl,
     Cuda
 }
 
-#[derive(Copy, Clone, Debug, Deserialize)]
+#[derive(Copy, Clone, Debug)]
 pub struct BackendConfig
 {
     pub backend: Option<Backend>,
@@ -49,27 +48,106 @@ pub struct BackendConfig
     pub cublas: Option<bool>,
     pub mma: Option<bool>,
 }
-
-pub fn read_backend_config(r: &mut dyn Read) -> Result<BackendConfig>
+impl BackendConfig
 {
-    let mut s = String::new();
-    match r.read_to_string(&mut s) {
-        Ok(_) => {
-            match toml::from_str::<BackendConfig>(s.as_str()) {
-                Ok(config) => Ok(config),
-                Err(err) => Err(Error::Toml(err)),
-            }
-        },
-        Err(err) => Err(Error::Io(err)),
+    pub fn new() -> BackendConfig
+    {
+        BackendConfig {
+            backend: None,
+            ordinal: None,
+            platform: None,
+            device: None,
+            cublas: None,
+            mma: None,
+        }
     }
-}
+    
+    pub fn read(r: &mut dyn Read) -> Result<Self>
+    {
+        let mut s = String::new();
+        match r.read_to_string(&mut s) {
+            Ok(_) => {
+                match Ini::load_from_str(s.as_str()) {
+                    Ok(ini) => {
+                        let mut config = BackendConfig::new();
+                        match ini.section::<&str>(None) {
+                            Some(section) => {
+                                match section.get("backend") {
+                                    Some(field) => {
+                                        if field == "OpenCL" {
+                                            config.backend = Some(Backend::OpenCl);
+                                        } else if field == "CUDA" {
+                                            config.backend = Some(Backend::Cuda);
+                                        } else {
+                                            return Err(Error::InvalidIniField(String::from("backend")));
+                                        }
+                                    },
+                                    None => (),
+                                }
+                                match section.get("ordinal") {
+                                    Some(field) => {
+                                        match field.parse::<usize>() {
+                                            Ok(n) => config.ordinal = Some(n),
+                                            Err(_) => return Err(Error::InvalidIniField(String::from("ordinal"))),
+                                        }
+                                    },
+                                    None => (),
+                                }
+                                match section.get("platform") {
+                                    Some(field) => {
+                                        match field.parse::<usize>() {
+                                            Ok(n) => config.platform = Some(n),
+                                            Err(_) => return Err(Error::InvalidIniField(String::from("platform"))),
+                                        }
+                                    },
+                                    None => (),
+                                }
+                                match section.get("device") {
+                                    Some(field) => {
+                                        match field.parse::<usize>() {
+                                            Ok(n) => config.device = Some(n),
+                                            Err(_) => return Err(Error::InvalidIniField(String::from("device"))),
+                                        }
+                                    },
+                                    None => (),
+                                }
+                                match section.get("cublas") {
+                                    Some(field) => {
+                                        match field.parse::<bool>() {
+                                            Ok(b) => config.cublas = Some(b),
+                                            Err(_) => return Err(Error::InvalidIniField(String::from("cublas"))),
+                                        }
+                                    },
+                                    None => (),
+                                }
+                                match section.get("mma") {
+                                    Some(field) => {
+                                        match field.parse::<bool>() {
+                                            Ok(b) => config.mma = Some(b),
+                                            Err(_) => return Err(Error::InvalidIniField(String::from("mma"))),
+                                        }
+                                    },
+                                    None => (),
+                                }
+                            },
+                            None => (),
+                        }
+                        Ok(config)
+                    },
+                    Err(err) => Err(Error::Ini(err)),
+                }
+            },
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
 
-pub fn load_backend_config<P: AsRef<Path>>(path: P) -> Result<Option<BackendConfig>>
-{
-    match File::open(path) {
-        Ok(mut file) => Ok(Some(read_backend_config(&mut file)?)),
-        Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
-        Err(err) => Err(Error::Io(err)),
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
+    {
+        match File::open(path) {
+            Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+            Err(err) => Err(Error::Io(err)),
+        }
     }
 }
 
@@ -159,7 +237,7 @@ pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<
 
 pub fn initialize_backend<P: AsRef<Path>>(path: P) -> Result<()>
 {
-    let config = load_backend_config(path)?;
+    let config = BackendConfig::load(path)?;
     initialize_backend_with_config(&config)
 }
 

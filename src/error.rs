@@ -11,8 +11,8 @@ use std::io;
 use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
+use crate::ini;
 use crate::matrix;
-use crate::toml;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Pos
@@ -60,7 +60,8 @@ pub enum Error
     NoFunMod,
     Io(io::Error),
     Ctrlc(ctrlc::Error),
-    Toml(toml::de::Error),
+    Ini(ini::ParseError),
+    InvalidIniField(String),
     NoOpenClBackend,
     NoCudaBackend,
     Stop(Stop),
@@ -86,7 +87,8 @@ impl fmt::Display for Error
             Error::NoFunMod => write!(f, "no function module"),
             Error::Io(err) => write!(f, "i/o error: {}", err),
             Error::Ctrlc(err) => write!(f, "ctrl-c error: {}", err),
-            Error::Toml(err) => write!(f, "toml error: {}", err),
+            Error::Ini(err) => write!(f, "ini error: {}", err),
+            Error::InvalidIniField(field_name) => write!(f, "invalid ini field {}", field_name),
             Error::NoOpenClBackend => write!(f, "no OpenCL backend"),
             Error::NoCudaBackend => write!(f, "no CUDA backend"),
             Error::Stop(Stop::Break) => write!(f, "stopped by break"),

@@ -6,9 +6,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 pub use ctrlc;
+pub use ini;
 pub use unmtx_gpu as matrix;
-pub use serde;
-pub use toml;
 
 pub mod backend;
 pub mod builtins;
