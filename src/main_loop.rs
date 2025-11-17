@@ -7,6 +7,7 @@
 //
 use std::ffi::OsStr;
 use std::ffi::OsString;
+use std::fs::create_dir_all;
 use std::io::Cursor;
 use std::path::Path;
 use std::path::PathBuf;
@@ -174,6 +175,17 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
             },
             Err(ReadlineError::Interrupted) => (),
             Err(ReadlineError::Eof) => break,
+            Err(err) => {
+                eprintln!("{}", err);
+                return Some(1);
+            },
+        }
+    }
+    let mut history_dir = PathBuf::from(history_file);
+    history_dir.pop();
+    if history_dir != PathBuf::from("") {
+        match create_dir_all(history_dir.as_path()) {
+            Ok(()) => (),
             Err(err) => {
                 eprintln!("{}", err);
                 return Some(1);
