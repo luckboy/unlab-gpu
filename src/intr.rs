@@ -30,7 +30,7 @@ impl IntrCheck for EmptyIntrChecker
     { Ok(()) }
 }
 
-static INTR_FLAG: AtomicBool = AtomicBool::new(true);
+static INTR_FLAG: AtomicBool = AtomicBool::new(false);
 
 #[derive(Copy, Clone, Debug)]
 pub struct CtrlCIntrChecker;
