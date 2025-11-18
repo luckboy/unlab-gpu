@@ -458,6 +458,10 @@ fn test_env_var_returns_values_for_variable_names()
 {
     let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
     let mut env = Env::new(root_mod.clone());
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Z"), Value::Bool(true));
+    }
     match env.add_and_push_mod(String::from("a")) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -473,6 +477,10 @@ fn test_env_var_returns_values_for_variable_names()
     }
     match env.var(&Name::Var(String::from("Y"))) {
         Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Z"))) {
+        Ok(Some(Value::Bool(true))) => assert!(true),
         _ => assert!(false),
     }
     match env.add_and_push_mod(String::from("b")) {
@@ -492,6 +500,10 @@ fn test_env_var_returns_values_for_variable_names()
         Ok(Some(Value::Int(2))) => assert!(true),
         _ => assert!(false),
     }
+    match env.var(&Name::Var(String::from("Z"))) {
+        Ok(Some(Value::Bool(true))) => assert!(true),
+        _ => assert!(false),
+    }
     match env.pop_mod() {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -502,6 +514,10 @@ fn test_env_var_returns_values_for_variable_names()
     }
     match env.var(&Name::Var(String::from("Y"))) {
         Ok(Some(Value::Float(n))) => assert_eq!(2.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Z"))) {
+        Ok(Some(Value::Bool(true))) => assert!(true),
         _ => assert!(false),
     }
     match env.pop_mod() {
@@ -743,6 +759,10 @@ fn test_env_var_returns_values_for_variable_names_and_local_variables()
 {
     let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
     let mut env = Env::new(root_mod.clone());
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("W"), Value::Bool(true));
+    }
     match env.add_and_push_mod(String::from("a")) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -790,6 +810,10 @@ fn test_env_var_returns_values_for_variable_names_and_local_variables()
         Ok(Some(Value::Bool(false))) => assert!(true),
         _ => assert!(false),
     }
+    match env.var(&Name::Var(String::from("W"))) {
+        Ok(Some(Value::Bool(true))) => assert!(true),
+        _ => assert!(false),
+    }
     let args = vec![
         Arg(String::from("X"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
         Arg(String::from("Y"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
@@ -805,6 +829,10 @@ fn test_env_var_returns_values_for_variable_names_and_local_variables()
     }
     match env.var(&Name::Var(String::from("Y"))) {
         Ok(Some(Value::Float(n))) => assert_eq!(1.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("W"))) {
+        Ok(Some(Value::Bool(true))) => assert!(true),
         _ => assert!(false),
     }
     env.pop_fun_mod_and_local_vars();

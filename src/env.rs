@@ -249,11 +249,16 @@ impl Env
         }
         match mod1 {
             Some(mod1) => {
-                let mod1_g = rw_lock_read(&mod1)?;
-                match mod1_g.var(ident) {
-                    Some(value) => Ok(Some(value.clone())),
-                    None => Ok(None),
+                let mut value: Option<Value>;
+                {
+                    let mod1_g = rw_lock_read(&mod1)?;
+                    value = mod1_g.var(ident).map(|v| v.clone());
                 }
+                if is_var && value.is_none() {
+                    let root_mod_g = rw_lock_read(&self.root_mod)?;
+                    value = root_mod_g.var(ident).map(|v| v.clone());
+                }
+                Ok(value)
             },
             None => Ok(None),
         }
