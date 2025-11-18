@@ -241,7 +241,7 @@ pub fn initialize_backend<P: AsRef<Path>>(path: P) -> Result<()>
     initialize_backend_with_config(&config)
 }
 
-pub fn uninitialize_backend() -> Result<()>
+pub fn finalize_backend() -> Result<()>
 {
     match unset_default_backend() {
         Ok(()) => Ok(()),
