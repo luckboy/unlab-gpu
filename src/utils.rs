@@ -79,6 +79,20 @@ pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
     }
 }
 
+fn matrix_res_backend_name() -> matrix::Result<&'static str>
+{
+    let frontend = Frontend::new()?;
+    Ok(frontend.backend().name())
+}
+
+pub fn matrix_backend_name() -> Result<&'static str>
+{
+    match matrix_res_backend_name() {
+        Ok(s) => Ok(s),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
 fn matrix_res_create_and_set_zeros(row_count: usize, col_count: usize) -> matrix::Result<Matrix>
 {
     let frontend = Frontend::new()?;

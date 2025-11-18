@@ -2146,6 +2146,23 @@ pub fn env(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(std::env::vars_os().map(|p| Value::Object(Arc::new(Object::String(format!("{}={}", p.0.to_string_lossy().into_owned(), p.1.to_string_lossy().into_owned()))))).collect())))))
 }
 
+pub fn scriptdir(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    Ok(Value::Object(Arc::new(Object::String(env.script_dir().to_string_lossy().into_owned()))))
+}
+
+pub fn libpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let shared_env_g = rw_lock_read(env.shared_env())?;
+    Ok(Value::Object(Arc::new(Object::String(shared_env_g.lib_path().to_string_lossy().into_owned()))))
+}
+
 fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
 {
     let lib_path = {
@@ -2287,6 +2304,14 @@ pub fn checkintr(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> R
     Ok(Value::None)
 }
 
+pub fn backend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    Ok(Value::Object(Arc::new(Object::String(String::from(matrix_backend_name()?)))))
+}
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -2424,6 +2449,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("savestr"), savestr);
     add_builtin_fun(root_mod, String::from("args"), args);
     add_builtin_fun(root_mod, String::from("env"), env);
+    add_builtin_fun(root_mod, String::from("scriptdir"), scriptdir);
+    add_builtin_fun(root_mod, String::from("libpath"), libpath);
     add_builtin_fun(root_mod, String::from("uselib"), uselib);
     add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
     add_builtin_fun(root_mod, String::from("run"), run);
@@ -2431,6 +2458,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
     add_builtin_fun(root_mod, String::from("checkintr"), checkintr);
+    add_builtin_fun(root_mod, String::from("backend"), backend);
 }
 
 #[cfg(test)]
