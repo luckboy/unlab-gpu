@@ -181,6 +181,7 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
             },
         }
     }
+    interp.clear_stack_trace();
     let mut history_dir = PathBuf::from(history_file);
     history_dir.pop();
     if history_dir != PathBuf::from("") {
