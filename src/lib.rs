@@ -26,5 +26,20 @@ pub mod tree;
 pub mod utils;
 pub mod value;
 
+pub use backend::initialize_backend;
+pub use backend::finalize_backend;
+pub use builtins::add_std_builtin_funs;
+pub use env::Env;
+pub use error::Error;
+pub use error::Result;
+pub use home::Home;
+pub use interp::Interp;
+pub use main_loop::main_loop;
+pub use mod_node::ModNode;
+pub use parser::parse;
+pub use parser::parse_with_doc_root_mod;
+pub use tree::Tree;
+pub use value::Value;
+
 #[cfg(test)]
 pub(crate) mod test_helpers;
