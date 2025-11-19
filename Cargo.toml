@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 clap = { version = "4.5", default-features = false, features = ["std", "help", "usage", "error-context", "derive"] }
 ctrlc = "3.5"
+getopts = "0.2"
 home = "<=0.5.9"
 rand = "0.9"
 rust-ini = "0.21"

@@ -32,6 +32,7 @@ use rand::random_range;
 use crate::matrix::Matrix;
 use crate::env::*;
 use crate::error::*;
+use crate::getopts::*;
 use crate::interp::*;
 use crate::io::*;
 use crate::mod_node::*;
@@ -2459,6 +2460,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
     add_builtin_fun(root_mod, String::from("checkintr"), checkintr);
     add_builtin_fun(root_mod, String::from("backend"), backend);
+    add_builtin_fun(root_mod, String::from("getopts"), getopts);
+    add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
 }
 
 #[cfg(test)]
