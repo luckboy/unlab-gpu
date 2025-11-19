@@ -32,6 +32,9 @@ fn create_options<F>(value: &Value, err_msg: &str, mut f: F) -> Result<Options>
                                 let opt_object_g = rw_lock_read(opt_object)?;
                                 match &*opt_object_g {
                                     MutObject::Array(opt_arg_values) => {
+                                        if opt_arg_values.len() < 3 || opt_arg_values.len() > 6 {
+                                            return Err(Error::Interp(String::from("invalid number of elements for option")))
+                                        }
                                         let short_name = match opt_arg_values.get(0) {
                                             Some(opt_arg_value) => {
                                                 let mut s = String::new();
