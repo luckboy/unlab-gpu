@@ -131,13 +131,18 @@ pub fn create_args(value: &Value, err_msg: &str) -> Result<Vec<String>>
     }
 }
 
-pub fn getopts(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn getopts(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    if arg_values.len() != 2 {
+    if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     let mut names: Vec<String> = Vec::new();
     let (opts, args) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(opt_value), None) => {
+            let tmp_opts = create_options(&opt_value, "unsupported types for getopts", |s| names.push(s))?;
+            let shared_env_g = rw_lock_read(env.shared_env())?;
+            (tmp_opts, shared_env_g.args().to_vec())
+        },
         (Some(opt_value), Some(arg_value)) => {
             let tmp_opts = create_options(&opt_value, "unsupported types for getopts", |s| names.push(s))?;
             let tmp_args = create_args(&arg_value, "unsupported types for getopts")?;
