@@ -183,3 +183,6 @@ pub fn getoptsusage(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
     };
     Ok(Value::Object(Arc::new(Object::String(opts.usage(brief.as_str())))))
 }
+
+#[cfg(test)]
+mod tests;
