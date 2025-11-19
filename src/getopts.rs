@@ -151,10 +151,11 @@ pub fn getopts(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     };
     let mut opt_fields: BTreeMap<String, Value> = BTreeMap::new();
     for name in &names {
+        let ident = name.replace("-", "_");
         if matches.opt_present(name.as_str()) {
-            opt_fields.insert(name.clone(), Value::Ref(Arc::new(RwLock::new(MutObject::Array(matches.opt_strs(name.as_str()).iter().map(|s| Value::Object(Arc::new(Object::String(s.clone())))).collect())))));
+            opt_fields.insert(ident, Value::Ref(Arc::new(RwLock::new(MutObject::Array(matches.opt_strs(name.as_str()).iter().map(|s| Value::Object(Arc::new(Object::String(s.clone())))).collect())))));
         } else {
-            opt_fields.insert(name.clone(), Value::None);
+            opt_fields.insert(ident, Value::None);
         }
     }
     let mut fields: BTreeMap<String, Value> = BTreeMap::new();
