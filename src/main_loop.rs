@@ -98,7 +98,7 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
         },
     };
     let _res = editor.load_history(history_file);
-    let mut line_count = 1u64;
+    let mut line_num = 1u64;
     let mut res: Option<i32> = None;
     loop {
         match editor.readline("unlab-gpu> ") {
@@ -110,13 +110,13 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
                         return Some(1);
                     },
                 }
-                let mut new_line_count = line_count;
+                let mut new_line_num = line_num;
                 let mut lines = line.clone();
                 lines.push('\n');
-                new_line_count += 1;
+                new_line_num += 1;
                 let tree = loop {
                     let mut cursor = Cursor::new(lines.as_str());
-                    let mut lexer = Lexer::new_with_line(Arc::new(String::from("(stdin)")), &mut cursor, line_count);
+                    let mut lexer = Lexer::new_with_line(Arc::new(String::from("(stdin)")), &mut cursor, line_num);
                     let parser_path = lexer.path().clone();
                     let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
                     let mut parser = Parser::new(parser_path, tokens);
@@ -134,7 +134,7 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
                                     }
                                     lines.push_str(next_line.as_str());
                                     lines.push('\n');
-                                    new_line_count += 1;
+                                    new_line_num += 1;
                                 },
                                 Err(ReadlineError::Interrupted) => (),
                                 Err(ReadlineError::Eof) => {
@@ -153,7 +153,7 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
                         },
                     }
                 };
-                line_count = new_line_count;
+                line_num = new_line_num;
                 CtrlCIntrChecker::reset();
                 match tree {
                     Some(tree) => {
