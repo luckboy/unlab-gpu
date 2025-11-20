@@ -27,6 +27,9 @@ struct Args
     /// Library path
     #[arg(short = 'L', long)]
     lib_path: Option<String>,
+    /// Don't handle CTRL-C
+    #[arg(short, long)]
+    no_ctrl_c: bool,
     /// Script file
     script_file: Option<String>,
     /// Arguments
@@ -54,7 +57,7 @@ fn main()
         let mut root_mod: ModNode<Value, ()> = ModNode::new(());
         add_std_builtin_funs(&mut root_mod);
         let root_mod_arc = Arc::new(RwLock::new(root_mod));
-        main_loop(&args.script_file, args.args.as_slice(), home.history_file(), &root_mod_arc, home.lib_path())
+        main_loop(&args.script_file, args.args.as_slice(), home.history_file(), &root_mod_arc, home.lib_path(), !args.no_ctrl_c)
     };
     match finalize_backend() {
         Ok(()) => (),

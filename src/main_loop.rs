@@ -39,16 +39,21 @@ pub fn eprint_error_with_stack_trace(err: &Error, stack_trace: &[(Option<Value>,
     }
 }
 
-fn non_interactive_main_loop(path: &str, args: &[String], root_mod: &Arc<RwLock<ModNode<Value, ()>>>, lib_path: &OsStr) -> Option<i32>
+fn non_interactive_main_loop(path: &str, args: &[String], root_mod: &Arc<RwLock<ModNode<Value, ()>>>, lib_path: &OsStr, is_ctrl_c_intr_checker: bool) -> Option<i32>
 {
-    match CtrlCIntrChecker::initialize() {
-        Ok(()) => (),
-        Err(err) => {
-            eprint_error(&err);
-            return Some(1);
-        },
-    }
-    let shared_env = SharedEnv::new_with_intr_checker(OsString::from(lib_path), args.to_vec(), Arc::new(CtrlCIntrChecker::new()));
+    let intr_checker: Arc<dyn IntrCheck + Send + Sync> = if is_ctrl_c_intr_checker {
+        match CtrlCIntrChecker::initialize() {
+            Ok(()) => (),
+            Err(err) => {
+                eprint_error(&err);
+                return Some(1);
+            },
+        }
+        Arc::new(CtrlCIntrChecker::new())
+    } else {
+        Arc::new(EmptyIntrChecker::new())
+    };
+    let shared_env = SharedEnv::new_with_intr_checker(OsString::from(lib_path), args.to_vec(), intr_checker);
     let mut env = Env::new_with_script_dir_and_shared_env(root_mod.clone(), PathBuf::from("."), Arc::new(RwLock::new(shared_env)));
     let mut interp = Interp::new();
     match parse(path) {
@@ -78,16 +83,21 @@ fn non_interactive_main_loop(path: &str, args: &[String], root_mod: &Arc<RwLock<
     }
 }
 
-fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<RwLock<ModNode<Value, ()>>>, lib_path: &OsStr) -> Option<i32>
+fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<RwLock<ModNode<Value, ()>>>, lib_path: &OsStr, is_ctrl_c_intr_checker: bool) -> Option<i32>
 {
-    match CtrlCIntrChecker::initialize() {
-        Ok(()) => (),
-        Err(err) => {
-            eprint_error(&err);
-            return Some(1);
-        },
-    }
-    let shared_env = SharedEnv::new_with_intr_checker(OsString::from(lib_path), args.to_vec(), Arc::new(CtrlCIntrChecker::new()));
+    let intr_checker: Arc<dyn IntrCheck + Send + Sync> = if is_ctrl_c_intr_checker {
+        match CtrlCIntrChecker::initialize() {
+            Ok(()) => (),
+            Err(err) => {
+                eprint_error(&err);
+                return Some(1);
+            },
+        }
+        Arc::new(CtrlCIntrChecker::new())
+    } else {
+        Arc::new(EmptyIntrChecker::new())
+    };
+    let shared_env = SharedEnv::new_with_intr_checker(OsString::from(lib_path), args.to_vec(), intr_checker);
     let mut env = Env::new_with_script_dir_and_shared_env(root_mod.clone(), PathBuf::from("."), Arc::new(RwLock::new(shared_env)));
     let mut interp = Interp::new();
     let mut editor = match DefaultEditor::new() {
@@ -154,7 +164,9 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
                     }
                 };
                 line_num = new_line_num;
-                CtrlCIntrChecker::reset();
+                if is_ctrl_c_intr_checker {
+                    CtrlCIntrChecker::reset();
+                }
                 match tree {
                     Some(tree) => {
                         match interp.interpret(&mut env, &tree) {
@@ -203,10 +215,10 @@ fn interactive_main_loop(args: &[String], history_file: &Path, root_mod: &Arc<Rw
     res
 }
 
-pub fn main_loop(path: &Option<String>, args: &[String], history_file: &Path, root_mod: &Arc<RwLock<ModNode<Value, ()>>>, lib_path: &OsStr) -> Option<i32>
+pub fn main_loop(path: &Option<String>, args: &[String], history_file: &Path, root_mod: &Arc<RwLock<ModNode<Value, ()>>>, lib_path: &OsStr, is_ctrl_c_intr_checker: bool) -> Option<i32>
 {
     match path {
-        Some(path) => non_interactive_main_loop(path.as_str(), args, root_mod, lib_path),
-        None => interactive_main_loop(args, history_file, root_mod, lib_path),
+        Some(path) => non_interactive_main_loop(path.as_str(), args, root_mod, lib_path, is_ctrl_c_intr_checker),
+        None => interactive_main_loop(args, history_file, root_mod, lib_path, is_ctrl_c_intr_checker),
     }
 }
