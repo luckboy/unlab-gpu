@@ -196,7 +196,7 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
             let mut line_num = 1u64;
             let mut res: Option<i32> = None;
             loop {
-                match editor.readline("unlab-gpu> ") {
+                match editor.readline(format!("unlab-gpu:{}> ", line_num).as_str()) {
                     Ok(line) => {
                         match editor.add_history_entry(line.as_str()) {
                             Ok(_) => (),
