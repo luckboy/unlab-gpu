@@ -11,13 +11,16 @@ clap = { version = "4.5", default-features = false, features = ["std", "help", "
 ctrlc = "3.5"
 getopts = "0.2"
 home = ">=0.5.0,<=0.5.9"
+plotters = { version = ">=0.3.6,<=0.3.6", optional = true, default-features = false, features = ["bitmap_backend", "bitmap_encoder", "svg_backend", "ttf", "all_series", "all_elements"] }
 rand = "0.9"
 rust-ini = "0.21"
 rustyline = { version = "14.0", default-features = false, features = ["with-file-history"] }
+softbuffer = { version = "0.4", optional = true }
 unmtx-gpu = { version = "0.1.4", default-features = false }
+winit = { version = "0.30", optional = true }
 
 [features]
-default = ["opencl"]
+default = ["opencl", "plot"]
 default_cublas = ["unmtx-gpu/default_cublas"]
 default_mma = ["unmtx-gpu/default_mma"]
 opencl = ["unmtx-gpu/opencl"]
@@ -35,3 +38,4 @@ cuda-11070 = ["cuda", "unmtx-gpu/cuda-11070"]
 cuda-11060 = ["cuda", "unmtx-gpu/cuda-11060"]
 cuda-11050 = ["cuda", "unmtx-gpu/cuda-11050"]
 cuda-11040 = ["cuda", "unmtx-gpu/cuda-11040"]
+plot = ["dep:plotters", "dep:softbuffer", "dep:winit"]

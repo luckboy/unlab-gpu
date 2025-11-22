@@ -24,11 +24,20 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
 use crate::matrix::Matrix;
+#[cfg(feature = "plot")]
+use crate::winit;
 use crate::env::*;
 use crate::error::*;
 use crate::interp::*;
 use crate::tree::*;
 use crate::utils::*;
+
+#[cfg(feature = "plot")]
+pub type WindowId = winit::window::WindowId;
+
+#[cfg(not(feature = "plot"))]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub struct WindowId(());
 
 #[derive(Clone, Debug)]
 pub enum Value
@@ -970,6 +979,7 @@ impl Value
                         }
                     },
                     Object::Error(_, msg) => write!(f, "{}", msg)?,
+                    Object::WindowId(_) => write!(f, "windowid(...)")?,
                 }
             },
             Value::Ref(object) => {
@@ -1266,6 +1276,7 @@ pub enum Object
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
     MatrixRowSlice(Arc<Object>, usize),
     Error(String, String),
+    WindowId(WindowId),
 }
 
 impl Object
@@ -1334,6 +1345,7 @@ impl Object
                 }
             },
             (Object::Error(kind, msg), Object::Error(kind2, msg2)) => Ok(kind == kind2 && msg == msg2),
+            (Object::WindowId(window_id), Object::WindowId(window_id2)) => Ok(window_id == window_id2),
             (_, _) => Ok(false),
         }
     }

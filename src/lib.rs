@@ -8,6 +8,8 @@
 pub use ctrlc;
 pub use ini;
 pub use unmtx_gpu as matrix;
+#[cfg(feature = "plot")]
+pub use winit;
 
 pub mod backend;
 pub mod builtins;

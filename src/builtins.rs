@@ -148,6 +148,7 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                 Object::MatrixArray(_, _, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixarray"))))),
                 Object::MatrixRowSlice(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixrowslice"))))),
                 Object::Error(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("error"))))),
+                Object::WindowId(_) => Ok(Value::Object(Arc::new(Object::String(String::from("windowid"))))),
             }
         },
         Some(Value::Ref(object)) => {
