@@ -5,6 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::ffi::OsString;
+use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -30,6 +32,9 @@ struct Args
     /// Don't handle CTRL-C
     #[arg(short, long)]
     no_ctrl_c: bool,
+    /// Don't show plotter windows
+    #[arg(short = 'p', long)]
+    no_plotter_windows: bool,
     /// Script file
     script_file: Option<String>,
     /// Arguments
@@ -57,7 +62,7 @@ fn main()
         let mut root_mod: ModNode<Value, ()> = ModNode::new(());
         add_std_builtin_funs(&mut root_mod);
         let root_mod_arc = Arc::new(RwLock::new(root_mod));
-        main_loop(&args.script_file, args.args.as_slice(), home.history_file(), &root_mod_arc, home.lib_path(), !args.no_ctrl_c)
+        main_loop(args.script_file.clone(), args.args.clone(), PathBuf::from(home.history_file()), root_mod_arc, OsString::from(home.lib_path()), !args.no_ctrl_c, !args.no_plotter_windows)
     };
     match finalize_backend() {
         Ok(()) => (),

@@ -25,6 +25,8 @@ pub mod lexer;
 pub mod main_loop;
 pub mod mod_node;
 pub mod parser;
+#[cfg(feature = "plot")]
+pub mod plot;
 pub mod tree;
 pub mod utils;
 pub mod value;

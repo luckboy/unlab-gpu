@@ -13,12 +13,23 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::RwLock;
+#[cfg(feature = "plot")]
+use crate::winit;
 use crate::error::*;
 use crate::intr::*;
 use crate::mod_node::*;
+#[cfg(feature = "plot")]
+use crate::plot::*;
 use crate::tree::*;
 use crate::utils::*;
 use crate::value::*;
+
+#[cfg(feature = "plot")]
+pub type EventLoopProxy = winit::event_loop::EventLoopProxy<PlotterAppEvent>;
+
+#[cfg(not(feature = "plot"))]
+#[derive(Clone, Debug)]
+pub struct EventLoopProxy(());
 
 #[derive(Clone)]
 pub struct SharedEnv
@@ -27,12 +38,16 @@ pub struct SharedEnv
     args: Vec<String>,
     used_libs: HashSet<String>,
     intr_checker: Arc<dyn IntrCheck + Send + Sync>,
+    event_loop_proxy: Option<EventLoopProxy>,    
 }
 
 impl SharedEnv
 {
+    pub fn new_with_intr_checker_and_event_loop_proxy(lib_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>, event_loop_proxy: Option<EventLoopProxy>) -> Self
+    { SharedEnv { lib_path, args, used_libs: HashSet::new(), intr_checker, event_loop_proxy, } }
+
     pub fn new_with_intr_checker(lib_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>) -> Self
-    { SharedEnv { lib_path, args, used_libs: HashSet::new(), intr_checker, } }
+    { Self::new_with_intr_checker_and_event_loop_proxy(lib_path, args, intr_checker, None) }
 
     pub fn new(lib_path: OsString, args: Vec<String>) -> Self
     { Self::new_with_intr_checker(lib_path, args, Arc::new(EmptyIntrChecker::new())) }
@@ -57,6 +72,14 @@ impl SharedEnv
     
     pub fn intr_checker(&self) -> &Arc<dyn IntrCheck + Send + Sync>
     { &self.intr_checker }
+    
+    pub fn event_loop_proxy(&self) -> Option<&EventLoopProxy>
+    {
+        match &self.event_loop_proxy {
+            Some(event_loop_proxy) => Some(event_loop_proxy),
+            None => None,
+        }
+    }
 }
 
 #[derive(Clone)]
