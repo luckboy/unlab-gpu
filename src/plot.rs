@@ -187,7 +187,14 @@ impl fmt::Display for HistogramValue
 impl fmt::Debug for HistogramValue
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    { fmt::Display::fmt(self, f) }
+    {
+        match self {
+            HistogramValue::Bool(b) => write!(f, "{:?}", b),
+            HistogramValue::Int(n) => write!(f, "{:?}", n),
+            HistogramValue::Float(n) => write!(f, "{:?}", n),
+            HistogramValue::String(s) => write!(f, "{:?}", s),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
