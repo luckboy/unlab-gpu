@@ -236,7 +236,7 @@ pub enum Series3d
 }
 
 #[derive(Clone, Debug)]
-pub struct HistogramSeries(Vec<HistogramValue>, RGBColor, Option<String>);
+pub struct HistogramSeries(pub Vec<HistogramValue>, pub RGBColor, pub Option<String>);
 
 const TITLE_FONT_SIZE: i32 = 40;
 const MARGIN: i32 = 5;
