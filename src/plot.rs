@@ -98,7 +98,7 @@ impl HistogramValue
             HistogramValue::Bool(b) => *b,
             HistogramValue::Int(n) => *n != 0,
             HistogramValue::Float(n) => *n != 0.0,
-            HistogramValue::String(s) => true,
+            HistogramValue::String(_) => true,
         }
     }
 
@@ -108,7 +108,7 @@ impl HistogramValue
             HistogramValue::Bool(b) => if *b { 1 } else { 0 },
             HistogramValue::Int(n) => *n,
             HistogramValue::Float(n) => *n as i64,
-            HistogramValue::String(s) => 1,
+            HistogramValue::String(_) => 1,
         }
     }
 
@@ -118,7 +118,7 @@ impl HistogramValue
             HistogramValue::Bool(b) => if *b { 1.0 } else { 0.0 },
             HistogramValue::Int(n) => *n as f32,
             HistogramValue::Float(n) => *n,
-            HistogramValue::String(s) => 1.0,
+            HistogramValue::String(_) => 1.0,
         }
     }
 
