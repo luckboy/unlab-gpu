@@ -236,7 +236,7 @@ pub enum Series3d
 }
 
 #[derive(Clone, Debug)]
-pub struct HistogramSeries(Vec<HistogramValue>, RGBColor);
+pub struct HistogramSeries(Vec<HistogramValue>, RGBColor, Option<String>);
 
 const TITLE_FONT_SIZE: i32 = 40;
 const MARGIN: i32 = 5;
@@ -491,11 +491,21 @@ fn draw_histogram<T: IntoDrawingArea>(backend: T, chart_desc: &Chart<HistogramAx
         .build_cartesian_2d(chart_desc.axes.x.as_slice().into_segmented(), chart_desc.axes.y.clone())?;
     for series in serieses {
         match series {
-            HistogramSeries(data, color) => {
-                chart.draw_series(Histogram::vertical(&chart).style(color.mix(HISTOGRAM_MIX).filled()).data(data.iter().map(|v| (v, 1))))?;
+            HistogramSeries(data, color, label) => {
+                let series_anno = chart.draw_series(Histogram::vertical(&chart).style(color.mix(HISTOGRAM_MIX).filled()).data(data.iter().map(|v| (v, 1))))?;
+                let color2 = *color;
+                match label {
+                    Some(label) => series_anno.label(label.as_str()),
+                    None => series_anno,
+                }.legend(move |(x, y)| Rectangle::new([(x, y - LEGEND_HEIGHT / 2), (x + LEGEND_WIDTH, y + LEGEND_HEIGHT / 2)], color2.mix(HISTOGRAM_MIX).filled()));
             },
         }
     }
+    chart
+        .configure_series_labels()
+        .background_style(&WHITE)
+        .border_style(&BLACK)
+        .draw()?;
     root.present()?;
     Ok(())
 }
