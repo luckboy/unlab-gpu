@@ -1160,7 +1160,7 @@ fn create_color_and_label(value: &Value, color_idx: usize) -> Result<(RGBColor, 
     Ok((color, label))
 }
 
-fn create_histogram_series(interp: &mut Interp, env: &mut Env, data_value: &Value, s_value: &Value, color_idx: usize) -> Result<HistogramSeries>
+fn create_histogram_series(data_value: &Value, s_value: &Value, color_idx: usize) -> Result<HistogramSeries>
 {
     let (color, label) = create_color_and_label(s_value, color_idx)?;
     let data = create_histogram_values(data_value)?;
