@@ -651,12 +651,18 @@ fn create_chart(value: &Value) -> Result<Chart>
             match &*object_g {
                 MutObject::Struct(fields) => {
                     let title = match fields.get(&String::from("title")) {
-                        Some(field) => Some(format!("{}", field)),
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
                         None => None,
                     };
                     let window_id = match fields.get(&String::from("windowid")) {
                         Some(field) => {
                             match field {
+                                Value::None => None,
                                 Value::Object(object) => {
                                     match &**object {
                                         Object::WindowId(tmp_window_id) => Some(*tmp_window_id),
@@ -669,15 +675,30 @@ fn create_chart(value: &Value) -> Result<Chart>
                         None => None,
                     };
                     let has_window = match fields.get(&String::from("haswindow")) {
-                        Some(field) => field.to_bool(),
+                        Some(field) => {
+                            match field {
+                                Value::None => true,
+                                _ => field.to_bool(),
+                            }
+                        },
                         None => true,
                     };
                     let file = match fields.get(&String::from("file")) {
-                        Some(field) => Some(format!("{}", field)),
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
                         None => None,
                     };
                     let size = match fields.get(&String::from("file")) {
-                        Some(field) => Some(create_size(field)?),
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(create_size(field)?),
+                            }
+                        },
                         None => None,
                     };
                     Ok(Chart { title, window_id, has_window, file, size, })
