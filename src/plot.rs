@@ -552,7 +552,7 @@ impl Plot
         }
     }
     
-    pub fn draw_to_file(&self) -> result::Result<(), Box<dyn error::Error>>
+    pub fn draw_and_save_to_file(&self) -> result::Result<(), Box<dyn error::Error>>
     {
         match &self.chart().file {
             Some(file) => {
@@ -567,7 +567,7 @@ impl Plot
         }
     }
     
-    pub fn draw_to_buffer(&self, buf: &mut [u8], size: (u32, u32)) -> result::Result<(), Box<dyn error::Error>>
+    pub fn draw_on_buffer(&self, buf: &mut [u8], size: (u32, u32)) -> result::Result<(), Box<dyn error::Error>>
     { self.draw(BitMapBackend::<BGRXPixel>::with_buffer_and_format(buf, size)?) }
 }
 
