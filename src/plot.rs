@@ -96,13 +96,13 @@ pub struct Axes3d
     pub z: Range<f32>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum HistogramValue
 {
     Bool(bool),
     Int(i64),
     Float(f32),
-    String(String),
+    String(Box<String>),
 }
 
 impl HistogramValue
@@ -166,7 +166,7 @@ impl HistogramValue
     pub fn to_opt_string(&self) -> Option<String>
     {
         match self {
-            HistogramValue::String(s) => Some(s.clone()),
+            HistogramValue::String(s) => Some((**s).clone()),
             _ => None,
         }
     }
@@ -194,20 +194,7 @@ impl fmt::Display for HistogramValue
             HistogramValue::Bool(b) => write!(f, "{}", b),
             HistogramValue::Int(n) => write!(f, "{}", n),
             HistogramValue::Float(n) => write!(f, "{}", n),
-            HistogramValue::String(s) => write!(f, "{}", s),
-        }
-    }
-}
-
-impl fmt::Debug for HistogramValue
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    {
-        match self {
-            HistogramValue::Bool(b) => write!(f, "{:?}", b),
-            HistogramValue::Int(n) => write!(f, "{:?}", n),
-            HistogramValue::Float(n) => write!(f, "{:?}", n),
-            HistogramValue::String(s) => write!(f, "{:?}", s),
+            HistogramValue::String(s) => write!(f, "{}", *s),
         }
     }
 }
@@ -502,6 +489,15 @@ fn draw_histogram<T: IntoDrawingArea>(backend: T, chart_desc: &Chart, axes: &His
         .x_label_area_size(X_LABEL_AREA_SIZE)
         .y_label_area_size(Y_LABEL_AREA_SIZE)
         .build_cartesian_2d(axes.x.as_slice().into_segmented(), axes.y.clone())?;
+    chart
+        .configure_mesh()
+        .x_label_formatter(&|x| {
+                match x {
+                    SegmentValue::Exact(x) => format!("{}", x),
+                    SegmentValue::CenterOf(x) => format!("{}", x),
+                    SegmentValue::Last => format!("last"),
+                }
+        }).draw()?;
     for series in serieses {
         match series {
             HistogramSeries(data, color, label) => {
@@ -740,7 +736,7 @@ fn create_histogram_values(value: &Value) -> Result<Vec<HistogramValue>>
                             Value::Bool(b) => values.push(HistogramValue::Bool(b)),
                             Value::Int(n) => values.push(HistogramValue::Int(n)),
                             Value::Float(n) => values.push(HistogramValue::Float(n)),
-                            _ => values.push(HistogramValue::String(format!("{}", elem))),
+                            _ => values.push(HistogramValue::String(Box::new(format!("{}", elem)))),
                         }
                     },
                     Err(err) => return Err(err),
