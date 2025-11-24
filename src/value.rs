@@ -143,6 +143,19 @@ impl Value
         }
     }
     
+    pub fn is_fun(&self) -> bool
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::Fun(_, _, _) | Object::BuiltinFun(_, _) => true,
+                    _ => false,
+                }
+            },
+            _ => false,
+        }
+    }
+    
     pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
         match (self, value) {
