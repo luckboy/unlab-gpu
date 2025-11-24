@@ -11,8 +11,10 @@ use std::error;
 use std::fmt;
 use std::mem::size_of;
 use std::ops::Range;
+use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
+use plotters::backend::BGRXPixel;
 use plotters::drawing::IntoDrawingArea;
 use plotters::element::DashedPathElement;
 use plotters::element::DottedPathElement;
@@ -235,6 +237,8 @@ pub enum Series3d
 
 #[derive(Clone, Debug)]
 pub struct HistogramSeries(pub Vec<HistogramValue>, pub RGBColor, pub Option<String>);
+
+const DEFAULT_SIZE: (u32, u32) = (640, 480);
 
 const TITLE_FONT_SIZE: i32 = 40;
 const MARGIN: i32 = 5;
@@ -525,6 +529,46 @@ pub enum Plot
     Plot(Arc<Chart>, Arc<Axes2d>, Arc<Vec<Series2d>>),
     Plot3(Arc<Chart>, Arc<Axes3d>, Arc<Vec<Series3d>>),
     Histogram(Arc<Chart>, Arc<HistogramAxes>, Arc<Vec<HistogramSeries>>),
+}
+
+impl Plot
+{
+    pub fn chart(&self) -> &Arc<Chart>
+    {
+        match self {
+            Plot::Plot(chart, _, _) => chart,
+            Plot::Plot3(chart, _, _) => chart,
+            Plot::Histogram(chart, _, _) => chart,
+        }
+    }
+    
+    fn draw<T: IntoDrawingArea>(&self, backend: T) -> result::Result<(), Box<dyn error::Error>>
+        where T::ErrorType: 'static
+    {
+        match self {
+            Plot::Plot(chart, axes, serieses) => draw_chart2d(backend, &**chart, &**axes, serieses.as_slice()),
+            Plot::Plot3(chart, axes, serieses) => draw_chart3d(backend, &**chart, &**axes, serieses.as_slice()),
+            Plot::Histogram(chart, axes, serieses) => draw_histogram(backend, &**chart, &**axes, serieses.as_slice()),
+        }
+    }
+    
+    pub fn draw_to_file(&self) -> result::Result<(), Box<dyn error::Error>>
+    {
+        match &self.chart().file {
+            Some(file) => {
+                let path_buf = PathBuf::from(file);
+                let size = self.chart().size.unwrap_or(DEFAULT_SIZE);
+                match path_buf.extension() {
+                    Some(ext) if ext == "svg" => self.draw(SVGBackend::new(path_buf.as_path(), size)),
+                    _ => self.draw(BitMapBackend::new(path_buf.as_path(), size)),
+                }
+            },
+            None => Ok(()),
+        }
+    }
+    
+    pub fn draw_to_buffer(&self, buf: &mut [u8], size: (u32, u32)) -> result::Result<(), Box<dyn error::Error>>
+    { self.draw(BitMapBackend::<BGRXPixel>::with_buffer_and_format(buf, size)?) }
 }
 
 #[derive(Clone, Debug)]
@@ -1102,4 +1146,23 @@ fn create_series3d(interp: &mut Interp, env: &mut Env, x_value: &Value, y_value:
         SeriesKind::Triangle => Ok(Series3d::Triangle(xs, ys, zs, color, label)),
         _ => Err(Error::Interp(String::from("invalid series kind")))
     }
+}
+
+fn create_color_and_label(value: &Value, color_idx: usize) -> Result<(RGBColor, Option<String>)>
+{
+    let s = format!("{}", value);
+    let (t, u) = match s.split_once(",") {
+        Some((tmp_t, tmp_u)) => (tmp_t, tmp_u),
+        None => (s.as_str(), ""),
+    };
+    let color = str_to_color(t, color_idx)?;
+    let label = str_to_opt_string(u);
+    Ok((color, label))
+}
+
+fn create_histogram_series(interp: &mut Interp, env: &mut Env, data_value: &Value, s_value: &Value, color_idx: usize) -> Result<HistogramSeries>
+{
+    let (color, label) = create_color_and_label(s_value, color_idx)?;
+    let data = create_histogram_values(data_value)?;
+    Ok(HistogramSeries(data, color, label))
 }
