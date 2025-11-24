@@ -163,6 +163,21 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+pub fn clone(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Ref(object)) => {
+            let object_g = rw_lock_read(object)?;
+            Ok(Value::Ref(Arc::new(RwLock::new(object_g.clone()))))
+        },
+        Some(value) => Ok(value.clone()),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn boolean(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::Bool(a.to_bool()))) }
 
@@ -2332,6 +2347,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     root_mod.add_var(String::from("eps"), Value::Float(f32::EPSILON));
     root_mod.add_var(String::from("pathsep"), Value::Object(Arc::new(Object::String(format!("{}", path::MAIN_SEPARATOR)))));
     add_builtin_fun(root_mod, String::from("type"), typ);
+    add_builtin_fun(root_mod, String::from("clone"), clone);
     add_builtin_fun(root_mod, String::from("bool"), boolean);
     add_builtin_fun(root_mod, String::from("int"), int);
     add_builtin_fun(root_mod, String::from("float"), float);

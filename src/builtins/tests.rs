@@ -157,6 +157,48 @@ fn test_type_is_applied_with_success()
 }
 
 #[test]
+fn test_clone_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("clone")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(arg_value, value);
+                    match (arg_value, value) {
+                        (Value::Ref(arg_object), Value::Ref(object)) => assert!(!Arc::ptr_eq(&arg_object, &object)),
+                        (_, _) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    assert_eq!(arg_value, value);
+                    match (arg_value, value) {
+                        (Value::Ref(arg_object), Value::Ref(object)) => assert!(!Arc::ptr_eq(&arg_object, &object)),
+                        (_, _) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_bool_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
