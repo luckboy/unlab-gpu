@@ -542,7 +542,7 @@ impl Plot
         }
     }
     
-    fn draw<T: IntoDrawingArea>(&self, backend: T) -> result::Result<(), Box<dyn error::Error>>
+    fn draw_with_backend<T: IntoDrawingArea>(&self, backend: T) -> result::Result<(), Box<dyn error::Error>>
         where T::ErrorType: 'static
     {
         match self {
@@ -559,8 +559,8 @@ impl Plot
                 let path_buf = PathBuf::from(file);
                 let size = self.chart().size.unwrap_or(DEFAULT_SIZE);
                 match path_buf.extension() {
-                    Some(ext) if ext == "svg" => self.draw(SVGBackend::new(path_buf.as_path(), size)),
-                    _ => self.draw(BitMapBackend::new(path_buf.as_path(), size)),
+                    Some(ext) if ext == "svg" => self.draw_with_backend(SVGBackend::new(path_buf.as_path(), size)),
+                    _ => self.draw_with_backend(BitMapBackend::new(path_buf.as_path(), size)),
                 }
             },
             None => Ok(()),
@@ -568,7 +568,7 @@ impl Plot
     }
     
     pub fn draw_on_buffer(&self, buf: &mut [u8], size: (u32, u32)) -> result::Result<(), Box<dyn error::Error>>
-    { self.draw(BitMapBackend::<BGRXPixel>::with_buffer_and_format(buf, size)?) }
+    { self.draw_with_backend(BitMapBackend::<BGRXPixel>::with_buffer_and_format(buf, size)?) }
 }
 
 #[derive(Clone, Debug)]
