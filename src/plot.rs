@@ -264,12 +264,12 @@ const LEGEND_HEIGHT: i32 = 10;
 const DASH_SIZE: i32 = 8;
 const DASH_SPACING: i32 = 2;
 const DOT_SHIFT: i32 = 0;
-const DOT_SPACING: i32 = 2;
+const DOT_SPACING: i32 = 4;
 const MARKER_SIZE: i32 = 4;
 const POINT_SIZE: i32 = 1;
 
 const SURFACE_MIX: f64 = 0.2;
-const HISTOGRAM_MIX: f64 = 0.2;
+const HISTOGRAM_MIX: f64 = 0.7;
 
 const COLORS: [RGBColor; 6] = [RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW];
 
@@ -494,6 +494,7 @@ fn draw_histogram<T: IntoDrawingArea>(backend: T, chart_desc: &Chart, axes: &His
     where T::ErrorType: 'static
 {
     let root = backend.into_drawing_area();
+    root.fill(&WHITE)?;
     let mut chart_builder = ChartBuilder::on(&root);
     match &chart_desc.title {
         Some(title) => {
@@ -826,7 +827,7 @@ fn create_chart(value: &Value) -> Result<Chart>
                         },
                         None => None,
                     };
-                    let size = match fields.get(&String::from("file")) {
+                    let size = match fields.get(&String::from("size")) {
                         Some(field) => {
                             match field {
                                 Value::None => None,
@@ -852,7 +853,7 @@ fn create_f32_range(value: &Value) -> Result<Range<f32>>
             match &*object_g {
                 MutObject::Array(elems) => {
                     if elems.len() != 2 {
-                        return Err(Error::Interp(String::from("invalid numner of elements for range")));
+                        return Err(Error::Interp(String::from("invalid number of elements for range")));
                     }
                     let start = match elems.get(0) {
                         Some(elem) => elem.to_f32(),
@@ -1095,10 +1096,10 @@ fn create_series_tuple(value: &Value, color_idx: usize) -> Result<(SeriesKind, R
         Some((tmp_t, tmp_u)) => (tmp_t, tmp_u),
         None => (s.as_str(), ""),
     };
-    let (series_kind, t2) = if t.starts_with("-") {
-        (SeriesKind::Line, &t[1..])
-    } else if t.starts_with("--") {
+    let (series_kind, t2) =  if t.starts_with("--") {
         (SeriesKind::DashedLine, &t[2..])
+    } else if t.starts_with("-") {
+        (SeriesKind::Line, &t[1..])
     } else if t.starts_with(":") {
         (SeriesKind::DottedLine, &t[1..])
     } else if t.starts_with("o") {
@@ -1276,13 +1277,13 @@ fn create_series3d(interp: &mut Interp, env: &mut Env, x_value: &Value, y_value:
                     (tmp_xs, tmp_ys, tmp_zs)
                 },
                 (true, false, true) => {
-                    let tmp_ys = create_f32s(x_value)?;
+                    let tmp_ys = create_f32s(y_value)?;
                     let tmp_xs = create_f32s_for_fun_value(interp, env, x_value, tmp_ys.as_slice())?;
                     let tmp_zs = create_f32s_for_fun_value(interp, env, z_value, tmp_ys.as_slice())?;
                     (tmp_xs, tmp_ys, tmp_zs)
                 },
                 (true, true, false) => {
-                    let tmp_zs = create_f32s(x_value)?;
+                    let tmp_zs = create_f32s(z_value)?;
                     let tmp_xs = create_f32s_for_fun_value(interp, env, x_value, tmp_zs.as_slice())?;
                     let tmp_ys = create_f32s_for_fun_value(interp, env, y_value, tmp_zs.as_slice())?;
                     (tmp_xs, tmp_ys, tmp_zs)
