@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::sync::mpsc::Receiver;
 use std::sync::RwLock;
 use std::sync::RwLockReadGuard;
 use std::sync::RwLockWriteGuard;
@@ -76,6 +77,14 @@ pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
     match rw_lock.write() {
         Ok(guard) => Ok(guard),
         Err(_) => Err(Error::RwLockRead),
+    }
+}
+
+pub fn receiver_recv<T>(receiver: &Receiver<T>) -> Result<T>
+{
+    match receiver.recv() {
+        Ok(object) => Ok(object),
+        Err(_) => Err(Error::Recv),
     }
 }
 

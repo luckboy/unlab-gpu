@@ -63,7 +63,7 @@ fn run_plotter_app<F>(are_plotter_windows: bool, f: F) -> Option<i32>
         let thr = thread::spawn(move || f(Some(event_loop_proxy)));
         event_loop.set_control_flow(ControlFlow::Poll);
         event_loop.set_control_flow(ControlFlow::Wait);
-        let mut plotter_app = PlotterApp::new();
+        let mut plotter_app = PlotterApp::new(&event_loop);
         match event_loop.run_app(&mut plotter_app) {
             Ok(()) => (),
             Err(err) => {

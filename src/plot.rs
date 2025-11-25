@@ -7,21 +7,34 @@
 //
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::error;
 use std::fmt;
 use std::mem::size_of;
+use std::mem::transmute;
+use std::num::NonZeroU32;
 use std::ops::Range;
 use std::path::PathBuf;
 use std::result;
+use std::slice;
+use std::sync::mpsc::Sender;
+use std::sync::mpsc::channel;
 use std::sync::Arc;
 use plotters::backend::BGRXPixel;
 use plotters::drawing::IntoDrawingArea;
 use plotters::element::DashedPathElement;
 use plotters::element::DottedPathElement;
 use plotters::prelude::*;
+use softbuffer::Context;
+use softbuffer::Surface;
 use crate::winit::application::ApplicationHandler;
+use crate::winit::dpi::PhysicalSize;
 use crate::winit::event::WindowEvent;
 use crate::winit::event_loop::ActiveEventLoop;
+use crate::winit::event_loop::EventLoop;
+use crate::winit::raw_window_handle::DisplayHandle;
+use crate::winit::raw_window_handle::HasDisplayHandle;
+use crate::winit::window::Window;
 use crate::env::*;
 use crate::error::*;
 use crate::interp::*;
@@ -526,14 +539,14 @@ fn draw_histogram<T: IntoDrawingArea>(backend: T, chart_desc: &Chart, axes: &His
 #[derive(Clone, Debug)]
 pub enum Plot
 {
-    Plot(Arc<Chart>, Arc<Axes2d>, Arc<Vec<Series2d>>),
-    Plot3(Arc<Chart>, Arc<Axes3d>, Arc<Vec<Series3d>>),
-    Histogram(Arc<Chart>, Arc<HistogramAxes>, Arc<Vec<HistogramSeries>>),
+    Plot(Chart, Axes2d, Vec<Series2d>),
+    Plot3(Chart, Axes3d, Vec<Series3d>),
+    Histogram(Chart, HistogramAxes, Vec<HistogramSeries>),
 }
 
 impl Plot
 {
-    pub fn chart(&self) -> &Arc<Chart>
+    pub fn chart(&self) -> &Chart
     {
         match self {
             Plot::Plot(chart, _, _) => chart,
@@ -546,9 +559,9 @@ impl Plot
         where T::ErrorType: 'static
     {
         match self {
-            Plot::Plot(chart, axes, serieses) => draw_chart2d(backend, &**chart, &**axes, serieses.as_slice()),
-            Plot::Plot3(chart, axes, serieses) => draw_chart3d(backend, &**chart, &**axes, serieses.as_slice()),
-            Plot::Histogram(chart, axes, serieses) => draw_histogram(backend, &**chart, &**axes, serieses.as_slice()),
+            Plot::Plot(chart, axes, serieses) => draw_chart2d(backend, chart, axes, serieses.as_slice()),
+            Plot::Plot3(chart, axes, serieses) => draw_chart3d(backend, chart, axes, serieses.as_slice()),
+            Plot::Histogram(chart, axes, serieses) => draw_histogram(backend, chart, axes, serieses.as_slice()),
         }
     }
     
@@ -569,22 +582,96 @@ impl Plot
     
     pub fn draw_on_buffer(&self, buf: &mut [u8], size: (u32, u32)) -> result::Result<(), Box<dyn error::Error>>
     { self.draw_with_backend(BitMapBackend::<BGRXPixel>::with_buffer_and_format(buf, size)?) }
+
+    pub fn draw_on_window(plot: &Arc<Self>, env: &Env) -> Result<Option<Option<WindowId>>>
+    {
+        if plot.chart().has_window {
+            let shared_env_g = rw_lock_read(env.shared_env())?;
+            match shared_env_g.event_loop_proxy() {
+                Some(event_loop_proxy) => {
+                    let (tx, rx) = channel();
+                    match event_loop_proxy.send_event(PlotterAppEvent::Plot(plot.clone(), tx)) {
+                        Ok(()) => (),
+                        Err(err) => return Err(Error::Winit(Box::new(err))),
+                    }
+                    Ok(Some(receiver_recv(&rx)?))
+                },
+                None => Ok(Some(None)),
+            }
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
 pub enum PlotterAppEvent
 {
-    Plot(Arc<Plot>),
+    Plot(Arc<Plot>, Sender<Option<WindowId>>),
     Quit,
 }
 
-#[derive(Clone, Debug)]
-pub struct PlotterApp;
+struct WindowState
+{
+    window: Arc<Window>,
+    surface: Surface<DisplayHandle<'static>, Arc<Window>>,
+    plot: Arc<Plot>,
+    size: (u32, u32),
+}
+
+impl WindowState
+{
+    fn new(app: &PlotterApp, window: Arc<Window>, plot: Arc<Plot>, size: (u32, u32)) -> result::Result<WindowState, Box<dyn error::Error>>
+    {
+        let surface = Surface::new(app.context.as_ref().unwrap(), window.clone())?;
+        Ok(WindowState { window, surface, plot, size })
+    }
+    
+    fn resize(&mut self, size: PhysicalSize<u32>)
+    {
+        self.size = (size.width, size.height);
+        match (NonZeroU32::new(size.width), NonZeroU32::new(size.height)) {
+            (Some(width), Some(height)) => self.surface.resize(width, height).unwrap(),
+            (_, _) => (),
+        }
+        self.window.request_redraw();
+    }
+    
+    fn draw(&mut self) -> result::Result<(), Box<dyn error::Error>>
+    {
+        if self.size.0 > 0 && self.size.1 > 0 {
+            let mut buf = self.surface.buffer_mut()?;
+            let plot_buf: &mut [u8] = unsafe { slice::from_raw_parts_mut(buf.as_mut_ptr() as *mut u8, buf.len() * size_of::<u32>()) };
+            self.plot.draw_on_buffer(plot_buf, self.size)?;
+            self.window.pre_present_notify();
+            buf.present()?;
+        }
+        Ok(())
+    }
+}
+
+pub struct PlotterApp
+{
+    windows: HashMap<WindowId, WindowState>,
+    context: Option<Context<DisplayHandle<'static>>>,
+}
 
 impl PlotterApp
 {
-    pub fn new() -> Self
-    { PlotterApp }
+    pub fn new(event_loop: &EventLoop<PlotterAppEvent>) -> Self
+    {
+        let context = Some(Context::new(unsafe { transmute::<DisplayHandle<'_>, DisplayHandle<'static>>(event_loop.display_handle().unwrap()) }).unwrap());
+        PlotterApp { windows: HashMap::new(), context, }
+    }
+
+    fn create_window(&mut self, event_loop: &ActiveEventLoop, size: (u32, u32), plot: Arc<Plot>) -> result::Result<WindowId, Box<dyn error::Error>>
+    {
+        let window_attrs = Window::default_attributes().with_title("Unlab-gpu window").with_inner_size(PhysicalSize::new(size.0, size.1));
+        let window = event_loop.create_window(window_attrs)?;
+        let window_id = window.id();
+        self.windows.insert(window_id, WindowState::new(self, Arc::new(window), plot, size)?);
+        Ok(window_id)
+    }
 }
 
 impl ApplicationHandler<PlotterAppEvent> for PlotterApp
@@ -592,16 +679,63 @@ impl ApplicationHandler<PlotterAppEvent> for PlotterApp
     fn resumed(&mut self, _event_loop: &ActiveEventLoop)
     {}
     
-    fn window_event(&mut self, _event_loop: &ActiveEventLoop, _window_id: WindowId, _event: WindowEvent)
-    {}
+    fn window_event(&mut self, _event_loop: &ActiveEventLoop, window_id: WindowId, event: WindowEvent)
+    {
+        let window = match self.windows.get_mut(&window_id) {
+            Some(tmp_window) => tmp_window,
+            None => return,
+        };
+        match event {
+           WindowEvent::Resized(size) => window.resize(size),
+           WindowEvent::CloseRequested => {
+               self.windows.remove(&window_id);
+           },
+           WindowEvent::RedrawRequested => {
+               match window.draw() {
+                   Ok(()) => (),
+                   Err(err) => eprintln!("plotter app error: {}", err),
+               }
+           },
+           _ => (),
+        }
+    }
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: PlotterAppEvent)
     {
         match event {
+            PlotterAppEvent::Plot(plot, tx) => {
+                let window_id = match plot.chart().window_id {
+                    Some(tmp_window_id) => {
+                        match self.windows.get_mut(&tmp_window_id) {
+                            Some(window) => {
+                                window.plot = plot;
+                                window.window.request_redraw();
+                                Some(tmp_window_id)
+                            },
+                            None => None,
+                        }
+                    }
+                    None => {
+                        match self.create_window(event_loop, plot.chart().size.unwrap_or(DEFAULT_SIZE), plot) {
+                            Ok(tmp_window_id) => Some(tmp_window_id),
+                            Err(err) => {
+                                eprintln!("{}", err);
+                                None
+                            },
+                        }
+                    },
+                };
+                match tx.send(window_id) {
+                    Ok(()) => (),
+                    Err(_) => eprintln!("plotter app error: can't send object"),
+                }
+            },
             PlotterAppEvent::Quit => event_loop.exit(),
-            _ => (),
         }
     }
+    
+    fn exiting(&mut self, _event_loop: &ActiveEventLoop)
+    { self.context = None; }
 }
 
 fn create_size(value: &Value) -> Result<(u32, u32)>
