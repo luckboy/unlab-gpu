@@ -256,7 +256,7 @@ const DEFAULT_SIZE: (u32, u32) = (640, 480);
 const TITLE_FONT_SIZE: i32 = 40;
 const MARGIN: i32 = 5;
 const X_LABEL_AREA_SIZE: i32 = 30;
-const Y_LABEL_AREA_SIZE: i32 = 30;
+const Y_LABEL_AREA_SIZE: i32 = 60;
 
 const LEGEND_WIDTH: i32 = 20;
 const LEGEND_HEIGHT: i32 = 10;
