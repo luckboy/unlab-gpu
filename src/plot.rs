@@ -1064,7 +1064,7 @@ fn str_to_color(s: &str, color_idx: usize) -> Result<RGBColor>
     } else if s == "g" || s == "green" {
         Ok(GREEN)
     } else if s == "b" || s == "blue" {
-        Ok(GREEN)
+        Ok(BLUE)
     } else if s == "c" || s == "cyan" {
         Ok(CYAN)
     } else if s == "m" || s == "magenta" {
