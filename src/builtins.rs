@@ -37,6 +37,8 @@ use crate::interp::*;
 use crate::io::*;
 use crate::mod_node::*;
 use crate::parser::*;
+#[cfg(feature = "plot")]
+use crate::plot::*;
 use crate::utils::*;
 use crate::value::*;
 
@@ -2479,6 +2481,14 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("backend"), backend);
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
+    #[cfg(feature = "plot")]
+    add_builtin_fun(root_mod, String::from("plot"), plot);
+    #[cfg(feature = "plot")]
+    add_builtin_fun(root_mod, String::from("plot3"), plot3);
+    #[cfg(feature = "plot")]
+    add_builtin_fun(root_mod, String::from("histogram"), histogram);
+    #[cfg(feature = "plot")]
+    add_alias(root_mod, String::from("hist"), &String::from("histogram"));
 }
 
 #[cfg(test)]

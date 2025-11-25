@@ -1321,3 +1321,116 @@ fn create_histogram_series(data_value: &Value, s_value: &Value, color_idx: usize
     let data = create_histogram_values(data_value)?;
     Ok(HistogramSeries(data, color, label))
 }
+
+fn plot_for_plot(plot: &Arc<Plot>, env: &Env) -> Result<Value>
+{
+    let window_id = match Plot::draw_on_window(plot, env)? {
+        Some(Some(tmp_window_id)) => Some(tmp_window_id),
+        Some(None) => return Ok(Value::Object(Arc::new(Object::Error(String::from("plot"), String::from("can't create or find window"))))),
+        None => None,
+    };
+    match plot.draw_and_save_to_file() {
+        Ok(()) => (),
+        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("plot"), format!("{}", err))))),
+    }
+    match window_id {
+        Some(window_id) => Ok(Value::Object(Arc::new(Object::WindowId(window_id)))),
+        None => Ok(Value::Bool(true)),
+    }
+}
+
+pub fn plot(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let mut arg_value_iter = arg_values.iter();
+    let (chart, axes) = match arg_value_iter.next() {
+        Some(chart_value) => (create_chart(chart_value)?, create_axes2d(chart_value)?),
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let mut serieses: Vec<Series2d> = Vec::new();
+    let mut color_idx = 0usize;
+    loop {
+        let x_value = match arg_value_iter.next() {
+            Some(tmp_x_value) => tmp_x_value,
+            None => break,
+        };
+        let y_value = match arg_value_iter.next() {
+            Some(tmp_y_value) => tmp_y_value,
+            None => return Err(Error::Interp(String::from("no argument y"))),
+        };
+        let s_value = match arg_value_iter.next() {
+            Some(tmp_s_value) => tmp_s_value,
+            None => return Err(Error::Interp(String::from("no argument s"))),
+        };
+        serieses.push(create_series2d(interp, env, x_value, y_value, s_value, color_idx)?);
+        color_idx = (color_idx + 1) % COLORS.len();
+    }
+    let plot = Arc::new(Plot::Plot(chart, axes, serieses));
+    plot_for_plot(&plot, env)
+}
+
+pub fn plot3(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let mut arg_value_iter = arg_values.iter();
+    let (chart, axes) = match arg_value_iter.next() {
+        Some(chart_value) => (create_chart(chart_value)?, create_axes3d(chart_value)?),
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let mut serieses: Vec<Series3d> = Vec::new();
+    let mut color_idx = 0usize;
+    loop {
+        let x_value = match arg_value_iter.next() {
+            Some(tmp_x_value) => tmp_x_value,
+            None => break,
+        };
+        let y_value = match arg_value_iter.next() {
+            Some(tmp_y_value) => tmp_y_value,
+            None => return Err(Error::Interp(String::from("no argument y"))),
+        };
+        let z_value = match arg_value_iter.next() {
+            Some(tmp_y_value) => tmp_y_value,
+            None => return Err(Error::Interp(String::from("no argument z"))),
+        };
+        let s_value = match arg_value_iter.next() {
+            Some(tmp_s_value) => tmp_s_value,
+            None => return Err(Error::Interp(String::from("no argument s"))),
+        };
+        serieses.push(create_series3d(interp, env, x_value, y_value, z_value, s_value, color_idx)?);
+        color_idx = (color_idx + 1) % COLORS.len();
+    }
+    let plot = Arc::new(Plot::Plot3(chart, axes, serieses));
+    plot_for_plot(&plot, env)
+}
+
+pub fn histogram(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let mut arg_value_iter = arg_values.iter();
+    let (chart, axes) = match arg_value_iter.next() {
+        Some(chart_value) => (create_chart(chart_value)?, create_histogram_axes(chart_value)?),
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let mut serieses: Vec<HistogramSeries> = Vec::new();
+    let mut color_idx = 0usize;
+    loop {
+        let data_value = match arg_value_iter.next() {
+            Some(tmp_data_value) => tmp_data_value,
+            None => break,
+        };
+        let s_value = match arg_value_iter.next() {
+            Some(tmp_s_value) => tmp_s_value,
+            None => return Err(Error::Interp(String::from("no argument s"))),
+        };
+        serieses.push(create_histogram_series(data_value, s_value, color_idx)?);
+        color_idx = (color_idx + 1) % COLORS.len();
+    }
+    let plot = Arc::new(Plot::Histogram(chart, axes, serieses));
+    plot_for_plot(&plot, env)
+}
