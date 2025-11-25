@@ -269,7 +269,7 @@ const MARKER_SIZE: i32 = 4;
 const POINT_SIZE: i32 = 1;
 
 const SURFACE_MIX: f64 = 0.2;
-const HISTOGRAM_MIX: f64 = 0.7;
+const HISTOGRAM_MIX: f64 = 0.6;
 
 const COLORS: [RGBColor; 6] = [RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW];
 
