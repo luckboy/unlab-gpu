@@ -2964,6 +2964,30 @@ fn test_withwidth_is_applied_with_success()
     }
 }
 
+#[test]
+fn test_withzeros_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("withzeros")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(10)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("0000001234")))), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(-5)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("width is negative")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
 fn shared_test_fun_is_existent(fun_name: &str, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());

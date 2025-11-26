@@ -1901,6 +1901,27 @@ pub fn withwidth(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+pub fn withzeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value), Some(width_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let width = width_value.to_i64();
+            if width < 0 {
+                return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("width is negative")))));
+            }
+            if width > (isize::MAX as i64) {
+                return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("too large width")))));
+            }
+            Ok(Value::Object(Arc::new(Object::String(format!("{:0>width$}", format!("{}", value), width = width as usize)))))
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function withzeros"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2527,6 +2548,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("code2char"), code2char);
     add_builtin_fun(root_mod, String::from("formatmillis"), formatmillis);
     add_builtin_fun(root_mod, String::from("withwidth"), withwidth);
+    add_builtin_fun(root_mod, String::from("withzeros"), withzeros);
     add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("format"), format);
     add_builtin_fun(root_mod, String::from("print"), print);
