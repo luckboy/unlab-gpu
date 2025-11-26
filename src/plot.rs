@@ -254,7 +254,7 @@ pub struct HistogramSeries(pub Vec<HistogramValue>, pub RGBColor, pub Option<Str
 const DEFAULT_SIZE: (u32, u32) = (640, 480);
 
 const TITLE_FONT_SIZE: i32 = 40;
-const MARGIN: i32 = 5;
+const MARGIN: i32 = 10;
 const X_LABEL_AREA_SIZE: i32 = 30;
 const Y_LABEL_AREA_SIZE: i32 = 60;
 
@@ -373,7 +373,9 @@ fn draw_chart3d<T: IntoDrawingArea>(backend: T, chart_desc: &Chart, axes: &Axes3
         },
         None => (),
     }
-    let mut chart = chart_builder.build_cartesian_3d(axes.x.clone(), axes.y.clone(), axes.z.clone())?;
+    let mut chart = chart_builder
+        .margin(MARGIN)
+        .build_cartesian_3d(axes.x.clone(), axes.y.clone(), axes.z.clone())?;
     chart.configure_axes().draw()?;
     for series in serieses {
         match series {
