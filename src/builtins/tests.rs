@@ -2878,34 +2878,22 @@ fn test_formatmillis_is_applied_with_success()
             let arg_value = Value::Object(Arc::new(Object::String(String::from("s"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(1234 * 1000 + 567)]) {
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("1234.567s")))), value),
-                Err(err) => {
-                    println!("{}", err);
-                    assert!(false);
-                },
+                Err(_) => assert!(false),
             }
             let arg_value = Value::Object(Arc::new(Object::String(String::from("ms"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(123 * 60 * 1000 + 4 * 1000 + 567)]) {
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("123m4.567s")))), value),
-                Err(err) => {
-                    println!("{}", err);
-                    assert!(false);
-                },
+                Err(_) => assert!(false),
             }
             let arg_value = Value::Object(Arc::new(Object::String(String::from("hms"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(12 * 60 * 60 * 1000 + 3 * 60 * 1000 + 4 * 1000 + 567)]) {
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("12h3m4.567s")))), value),
-                Err(err) => {
-                    println!("{}", err);
-                    assert!(false);
-                },
+                Err(_) => assert!(false),
             }
             let arg_value = Value::Object(Arc::new(Object::String(String::from("xxx"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(1234 * 1000 + 567)]) {
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::Error(String::from("formatmillis"), String::from("invalid format")))), value),
-                Err(err) => {
-                    println!("{}", err);
-                    assert!(false);
-                },
+                Err(_) => assert!(false),
             }
         },
         None => assert!(false),
