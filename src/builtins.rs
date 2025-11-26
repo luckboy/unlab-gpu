@@ -1846,13 +1846,13 @@ pub fn formatmillis(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
                     } else if s == &String::from("hms") {
                         Ok(Value::Object(Arc::new(Object::String(format!("{}h{}m{}.{:03}s", (secs / 60) / 60, (secs / 60) % 60, secs % 60, millis % 1000)))))
                     } else {
-                        Ok(Value::Object(Arc::new(Object::Error(String::from("formatmillis"), String::from("invalid format")))))
+                        Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("invalid format")))))
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function formatmillis"))),
+                _ => Err(Error::Interp(String::from("unsupported types for function formatmillis"))),
             }
         },
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function formatmillis"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function formatmillis"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }

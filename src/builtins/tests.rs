@@ -2892,7 +2892,7 @@ fn test_formatmillis_is_applied_with_success()
             }
             let arg_value = Value::Object(Arc::new(Object::String(String::from("xxx"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(1234 * 1000 + 567)]) {
-                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::Error(String::from("formatmillis"), String::from("invalid format")))), value),
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("invalid format")))), value),
                 Err(_) => assert!(false),
             }
         },
