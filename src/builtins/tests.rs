@@ -2864,6 +2864,54 @@ fn test_code2char_is_applied_with_success()
     }
 }
 
+#[test]
+fn test_formatmillis_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("formatmillis")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("s"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(1234 * 1000 + 567)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("1234.567s")))), value),
+                Err(err) => {
+                    println!("{}", err);
+                    assert!(false);
+                },
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("ms"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(123 * 60 * 1000 + 4 * 1000 + 567)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("123m4.567s")))), value),
+                Err(err) => {
+                    println!("{}", err);
+                    assert!(false);
+                },
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("hms"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(12 * 60 * 60 * 1000 + 3 * 60 * 1000 + 4 * 1000 + 567)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("12h3m4.567s")))), value),
+                Err(err) => {
+                    println!("{}", err);
+                    assert!(false);
+                },
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("xxx"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(1234 * 1000 + 567)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::Error(String::from("formatmillis"), String::from("invalid format")))), value),
+                Err(err) => {
+                    println!("{}", err);
+                    assert!(false);
+                },
+            }
+        },
+        None => assert!(false),
+    }
+}
+
 fn shared_test_fun_is_existent(fun_name: &str, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -3056,6 +3104,10 @@ fn test_reuselib_is_existent()
 #[test]
 fn test_run_is_existent()
 { shared_test_fun_is_existent("run", run); }
+
+#[test]
+fn test_clock_is_existent()
+{ shared_test_fun_is_existent("clock", clock); }
 
 #[test]
 fn test_removemod_is_applied_with_success()

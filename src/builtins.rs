@@ -1828,6 +1828,35 @@ pub fn code2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+pub fn formatmillis(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(millis_value @ (Value::Int(_) | Value::Float(_)))) => {
+            match &**object {
+                Object::String(s) => {
+                    let millis = millis_value.to_i64();
+                    let secs = millis / 1000;
+                    if s == &String::from("s") {
+                        Ok(Value::Object(Arc::new(Object::String(format!("{}.{:03}s", secs, millis % 1000)))))
+                    } else if s == &String::from("ms") {
+                        Ok(Value::Object(Arc::new(Object::String(format!("{}m{}.{:03}s", secs / 60, secs % 60, millis % 1000)))))
+                    } else if s == &String::from("hms") {
+                        Ok(Value::Object(Arc::new(Object::String(format!("{}h{}m{}.{:03}s", (secs / 60) / 60, (secs / 60) % 60, secs % 60, millis % 1000)))))
+                    } else {
+                        Ok(Value::Object(Arc::new(Object::Error(String::from("formatmillis"), String::from("invalid format")))))
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function formatmillis"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function formatmillis"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2251,6 +2280,15 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     Ok(Value::None)
 }
 
+pub fn clock(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let shared_env_g = rw_lock_read(env.shared_env())?;
+    Ok(Value::Int(shared_env_g.instant().elapsed().as_millis() as i64))
+}
+
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2443,6 +2481,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("hex2dec"), hex2dec);
     add_builtin_fun(root_mod, String::from("char2code"), char2code);
     add_builtin_fun(root_mod, String::from("code2char"), code2char);
+    add_builtin_fun(root_mod, String::from("formatmillis"), formatmillis);
     add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("format"), format);
     add_builtin_fun(root_mod, String::from("print"), print);
@@ -2474,6 +2513,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("uselib"), uselib);
     add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
     add_builtin_fun(root_mod, String::from("run"), run);
+    add_builtin_fun(root_mod, String::from("clock"), clock);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);

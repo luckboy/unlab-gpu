@@ -13,6 +13,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::RwLock;
+use std::time::Instant;
 #[cfg(feature = "plot")]
 use crate::winit;
 use crate::error::*;
@@ -38,13 +39,14 @@ pub struct SharedEnv
     args: Vec<String>,
     used_libs: HashSet<String>,
     intr_checker: Arc<dyn IntrCheck + Send + Sync>,
-    event_loop_proxy: Option<EventLoopProxy>,    
+    event_loop_proxy: Option<EventLoopProxy>,
+    instant: Instant,
 }
 
 impl SharedEnv
 {
     pub fn new_with_intr_checker_and_event_loop_proxy(lib_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>, event_loop_proxy: Option<EventLoopProxy>) -> Self
-    { SharedEnv { lib_path, args, used_libs: HashSet::new(), intr_checker, event_loop_proxy, } }
+    { SharedEnv { lib_path, args, used_libs: HashSet::new(), intr_checker, event_loop_proxy, instant: Instant::now(), } }
 
     pub fn new_with_intr_checker(lib_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>) -> Self
     { Self::new_with_intr_checker_and_event_loop_proxy(lib_path, args, intr_checker, None) }
@@ -80,6 +82,9 @@ impl SharedEnv
             None => None,
         }
     }
+    
+    pub fn instant(&self) -> &Instant
+    { &self.instant }
 }
 
 #[derive(Clone)]
