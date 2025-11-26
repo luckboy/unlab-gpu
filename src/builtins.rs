@@ -1857,6 +1857,50 @@ pub fn formatmillis(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
     }
 }
 
+pub fn withwidth(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 || arg_values.len() > 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(width_value @ (Value::Int(_) | Value::Float(_))), None) => {
+            let width = width_value.to_i64();
+            if width < 0 {
+                return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("width is negative")))));
+            }
+            if width > (isize::MAX as i64) {
+                return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("too large width")))));
+            }
+            Ok(Value::Object(Arc::new(Object::String(format!("{:width$}", format!("{}", value), width = width as usize)))))
+        },
+        (Some(value), Some(width_value @ (Value::Int(_) | Value::Float(_))), Some(Value::Object(align_object))) => {
+            match &**align_object {
+                Object::String(align) => {
+                    let width = width_value.to_i64();
+                    if width < 0 {
+                        return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("width is negative")))));
+                    }
+                    if width > (isize::MAX as i64) {
+                        return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("too large width")))));
+                    }
+                    if align == &String::from("left") || align == &String::from("l") {
+                        Ok(Value::Object(Arc::new(Object::String(format!("{:<width$}", format!("{}", value), width = width as usize)))))
+                    } else if align == &String::from("center") || align == &String::from("c") {
+                        Ok(Value::Object(Arc::new(Object::String(format!("{:^width$}", format!("{}", value), width = width as usize)))))
+                    } else if align == &String::from("right") || align == &String::from("r") {
+                        Ok(Value::Object(Arc::new(Object::String(format!("{:>width$}", format!("{}", value), width = width as usize)))))
+                    } else {
+                        Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("invalid alignment")))))
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function withwidth"))),
+            }
+        },
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function withwidth"))),
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2482,6 +2526,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("char2code"), char2code);
     add_builtin_fun(root_mod, String::from("code2char"), code2char);
     add_builtin_fun(root_mod, String::from("formatmillis"), formatmillis);
+    add_builtin_fun(root_mod, String::from("withwidth"), withwidth);
     add_builtin_fun(root_mod, String::from("readline"), readline);
     add_builtin_fun(root_mod, String::from("format"), format);
     add_builtin_fun(root_mod, String::from("print"), print);
