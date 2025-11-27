@@ -46,7 +46,7 @@ impl Home
             },
         };
         let mut backend_config_file = home_dir.clone();
-        backend_config_file.push("backend.ini");
+        backend_config_file.push("backend.toml");
         let mut history_file = home_dir.clone();
         history_file.push("history.txt");
         let lib_path = match lib_path {

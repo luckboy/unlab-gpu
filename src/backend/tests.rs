@@ -12,7 +12,7 @@ use super::*;
 fn test_backend_config_read_reads_fields()
 {
     let s = "
-backend = OpenCL
+backend = \"OpenCL\"
 platform = 1234
 device = 4567
 ";
@@ -35,7 +35,7 @@ device = 4567
 fn test_backend_config_read_reads_fields_for_cuda()
 {
     let s = "
-backend = CUDA
+backend = \"CUDA\"
 ordinal = 1234
 cublas = false
 mma = true

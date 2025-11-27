@@ -28,17 +28,20 @@ use crate::matrix::cuda::CudaBackend;
 #[cfg(any(feature = "opencl", feature = "cuda"))]
 use crate::matrix::set_default_backend;
 use crate::matrix::unset_default_backend;
-use crate::ini::Ini;
+use crate::serde::Deserialize;
+use crate::toml;
 use crate::error::*;
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Deserialize)]
 pub enum Backend
 {
+    #[serde(rename = "OpenCL")]
     OpenCl,
-    Cuda
+    #[serde(rename = "CUDA")]
+    Cuda,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Deserialize)]
 pub struct BackendConfig
 {
     pub backend: Option<Backend>,
@@ -50,91 +53,14 @@ pub struct BackendConfig
 }
 impl BackendConfig
 {
-    pub fn new() -> BackendConfig
-    {
-        BackendConfig {
-            backend: None,
-            ordinal: None,
-            platform: None,
-            device: None,
-            cublas: None,
-            mma: None,
-        }
-    }
-    
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
         match r.read_to_string(&mut s) {
             Ok(_) => {
-                match Ini::load_from_str(s.as_str()) {
-                    Ok(ini) => {
-                        let mut config = BackendConfig::new();
-                        match ini.section::<&str>(None) {
-                            Some(section) => {
-                                match section.get("backend") {
-                                    Some(field) => {
-                                        if field == "OpenCL" {
-                                            config.backend = Some(Backend::OpenCl);
-                                        } else if field == "CUDA" {
-                                            config.backend = Some(Backend::Cuda);
-                                        } else {
-                                            return Err(Error::InvalidIniField(String::from("backend")));
-                                        }
-                                    },
-                                    None => (),
-                                }
-                                match section.get("ordinal") {
-                                    Some(field) => {
-                                        match field.parse::<usize>() {
-                                            Ok(n) => config.ordinal = Some(n),
-                                            Err(_) => return Err(Error::InvalidIniField(String::from("ordinal"))),
-                                        }
-                                    },
-                                    None => (),
-                                }
-                                match section.get("platform") {
-                                    Some(field) => {
-                                        match field.parse::<usize>() {
-                                            Ok(n) => config.platform = Some(n),
-                                            Err(_) => return Err(Error::InvalidIniField(String::from("platform"))),
-                                        }
-                                    },
-                                    None => (),
-                                }
-                                match section.get("device") {
-                                    Some(field) => {
-                                        match field.parse::<usize>() {
-                                            Ok(n) => config.device = Some(n),
-                                            Err(_) => return Err(Error::InvalidIniField(String::from("device"))),
-                                        }
-                                    },
-                                    None => (),
-                                }
-                                match section.get("cublas") {
-                                    Some(field) => {
-                                        match field.parse::<bool>() {
-                                            Ok(b) => config.cublas = Some(b),
-                                            Err(_) => return Err(Error::InvalidIniField(String::from("cublas"))),
-                                        }
-                                    },
-                                    None => (),
-                                }
-                                match section.get("mma") {
-                                    Some(field) => {
-                                        match field.parse::<bool>() {
-                                            Ok(b) => config.mma = Some(b),
-                                            Err(_) => return Err(Error::InvalidIniField(String::from("mma"))),
-                                        }
-                                    },
-                                    None => (),
-                                }
-                            },
-                            None => (),
-                        }
-                        Ok(config)
-                    },
-                    Err(err) => Err(Error::Ini(err)),
+                match toml::from_str(s.as_str()) {
+                    Ok(config) => Ok(config),
+                    Err(err) => Err(Error::Toml(err)),
                 }
             },
             Err(err) => Err(Error::Io(err)),
