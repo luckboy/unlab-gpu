@@ -83,7 +83,10 @@ fn test_mod_node_remove_used_mod_removes_used_module_node_from_module_node()
         Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
         None => assert!(false),
     }
-    assert_eq!(false, mod1_g.has_used_mod(&String::from("b")));
+    match mod1_g.used_mod(&String::from("b")) {
+        None => assert!(true),
+        Some(_) => assert!(false),
+    }
     match mod1_g.used_mod(&String::from("c")) {
         Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
         None => assert!(false),
