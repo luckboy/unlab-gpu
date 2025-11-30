@@ -2369,9 +2369,24 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                         name.as_str()
                     };
                     let idents: Vec<String> = name_without_first_colons.split("::").map(String::from).collect();
-                    let (mod1, real_idents) = match idents.first() {
-                        Some(ident) if ident == &String::from("root") => (env.root_mod(), &idents[1..]),
-                        _ => (env.current_mod(), idents.as_slice()),
+                    let (used_mod, real_idents) = match idents.first() {
+                        Some(ident) if ident == &String::from("root") => {
+                            match ModNode::mod_from(env.root_mod(), &idents[1..], false)? {
+                                Some(tmp_used_mod) => (tmp_used_mod, &idents[1..]),
+                                None => return Err(Error::Interp(format!("undefined module {}", name))),
+                            }
+                        },
+                        _ => {
+                            match ModNode::mod_from(env.current_mod(), idents.as_slice(), true)? {
+                                Some(tmp_used_mod) => (tmp_used_mod, idents.as_slice()),
+                                None => {
+                                    match ModNode::mod_from(env.root_mod(), idents.as_slice(), false)? {
+                                        Some(tmp_used_mod) => (tmp_used_mod, idents.as_slice()),
+                                        None => return Err(Error::Interp(format!("undefined module {}", name))),
+                                    }
+                                },
+                            }
+                        },
                     };
                     let ident = match arg_values.get(1) {
                         Some(Value::Object(object)) => {
@@ -2385,15 +2400,6 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                             match real_idents.last() {
                                 Some(tmp_ident) => tmp_ident.clone(),
                                 None => return Err(Error::Interp(String::from("no last identifier"))),
-                            }
-                        },
-                    };
-                    let used_mod = match ModNode::mod_from(mod1, real_idents, true)? {
-                        Some(tmp_used_mod) => tmp_used_mod,
-                        None => {
-                            match ModNode::mod_from(env.root_mod(), real_idents, false)? {
-                                Some(tmp_used_mod) => tmp_used_mod,
-                                None => return Err(Error::Interp(format!("undefined module {}", name))),
                             }
                         },
                     };
