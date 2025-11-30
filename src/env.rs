@@ -188,7 +188,7 @@ impl Env
     
     pub fn push_fun_mod_and_local_vars(&mut self, fun_mod_idents: &[String], args: &[Arg], arg_values: &[Value]) -> Result<bool>
     {
-        let fun_mod = match ModNode::mod_from(&self.root_mod, fun_mod_idents)? {
+        let fun_mod = match ModNode::mod_from(&self.root_mod, fun_mod_idents, false)? {
             Some(tmp_fun_mod) => tmp_fun_mod,
             None => return Err(Error::NoFunMod),
         };
@@ -230,7 +230,7 @@ impl Env
         *is_var = false;
         match name {
             Name::Abs(idents, ident) => {
-                match ModNode::mod_from(&self.root_mod, idents.as_slice())? {
+                match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
                     Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
                     None => Ok((None, ident)),
                 }
@@ -240,10 +240,10 @@ impl Env
                     Some((fun_mod, _)) => fun_mod.clone(),
                     None => self.current_mod.clone(),
                 };
-                match ModNode::mod_from(&mod1, idents.as_slice())? {
+                match ModNode::mod_from(&mod1, idents.as_slice(), true)? {
                     Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
                     None => {
-                        match ModNode::mod_from(&self.root_mod, idents.as_slice())? {
+                        match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
                             Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
                             None => Ok((None, ident)),
                         }

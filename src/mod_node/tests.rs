@@ -231,7 +231,7 @@ fn test_mod_node_mod_from_returns_nested_module_for_identifiers()
         Ok(()) => assert!(true),
         Err(_) => assert!(false),
     }
-    match ModNode::mod_from(&mod1, &[String::from("a"), String::from("c")]) {
+    match ModNode::mod_from(&mod1, &[String::from("a"), String::from("c")], true) {
         Ok(Some(nested_mod)) => assert!(Arc::ptr_eq(&mod4, &nested_mod)),
         _ => assert!(false),
     }
@@ -241,7 +241,7 @@ fn test_mod_node_mod_from_returns_nested_module_for_identifiers()
 fn test_mod_node_mod_from_returns_same_module_for_empty_identifiers()
 {
     let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
-    match ModNode::mod_from(&mod1, &[]) {
+    match ModNode::mod_from(&mod1, &[], true) {
         Ok(Some(mod2)) => assert!(Arc::ptr_eq(&mod1, &mod2)),
         _ => assert!(false),
     }
@@ -271,7 +271,7 @@ fn test_mod_node_mod_from_does_not_returns_nested_module_for_identifiers()
         Ok(()) => assert!(true),
         Err(_) => assert!(false),
     }
-    match ModNode::mod_from(&mod1, &[String::from("b"), String::from("c")]) {
+    match ModNode::mod_from(&mod1, &[String::from("b"), String::from("c")], true) {
         Ok(None) => assert!(true),
         _ => assert!(false),
     }

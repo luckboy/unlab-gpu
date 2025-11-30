@@ -353,16 +353,16 @@ impl<'a> Parser<'a>
                             Some(doc_env) => {
                                 let pair = match &*expr {
                                     Expr::Var(Name::Abs(idents, ident), _) => {
-                                        match ModNode::mod_from(&doc_env.root_mod, idents.as_slice())? {
+                                        match ModNode::mod_from(&doc_env.root_mod, idents.as_slice(), false)? {
                                             Some(tmp_mod) => Some((tmp_mod, ident.clone())),
                                             None => None,
                                         }
                                     },
                                     Expr::Var(Name::Rel(idents, ident), _) => {
-                                        match ModNode::mod_from(&doc_env.current_mod, idents.as_slice())? {
+                                        match ModNode::mod_from(&doc_env.current_mod, idents.as_slice(), true)? {
                                             Some(tmp_mod) => Some((tmp_mod, ident.clone())),
                                             None => {
-                                                match ModNode::mod_from(&doc_env.root_mod, idents.as_slice())? {
+                                                match ModNode::mod_from(&doc_env.root_mod, idents.as_slice(), false)? {
                                                     Some(tmp_mod) => Some((tmp_mod, ident.clone())),
                                                     None => None,
                                                 }

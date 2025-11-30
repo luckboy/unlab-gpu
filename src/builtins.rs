@@ -2354,6 +2354,84 @@ pub fn clock(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::Int(shared_env_g.instant().elapsed().as_millis() as i64))
 }
 
+pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(name) => {
+                    let name_without_first_colons = if name.starts_with("::") {
+                        &name[2..]
+                    } else {
+                        name.as_str()
+                    };
+                    let idents: Vec<String> = name_without_first_colons.split("::").map(String::from).collect();
+                    let (mod1, real_idents) = match idents.first() {
+                        Some(ident) if ident == &String::from("root") => (env.root_mod(), &idents[1..]),
+                        _ => (env.current_mod(), idents.as_slice()),
+                    };
+                    let ident = match arg_values.get(1) {
+                        Some(Value::Object(object)) => {
+                            match &**object {
+                                Object::String(tmp_ident) => tmp_ident.clone(),
+                                _ => return Err(Error::Interp(String::from("unsupported types for function usemod"))),
+                            }
+                        },
+                        Some(_) =>  return Err(Error::Interp(String::from("unsupported types for function usemod"))),
+                        None => {
+                            match real_idents.last() {
+                                Some(tmp_ident) => tmp_ident.clone(),
+                                None => return Err(Error::Interp(String::from("no last identifier"))),
+                            }
+                        },
+                    };
+                    let used_mod = match ModNode::mod_from(mod1, real_idents, true)? {
+                        Some(tmp_used_mod) => tmp_used_mod,
+                        None => {
+                            match ModNode::mod_from(env.root_mod(), real_idents, false)? {
+                                Some(tmp_used_mod) => tmp_used_mod,
+                                None => return Err(Error::Interp(format!("undefined module {}", name))),
+                            }
+                        },
+                    };
+                    match ModNode::add_used_mod(env.current_mod(), ident, used_mod) {
+                        Ok(()) => Ok(Value::None),
+                        Err(Error::RecursivelyUsedModNode) => Err(Error::Interp(format!("recursively used module {}", name))),
+                        Err(err) => Err(err),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function usemod"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function usemod"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn removeusemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(ident) => {
+                    let mut current_mod_g = rw_lock_write(env.current_mod())?;
+                    current_mod_g.remove_used_mod(ident);
+                    Ok(Value::None)
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function removeusemod"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function removeusemod"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2581,6 +2659,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
     add_builtin_fun(root_mod, String::from("run"), run);
     add_builtin_fun(root_mod, String::from("clock"), clock);
+    add_builtin_fun(root_mod, String::from("usemod"), usemod);
+    add_builtin_fun(root_mod, String::from("removeusemod"), removeusemod);
     add_builtin_fun(root_mod, String::from("removemod"), removemod);
     add_builtin_fun(root_mod, String::from("removevar"), removevar);
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);

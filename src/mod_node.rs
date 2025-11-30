@@ -15,6 +15,7 @@ use crate::utils::*;
 #[derive(Clone, Debug)]
 pub struct ModNode<T, U>
 {
+    used_mods: HashMap<String, Arc<RwLock<ModNode<T, U>>>>,
     mods: HashMap<String, Arc<RwLock<ModNode<T, U>>>>,
     vars: HashMap<String, T>,
     parent: Option<Weak<RwLock<ModNode<T, U>>>>,
@@ -24,7 +25,42 @@ pub struct ModNode<T, U>
 impl<T, U> ModNode<T, U>
 {
     pub fn new(value: U) -> Self
-    { ModNode { mods: HashMap::new(), vars: HashMap::new(), parent: None, value, } }
+    { ModNode { used_mods: HashMap::new(), mods: HashMap::new(), vars: HashMap::new(), parent: None, value, } }
+    
+    pub fn used_mods(&self) -> &HashMap<String, Arc<RwLock<ModNode<T, U>>>>
+    { &self.used_mods }
+
+    pub fn has_used_mod(&self, ident: &String) -> bool
+    { self.used_mods.contains_key(ident) }
+    
+    pub fn used_mod(&self, ident: &String) -> Option<&Arc<RwLock<ModNode<T, U>>>>
+    { self.used_mods.get(ident) }
+
+    pub fn add_used_mod(mod1: &Arc<RwLock<ModNode<T, U>>>, ident: String, used_mod: Arc<RwLock<ModNode<T, U>>>) -> Result<()>
+    {
+        let mut node = Some(mod1.clone());
+        loop {
+            match &node {
+                Some(tmp_node) => { 
+                    if Arc::ptr_eq(&tmp_node, &used_mod) {
+                        return Err(Error::RecursivelyUsedModNode);
+                    }
+                    let parent = {
+                        let tmp_node_g = rw_lock_read(&**tmp_node)?;
+                        tmp_node_g.parent()
+                    };
+                    node = parent;
+                },
+                None => break,
+            }
+        }
+        let mut mod1_g = rw_lock_write(&**mod1)?;
+        mod1_g.used_mods.insert(ident, used_mod);
+        Ok(())
+    }
+
+    pub fn remove_used_mod(&mut self, ident: &String)
+    { self.used_mods.remove(ident); }
     
     pub fn mods(&self) -> &HashMap<String, Arc<RwLock<ModNode<T, U>>>>
     { &self.mods }
@@ -91,19 +127,30 @@ impl<T, U> ModNode<T, U>
     pub fn value(&self) -> &U
     { &self.value }
     
-    pub fn mod_from(root: &Arc<RwLock<ModNode<T, U>>>, idents: &[String]) -> Result<Option<Arc<RwLock<ModNode<T, U>>>>>
+    pub fn mod_from(root: &Arc<RwLock<ModNode<T, U>>>, idents: &[String], are_used_mods: bool) -> Result<Option<Arc<RwLock<ModNode<T, U>>>>>
     {
         let mut node = root.clone();
+        let mut is_first = true;
         for ident in idents {
             let child: Arc<RwLock<ModNode<T, U>>>;
             {
                 let node_g = rw_lock_read(&*node)?;
                 child = match node_g.mods.get(ident) {
                     Some(tmp_child) => tmp_child.clone(),
-                    None => return Ok(None),
+                    None => {
+                        if is_first && are_used_mods {
+                            match node_g.used_mods.get(ident) {
+                                Some(tmp_child) => tmp_child.clone(),
+                                None => return Ok(None),
+                            }
+                        } else {
+                            return Ok(None);
+                        }
+                    },
                 };
             };
             node = child;
+            is_first = false;
         }
         Ok(Some(node))
     }
