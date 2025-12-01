@@ -2484,7 +2484,7 @@ pub fn usevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                     };
                     {
                         let used_var_mod_g = rw_lock_read(&used_var_mod)?;
-                        if !used_var_mod_g.has_var(&ident) {
+                        if !used_var_mod_g.has_var(&used_var_ident) {
                             return Err(Error::Interp(String::from("undefined variable")));
                         }
                     }
@@ -2511,7 +2511,7 @@ pub fn usevars(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
                     let used_var_mod = used_mod_pair(env, name, false)?.0;
                     let used_var_idents: Vec<String> = {
                         let used_var_mod_g = rw_lock_read(&used_var_mod)?;
-                        used_var_mod_g.mods().keys().map(|s| s.clone()).collect()
+                        used_var_mod_g.vars().keys().map(|s| s.clone()).collect()
                     };
                     for used_var_ident in &used_var_idents {
                         ModNode::add_used_var(env.current_mod(), used_var_ident.clone(), used_var_mod.clone(), used_var_ident.clone())?;

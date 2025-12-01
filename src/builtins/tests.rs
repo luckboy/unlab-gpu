@@ -3337,6 +3337,367 @@ fn test_usemod_is_applied_with_success()
 }
 
 #[test]
+fn test_usemods_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("usemods")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    env.add_and_push_mod(String::from("a")).unwrap();
+    env.add_and_push_mod(String::from("b")).unwrap();
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("c")).unwrap();
+    env.pop_mod().unwrap();
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("d")).unwrap();
+    env.add_and_push_mod(String::from("e")).unwrap();
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("f")).unwrap();
+    env.pop_mod().unwrap();
+    env.pop_mod().unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            let current_mod_g = env.current_mod().read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    let a_mod_g = a_mod.read().unwrap();
+                    match a_mod_g.mod1(&String::from("b")) {
+                        Some(a_b_mod) => {
+                            match current_mod_g.used_mod(&String::from("b")) {
+                                Some(b_mod_ref) => {
+                                    match b_mod_ref.to_arc() {
+                                        Some(b_mod) => assert!(Arc::ptr_eq(a_b_mod, &b_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
+                                None => assert!(false),
+                            }
+                        }
+                        None => assert!(false),
+                    }
+                    match a_mod_g.mod1(&String::from("c")) {
+                        Some(a_c_mod) => {
+                            match current_mod_g.used_mod(&String::from("c")) {
+                                Some(c_mod_ref) => {
+                                    match c_mod_ref.to_arc() {
+                                        Some(c_mod) => assert!(Arc::ptr_eq(a_c_mod, &c_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
+                                None => assert!(false),
+                            }
+                        }
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let current_mod_g = env.current_mod().read().unwrap();
+            match current_mod_g.mod1(&String::from("d")) {
+                Some(d_mod) => {
+                    let d_mod_g = d_mod.read().unwrap();
+                    match d_mod_g.mod1(&String::from("e")) {
+                        Some(d_e_mod) => {
+                            match current_mod_g.used_mod(&String::from("e")) {
+                                Some(e_mod_ref) => {
+                                    match e_mod_ref.to_arc() {
+                                        Some(e_mod) => assert!(Arc::ptr_eq(d_e_mod, &e_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
+                                None => assert!(false),
+                            }
+                        }
+                        None => assert!(false),
+                    }
+                    match d_mod_g.mod1(&String::from("f")) {
+                        Some(d_f_mod) => {
+                            match current_mod_g.used_mod(&String::from("f")) {
+                                Some(f_mod_ref) => {
+                                    match f_mod_ref.to_arc() {
+                                        Some(f_mod) => assert!(Arc::ptr_eq(d_f_mod, &f_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
+                                None => assert!(false),
+                            }
+                        }
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+}
+
+#[test]
+fn test_usevar_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("usevar")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    env.add_and_push_mod(String::from("a")).unwrap();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+    }
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("d")).unwrap();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    env.pop_mod().unwrap();    
+    env.add_and_push_mod(String::from("c")).unwrap();
+    env.add_and_push_mod(String::from("d")).unwrap();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Y"), Value::Bool(false));
+    }
+    env.pop_mod().unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a::X"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            let current_mod_g = env.current_mod().read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    match current_mod_g.used_var(&String::from("X")) {
+                        Some(x_used_var) => {
+                            match x_used_var.mod1().to_arc() {
+                                Some(x_used_var_mod) => assert!(Arc::ptr_eq(a_mod, &x_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("X"), *x_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d::Y"))));
+    let arg_value2 = Value::Object(Arc::new(Object::String(String::from("Z"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let current_mod_g = env.current_mod().read().unwrap();
+            match current_mod_g.mod1(&String::from("d")) {
+                Some(d_mod) => {
+                    match current_mod_g.used_var(&String::from("Z")) {
+                        Some(z_used_var) => {
+                            match z_used_var.mod1().to_arc() {
+                                Some(z_used_var_mod) => assert!(Arc::ptr_eq(d_mod, &z_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("Y"), *z_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(err) => {
+            println!("{}", err);
+            assert!(false)
+        },
+    }
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("::d::Y"))));
+    let arg_value2 = Value::Object(Arc::new(Object::String(String::from("W"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let current_mod_g = env.current_mod().read().unwrap();
+            match current_mod_g.mod1(&String::from("d")) {
+                Some(d_mod) => {
+                    match current_mod_g.used_var(&String::from("W")) {
+                        Some(w_used_var) => {
+                            match w_used_var.mod1().to_arc() {
+                                Some(w_used_var_mod) => assert!(Arc::ptr_eq(d_mod, &w_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("Y"), *w_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("root::d::Y"))));
+    let arg_value2 = Value::Object(Arc::new(Object::String(String::from("V"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            let current_mod_g = env.current_mod().read().unwrap();
+            match root_mod_g.mod1(&String::from("d")) {
+                Some(d_mod) => {
+                    match current_mod_g.used_var(&String::from("V")) {
+                        Some(v_used_var) => {
+                            match v_used_var.mod1().to_arc() {
+                                Some(v_used_var_mod) => assert!(Arc::ptr_eq(d_mod, &v_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("Y"), *v_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+}
+
+#[test]
+fn test_usevars_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("usevars")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    env.add_and_push_mod(String::from("a")).unwrap();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("c")).unwrap();
+    env.add_and_push_mod(String::from("d")).unwrap();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Z"), Value::Bool(false));
+        current_mod_g.add_var(String::from("W"), Value::Int(3));
+    }
+    env.pop_mod().unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            let current_mod_g = env.current_mod().read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(a_mod) => {
+                    match current_mod_g.used_var(&String::from("X")) {
+                        Some(x_used_var) => {
+                            match x_used_var.mod1().to_arc() {
+                                Some(x_used_var_mod) => assert!(Arc::ptr_eq(a_mod, &x_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("X"), *x_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                    match current_mod_g.used_var(&String::from("Y")) {
+                        Some(y_used_var) => {
+                            match y_used_var.mod1().to_arc() {
+                                Some(y_used_var_mod) => assert!(Arc::ptr_eq(a_mod, &y_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("Y"), *y_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let current_mod_g = env.current_mod().read().unwrap();
+            match current_mod_g.mod1(&String::from("d")) {
+                Some(d_mod) => {
+                    match current_mod_g.used_var(&String::from("Z")) {
+                        Some(z_used_var) => {
+                            match z_used_var.mod1().to_arc() {
+                                Some(z_used_var_mod) => assert!(Arc::ptr_eq(d_mod, &z_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("Z"), *z_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                    match current_mod_g.used_var(&String::from("W")) {
+                        Some(w_used_var) => {
+                            match w_used_var.mod1().to_arc() {
+                                Some(w_used_var_mod) => assert!(Arc::ptr_eq(d_mod, &w_used_var_mod)),
+                                None => assert!(false),
+                            }
+                            assert_eq!(String::from("W"), *w_used_var.ident())
+                        },
+                        None => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+}
+
+#[test]
 fn test_removeusemod_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -3354,15 +3715,13 @@ fn test_removeusemod_is_applied_with_success()
             },
         }
     };
-    env.add_and_push_mod(String::from("a")).unwrap();
-    env.pop_mod().unwrap();
-    ModNode::add_used_mod(&root_mod, String::from("b"), Arc::new(RwLock::new(ModNode::new(())))).unwrap();
-    let arg_value = Value::Object(Arc::new(Object::String(String::from("b"))));
+    ModNode::add_used_mod(&root_mod, String::from("a"), Arc::new(RwLock::new(ModNode::new(())))).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a"))));
     match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
         Ok(value) => {
             assert_eq!(Value::None, value);
             let root_mod_g = root_mod.read().unwrap();
-            assert_eq!(false, root_mod_g.has_used_mod(&String::from("b")));
+            assert_eq!(false, root_mod_g.has_used_mod(&String::from("a")));
         },
         Err(_) => assert!(false),
     }
@@ -3382,6 +3741,56 @@ fn test_removeusemod_is_applied_with_success()
                 None => assert!(false),
             }
             assert_eq!(true, root_mod_g.has_used_mod(&String::from("c")));
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+}
+
+#[test]
+fn test_removeusevar_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("removeusevar")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    ModNode::add_used_var(&root_mod, String::from("X"), Arc::new(RwLock::new(ModNode::new(()))), String::from("X")).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("X"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            assert_eq!(false, root_mod_g.has_used_mod(&String::from("X")));
+        },
+        Err(_) => assert!(false),
+    }
+    ModNode::add_used_var(&root_mod, String::from("Y"), Arc::new(RwLock::new(ModNode::new(()))), String::from("Y")).unwrap();
+    env.add_and_push_mod(String::from("a")).unwrap();
+    ModNode::add_used_var(env.current_mod(), String::from("Y"), Arc::new(RwLock::new(ModNode::new(()))), String::from("Y")).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("Y"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let root_mod_g = root_mod.read().unwrap();
+            match root_mod_g.mod1(&String::from("a")) {
+                Some(b_mod) => {
+                    let b_mod_g = b_mod.read().unwrap();
+                    assert_eq!(false, b_mod_g.has_used_var(&String::from("Y")));
+                },
+                None => assert!(false),
+            }
+            assert_eq!(true, root_mod_g.has_used_var(&String::from("Y")));
         },
         Err(_) => assert!(false),
     }
