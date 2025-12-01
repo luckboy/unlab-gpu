@@ -1086,8 +1086,22 @@ fn test_env_var_returns_values_for_variable_names_and_used_variables_and_local_v
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    match env.add_and_push_mod(String::from("c")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let c_mod = env.current_mod().clone();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Z"), Value::Bool(false));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     ModNode::add_used_var(env.current_mod(), String::from("X2"), a_mod, String::from("X")).unwrap();
     ModNode::add_used_var(env.current_mod(), String::from("Y2"), b_mod, String::from("Y")).unwrap();
+    ModNode::add_used_var(env.current_mod(), String::from("Z2"), c_mod, String::from("Z")).unwrap();
     {
         let mut current_mod_g = env.current_mod().write().unwrap();
         current_mod_g.add_var(String::from("Y2"), Value::Float(1.5));
@@ -1107,6 +1121,10 @@ fn test_env_var_returns_values_for_variable_names_and_used_variables_and_local_v
     }
     match env.var(&Name::Var(String::from("Y2"))) {
         Ok(Some(Value::Int(2))) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Z2"))) {
+        Ok(Some(Value::Bool(false))) => assert!(true),
         _ => assert!(false),
     }
 }
