@@ -28,34 +28,32 @@ fn test_mod_node_add_used_mod_adds_used_module_nodes_to_module_node()
     }
     let mod1_g = mod1.read().unwrap();
     match mod1_g.used_mod(&String::from("a")) {
-        Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+        Some(used_mod_ref) => {
+            match used_mod_ref.to_arc() {
+                Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+                None => assert!(false),
+            }
+        },
         None => assert!(false),
     }
     match mod1_g.used_mod(&String::from("b")) {
-        Some(used_mod) => assert!(Arc::ptr_eq(&mod3, &used_mod)),
+        Some(used_mod_ref) => {
+            match used_mod_ref.to_arc() {
+                Some(used_mod) => assert!(Arc::ptr_eq(&mod3, &used_mod)),
+                None => assert!(false),
+            }
+        },
         None => assert!(false),
     }
     match mod1_g.used_mod(&String::from("c")) {
-        Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+        Some(used_mod_ref) => {
+            match used_mod_ref.to_arc() {
+                Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+                None => assert!(false),
+            }
+        },
         None => assert!(false),
     }
-}
-
-#[test]
-fn test_mod_node_add_used_mod_complains_on_recursively_used_module_node()
-{
-    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
-    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
-    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
-        Ok(()) => assert!(true),
-        Err(_) => assert!(false),
-    }
-    match ModNode::add_used_mod(&mod2, String::from("b"), mod1.clone()) {
-        Err(Error::RecursivelyUsedModNode) => assert!(true),
-        _ => assert!(false),
-    }
-    let mod2_g = mod2.read().unwrap();
-    assert_eq!(false, mod2_g.has_used_mod(&String::from("b")));
 }
 
 #[test]
@@ -80,7 +78,12 @@ fn test_mod_node_remove_used_mod_removes_used_module_node_from_module_node()
     let mut mod1_g = mod1.write().unwrap();
     mod1_g.remove_used_mod(&String::from("b"));
     match mod1_g.used_mod(&String::from("a")) {
-        Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+        Some(used_mod_ref) => {
+            match used_mod_ref.to_arc() {
+                Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+                None => assert!(false),
+            }
+        },
         None => assert!(false),
     }
     match mod1_g.used_mod(&String::from("b")) {
@@ -88,7 +91,12 @@ fn test_mod_node_remove_used_mod_removes_used_module_node_from_module_node()
         Some(_) => assert!(false),
     }
     match mod1_g.used_mod(&String::from("c")) {
-        Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+        Some(used_mod_ref) => {
+            match used_mod_ref.to_arc() {
+                Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+                None => assert!(false),
+            }
+        },
         None => assert!(false),
     }
 }

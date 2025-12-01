@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::ffi::OsStr;
@@ -225,14 +226,14 @@ impl Env
         Ok(())
     }
     
-    fn mod_pair_for_name<'a>(&self, name: &'a Name, is_var: &mut bool) -> Result<(Option<Arc<RwLock<ModNode<Value, ()>>>>, &'a String)>
+    fn mod_pair_for_name<'a>(&self, name: &'a Name, is_var: &mut bool, is_set: bool) -> Result<(Option<Arc<RwLock<ModNode<Value, ()>>>>, Cow<'a, String>)>
     {
         *is_var = false;
         match name {
             Name::Abs(idents, ident) => {
                 match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
-                    Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
-                    None => Ok((None, ident)),
+                    Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident))),
+                    None => Ok((None, Cow::Borrowed(ident))),
                 }
             },
             Name::Rel(idents, ident) => {
@@ -240,21 +241,54 @@ impl Env
                     Some((fun_mod, _)) => fun_mod.clone(),
                     None => self.current_mod.clone(),
                 };
-                match ModNode::mod_from(&mod1, idents.as_slice(), true)? {
-                    Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
-                    None => {
-                        match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
-                            Some(tmp_mod) => Ok((Some(tmp_mod), ident)),
-                            None => Ok((None, ident)),
+                if !idents.is_empty() {
+                    match ModNode::mod_from(&mod1, idents.as_slice(), true)? {
+                        Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident))),
+                        None => {
+                            match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
+                                Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident))),
+                                None => Ok((None, Cow::Borrowed(ident))),
+                            }
+                        }
+                    }
+                } else {
+                    let is_defined_var = {
+                        let mod_g = rw_lock_read(&mod1)?;
+                        mod_g.has_var(ident)
+                    };
+                    if is_defined_var {
+                        Ok((Some(mod1), Cow::Borrowed(ident)))
+                    } else {
+                        let mod_g = rw_lock_read(&mod1)?;
+                        match mod_g.used_var(ident) {
+                            Some(used_var) => Ok((used_var.mod1().to_arc(), Cow::Owned(used_var.ident().clone()))),
+                            None => Ok((Some(mod1.clone()), Cow::Borrowed(ident))),
                         }
                     }
                 }
             },
             Name::Var(ident) => {
                 *is_var = true;
-                match self.stack.last() {
-                    Some((fun_mod, _)) => Ok((Some(fun_mod.clone()), ident)),
-                    None => Ok((Some(self.current_mod.clone()), ident)),
+                let mod1 = match self.stack.last() {
+                    Some((fun_mod, _)) => fun_mod.clone(),
+                    None => self.current_mod.clone(),
+                };
+                if is_set && !self.stack.is_empty() {
+                    Ok((Some(mod1), Cow::Borrowed(ident)))
+                } else {
+                    let is_defined_var = {
+                        let mod_g = rw_lock_read(&mod1)?;
+                        mod_g.has_var(ident)
+                    };
+                    if is_defined_var {
+                        Ok((Some(mod1), Cow::Borrowed(ident)))
+                    } else {
+                        let mod_g = rw_lock_read(&mod1)?;
+                        match mod_g.used_var(ident) {
+                            Some(used_var) => Ok((used_var.mod1().to_arc(), Cow::Owned(used_var.ident().clone()))),
+                            None => Ok((Some(mod1.clone()), Cow::Borrowed(ident))),
+                        }
+                    }
                 }
             },
         }
@@ -263,11 +297,11 @@ impl Env
     pub fn var(&self, name: &Name) -> Result<Option<Value>>
     {
         let mut is_var = false;
-        let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var)?;
+        let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var, false)?;
         if is_var {
             match self.stack.last() {
                 Some((_, local_vars)) => {
-                    match local_vars.get(ident) {
+                    match local_vars.get(&*ident) {
                         Some(value) => return Ok(Some(value.clone())),
                         None => (),
                     }
@@ -280,11 +314,11 @@ impl Env
                 let mut value: Option<Value>;
                 {
                     let mod1_g = rw_lock_read(&mod1)?;
-                    value = mod1_g.var(ident).map(|v| v.clone());
+                    value = mod1_g.var(&*ident).map(|v| v.clone());
                 }
                 if is_var && value.is_none() {
                     let root_mod_g = rw_lock_read(&self.root_mod)?;
-                    value = root_mod_g.var(ident).map(|v| v.clone());
+                    value = root_mod_g.var(&*ident).map(|v| v.clone());
                 }
                 Ok(value)
             },
@@ -295,11 +329,11 @@ impl Env
     pub fn set_var(&mut self, name: &Name, value: Value) -> Result<bool>
     {
         let mut is_var = false;
-        let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var)?;
+        let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var, true)?;
         if is_var {
             match self.stack.last_mut() {
                 Some((_, local_vars)) => {
-                    local_vars.insert(ident.clone(), value);
+                    local_vars.insert(ident.into_owned(), value);
                     return Ok(true)
                 },
                 None => (),
@@ -308,7 +342,7 @@ impl Env
         match mod1 {
             Some(mod1) => {
                 let mut mod1_g = rw_lock_write(&mod1)?;
-                mod1_g.add_var(ident.clone(), value);
+                mod1_g.add_var(ident.into_owned(), value);
                 Ok(true)
             },
             None => Ok(false),

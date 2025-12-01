@@ -2403,11 +2403,8 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                             }
                         },
                     };
-                    match ModNode::add_used_mod(env.current_mod(), ident, used_mod) {
-                        Ok(()) => Ok(Value::None),
-                        Err(Error::RecursivelyUsedModNode) => Err(Error::Interp(String::from("recursively used module"))),
-                        Err(err) => Err(err),
-                    }
+                    ModNode::add_used_mod(env.current_mod(), ident, used_mod)?;
+                    Ok(Value::None)
                 },
                 _ => Err(Error::Interp(String::from("unsupported types for function usemod"))),
             }

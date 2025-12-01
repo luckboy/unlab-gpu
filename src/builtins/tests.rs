@@ -3228,7 +3228,12 @@ fn test_usemod_is_applied_with_success()
                     match a_mod_g.mod1(&String::from("b")) {
                         Some(a_b_mod) => {
                             match current_mod_g.used_mod(&String::from("b")) {
-                                Some(b_mod) => assert!(Arc::ptr_eq(a_b_mod, b_mod)),
+                                Some(b_mod_ref) => {
+                                    match b_mod_ref.to_arc() {
+                                        Some(b_mod) => assert!(Arc::ptr_eq(a_b_mod, &b_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
                                 None => assert!(false),
                             }
                         }
@@ -3252,7 +3257,12 @@ fn test_usemod_is_applied_with_success()
                     match d_mod_g.mod1(&String::from("e")) {
                         Some(d_e_mod) => {
                             match current_mod_g.used_mod(&String::from("f")) {
-                                Some(f_mod) => assert!(Arc::ptr_eq(d_e_mod, f_mod)),
+                                Some(f_mod_ref) => {
+                                    match f_mod_ref.to_arc() {
+                                        Some(f_mod) => assert!(Arc::ptr_eq(d_e_mod, &f_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
                                 None => assert!(false),
                             }
                         }
@@ -3276,7 +3286,12 @@ fn test_usemod_is_applied_with_success()
                     match d_mod_g.mod1(&String::from("e")) {
                         Some(d_e_mod) => {
                             match current_mod_g.used_mod(&String::from("g")) {
-                                Some(g_mod) => assert!(Arc::ptr_eq(d_e_mod, g_mod)),
+                                Some(g_mod_ref) => {
+                                    match g_mod_ref.to_arc() {
+                                        Some(g_mod) => assert!(Arc::ptr_eq(d_e_mod, &g_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
                                 None => assert!(false),
                             }
                         }
@@ -3301,7 +3316,12 @@ fn test_usemod_is_applied_with_success()
                     match d_mod_g.mod1(&String::from("e")) {
                         Some(d_e_mod) => {
                             match current_mod_g.used_mod(&String::from("h")) {
-                                Some(h_mod) => assert!(Arc::ptr_eq(d_e_mod, h_mod)),
+                                Some(h_mod_ref) => {
+                                    match h_mod_ref.to_arc() {
+                                        Some(h_mod) => assert!(Arc::ptr_eq(d_e_mod, &h_mod)),
+                                        None => assert!(false),
+                                    }
+                                },
                                 None => assert!(false),
                             }
                         }
