@@ -132,6 +132,9 @@ impl<T, U> ModNode<T, U>
         Ok(())
     }
     
+    pub fn remove_used_var(&mut self, ident: &String)
+    { self.used_vars.remove(ident); }
+
     pub fn mods(&self) -> &HashMap<String, Arc<RwLock<ModNode<T, U>>>>
     { &self.mods }
 

@@ -234,7 +234,7 @@ fn test_mod_node_remove_used_var_removes_used_variable_from_module_node()
         Err(_) => assert!(false),
     }
     let mut mod1_g = mod1.write().unwrap();
-    mod1_g.remove_used_mod(&String::from("b"));
+    mod1_g.remove_used_var(&String::from("b"));
     match mod1_g.used_var(&String::from("a")) {
         Some(used_var) => {
             match used_var.mod1() {
@@ -245,7 +245,7 @@ fn test_mod_node_remove_used_var_removes_used_variable_from_module_node()
         },
         None => assert!(false),
     }
-    match mod1_g.used_mod(&String::from("b")) {
+    match mod1_g.used_var(&String::from("b")) {
         None => assert!(true),
         Some(_) => assert!(false),
     }
