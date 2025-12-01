@@ -1056,6 +1056,62 @@ fn test_env_var_returns_values_for_variable_names_and_used_variables()
 }
 
 #[test]
+fn test_env_var_returns_values_for_variable_names_and_used_variables_and_local_variables()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let a_mod = env.current_mod().clone();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("X"), Value::Int(1));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let b_mod = env.current_mod().clone();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Y"), Value::Float(2.5));
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    ModNode::add_used_var(env.current_mod(), String::from("X2"), a_mod, String::from("X")).unwrap();
+    ModNode::add_used_var(env.current_mod(), String::from("Y2"), b_mod, String::from("Y")).unwrap();
+    {
+        let mut current_mod_g = env.current_mod().write().unwrap();
+        current_mod_g.add_var(String::from("Y2"), Value::Float(1.5));
+    }
+    let args = vec![
+        Arg(String::from("X2"), Pos::new(Arc::new(String::from("test.unl")), 1, 1)),
+        Arg(String::from("Y2"), Pos::new(Arc::new(String::from("test.unl")), 1, 2)),
+    ];
+    let arg_values = vec![Value::Float(3.5), Value::Int(2)];
+    match env.push_fun_mod_and_local_vars(&[], args.as_slice(), arg_values.as_slice()) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("X2"))) {
+        Ok(Some(Value::Float(n))) => assert_eq!(3.5, n),
+        _ => assert!(false),
+    }
+    match env.var(&Name::Var(String::from("Y2"))) {
+        Ok(Some(Value::Int(2))) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
 fn test_env_var_returns_values_for_relative_names_and_used_variables()
 {
     let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));

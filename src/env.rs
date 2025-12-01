@@ -226,14 +226,14 @@ impl Env
         Ok(())
     }
     
-    fn mod_pair_for_name<'a>(&self, name: &'a Name, is_var: &mut bool, is_set: bool) -> Result<(Option<Arc<RwLock<ModNode<Value, ()>>>>, Cow<'a, String>)>
+    fn mod_tuple_for_name<'a>(&self, name: &'a Name, is_var: &mut bool, is_set: bool) -> Result<(Option<Arc<RwLock<ModNode<Value, ()>>>>, Cow<'a, String>, Option<Value>)>
     {
         *is_var = false;
         match name {
             Name::Abs(idents, ident) => {
                 match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
-                    Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident))),
-                    None => Ok((None, Cow::Borrowed(ident))),
+                    Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident), None)),
+                    None => Ok((None, Cow::Borrowed(ident), None)),
                 }
             },
             Name::Rel(idents, ident) => {
@@ -243,11 +243,11 @@ impl Env
                 };
                 if !idents.is_empty() {
                     match ModNode::mod_from(&mod1, idents.as_slice(), true)? {
-                        Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident))),
+                        Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident), None)),
                         None => {
                             match ModNode::mod_from(&self.root_mod, idents.as_slice(), false)? {
-                                Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident))),
-                                None => Ok((None, Cow::Borrowed(ident))),
+                                Some(tmp_mod) => Ok((Some(tmp_mod), Cow::Borrowed(ident), None)),
+                                None => Ok((None, Cow::Borrowed(ident), None)),
                             }
                         }
                     }
@@ -257,12 +257,12 @@ impl Env
                         mod_g.has_var(ident)
                     };
                     if is_defined_var {
-                        Ok((Some(mod1), Cow::Borrowed(ident)))
+                        Ok((Some(mod1), Cow::Borrowed(ident), None))
                     } else {
                         let mod_g = rw_lock_read(&mod1)?;
                         match mod_g.used_var(ident) {
-                            Some(used_var) => Ok((used_var.mod1().to_arc(), Cow::Owned(used_var.ident().clone()))),
-                            None => Ok((Some(mod1.clone()), Cow::Borrowed(ident))),
+                            Some(used_var) => Ok((used_var.mod1().to_arc(), Cow::Owned(used_var.ident().clone()), None)),
+                            None => Ok((Some(mod1.clone()), Cow::Borrowed(ident), None)),
                         }
                     }
                 }
@@ -273,20 +273,28 @@ impl Env
                     Some((fun_mod, _)) => fun_mod.clone(),
                     None => self.current_mod.clone(),
                 };
-                if is_set && !self.stack.is_empty() {
-                    Ok((Some(mod1), Cow::Borrowed(ident)))
+                let local_var_value = if !is_set {
+                    match self.stack.last() {
+                        Some((_, local_vars)) => local_vars.get(ident).map(|v| v.clone()),
+                        None => None, 
+                    }
+                } else {
+                    None
+                };
+                if local_var_value.is_some() || (is_set && !self.stack.is_empty()) {
+                    Ok((Some(mod1), Cow::Borrowed(ident), local_var_value))
                 } else {
                     let is_defined_var = {
                         let mod_g = rw_lock_read(&mod1)?;
                         mod_g.has_var(ident)
                     };
                     if is_defined_var {
-                        Ok((Some(mod1), Cow::Borrowed(ident)))
+                        Ok((Some(mod1), Cow::Borrowed(ident), None))
                     } else {
                         let mod_g = rw_lock_read(&mod1)?;
                         match mod_g.used_var(ident) {
-                            Some(used_var) => Ok((used_var.mod1().to_arc(), Cow::Owned(used_var.ident().clone()))),
-                            None => Ok((Some(mod1.clone()), Cow::Borrowed(ident))),
+                            Some(used_var) => Ok((used_var.mod1().to_arc(), Cow::Owned(used_var.ident().clone()), None)),
+                            None => Ok((Some(mod1.clone()), Cow::Borrowed(ident), None)),
                         }
                     }
                 }
@@ -297,17 +305,10 @@ impl Env
     pub fn var(&self, name: &Name) -> Result<Option<Value>>
     {
         let mut is_var = false;
-        let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var, false)?;
-        if is_var {
-            match self.stack.last() {
-                Some((_, local_vars)) => {
-                    match local_vars.get(&*ident) {
-                        Some(value) => return Ok(Some(value.clone())),
-                        None => (),
-                    }
-                },
-                None => (),
-            }
+        let (mod1, ident, value) = self.mod_tuple_for_name(name, &mut is_var, false)?;
+        match value {
+            Some(value) => return Ok(Some(value.clone())),
+            None => (),
         }
         match mod1 {
             Some(mod1) => {
@@ -329,7 +330,7 @@ impl Env
     pub fn set_var(&mut self, name: &Name, value: Value) -> Result<bool>
     {
         let mut is_var = false;
-        let (mod1, ident) = self.mod_pair_for_name(name, &mut is_var, true)?;
+        let (mod1, ident, _) = self.mod_tuple_for_name(name, &mut is_var, true)?;
         if is_var {
             match self.stack.last_mut() {
                 Some((_, local_vars)) => {
