@@ -29,27 +29,57 @@ fn test_mod_node_add_used_mod_adds_used_module_nodes_to_module_node()
     let mod1_g = mod1.read().unwrap();
     match mod1_g.used_mod(&String::from("a")) {
         Some(used_mod_ref) => {
-            match used_mod_ref.to_arc() {
-                Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
-                None => assert!(false),
+            match used_mod_ref {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+                _ => assert!(false),
             }
         },
         None => assert!(false),
     }
     match mod1_g.used_mod(&String::from("b")) {
         Some(used_mod_ref) => {
-            match used_mod_ref.to_arc() {
-                Some(used_mod) => assert!(Arc::ptr_eq(&mod3, &used_mod)),
-                None => assert!(false),
+            match used_mod_ref {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod3, &used_mod)),
+                _ => assert!(false),
             }
         },
         None => assert!(false),
     }
     match mod1_g.used_mod(&String::from("c")) {
         Some(used_mod_ref) => {
-            match used_mod_ref.to_arc() {
-                Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
-                None => assert!(false),
+            match used_mod_ref {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_add_used_mod_recursively_adds_used_module_node_to_module_node()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_used_mod(&mod2, String::from("b"), mod1.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mod2_g = mod2.read().unwrap();
+    match mod2_g.used_mod(&String::from("b")) {
+        Some(used_mod_ref) => {
+            match used_mod_ref {
+                ModNodeRef::Weak(used_mod) => {
+                    match used_mod.upgrade() {
+                        Some(used_mod) => assert!(Arc::ptr_eq(&mod1, &used_mod)),
+                        None => assert!(false),
+                    }
+                },
+                _ => assert!(false),
             }
         },
         None => assert!(false),
@@ -79,9 +109,9 @@ fn test_mod_node_remove_used_mod_removes_used_module_node_from_module_node()
     mod1_g.remove_used_mod(&String::from("b"));
     match mod1_g.used_mod(&String::from("a")) {
         Some(used_mod_ref) => {
-            match used_mod_ref.to_arc() {
-                Some(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
-                None => assert!(false),
+            match used_mod_ref {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+                _ => assert!(false),
             }
         },
         None => assert!(false),
@@ -92,10 +122,140 @@ fn test_mod_node_remove_used_mod_removes_used_module_node_from_module_node()
     }
     match mod1_g.used_mod(&String::from("c")) {
         Some(used_mod_ref) => {
-            match used_mod_ref.to_arc() {
-                Some(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
-                None => assert!(false),
+            match used_mod_ref {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+                _ => assert!(false),
             }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_add_used_var_adds_used_variables_to_module_node()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+    let mod4: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(4)));
+    match ModNode::add_used_var(&mod1, String::from("a"), mod2.clone(), String::from("d")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_used_var(&mod1, String::from("b"), mod3.clone(), String::from("e")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_used_var(&mod1, String::from("c"), mod4.clone(), String::from("f")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mod1_g = mod1.read().unwrap();
+    match mod1_g.used_var(&String::from("a")) {
+        Some(used_var) => {
+            match used_var.mod1() {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+                _ => assert!(false),
+            }
+            assert_eq!(String::from("d"), *used_var.ident())
+        },
+        None => assert!(false),
+    }
+    match mod1_g.used_var(&String::from("b")) {
+        Some(used_var) => {
+            match used_var.mod1() {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod3, &used_mod)),
+                _ => assert!(false),
+            }
+            assert_eq!(String::from("e"), *used_var.ident())
+        },
+        None => assert!(false),
+    }
+    match mod1_g.used_var(&String::from("c")) {
+        Some(used_var) => {
+            match used_var.mod1() {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+                _ => assert!(false),
+            }
+            assert_eq!(String::from("f"), *used_var.ident())
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_add_used_var_recursively_adds_used_variable_to_module_node()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_used_var(&mod2, String::from("b"), mod1.clone(), String::from("c")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mod2_g = mod2.read().unwrap();
+    match mod2_g.used_var(&String::from("b")) {
+        Some(used_var) => {
+            match used_var.mod1() {
+                ModNodeRef::Weak(used_mod) => {
+                    match used_mod.upgrade() {
+                        Some(used_mod) => assert!(Arc::ptr_eq(&mod1, &used_mod)),
+                        None => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            assert_eq!(String::from("c"), *used_var.ident())
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_remove_used_var_removes_used_variable_from_module_node()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+    let mod4: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(4)));
+    match ModNode::add_used_var(&mod1, String::from("a"), mod2.clone(), String::from("d")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_used_var(&mod1, String::from("b"), mod3.clone(), String::from("e")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_used_var(&mod1, String::from("c"), mod4.clone(), String::from("f")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mut mod1_g = mod1.write().unwrap();
+    mod1_g.remove_used_mod(&String::from("b"));
+    match mod1_g.used_var(&String::from("a")) {
+        Some(used_var) => {
+            match used_var.mod1() {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod2, &used_mod)),
+                _ => assert!(false),
+            }
+            assert_eq!(String::from("d"), *used_var.ident())
+        },
+        None => assert!(false),
+    }
+    match mod1_g.used_mod(&String::from("b")) {
+        None => assert!(true),
+        Some(_) => assert!(false),
+    }
+    match mod1_g.used_var(&String::from("c")) {
+        Some(used_var) => {
+            match used_var.mod1() {
+                ModNodeRef::Arc(used_mod) => assert!(Arc::ptr_eq(&mod4, &used_mod)),
+                _ => assert!(false),
+            }
+            assert_eq!(String::from("f"), *used_var.ident())
         },
         None => assert!(false),
     }
