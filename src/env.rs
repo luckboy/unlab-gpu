@@ -307,7 +307,7 @@ impl Env
         let mut is_var = false;
         let (mod1, ident, value) = self.mod_tuple_for_name(name, &mut is_var, false)?;
         match value {
-            Some(value) => return Ok(Some(value.clone())),
+            Some(value) => return Ok(Some(value)),
             None => (),
         }
         match mod1 {
