@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::cmp;
 use std::f32;
 use std::ffi::OsString;
 use std::fs;
@@ -2369,7 +2370,7 @@ fn used_mod_pair(env: &Env, name: &str, is_var: bool) -> Result<(Arc<RwLock<ModN
     };
     match idents.first() {
         Some(ident) if ident == &String::from("root") => {
-            match ModNode::mod_from(env.root_mod(), &idents[1..end], false)? {
+            match ModNode::mod_from(env.root_mod(), &idents[1..cmp::max(end, 1)], false)? {
                 Some(used_mod) => Ok((used_mod, (&idents[1..]).to_vec())),
                 None => Err(Error::Interp(format!("undefined module {}", name))),
             }
