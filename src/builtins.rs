@@ -2355,7 +2355,7 @@ pub fn clock(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::Int(shared_env_g.instant().elapsed().as_millis() as i64))
 }
 
-fn used_mod_pair(env: &Env, name: &str, is_var: bool) -> Result<(Arc<RwLock<ModNode<Value, ()>>>, Vec<String>)>
+fn mod_pair_for_name(env: &Env, name: &str, is_var: bool) -> Result<(Arc<RwLock<ModNode<Value, ()>>>, Vec<String>)>
 {
     let name_without_first_colons = if name.starts_with("::") {
         &name[2..]
@@ -2398,7 +2398,7 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
         Some(Value::Object(object)) => {
             match &**object {
                 Object::String(name) => {
-                    let (used_mod, idents) = used_mod_pair(env, name, false)?;
+                    let (used_mod, idents) = mod_pair_for_name(env, name, false)?;
                     let ident = match arg_values.get(1) {
                         Some(Value::Object(object)) => {
                             match &**object {
@@ -2434,7 +2434,7 @@ pub fn usemods(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
         Some(Value::Object(object)) => {
             match &**object {
                 Object::String(name) => {
-                    let mod1 = used_mod_pair(env, name, false)?.0;
+                    let mod1 = mod_pair_for_name(env, name, false)?.0;
                     let used_mods: Vec<(String, Arc<RwLock<ModNode<Value, ()>>>)> = {
                         let mod_g = rw_lock_read(&mod1)?;
                         mod_g.mods().iter().map(|p| (p.0.clone(), p.1.clone())).collect()
@@ -2461,7 +2461,7 @@ pub fn usevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
         Some(Value::Object(object)) => {
             match &**object {
                 Object::String(name) => {
-                    let (used_var_mod, idents) = used_mod_pair(env, name, true)?;
+                    let (used_var_mod, idents) = mod_pair_for_name(env, name, true)?;
                     let (ident, used_var_ident) = match arg_values.get(1) {
                         Some(Value::Object(object)) => {
                             match &**object {
@@ -2508,7 +2508,7 @@ pub fn usevars(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
         Some(Value::Object(object)) => {
             match &**object {
                 Object::String(name) => {
-                    let used_var_mod = used_mod_pair(env, name, false)?.0;
+                    let used_var_mod = mod_pair_for_name(env, name, false)?.0;
                     let used_var_idents: Vec<String> = {
                         let used_var_mod_g = rw_lock_read(&used_var_mod)?;
                         used_var_mod_g.vars().keys().map(|s| s.clone()).collect()
