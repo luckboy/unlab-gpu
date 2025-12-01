@@ -2382,7 +2382,7 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                                 None => {
                                     match ModNode::mod_from(env.root_mod(), idents.as_slice(), false)? {
                                         Some(tmp_used_mod) => (tmp_used_mod, idents.as_slice()),
-                                        None => return Err(Error::Interp(format!("undefined module {}", name))),
+                                        None => return Err(Error::Interp(String::from("undefined module"))),
                                     }
                                 },
                             }
@@ -2405,7 +2405,7 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                     };
                     match ModNode::add_used_mod(env.current_mod(), ident, used_mod) {
                         Ok(()) => Ok(Value::None),
-                        Err(Error::RecursivelyUsedModNode) => Err(Error::Interp(format!("recursively used module {}", name))),
+                        Err(Error::RecursivelyUsedModNode) => Err(Error::Interp(String::from("recursively used module"))),
                         Err(err) => Err(err),
                     }
                 },
