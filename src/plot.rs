@@ -34,6 +34,7 @@ use crate::winit::event_loop::ActiveEventLoop;
 use crate::winit::event_loop::EventLoop;
 use crate::winit::raw_window_handle::DisplayHandle;
 use crate::winit::raw_window_handle::HasDisplayHandle;
+use crate::winit::window::Icon;
 use crate::winit::window::Window;
 use crate::env::*;
 use crate::error::*;
@@ -655,6 +656,7 @@ impl WindowState
 
 pub struct PlotterApp
 {
+    icon: Icon,
     windows: HashMap<WindowId, WindowState>,
     context: Option<Context<DisplayHandle<'static>>>,
 }
@@ -664,12 +666,17 @@ impl PlotterApp
     pub fn new(event_loop: &EventLoop<PlotterAppEvent>) -> Self
     {
         let context = Some(Context::new(unsafe { transmute::<DisplayHandle<'_>, DisplayHandle<'static>>(event_loop.display_handle().unwrap()) }).unwrap());
-        PlotterApp { windows: HashMap::new(), context, }
+        let image = image::load_from_memory(include_bytes!("icon.png")).unwrap();
+        let rgba_image = image.into_rgba8();
+        let (width, height) = rgba_image.dimensions();
+        let rgba = rgba_image.into_raw();
+        let icon = Icon::from_rgba(rgba, width, height).unwrap();
+        PlotterApp { icon, windows: HashMap::new(), context, }
     }
 
     fn create_window(&mut self, event_loop: &ActiveEventLoop, size: (u32, u32), plot: Arc<Plot>) -> result::Result<WindowId, Box<dyn error::Error>>
     {
-        let window_attrs = Window::default_attributes().with_title("Unlab-gpu window").with_inner_size(PhysicalSize::new(size.0, size.1));
+        let window_attrs = Window::default_attributes().with_title("Unlab-gpu window").with_inner_size(PhysicalSize::new(size.0, size.1)).with_window_icon(Some(self.icon.clone()));
         let window = event_loop.create_window(window_attrs)?;
         let window_id = window.id();
         self.windows.insert(window_id, WindowState::new(self, Arc::new(window), plot, size)?);
