@@ -2372,7 +2372,7 @@ fn mod_pair_for_name(env: &Env, name: &str, is_var: bool) -> Result<(Arc<RwLock<
         Some(ident) if ident == &String::from("root") => {
             match ModNode::mod_from(env.root_mod(), &idents[1..cmp::max(end, 1)], false)? {
                 Some(mod1) => Ok((mod1, (&idents[1..]).to_vec())),
-                None => Err(Error::Interp(format!("undefined module {}", name))),
+                None => Err(Error::Interp(String::from("undefined module"))),
             }
         },
         _ => {
