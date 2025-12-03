@@ -17,6 +17,7 @@ pub mod builtins;
 pub mod doc;
 pub mod env;
 pub mod error;
+pub mod fs;
 pub mod getopts;
 pub mod home;
 pub mod interp;
