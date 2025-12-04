@@ -189,6 +189,18 @@ pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec
     Ok(paths)
 }
 
+pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, paths: &[PathBuf]) -> Result<()>
+{
+    for suffix_path_buf in paths {
+        let mut src_path_buf = PathBuf::from(src.as_ref());
+        src_path_buf.push(suffix_path_buf.as_path());
+        let mut dst_path_buf = PathBuf::from(dst.as_ref());
+        dst_path_buf.push(suffix_path_buf.as_path());
+        recursively_copy(src_path_buf.as_path(), dst_path_buf.as_path())?;
+    }
+    Ok(())
+}
+
 pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf]) -> Result<()>
 {
     for suffix_path_buf in paths {
