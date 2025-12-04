@@ -14,6 +14,7 @@ pub use winit;
 
 pub mod backend;
 pub mod builtins;
+pub mod dfs;
 pub mod doc;
 pub mod env;
 pub mod error;
