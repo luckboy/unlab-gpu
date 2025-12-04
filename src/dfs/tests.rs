@@ -19,7 +19,7 @@ fn test_dfs_traverses_graph()
         Vec::new() // 5
     ];
     let mut data: (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
-    let res = dfs(0, &mut data, |u, data| {
+    let res = dfs(&0, &mut data, |u, data| {
             data.0.push(*u);
             Ok::<Vec<usize>, ()>(graph.get(*u).map(|vs| vs.clone()).unwrap_or(Vec::new()))
     }, |u, data| {
@@ -42,7 +42,7 @@ fn test_dfs_traverses_graph_with_little_cycle()
         vec![1] // 1
     ];
     let mut data: (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
-    let res = dfs(0, &mut data, |u, data| {
+    let res = dfs(&0, &mut data, |u, data| {
             data.0.push(*u);
             Ok::<Vec<usize>, ()>(graph.get(*u).map(|vs| vs.clone()).unwrap_or(Vec::new()))
     }, |u, data| {
@@ -69,7 +69,7 @@ fn test_dfs_traverses_graph_with_cycle()
         Vec::new() // 5
     ];
     let mut data: (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
-    let res = dfs(0, &mut data, |u, data| {
+    let res = dfs(&0, &mut data, |u, data| {
             data.0.push(*u);
             Ok::<Vec<usize>, ()>(graph.get(*u).map(|vs| vs.clone()).unwrap_or(Vec::new()))
     }, |u, data| {

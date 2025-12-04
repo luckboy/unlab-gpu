@@ -8,7 +8,7 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 
-pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: T, data: &mut U, mut f: F, mut g: G) -> Result<bool, E>
+pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, mut g: G) -> Result<bool, E>
     where F: FnMut(&T, &mut U) -> Result<Vec<T>, E>,
           G: FnMut(&T, &mut U) -> Result<(), E>
 {
@@ -16,10 +16,10 @@ pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: T, data: &mut U, mut f: F, m
     let mut visiteds: HashSet<T> = HashSet::new();
     let mut processeds: HashSet<T> = HashSet::new();
     processeds.insert(start.clone());
-    let mut us = f(&start, data)?;
+    let mut us = f(start, data)?;
     us.reverse();
     stack.push((start.clone(), us));
-    visiteds.insert(start);
+    visiteds.insert(start.clone());
     loop {
         match stack.last_mut() {
             Some((u, vs)) => {
