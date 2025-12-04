@@ -102,7 +102,7 @@ pub fn recursively_remove<P: AsRef<Path>>(path: P) -> Result<()>
     recursively_remove_with_path_buf(&mut path_buf)
 }
 
-fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, dir_paths: &mut HashSet<PathBuf>, paths: &mut HashSet<PathBuf>, depth: Option<usize>) -> Result<()>
+fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, dir_paths: &mut HashSet<PathBuf>, paths: &mut HashSet<PathBuf>, path_vec: &mut Option<Vec<PathBuf>>, depth: Option<usize>) -> Result<()>
 {
     let mut path_buf = PathBuf::from(path);
     if suffix_path_buf != &PathBuf::from("") {
@@ -120,7 +120,7 @@ fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, di
                 for entry in entries {
                     let tmp_entry = entry?;
                     suffix_path_buf.push(tmp_entry.file_name());
-                    get_dir_paths_and_paths_in_dir(path, suffix_path_buf, dir_paths, paths, depth.map(|d| d - 1))?;
+                    get_dir_paths_and_paths_in_dir(path, suffix_path_buf, dir_paths, paths, path_vec, depth.map(|d| d - 1))?;
                     suffix_path_buf.pop();
                 }
             },
@@ -129,64 +129,31 @@ fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, di
         }
     } else {
         paths.insert(suffix_path_buf.clone());
+        match path_vec {
+            Some(path_vec) => path_vec.push(suffix_path_buf.clone()),
+            None => (),
+        }
     }
     Ok(())
 }
 
-pub fn conflicts<P: AsRef<Path>, Q: AsRef<Path>>(path1: P, path2: Q, depth: Option<usize>) -> Result<Vec<PathBuf>>
+pub fn conflicts<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, depth: Option<usize>) -> Result<(Vec<PathBuf>, Vec<PathBuf>)>
 {
-    let mut dir_paths1: HashSet<PathBuf> = HashSet::new();
-    let mut paths1: HashSet<PathBuf> = HashSet::new();
-    let mut suffix_path_buf1 = PathBuf::from("");
-    get_dir_paths_and_paths_in_dir(path1.as_ref(), &mut suffix_path_buf1, &mut dir_paths1, &mut paths1, depth)?;
-    let mut dir_paths2: HashSet<PathBuf> = HashSet::new();
-    let mut paths2: HashSet<PathBuf> = HashSet::new();
-    let mut suffix_path_buf2 = PathBuf::from("");
-    get_dir_paths_and_paths_in_dir(path2.as_ref(), &mut suffix_path_buf2, &mut dir_paths2, &mut paths2, depth)?;
-    let mut conflict_paths: Vec<PathBuf> = dir_paths1.intersection(&paths2).map(|p| p.clone()).collect();
-    let mut conflict_paths2: Vec<PathBuf> = paths1.intersection(&dir_paths2).map(|p| p.clone()).collect();
-    let mut conflict_paths3: Vec<PathBuf> = paths1.intersection(&paths2).map(|p| p.clone()).collect();
+    let mut paths: Option<Vec<PathBuf>> = Some(Vec::new());
+    let mut src_dir_paths: HashSet<PathBuf> = HashSet::new();
+    let mut src_paths: HashSet<PathBuf> = HashSet::new();
+    let mut src_suffix_path_buf = PathBuf::from("");
+    get_dir_paths_and_paths_in_dir(src.as_ref(), &mut src_suffix_path_buf, &mut src_dir_paths, &mut src_paths, &mut paths, depth)?;
+    let mut dst_dir_paths: HashSet<PathBuf> = HashSet::new();
+    let mut dst_paths: HashSet<PathBuf> = HashSet::new();
+    let mut dst_suffix_path_buf = PathBuf::from("");
+    get_dir_paths_and_paths_in_dir(dst.as_ref(), &mut dst_suffix_path_buf, &mut dst_dir_paths, &mut dst_paths, &mut None, depth)?;
+    let mut conflict_paths: Vec<PathBuf> = src_dir_paths.intersection(&dst_paths).map(|p| p.clone()).collect();
+    let mut conflict_paths2: Vec<PathBuf> = src_paths.intersection(&dst_dir_paths).map(|p| p.clone()).collect();
+    let mut conflict_paths3: Vec<PathBuf> = src_paths.intersection(&dst_paths).map(|p| p.clone()).collect();
     conflict_paths.append(&mut conflict_paths2);
     conflict_paths.append(&mut conflict_paths3);
-    Ok(conflict_paths)
-}
-
-fn get_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, paths: &mut Vec<PathBuf>, depth: Option<usize>) -> Result<()>
-{
-    let mut path_buf = PathBuf::from(path);
-    if suffix_path_buf != &PathBuf::from("") {
-        path_buf.push(suffix_path_buf.as_path());
-    }
-    let metadata = match symlink_metadata(path_buf.as_path()) {
-        Ok(tmp_metadata) => tmp_metadata,
-        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(()),
-        Err(err) => return Err(err),
-    };
-    if metadata.is_dir() && depth.map(|d| d > 0).unwrap_or(true) {
-        match read_dir(path_buf.as_path()) {
-            Ok(entries) => {
-                for entry in entries {
-                    let tmp_entry = entry?;
-                    suffix_path_buf.push(tmp_entry.file_name());
-                    get_paths_in_dir(path, suffix_path_buf, paths, depth.map(|d| d - 1))?;
-                    suffix_path_buf.pop();
-                }
-            },
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(err),
-        }
-    } else {
-        paths.push(suffix_path_buf.clone());
-    }
-    Ok(())
-}
-
-pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec<PathBuf>>
-{
-    let mut paths: Vec<PathBuf> = Vec::new();
-    let mut suffix_path_buf = PathBuf::from("");
-    get_paths_in_dir(path.as_ref(), &mut suffix_path_buf, &mut paths, depth)?;
-    Ok(paths)
+    Ok((conflict_paths, paths.unwrap_or(Vec::new())))
 }
 
 pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, paths: &[PathBuf]) -> Result<()>
