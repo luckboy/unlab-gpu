@@ -188,3 +188,26 @@ pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec
     get_paths_in_dir(path.as_ref(), &mut suffix_path_buf, &mut paths, depth)?;
     Ok(paths)
 }
+
+pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf]) -> Result<()>
+{
+    for suffix_path_buf in paths {
+        let mut path_buf = PathBuf::from(path.as_ref());
+        path_buf.push(suffix_path_buf.as_path());
+        recursively_remove(path_buf.as_path())?;
+        let mut tmp_suffix_path_buf = suffix_path_buf.clone();
+        if tmp_suffix_path_buf != PathBuf::from("") {
+            tmp_suffix_path_buf.pop();
+            while tmp_suffix_path_buf != PathBuf::from("") {
+                let mut dir_path_buf = PathBuf::from(path.as_ref());
+                dir_path_buf.push(tmp_suffix_path_buf.as_path());
+                match remove_dir(dir_path_buf.as_path()) {
+                    Ok(()) => (),
+                    Err(_) => break,
+                }
+                tmp_suffix_path_buf.pop();
+            }
+        }
+    }
+    Ok(())
+}
