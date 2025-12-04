@@ -53,3 +53,6 @@ pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: T, data: &mut U, mut f: F, m
     }
     Ok(true)
 }
+
+#[cfg(test)]
+mod tests;
