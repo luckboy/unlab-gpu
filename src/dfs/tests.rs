@@ -27,7 +27,7 @@ fn test_dfs_traverses_graph()
             Ok::<(), ()>(())
     });
     match res {
-        Ok(true) => assert!(true),
+        Ok(DfsResult::Success) => assert!(true),
         _ => assert!(false),
     }
     assert_eq!(vec![0, 1, 2, 3, 4, 5], data.0);
@@ -50,7 +50,7 @@ fn test_dfs_traverses_graph_with_little_cycle()
             Ok::<(), ()>(())
     });
     match res {
-        Ok(false) => assert!(true),
+        Ok(DfsResult::Cycle(cycle)) => assert_eq!(vec![0, 1, 1], cycle),
         _ => assert!(false),
     }
     assert_eq!(vec![0, 1], data.0);
@@ -77,9 +77,29 @@ fn test_dfs_traverses_graph_with_cycle()
             Ok::<(), ()>(())
     });
     match res {
-        Ok(false) => assert!(true),
+        Ok(DfsResult::Cycle(cycle)) => assert_eq!(vec![0, 1, 2, 4, 1], cycle),
         _ => assert!(false),
     }
     assert_eq!(vec![0, 1, 2, 3, 4], data.0);
     assert_eq!(vec![3], data.1);
+}
+
+#[test]
+fn test_dfs_traverses_graph_with_little_cycle_for_one_node()
+{
+    let graph: Vec<Vec<usize>> = vec![vec![0]];
+    let mut data: (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
+    let res = dfs(&0, &mut data, |u, data| {
+            data.0.push(*u);
+            Ok::<Vec<usize>, ()>(graph.get(*u).map(|vs| vs.clone()).unwrap_or(Vec::new()))
+    }, |u, data| {
+            data.1.push(*u);
+            Ok::<(), ()>(())
+    });
+    match res {
+        Ok(DfsResult::Cycle(cycle)) => assert_eq!(vec![0, 0], cycle),
+        _ => assert!(false),
+    }
+    assert_eq!(vec![0], data.0);
+    assert_eq!(true, data.1.is_empty());
 }

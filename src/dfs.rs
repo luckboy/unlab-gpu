@@ -8,7 +8,27 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 
-pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, mut g: G) -> Result<bool, E>
+#[derive(Clone, Debug)]
+pub enum DfsResult<T>
+{
+    Success,
+    Cycle(Vec<T>),
+}
+
+fn find_cycle<T: Clone + Eq + Hash>(u: &T, vs: &[T], stack: &[(T, Vec<T>)], processeds: &HashSet<T>) -> DfsResult<T>
+{
+    match vs.iter().find(|v| processeds.contains(v)) {
+        Some(v) => {
+            let mut cycle: Vec<T> = stack.iter().map(|p| p.0.clone()).collect();
+            cycle.push(u.clone());
+            cycle.push(v.clone());
+            DfsResult::Cycle(cycle)
+        },
+        None => DfsResult::Success,
+    }
+}
+
+pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, mut g: G) -> Result<DfsResult<T>, E>
     where F: FnMut(&T, &mut U) -> Result<Vec<T>, E>,
           G: FnMut(&T, &mut U) -> Result<(), E>
 {
@@ -17,6 +37,10 @@ pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, 
     let mut processeds: HashSet<T> = HashSet::new();
     processeds.insert(start.clone());
     let mut us = f(start, data)?;
+    match find_cycle(start, us.as_slice(), stack.as_slice(), &processeds) {
+        DfsResult::Success => (),
+        res @ DfsResult::Cycle(_) => return Ok(res),
+    }
     us.reverse();
     stack.push((start.clone(), us));
     visiteds.insert(start.clone());
@@ -34,8 +58,9 @@ pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, 
                     Some(v) => {
                         processeds.insert(v.clone());
                         let mut ws = f(&v, data)?;
-                        if ws.iter().any(|w| processeds.contains(w)) {
-                            return Ok(false);
+                        match find_cycle(&v, ws.as_slice(), stack.as_slice(), &processeds) {
+                            DfsResult::Success => (),
+                            res @ DfsResult::Cycle(_) => return Ok(res),
                         }
                         ws.reverse();
                         stack.push((v.clone(), ws));
@@ -51,7 +76,7 @@ pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, 
             None => break,
         }
     }
-    Ok(true)
+    Ok(DfsResult::Success)
 }
 
 #[cfg(test)]
