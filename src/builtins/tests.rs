@@ -2160,6 +2160,184 @@ fn shared_test_fun1_is_applied_with_success_for_f32_and_matrix<F>(fun_name: &str
     }
 }
 
+fn shared_test_fun2_is_applied_with_success_for_f32_and_matrix<F>(fun_name: &str, a: f32, b: f32, row_count: usize, col_count: usize, xs: &[f32], ys: &[f32], mut f: F)
+    where F: FnMut(f32, f32) -> f32
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from(fun_name)) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a), Value::Float(b)]) {
+                Ok(Value::Float(c)) => assert!((f(a, b) - c).abs() < 0.001),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, xs))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Float(b)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(row_count, matrix.row_count());
+                            assert_eq!(col_count, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(row_count * col_count) {
+                                assert!((f(xs[i], b) - zs[i]).abs() < 0.001);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, ys))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a), arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(row_count, matrix.row_count());
+                            assert_eq!(col_count, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(row_count * col_count) {
+                                assert!((f(a, ys[i]) - zs[i]).abs() < 0.001);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, xs))));
+            let arg_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, ys))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(row_count, matrix.row_count());
+                            assert_eq!(col_count, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(row_count * col_count) {
+                                assert!((f(xs[i], ys[i]) - zs[i]).abs() < 0.001);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(a), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, xs))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Float(b)]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert!((f(a, b) - c).abs() < 0.001),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(row_count, matrix.row_count());
+                                            assert_eq!(col_count, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(row_count * col_count) {
+                                                assert!((f(xs[i], b) - zs[i]).abs() < 0.001);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(b), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, ys))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a), arg_value2]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert!((f(a, b) - c).abs() < 0.001),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(row_count, matrix.row_count());
+                                            assert_eq!(col_count, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(row_count * col_count) {
+                                                assert!((f(a, ys[i]) - zs[i]).abs() < 0.001);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(a), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, xs))))]))));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(b), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(row_count, col_count, ys))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert!((f(a, b) - c).abs() < 0.001),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(row_count, matrix.row_count());
+                                            assert_eq!(col_count, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(row_count * col_count) {
+                                                assert!((f(xs[i], ys[i]) - zs[i]).abs() < 0.001);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
 #[test]
 fn test_sigmoid_is_applied_with_success()
 {
@@ -2410,44 +2588,61 @@ fn test_abs_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Float(2.5), value),
                 Err(_) => assert!(false),
             }
-        },
-        None => assert!(false),
-    }
-}
-
-fn shared_test_fun1_is_applied_with_success_for_f32<F>(fun_name: &str, a: f32, mut f: F)
-    where F: FnMut(f32) -> f32
-{
-    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
-    add_std_builtin_funs(&mut root_mod);
-    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
-    let mut interp = Interp::new();
-    let root_mod = env.root_mod().clone();
-    let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from(fun_name)) {
-        Some(fun_value) => {
-            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a)]) {
-                Ok(Value::Float(b)) => assert!((f(a) - b).abs() < 0.001),
+            let xs = vec![
+                -2.0, -1.0,
+                0.0, 1.0,
+                2.0, 3.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].abs(), ys[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
                 _ => assert!(false),
             }
-        },
-        None => assert!(false),
-    }
-}
-
-fn shared_test_fun2_is_applied_with_success_for_f32<F>(fun_name: &str, a: f32, b: f32, mut f: F)
-    where F: FnMut(f32, f32) -> f32
-{
-    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
-    add_std_builtin_funs(&mut root_mod);
-    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
-    let mut interp = Interp::new();
-    let root_mod = env.root_mod().clone();
-    let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from(fun_name)) {
-        Some(fun_value) => {
-            match fun_value.apply(&mut interp, &mut env, &[Value::Float(a), Value::Float(b)]) {
-                Ok(Value::Float(c)) => assert!((f(a, b) - c).abs() < 0.001),
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert_eq!(2.5, *b),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].abs(), ys[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
                 _ => assert!(false),
             }
         },
@@ -2457,71 +2652,200 @@ fn shared_test_fun2_is_applied_with_success_for_f32<F>(fun_name: &str, a: f32, b
 
 #[test]
 fn test_pow_is_applied_with_success()
-{ shared_test_fun2_is_applied_with_success_for_f32("pow", 3.5, 2.5, f32::powf); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let ys = vec![
+        3.0, 4.0,
+        5.0, 6.0,
+        4.0, 3.0
+    ];
+    shared_test_fun2_is_applied_with_success_for_f32_and_matrix("pow", 3.5, 2.5, 3, 2, xs.as_slice(), ys.as_slice(), f32::powf);
+}
 
 #[test]
 fn test_exp_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("exp", 2.5, f32::exp); }
+{ 
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("exp", 2.53, 3, 2, xs.as_slice(), f32::exp);
+}
 
 #[test]
 fn test_log_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("log", 10.5, f32::ln); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("log", 10.5, 3, 2, xs.as_slice(), f32::ln);
+}
 
 #[test]
 fn test_log2_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("log2", 10.5, f32::log2); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("log2", 10.5, 3, 2, xs.as_slice(), f32::log2);
+}
 
 #[test]
 fn test_log10_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("log10", 10.5, f32::log10); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("log10", 10.5, 3, 2, xs.as_slice(), f32::log10);
+}
 
 #[test]
 fn test_sin_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("sin", 0.5, f32::sin); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("sin", 0.5, 3, 2, xs.as_slice(), f32::sin);
+}
 
 #[test]
 fn test_cos_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("cos", 0.5, f32::cos); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("cos", 0.5, 3, 2, xs.as_slice(), f32::cos);
+}
 
 #[test]
 fn test_tan_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("tan", 0.5, f32::tan); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("tan", 0.5, 3, 2, xs.as_slice(), f32::tan);
+}
 
 #[test]
 fn test_asin_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("asin", 0.5, f32::asin); }
+{
+    let xs = vec![
+        -0.5, 0.25,
+        0.0, 0.25,
+        0.5, 0.75
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("asin", 0.5, 3, 2, xs.as_slice(), f32::asin);
+}
 
 #[test]
 fn test_acos_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("acos", 0.5, f32::acos); }
+{
+    let xs = vec![
+        -0.5, 0.25,
+        0.0, 0.25,
+        0.5, 0.75
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("acos", 0.5, 3, 2, xs.as_slice(), f32::acos);
+}
 
 #[test]
 fn test_atan_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("atan", 0.5, f32::atan); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("atan", 0.5, 3, 2, xs.as_slice(), f32::atan);
+}
 
 #[test]
 fn test_atan2_is_applied_with_success()
-{ shared_test_fun2_is_applied_with_success_for_f32("atan2", 0.25, 0.5, f32::atan2); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let ys = vec![
+        5.0, 6.0,
+        7.0, 8.0,
+        9.0, 10.0
+    ];
+    shared_test_fun2_is_applied_with_success_for_f32_and_matrix("atan2", 0.25, 0.5, 3, 2, xs.as_slice(), ys.as_slice(), f32::atan2);
+}
 
 #[test]
 fn test_sinh_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("sinh", 0.5, f32::sinh); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("sinh", 0.5, 3, 2, xs.as_slice(), f32::sinh);
+}
 
 #[test]
 fn test_cosh_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("cosh", 0.5, f32::cosh); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("cosh", 0.5, 3, 2, xs.as_slice(), f32::cosh);
+}
 
 #[test]
 fn test_asinh_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("asinh", 0.5, f32::asinh); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("asinh", 0.5, 3, 2, xs.as_slice(), f32::asinh);
+}
 
 #[test]
 fn test_acosh_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("acosh", 1.5, f32::acosh); }
+{
+    let xs = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("acosh", 1.5, 3, 2, xs.as_slice(), f32::acosh);
+}
 
 #[test]
 fn test_atanh_is_applied_with_success()
-{ shared_test_fun1_is_applied_with_success_for_f32("atanh", 0.5, f32::atanh); }
+{
+    let xs = vec![
+        -0.5, 0.25,
+        0.0, 0.25,
+        0.5, 0.75
+    ];
+    shared_test_fun1_is_applied_with_success_for_f32_and_matrix("atanh", 0.5, 3, 2, xs.as_slice(), f32::atanh);
+}
 
 #[test]
 fn test_sign_is_applied_with_success()
@@ -2546,33 +2870,62 @@ fn test_sign_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Float(-1.0), value),
                 Err(_) => assert!(false),
             }
-        },
-        None => assert!(false),
-    }
-}
-
-#[test]
-fn test_floor_is_applied_with_success()
-{
-    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
-    add_std_builtin_funs(&mut root_mod);
-    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
-    let mut interp = Interp::new();
-    let root_mod = env.root_mod().clone();
-    let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from("floor")) {
-        Some(fun_value) => {
-            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
-                Ok(value) => assert_eq!(Value::Float(2.0), value),
-                Err(_) => assert!(false),
+            let xs = vec![
+                -2.0, -1.0,
+                0.0, 1.0,
+                2.0, 3.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].signum(), ys[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
             }
-            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
-                Ok(value) => assert_eq!(Value::Float(0.0), value),
-                Err(_) => assert!(false),
-            }
-            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
-                Ok(value) => assert_eq!(Value::Float(-3.0), value),
-                Err(_) => assert!(false),
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert_eq!(-1.0, *b),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].signum(), ys[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
             }
         },
         None => assert!(false),
@@ -2602,6 +2955,148 @@ fn test_ceil_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Float(-2.0), value),
                 Err(_) => assert!(false),
             }
+            let xs = vec![
+                -2.6, -1.3,
+                0.0, 1.3,
+                2.6, 3.7
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].ceil(), ys[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert_eq!((-2.0), *b),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].ceil(), ys[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_floor_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("floor")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(2.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0)]) {
+                Ok(value) => assert_eq!(Value::Float(0.0), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Float(-3.0), value),
+                Err(_) => assert!(false),
+            }
+            let xs = vec![
+                -2.6, -1.3,
+                0.0, 1.3,
+                2.6, 3.7
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].floor(), ys[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert_eq!((-3.0), *b),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].floor(), ys[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
         },
         None => assert!(false),
     }
@@ -2630,6 +3125,63 @@ fn test_round_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Float(-3.0), value),
                 Err(_) => assert!(false),
             }
+            let xs = vec![
+                -2.6, -1.3,
+                0.0, 1.3,
+                2.6, 3.7
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].round(), ys[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert_eq!((-3.0), *b),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].round(), ys[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
         },
         None => assert!(false),
     }
@@ -2657,6 +3209,63 @@ fn test_trunc_is_applied_with_success()
             match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5)]) {
                 Ok(value) => assert_eq!(Value::Float(-2.0), value),
                 Err(_) => assert!(false),
+            }
+            let xs = vec![
+                -2.6, -1.3,
+                0.0, 1.3,
+                2.6, 3.7
+            ];
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let ys = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].trunc(), ys[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(b) => assert_eq!((-2.0), *b),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let ys = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].trunc(), ys[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
             }
         },
         None => assert!(false),
