@@ -462,3 +462,435 @@ pub fn matrix_to_matrix_array(a: &Matrix) -> Result<Object>
         Err(err) => Err(Error::Matrix(err)),
     }
 }
+
+fn matrix_res_abs(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.abs(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_abs(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_abs(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_pow(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.pow(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_pow(a: &Matrix, b: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_pow(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_pow_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.pow_for_scalar(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_pow_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
+{
+    match matrix_res_pow_for_scalar(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_rpow_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.rpow_for_scalar(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_rpow_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
+{
+    match matrix_res_rpow_for_scalar(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_exp(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.exp(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_exp(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_exp(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_ln(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.ln(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_ln(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_ln(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_log2(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.log2(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_log2(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_log2(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_log10(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.log10(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_log10(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_log10(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_sin(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.sin(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_sin(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_sin(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_cos(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.cos(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_cos(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_cos(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_tan(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.tan(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_tan(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_tan(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_asin(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.asin(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_asin(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_asin(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_acos(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.acos(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_acos(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_acos(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_atan(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.atan(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_atan(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_atan(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_atan2(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.atan2(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_atan2(a: &Matrix, b: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_atan2(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_atan2_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.atan2_for_scalar(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_atan2_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
+{
+    match matrix_res_atan2_for_scalar(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_ratan2_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.ratan2_for_scalar(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_ratan2_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
+{
+    match matrix_res_ratan2_for_scalar(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_sinh(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.sinh(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_sinh(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_sinh(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_cosh(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.cosh(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_cosh(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_cosh(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_asinh(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.asinh(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_asinh(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_asinh(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_acosh(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.acosh(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_acosh(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_acosh(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_atanh(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.atanh(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_atanh(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_atanh(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_signum(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.signum(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_signum(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_signum(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_ceil(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.ceil(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_ceil(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_ceil(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_floor(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.floor(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_floor(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_floor(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_round(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.round(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_round(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_round(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_trunc(a: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let b = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.trunc(a, &b)?;
+    Ok(b)
+}
+
+pub fn matrix_trunc(a: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_trunc(a) {
+        Ok(b) => Ok(b),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}

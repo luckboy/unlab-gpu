@@ -67,32 +67,6 @@ fn fun2<F>(arg_values: &[Value], f: F) -> Result<Value>
     }
 }
 
-fn fun1_for_f32<F>(arg_values: &[Value], err_msg: &str, f: F) -> Result<Value>
-    where F: FnOnce(f32) -> f32
-{
-    if arg_values.len() != 1 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    match arg_values.get(0) {
-        Some(value @ (Value::Int(_) | Value::Float(_))) => Ok(Value::Float(f(value.to_f32()))),
-        Some(_) => Err(Error::Interp(String::from(err_msg))),
-        None => Err(Error::Interp(String::from("no argument"))),
-    }
-}
-
-fn fun2_for_f32<F>(arg_values: &[Value], err_msg: &str, f: F) -> Result<Value>
-    where F: FnOnce(f32, f32) -> f32
-{
-    if arg_values.len() != 2 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    match (arg_values.get(0), arg_values.get(1)) {
-        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(f(value.to_f32(), value2.to_f32()))),
-        (Some(_), Some(_)) => Err(Error::Interp(String::from(err_msg))),
-        (_, _) => Err(Error::Interp(String::from("no argument"))),
-    }
-}
-
 fn fun1_for_f32_and_matrix_with_fun_refs<F, G>(arg_values: &[Value], err_msg: &str, f: &mut F, g: &mut G) -> Result<Value>
     where F: FnMut(f32) -> f32,
         G: FnMut(&Matrix) -> Result<Matrix>
@@ -117,6 +91,49 @@ fn fun1_for_f32_and_matrix<F, G>(arg_values: &[Value], err_msg: &str, mut f: F, 
     where F: FnMut(f32) -> f32,
         G: FnMut(&Matrix) -> Result<Matrix>
 { fun1_for_f32_and_matrix_with_fun_refs(arg_values, err_msg, &mut f, &mut g) }
+
+fn fun2_for_f32_and_matrix_with_fun_refs<F, G, RG, H>(arg_values: &[Value], err_msg: &str, f: &mut F, g: &mut G, rg: &mut RG, h: &mut H) -> Result<Value>
+    where F: FnMut(f32, f32) -> f32,
+        G: FnMut(&Matrix, f32) -> Result<Matrix>,
+        RG: FnMut(&Matrix, f32) -> Result<Matrix>,
+        H: FnMut(&Matrix, &Matrix) -> Result<Matrix>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(f(value.to_f32(), value2.to_f32()))),
+        (Some(Value::Object(object)), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => {
+            match &**object {
+                Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(g(a, value2.to_f32())?)))),
+                _ => Err(Error::Interp(String::from(err_msg))),
+            }
+        },
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(Value::Object(object2))) => {
+            match &**object2 {
+                Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(rg(b, value.to_f32())?)))),
+                _ => Err(Error::Interp(String::from(err_msg))),
+            }
+        },
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(h(a, b)?)))),
+                _ => Err(Error::Interp(String::from(err_msg))),
+            }
+        },
+        (Some(value @ Value::Ref(_)), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => value.dot1(err_msg, |a| fun2_for_f32_and_matrix_with_fun_refs(&[a.clone(), value2.clone()], err_msg, f, g, rg, h)),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ Value::Ref(_))) => value2.dot1(err_msg, |b| fun2_for_f32_and_matrix_with_fun_refs(&[value.clone(), b.clone()], err_msg, f, g, rg, h)),
+        (Some(value), Some(value2)) => value.dot2(value2, err_msg, |a, b| fun2_for_f32_and_matrix_with_fun_refs(&[a.clone(), b.clone()], err_msg, f, g, rg, h)),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+fn fun2_for_f32_and_matrix<F, G, RG, H>(arg_values: &[Value], err_msg: &str, mut f: F, mut g: G, mut rg: RG, mut h: H) -> Result<Value>
+    where F: FnMut(f32, f32) -> f32,
+        G: FnMut(&Matrix, f32) -> Result<Matrix>,
+        RG: FnMut(&Matrix, f32) -> Result<Matrix>,
+        H: FnMut(&Matrix, &Matrix) -> Result<Matrix>
+{ fun2_for_f32_and_matrix_with_fun_refs(arg_values, err_msg, &mut f, &mut g, &mut rg, &mut h) }
 
 fn get_first_arg_string(arg_values: &[Value], err_msg: &str) -> Result<String>
 {
@@ -1598,12 +1615,12 @@ pub fn modulo(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
             }
         },
         (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(value.to_f32() % value2.to_f32())),
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported type for function mod"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function mod"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
-pub fn abs(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn abs(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -1611,76 +1628,82 @@ pub fn abs(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     match arg_values.get(0) {
         Some(Value::Int(a)) => Ok(Value::Int(a.abs())),
         Some(Value::Float(a)) => Ok(Value::Float(a.abs())),
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function abs"))),
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_abs(a)?)))),
+                _ => Err(Error::Interp(String::from("unsupported type for function abs"))),
+            }
+        },
+        Some(value) => value.dot1("unsupported type for function abs", |a| abs(interp, env, &[a.clone()])),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
 pub fn pow(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun2_for_f32(arg_values, "unsupported types for function pow", f32::powf) }
+{ fun2_for_f32_and_matrix(arg_values, "unsupported types for function pow", f32::powf, matrix_pow_for_scalar, matrix_rpow_for_scalar, matrix_pow) }
 
 pub fn exp(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function exp", f32::exp) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function exp", f32::exp, matrix_exp) }
 
 pub fn log(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function log", f32::ln) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function log", f32::ln, matrix_ln) }
 
 pub fn log2(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function log2", f32::log2) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function log2", f32::log2, matrix_log2) }
 
 pub fn log10(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function log10", f32::log10) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function log10", f32::log10, matrix_log10) }
 
 pub fn sin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function sin", f32::sin) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function sin", f32::sin, matrix_sin) }
 
 pub fn cos(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function cos", f32::cos) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function cos", f32::cos, matrix_cos) }
 
 pub fn tan(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function tan", f32::tan) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function tan", f32::tan, matrix_tan) }
 
 pub fn asin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function asin", f32::asin) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function asin", f32::asin, matrix_asin) }
 
 pub fn acos(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function acos", f32::acos) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function acos", f32::acos, matrix_acos) }
 
 pub fn atan(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function atan", f32::atan) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function atan", f32::atan, matrix_atan) }
 
 pub fn atan2(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun2_for_f32(arg_values, "unsupported types for function atan2", f32::atan2) }
+{ fun2_for_f32_and_matrix(arg_values, "unsupported types for function atan2", f32::atan2, matrix_atan2_for_scalar, matrix_ratan2_for_scalar, matrix_atan2) }
 
 pub fn sinh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function sinh", f32::sinh) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function sinh", f32::sinh, matrix_sinh) }
 
 pub fn cosh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function cosh", f32::cosh) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function cosh", f32::cosh, matrix_cosh) }
 
 pub fn asinh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function asinh", f32::asinh) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function asinh", f32::asinh, matrix_asinh) }
 
 pub fn acosh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function acosh", f32::acosh) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function acosh", f32::acosh, matrix_acosh) }
 
 pub fn atanh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function atanh", f32::atanh) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function atanh", f32::atanh, matrix_atanh) }
 
 pub fn sign(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function sign", f32::signum) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function sign", f32::signum, matrix_signum) }
 
 pub fn ceil(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function ceil", f32::ceil) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function ceil", f32::ceil, matrix_ceil) }
 
 pub fn floor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function floor", f32::floor) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function floor", f32::floor, matrix_floor) }
 
 pub fn round(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function round", f32::round) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function round", f32::round, matrix_round) }
 
 pub fn trunc(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{ fun1_for_f32(arg_values, "unsupported type for function trunc", f32::trunc) }
+{ fun1_for_f32_and_matrix(arg_values, "unsupported type for function trunc", f32::trunc, matrix_trunc) }
 
 pub fn rand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
