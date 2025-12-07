@@ -4146,10 +4146,7 @@ fn test_usevar_is_applied_with_success()
                 None => assert!(false),
             }
         },
-        Err(err) => {
-            println!("{}", err);
-            assert!(false)
-        },
+        Err(_) => assert!(false),
     }
     let arg_value = Value::Object(Arc::new(Object::String(String::from("::d::Y"))));
     let arg_value2 = Value::Object(Arc::new(Object::String(String::from("W"))));
