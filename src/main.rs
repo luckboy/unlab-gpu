@@ -26,9 +26,24 @@ struct Args
     /// Unlab-gpu home directory
     #[arg(short = 'H', long)]
     home_dir: Option<String>,
+    /// Binary path
+    #[arg(short = 'B', long)]
+    bin_path: Option<String>,
     /// Library path
     #[arg(short = 'L', long)]
     lib_path: Option<String>,
+    /// Documentation path
+    #[arg(short = 'D', long)]
+    doc_path: Option<String>,
+    /// Add directory to binary path
+    #[arg(short, long)]
+    bin_dir: Vec<String>,
+    /// Add directory to library path
+    #[arg(short, long)]
+    lib_dir: Vec<String>,
+    /// Add directory to documentation path
+    #[arg(short, long)]
+    doc_dir: Vec<String>,
     /// Don't handle CTRL-C
     #[arg(short, long)]
     no_ctrl_c: bool,
@@ -44,13 +59,34 @@ struct Args
 fn main()
 {
     let args = Args::parse();
-    let home = match Home::new(&args.home_dir, &args.lib_path) {
+    let mut home = match Home::new(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path) {
         Some(tmp_home) => tmp_home,
         None => {
             eprintln!("no unlab-gpu home directory");
             exit(1);
         },
     };
+    match home.add_dirs_to_bin_path(args.bin_dir.as_slice()) {
+        Ok(()) => (),
+        Err(err) => {
+            eprintln!("{}", err);
+            exit(1);
+        },
+    }
+    match home.add_dirs_to_lib_path(args.lib_dir.as_slice()) {
+        Ok(()) => (),
+        Err(err) => {
+            eprintln!("{}", err);
+            exit(1);
+        },
+    }
+    match home.add_dirs_to_doc_path(args.doc_dir.as_slice()) {
+        Ok(()) => (),
+        Err(err) => {
+            eprintln!("{}", err);
+            exit(1);
+        },
+    }
     match initialize_backend(home.backend_config_file()) {
         Ok(()) => (),
         Err(err) => {
@@ -62,7 +98,7 @@ fn main()
         let mut root_mod: ModNode<Value, ()> = ModNode::new(());
         add_std_builtin_funs(&mut root_mod);
         let root_mod_arc = Arc::new(RwLock::new(root_mod));
-        main_loop(args.script_file.clone(), args.args.clone(), PathBuf::from(home.history_file()), root_mod_arc, OsString::from(home.lib_path()), !args.no_ctrl_c, !args.no_plotter_windows)
+        main_loop(args.script_file.clone(), args.args.clone(), PathBuf::from(home.history_file()), root_mod_arc, OsString::from(home.lib_path()), OsString::from(home.doc_path()), !args.no_ctrl_c, !args.no_plotter_windows)
     };
     match finalize_backend() {
         Ok(()) => (),

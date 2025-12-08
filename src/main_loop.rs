@@ -117,7 +117,7 @@ fn run_plotter_app<F>(_are_plotter_windows: bool, f: F) -> Option<i32>
 fn quit_from_plotter_app(_env: &Env) -> bool
 { true }
 
-fn non_interactive_main_loop(path: String, args: Vec<String>, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
+fn non_interactive_main_loop(path: String, args: Vec<String>, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
 {
     run_plotter_app(are_plotter_windows, move |event_loop_proxy| {
             let intr_checker: Arc<dyn IntrCheck + Send + Sync> = if is_ctrl_c_intr_checker {
@@ -132,7 +132,7 @@ fn non_interactive_main_loop(path: String, args: Vec<String>, root_mod: Arc<RwLo
             } else {
                 Arc::new(EmptyIntrChecker::new())
             };
-            let shared_env = SharedEnv::new_with_intr_checker_and_event_loop_proxy(lib_path, args, intr_checker, event_loop_proxy);
+            let shared_env = SharedEnv::new_with_intr_checker_and_event_loop_proxy(lib_path, doc_path, args, intr_checker, event_loop_proxy);
             let mut env = Env::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(shared_env)));
             let mut interp = Interp::new();
             let res = match parse(path) {
@@ -167,7 +167,7 @@ fn non_interactive_main_loop(path: String, args: Vec<String>, root_mod: Arc<RwLo
     })
 }
 
-fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
+fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
 {
     run_plotter_app(are_plotter_windows, move |event_loop_proxy| {
             let intr_checker: Arc<dyn IntrCheck + Send + Sync> = if is_ctrl_c_intr_checker {
@@ -182,7 +182,7 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
             } else {
                 Arc::new(EmptyIntrChecker::new())
             };
-            let shared_env = SharedEnv::new_with_intr_checker_and_event_loop_proxy(lib_path, args, intr_checker, event_loop_proxy);
+            let shared_env = SharedEnv::new_with_intr_checker_and_event_loop_proxy(lib_path, doc_path, args, intr_checker, event_loop_proxy);
             let mut env = Env::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(shared_env)));
             let mut interp = Interp::new();
             let mut editor = match DefaultEditor::new() {
@@ -304,10 +304,10 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
     })
 }
 
-pub fn main_loop(path: Option<String>, args: Vec<String>, history_file: PathBuf, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
+pub fn main_loop(path: Option<String>, args: Vec<String>, history_file: PathBuf, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
 {
     match path {
-        Some(path) => non_interactive_main_loop(path, args, root_mod, lib_path, is_ctrl_c_intr_checker, are_plotter_windows),
-        None => interactive_main_loop(args, history_file, root_mod, lib_path, is_ctrl_c_intr_checker, are_plotter_windows),
+        Some(path) => non_interactive_main_loop(path, args, root_mod, lib_path, doc_path, is_ctrl_c_intr_checker, are_plotter_windows),
+        None => interactive_main_loop(args, history_file, root_mod, lib_path, doc_path, is_ctrl_c_intr_checker, are_plotter_windows),
     }
 }

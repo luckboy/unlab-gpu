@@ -5,6 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::env::JoinPathsError;
+use std::env::join_paths;
+use std::env::split_paths;
 use std::env::var_os;
 use std::ffi::OsStr;
 use std::ffi::OsString;
@@ -17,12 +20,31 @@ pub struct Home
     home_dir: PathBuf,
     backend_config_file: PathBuf,
     history_file: PathBuf,
+    bin_path: OsString,
     lib_path: OsString,
+    doc_path: OsString,
 }
 
 impl Home
 {
-    pub fn new(home_dir: &Option<String>, lib_path: &Option<String>) -> Option<Self>
+    fn path_from<K: AsRef<OsStr>, D: AsRef<Path>>(path: &Option<String>, path_var_name: K, home_dir: &PathBuf, dir: D) -> OsString
+    {
+        match path {
+            Some(path) => OsString::from(path.as_str()),
+            None => {
+                match var_os(path_var_name) {
+                    Some(tmp_lib_path) => tmp_lib_path,
+                    None => {
+                        let mut tmp_lib_path = home_dir.clone();
+                        tmp_lib_path.push(dir);
+                        tmp_lib_path.into_os_string()
+                    },
+                }
+            },
+        }
+    }
+    
+    pub fn new(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>) -> Option<Self>
     {
         let home_dir = match home_dir {
             Some(home_dir) => PathBuf::from(home_dir.as_str()),
@@ -49,20 +71,17 @@ impl Home
         backend_config_file.push("backend.toml");
         let mut history_file = home_dir.clone();
         history_file.push("history.txt");
-        let lib_path = match lib_path {
-            Some(lib_path) => OsString::from(lib_path.as_str()),
-            None => {
-                match var_os("UNLAB_GPU_LIB_PATH") {
-                    Some(tmp_lib_path) => tmp_lib_path,
-                    None => {
-                        let mut tmp_lib_path = home_dir.clone();
-                        tmp_lib_path.push("lib");
-                        tmp_lib_path.into_os_string()
-                    },
-                }
-            },
-        };
-        Some(Home { home_dir, backend_config_file, history_file, lib_path, })
+        let bin_path = Self::path_from(bin_path, "UNLAB_GPU_BIN_PATH", &home_dir, "bin");
+        let lib_path = Self::path_from(lib_path, "UNLAB_GPU_LIB_PATH", &home_dir, "lib");
+        let doc_path = Self::path_from(doc_path, "UNLAB_GPU_DOC_PATH", &home_dir, "doc");
+        Some(Home {
+                home_dir,
+                backend_config_file,
+                history_file,
+                bin_path,
+                lib_path,
+                doc_path,
+        })
     }
     
     pub fn home_dir(&self) -> &Path
@@ -74,6 +93,33 @@ impl Home
     pub fn history_file(&self) -> &Path
     { self.history_file.as_path() }
 
+    pub fn bin_path(&self) -> &OsStr
+    { self.bin_path.as_os_str() }
+
     pub fn lib_path(&self) -> &OsStr
     { self.lib_path.as_os_str() }
+    
+    pub fn doc_path(&self) -> &OsStr
+    { self.doc_path.as_os_str() }
+
+    fn add_dirs_to_path(path: &mut OsString, dirs: &[String]) -> Result<(), JoinPathsError>
+    {
+        if !dirs.is_empty() {
+            let mut tmp_dirs: Vec<OsString> = dirs.iter().map(|d| OsString::from(d)).collect();
+            let mut tmp_dirs_from_path: Vec<OsString> = split_paths(path).map(|d| d.into_os_string()).collect();
+            tmp_dirs.reverse();
+            tmp_dirs.append(&mut tmp_dirs_from_path);
+            *path = join_paths(tmp_dirs)?;
+        }
+        Ok(())
+    }
+
+    pub fn add_dirs_to_bin_path(&mut self, dirs: &[String]) -> Result<(), JoinPathsError>
+    { Self::add_dirs_to_path(&mut self.bin_path, dirs) }
+
+    pub fn add_dirs_to_lib_path(&mut self, dirs: &[String]) -> Result<(), JoinPathsError>
+    { Self::add_dirs_to_path(&mut self.lib_path, dirs) }
+    
+    pub fn add_dirs_to_doc_path(&mut self, dirs: &[String]) -> Result<(), JoinPathsError>
+    { Self::add_dirs_to_path(&mut self.doc_path, dirs) }
 }

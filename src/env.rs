@@ -37,6 +37,7 @@ pub struct EventLoopProxy(());
 pub struct SharedEnv
 {
     lib_path: OsString,
+    doc_path: OsString,
     args: Vec<String>,
     used_libs: HashSet<String>,
     intr_checker: Arc<dyn IntrCheck + Send + Sync>,
@@ -46,17 +47,30 @@ pub struct SharedEnv
 
 impl SharedEnv
 {
-    pub fn new_with_intr_checker_and_event_loop_proxy(lib_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>, event_loop_proxy: Option<EventLoopProxy>) -> Self
-    { SharedEnv { lib_path, args, used_libs: HashSet::new(), intr_checker, event_loop_proxy, instant: Instant::now(), } }
+    pub fn new_with_intr_checker_and_event_loop_proxy(lib_path: OsString, doc_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>, event_loop_proxy: Option<EventLoopProxy>) -> Self
+    {
+        SharedEnv {
+            lib_path,
+            doc_path,
+            args,
+            used_libs: HashSet::new(),
+            intr_checker,
+            event_loop_proxy,
+            instant: Instant::now(),
+        }
+    }
 
-    pub fn new_with_intr_checker(lib_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>) -> Self
-    { Self::new_with_intr_checker_and_event_loop_proxy(lib_path, args, intr_checker, None) }
+    pub fn new_with_intr_checker(lib_path: OsString, doc_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>) -> Self
+    { Self::new_with_intr_checker_and_event_loop_proxy(lib_path, doc_path, args, intr_checker, None) }
 
-    pub fn new(lib_path: OsString, args: Vec<String>) -> Self
-    { Self::new_with_intr_checker(lib_path, args, Arc::new(EmptyIntrChecker::new())) }
+    pub fn new(lib_path: OsString, doc_path: OsString, args: Vec<String>) -> Self
+    { Self::new_with_intr_checker(lib_path, doc_path, args, Arc::new(EmptyIntrChecker::new())) }
     
     pub fn lib_path(&self) -> &OsStr
     { self.lib_path.as_os_str() }
+
+    pub fn doc_path(&self) -> &OsStr
+    { self.doc_path.as_os_str() }
     
     pub fn args(&self) -> &[String]
     { self.args.as_slice() }
@@ -114,7 +128,7 @@ impl Env
     }
 
     pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>) -> Self
-    { Self::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(SharedEnv::new(OsString::from("."), Vec::new())))) }
+    { Self::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new())))) }
 
     pub fn clone_without_stack(&self) -> Self
     {
