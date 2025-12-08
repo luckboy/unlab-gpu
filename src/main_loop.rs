@@ -133,7 +133,7 @@ fn non_interactive_main_loop(path: String, args: Vec<String>, root_mod: Arc<RwLo
                 Arc::new(EmptyIntrChecker::new())
             };
             let shared_env = SharedEnv::new_with_intr_checker_and_event_loop_proxy(lib_path, doc_path, args, intr_checker, event_loop_proxy);
-            let mut env = Env::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(shared_env)));
+            let mut env = Env::new_with_script_dir_and_domain_and_shared_env(root_mod, PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
             let mut interp = Interp::new();
             let res = match parse(path) {
                 Ok(tree) => {
@@ -183,7 +183,7 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
                 Arc::new(EmptyIntrChecker::new())
             };
             let shared_env = SharedEnv::new_with_intr_checker_and_event_loop_proxy(lib_path, doc_path, args, intr_checker, event_loop_proxy);
-            let mut env = Env::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(shared_env)));
+            let mut env = Env::new_with_script_dir_and_domain_and_shared_env(root_mod, PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
             let mut interp = Interp::new();
             let mut editor = match DefaultEditor::new() {
                 Ok(tmp_editor) => tmp_editor,

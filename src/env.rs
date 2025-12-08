@@ -110,12 +110,13 @@ pub struct Env
     mod_idents: Vec<String>,
     stack: Vec<(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)>,
     script_dir: PathBuf,
+    domain: Option<String>,
     shared_env: Arc<RwLock<SharedEnv>>,
 }
 
 impl Env
 {
-    pub fn new_with_script_dir_and_shared_env(root_mod: Arc<RwLock<ModNode<Value, ()>>>, script_dir: PathBuf, shared_env: Arc<RwLock<SharedEnv>>) -> Self
+    pub fn new_with_script_dir_and_domain_and_shared_env(root_mod: Arc<RwLock<ModNode<Value, ()>>>, script_dir: PathBuf, domain: Option<String>, shared_env: Arc<RwLock<SharedEnv>>) -> Self
     {
         Env {
             root_mod: root_mod.clone(),
@@ -123,12 +124,13 @@ impl Env
             mod_idents: Vec::new(),
             stack: Vec::new(),
             script_dir,
+            domain,
             shared_env,
         }
     }
 
     pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>) -> Self
-    { Self::new_with_script_dir_and_shared_env(root_mod, PathBuf::from("."), Arc::new(RwLock::new(SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new())))) }
+    { Self::new_with_script_dir_and_domain_and_shared_env(root_mod, PathBuf::from("."), None, Arc::new(RwLock::new(SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new())))) }
 
     pub fn clone_without_stack(&self) -> Self
     {
@@ -138,6 +140,7 @@ impl Env
             mod_idents: self.mod_idents.clone(),
             stack: Vec::new(),
             script_dir: self.script_dir.clone(),
+            domain: self.domain.clone(),
             shared_env: self.shared_env.clone(),
         }
     }
@@ -157,6 +160,9 @@ impl Env
     pub fn script_dir(&self) -> &Path
     { self.script_dir.as_path() }
 
+    pub fn domain(&self) -> &Option<String>
+    { &self.domain }
+    
     pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
     { &self.shared_env }
     

@@ -3779,6 +3779,26 @@ fn test_libpath_is_applied_with_success()
 }
 
 #[test]
+fn test_domain_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("domain")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_uselib_is_existent()
 { shared_test_fun_is_existent("uselib", uselib); }
 

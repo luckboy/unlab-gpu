@@ -2300,8 +2300,45 @@ pub fn libpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::Object(Arc::new(Object::String(shared_env_g.lib_path().to_string_lossy().into_owned()))))
 }
 
+pub fn domain(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match env.domain() {
+        Some(domain) => Ok(Value::Object(Arc::new(Object::String(domain.clone())))),
+        None => Ok(Value::None),
+    }
+}
+
+fn name_with_domain(name: &str, env: &Env) -> Result<String>
+{
+    if name.contains('/') {
+        Ok(String::from(name))
+    } else {
+        match env.domain() {
+            Some(domain) => {
+                let mut new_name = domain.clone();
+                new_name.push('/');
+                new_name.push_str(name);
+                Ok(new_name)
+            },
+            None => Err(Error::Interp(String::from("name library without domain"))),
+        }
+    }
+}
+
+fn domain_from_name(name: &str) -> Result<String>
+{
+    match name.split_once('/') {
+        Some((domain, _)) => Ok(String::from(domain)),
+        None => Err(Error::Interp(String::from("name library without domain"))),
+    }
+}
+
 fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
 {
+    let domain = domain_from_name(lib_name)?;
     let lib_path = {
         let shared_env_g = rw_lock_read(env.shared_env())?;
         OsString::from(shared_env_g.lib_path())
@@ -2309,12 +2346,12 @@ fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
     let mut res: Result<()> = Ok(());
     for dir in std::env::split_paths(lib_path.as_os_str()) {
         let mut script_dir = dir.clone();
-        script_dir.push(lib_name);
+        script_dir.push(lib_name.replace('/', path::MAIN_SEPARATOR_STR));
         let mut path = script_dir.clone();
         path.push("lib.un");
         match parse(path) {
             Ok(tree) => {
-                let mut new_env = Env::new_with_script_dir_and_shared_env(env.root_mod().clone(), script_dir.clone(), env.shared_env().clone());
+                let mut new_env = Env::new_with_script_dir_and_domain_and_shared_env(env.root_mod().clone(), script_dir.clone(), Some(domain), env.shared_env().clone());
                 interp.interpret(&mut new_env, &tree)?;
                 {
                     let mut shared_env_g = rw_lock_write(env.shared_env())?;
@@ -2335,6 +2372,7 @@ pub fn uselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     let lib_name = get_first_arg_string(arg_values, "unsupported type for function uselib")?;
+    let lib_name = name_with_domain(lib_name.as_str(), env)?;
     let is_used_lib = {
         let shared_env_g = rw_lock_read(env.shared_env())?;
         shared_env_g.has_used_lib(&lib_name)
@@ -2351,6 +2389,7 @@ pub fn reuselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     let lib_name = get_first_arg_string(arg_values, "unsupported type for function reuselib")?;
+    let lib_name = name_with_domain(lib_name.as_str(), env)?;
     use_lib(interp, env, lib_name.as_str())?;
     Ok(Value::None)
 }
@@ -2814,6 +2853,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("env"), env);
     add_builtin_fun(root_mod, String::from("scriptdir"), scriptdir);
     add_builtin_fun(root_mod, String::from("libpath"), libpath);
+    add_builtin_fun(root_mod, String::from("domain"), domain);
     add_builtin_fun(root_mod, String::from("uselib"), uselib);
     add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
     add_builtin_fun(root_mod, String::from("run"), run);
