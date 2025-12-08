@@ -1159,6 +1159,8 @@ pub fn max(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                 None => Err(Error::Interp(String::from("value isn't iterable"))),
             }
         },
+        (Some(Value::Int(a)), Some(Value::Int(b))) => Ok(Value::Int((*a).max(*b))),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(value.to_f32().max(value2.to_f32()))),
         (Some(value), Some(value2)) => {
             if value2 > value {
                 Ok(value2.clone())
@@ -1201,6 +1203,8 @@ pub fn min(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                 None => Err(Error::Interp(String::from("value isn't iterable"))),
             }
         },
+        (Some(Value::Int(a)), Some(Value::Int(b))) => Ok(Value::Int((*a).min(*b))),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(value.to_f32().min(value2.to_f32()))),
         (Some(value), Some(value2)) => {
             if value2 < value {
                 Ok(value2.clone())
