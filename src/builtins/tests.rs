@@ -1524,6 +1524,178 @@ fn test_max_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Int(2), value),
                 Err(_) => assert!(false),
             }
+            let xs = vec![
+                -2.0, -1.0,
+                0.0, 1.0,
+                2.0, 3.0
+            ];
+            let ys = vec![
+                4.0, 2.0,
+                0.0, -2.0,
+                -4.0, -6.0
+            ];
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5), Value::Float(2.5)]) {
+                Ok(Value::Float(c)) => assert_eq!(2.5, c),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Float(0.0)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].max(0.0), zs[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0), arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(0.0f32.max(ys[i]), zs[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            let arg_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].max(ys[i]), zs[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Float(0.0)]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert_eq!(0.0, *c),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].max(0.0), zs[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0), arg_value2]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert_eq!(2.5, *c),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(0.0f32.max(ys[i]), zs[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert_eq!(2.5, *c),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].max(ys[i]), zs[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
         },
         None => assert!(false),
     }
@@ -1557,6 +1729,178 @@ fn test_min_is_applied_with_success()
             match fun_value.apply(&mut interp, &mut env, &[Value::Int(2), Value::Int(1)]) {
                 Ok(value) => assert_eq!(Value::Int(1), value),
                 Err(_) => assert!(false),
+            }
+            let xs = vec![
+                -2.0, -1.0,
+                0.0, 1.0,
+                2.0, 3.0
+            ];
+            let ys = vec![
+                4.0, 2.0,
+                0.0, -2.0,
+                -4.0, -6.0
+            ];
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(-2.5), Value::Float(2.5)]) {
+                Ok(Value::Float(c)) => assert_eq!(-2.5, c),
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Float(0.0)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].min(0.0), zs[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0), arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(0.0f32.min(ys[i]), zs[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))));
+            let arg_value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Matrix(matrix) => {
+                            assert_eq!(3, matrix.row_count());
+                            assert_eq!(2, matrix.col_count());
+                            assert_eq!(false, matrix.is_transposed());
+                            let zs = matrix.elems();
+                            for i in 0..(3usize * 2usize) {
+                                assert_eq!(xs[i].min(ys[i]), zs[i]);
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Float(0.0)]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert_eq!(-2.5, *c),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].min(0.0), zs[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(0.0), arg_value2]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert_eq!(0.0, *c),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(0.0f32.min(ys[i]), zs[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(-2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, xs.as_slice()))))]))));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Float(2.5), Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, ys.as_slice()))))]))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(2, elems.len());
+                            match &elems[0] {
+                                Value::Float(c) => assert_eq!(-2.5, *c),
+                                _ => assert!(false),
+                            }
+                            match &elems[1] {
+                                Value::Object(object2) => {
+                                    match &**object2 {
+                                        Object::Matrix(matrix) => {
+                                            assert_eq!(3, matrix.row_count());
+                                            assert_eq!(2, matrix.col_count());
+                                            assert_eq!(false, matrix.is_transposed());
+                                            let zs = matrix.elems();
+                                            for i in 0..(3usize * 2usize) {
+                                                assert_eq!(xs[i].min(ys[i]), zs[i]);
+                                            }
+                                        },
+                                        _ => assert!(false),
+                                    }
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
             }
         },
         None => assert!(false),
