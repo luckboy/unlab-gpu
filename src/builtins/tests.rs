@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::collections::BTreeMap;
+use sealed_test::prelude::*;
 use crate::matrix::matrix;
 use crate::tree::*;
 use super::*;
@@ -4003,25 +4004,205 @@ fn test_flush_is_existent()
 fn test_eflush_is_existent()
 { shared_test_fun_is_existent("eflush", eflush); }
 
-#[test]
-fn test_cd_is_existent()
-{ shared_test_fun_is_existent("cd", cd); }
+#[sealed_test]
+fn test_cd_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("cd")) {
+        Some(fun_value) => {
+            let old_curerent_dir = std::env::current_dir().unwrap();
+            fs::create_dir("test").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    assert_eq!(Value::Object(Arc::new(Object::String(old_curerent_dir.to_string_lossy().into_owned()))), value);
+                    let new_current_dir = std::env::current_dir().unwrap();
+                    assert_eq!(true, new_current_dir.ends_with("test"));
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            std::env::set_current_dir(old_curerent_dir.as_path()).unwrap();
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_pwd_is_existent()
-{ shared_test_fun_is_existent("pwd", pwd); }
+#[sealed_test]
+fn test_pwd_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("pwd")) {
+        Some(fun_value) => {
+            let old_curerent_dir = std::env::current_dir().unwrap();
+            fs::create_dir("test").unwrap();
+            std::env::set_current_dir("test").unwrap();
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::String(s) => assert_eq!(true, PathBuf::from(s).ends_with("test")),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            std::env::set_current_dir(old_curerent_dir.as_path()).unwrap();
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_exist_is_existent()
-{ shared_test_fun_is_existent("exist", exist); }
+#[sealed_test]
+fn test_exist_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("exist")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            fs::create_dir("test").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_filetype_is_existent()
-{ shared_test_fun_is_existent("filetype", filetype); }
+#[sealed_test]
+fn test_filetype_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("filetype")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            fs::create_dir("test").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("file")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("dir")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_dir_is_existent()
-{ shared_test_fun_is_existent("dir", dir); }
+#[sealed_test]
+fn test_dir_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("dir")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            fs::create_dir("test").unwrap();
+            fs::create_dir("test2").unwrap();
+            let mut path_buf = PathBuf::from("test2");
+            path_buf.push("test.txt");
+            fs::write(path_buf.as_path(), "second some text").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("."))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(3, elems.len());
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("test.txt"))))));
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("test"))))));
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("test2"))))));
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(1, elems.len());
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("test.txt"))))));
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test3"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
 #[test]
 fn test_ls_is_alias_to_dir()
@@ -4034,21 +4215,170 @@ fn test_ls_is_alias_to_dir()
     }
 }
 
-#[test]
-fn test_mkdir_is_existent()
-{ shared_test_fun_is_existent("mkdir", mkdir); }
+#[sealed_test]
+fn test_mkdir_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("mkdir")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::metadata("test") {
+                        Ok(metadata) => assert_eq!(true, metadata.is_dir()),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let mut path_buf = PathBuf::from("test2");
+            path_buf.push("test");
+            let arg_value = Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned())));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_rmdir_is_existent()
-{ shared_test_fun_is_existent("rmdir", rmdir); }
+#[sealed_test]
+fn test_rmdir_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rmdir")) {
+        Some(fun_value) => {
+            fs::create_dir("test").unwrap();
+            fs::create_dir("test2").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::metadata("test") {
+                        Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                        Ok(_) => assert!(false), 
+                    }
+                    match fs::metadata("test2") {
+                        Ok(metadata) => assert_eq!(true, metadata.is_dir()),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test3"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_rmfile_is_existent()
-{ shared_test_fun_is_existent("rmfile", rmfile); }
+#[sealed_test]
+fn test_rmfile_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rmfile")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            fs::write("test2.txt", "second some text").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::metadata("test.txt") {
+                        Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                        Ok(_) => assert!(false), 
+                    }
+                    match fs::metadata("test2.txt") {
+                        Ok(metadata) => assert_eq!(true, metadata.is_file()),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test3.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_copy_is_existent()
-{ shared_test_fun_is_existent("copy", copy); }
+#[sealed_test]
+fn test_copy_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("copy")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("test2.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::read_to_string("test2.txt") {
+                        Ok(s) => assert_eq!(String::from("some text"), s),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test3.txt"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("test4.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
 
 #[test]
 fn test_spawn_is_existent()
@@ -4058,32 +4388,8 @@ fn test_spawn_is_existent()
 fn test_exit_is_existent()
 { shared_test_fun_is_existent("exit", exit); }
 
-#[test]
-fn test_load_is_existent()
-{ shared_test_fun_is_existent("load", load); }
-
-#[test]
-fn test_save_is_existent()
-{ shared_test_fun_is_existent("save", save); }
-
-#[test]
-fn test_loadstr_is_existent()
-{ shared_test_fun_is_existent("loadstr", loadstr); }
-
-#[test]
-fn test_savestr_is_existent()
-{ shared_test_fun_is_existent("savestr", savestr); }
-
-#[test]
-fn test_args_is_existent()
-{ shared_test_fun_is_existent("args", args); }
-
-#[test]
-fn test_env_is_existent()
-{ shared_test_fun_is_existent("env", env); }
-
-#[test]
-fn test_scriptdir_is_applied_with_success()
+#[sealed_test]
+fn test_load_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
@@ -4091,10 +4397,219 @@ fn test_scriptdir_is_applied_with_success()
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("load")) {
+        Some(fun_value) => {
+            save_values("test.bin", &[Value::Int(1), Value::Float(2.0), Value::Bool(false)]).unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.bin"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2.bin"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_save_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("save")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.bin"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(1), Value::Float(2.0), Value::Bool(false)]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match load_values("test.bin", &env) {
+                        Ok(values) => assert_eq!(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)], values),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let mut path_buf = PathBuf::from("test");
+            path_buf.push("test.bin");
+            let arg_value = Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned())));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_loadstr_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("loadstr")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("some text")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_savestr_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("savestr")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("some text"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::read_to_string("test.txt") {
+                        Ok(s) => assert_eq!(String::from("some text"), s),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let mut path_buf = PathBuf::from("test");
+            path_buf.push("test.txt");
+            let arg_value = Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned())));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("some text"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_args_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let shared_env = SharedEnv::new(OsString::from("."), OsString::from("."), vec![String::from("abc"), String::from("def"), String::from("ghi")]);
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("args")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![
+                        Value::Object(Arc::new(Object::String(String::from("abc")))),
+                        Value::Object(Arc::new(Object::String(String::from("def")))),
+                        Value::Object(Arc::new(Object::String(String::from("ghi"))))
+                    ]))));
+                    assert_eq!(expected_value, value);                    
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_env_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("env")) {
+        Some(fun_value) => {
+            std::env::set_var("TEST_VAR", "abc");
+            std::env::set_var("TEST_VAR2", "def");
+            std::env::set_var("TEST_VAR3", "ghi");
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(Value::Ref(object)) => {
+                    let object_g = object.read().unwrap();
+                    match &*object_g {
+                        MutObject::Array(elems) => {
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("TEST_VAR=abc"))))));
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("TEST_VAR2=def"))))));
+                            assert_eq!(true, elems.contains(&Value::Object(Arc::new(Object::String(String::from("TEST_VAR3=ghi"))))));
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+       },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_scriptdir_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let shared_env = SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("scripts"), None, Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
     match root_mod_g.var(&String::from("scriptdir")) {
         Some(fun_value) => {
             match fun_value.apply(&mut interp, &mut env, &[]) {
-                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from(".")))), value),
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("scripts")))), value),
                 Err(_) => assert!(false),
             }
         },
@@ -4107,14 +4622,16 @@ fn test_libpath_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
-    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let lib_path = std::env::join_paths(&["lib", "lib2", "lib3"]).unwrap();
+    let shared_env = SharedEnv::new(lib_path.clone(), OsString::from("."), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
     match root_mod_g.var(&String::from("libpath")) {
         Some(fun_value) => {
             match fun_value.apply(&mut interp, &mut env, &[]) {
-                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from(".")))), value),
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(lib_path.to_string_lossy().into_owned()))), value),
                 Err(_) => assert!(false),
             }
         },
@@ -4125,6 +4642,22 @@ fn test_libpath_is_applied_with_success()
 #[test]
 fn test_domain_is_applied_with_success()
 {
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let shared_env = SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), Some(String::from("abc")), Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("domain")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("abc")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
     let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
@@ -4142,17 +4675,225 @@ fn test_domain_is_applied_with_success()
     }
 }
 
-#[test]
-fn test_uselib_is_existent()
-{ shared_test_fun_is_existent("uselib", uselib); }
+#[sealed_test]
+fn test_uselib_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let lib_path = std::env::join_paths(&["lib", "lib2"]).unwrap();
+    let shared_env = SharedEnv::new(lib_path.clone(), OsString::from("."), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("uselib")) {
+            Some(tmp_fun_value) => tmp_fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    let mut path_buf = PathBuf::from("lib");
+    path_buf.push("a");
+    path_buf.push("b");
+    fs::create_dir_all(path_buf.as_path()).unwrap();
+    let mut file_path_buf = path_buf.clone();
+    file_path_buf.push("lib.un");
+    let s = "
+uselib(\"c\")
+X = 1
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    path_buf.pop();
+    path_buf.push("c");
+    fs::create_dir_all(path_buf.as_path()).unwrap();
+    let mut file_path_buf = path_buf.clone();
+    file_path_buf.push("lib.un");
+    let s = "
+Y = 2
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a/b"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let mut path_buf = PathBuf::from("lib2");
+    path_buf.push("d");
+    path_buf.push("e");
+    fs::create_dir_all(path_buf.as_path()).unwrap();
+    let mut file_path_buf = path_buf.clone();
+    file_path_buf.push("lib.un");
+    let s = "
+Z = 3
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d/e"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let s = "
+Z = 4
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d/e"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("X")) {
+        Some(value) => assert_eq!(Value::Int(1), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Y")) {
+        Some(value) => assert_eq!(Value::Int(2), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Z")) {
+        Some(value) => assert_eq!(Value::Int(3), *value),
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_reuselib_is_existent()
-{ shared_test_fun_is_existent("reuselib", reuselib); }
+#[sealed_test]
+fn test_reuselib_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let lib_path = std::env::join_paths(&["lib", "lib2"]).unwrap();
+    let shared_env = SharedEnv::new(lib_path.clone(), OsString::from("."), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("reuselib")) {
+            Some(tmp_fun_value) => tmp_fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    let mut path_buf = PathBuf::from("lib");
+    path_buf.push("a");
+    path_buf.push("b");
+    fs::create_dir_all(path_buf.as_path()).unwrap();
+    let mut file_path_buf = path_buf.clone();
+    file_path_buf.push("lib.un");
+    let s = "
+uselib(\"c\")
+X = 1
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    path_buf.pop();
+    path_buf.push("c");
+    fs::create_dir_all(path_buf.as_path()).unwrap();
+    let mut file_path_buf = path_buf.clone();
+    file_path_buf.push("lib.un");
+    let s = "
+Y = 2
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("a/b"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let mut path_buf = PathBuf::from("lib2");
+    path_buf.push("d");
+    path_buf.push("e");
+    fs::create_dir_all(path_buf.as_path()).unwrap();
+    let mut file_path_buf = path_buf.clone();
+    file_path_buf.push("lib.un");
+    let s = "
+Z = 3
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d/e"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let s = "
+Z = 4
+";
+    let s2 = &s[1..];
+    fs::write(file_path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("d/e"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("X")) {
+        Some(value) => assert_eq!(Value::Int(1), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Y")) {
+        Some(value) => assert_eq!(Value::Int(2), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Z")) {
+        Some(value) => assert_eq!(Value::Int(4), *value),
+        None => assert!(false),
+    }
+}
 
-#[test]
-fn test_run_is_existent()
-{ shared_test_fun_is_existent("run", run); }
+#[sealed_test]
+fn test_run_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let shared_env = SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("scripts"), None, Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("run")) {
+            Some(tmp_fun_value) => tmp_fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    let mut path_buf = PathBuf::from("scripts");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test.un");
+    let s = "
+X = 1
+Y = 2
+";
+    let s2 = &s[1..];
+    fs::write(path_buf.as_path(), s2).unwrap();
+    let arg_value = Value::Object(Arc::new(Object::String(String::from("test.un"))));
+    match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+        Ok(value) => assert_eq!(Value::None, value),
+        Err(_) => assert!(false),
+    }
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("X")) {
+        Some(value) => assert_eq!(Value::Int(1), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Y")) {
+        Some(value) => assert_eq!(Value::Int(2), *value),
+        None => assert!(false),
+    }
+}
 
 #[test]
 fn test_clock_is_existent()

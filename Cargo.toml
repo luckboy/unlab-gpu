@@ -21,6 +21,9 @@ toml = "0.6"
 unmtx-gpu = { version = "0.1.7", default-features = false }
 winit = { version = "0.30", optional = true }
 
+[dev-dependencies]
+sealed_test = "1.1.0"
+
 [features]
 default = ["opencl", "plot"]
 default_cublas = ["unmtx-gpu/default_cublas"]

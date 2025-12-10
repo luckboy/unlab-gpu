@@ -5,6 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::ffi::OsString;
+use std::path::PathBuf;
 use crate::builtins::add_std_builtin_funs;
 use crate::mod_node::*;
 use super::*;
@@ -18,12 +20,22 @@ fn str_array(ss: &[&str]) -> Value
     Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems))))
 }
 
+fn str_vec(ss: &[&str]) -> Vec<String>
+{
+    let mut ts: Vec<String> = Vec::new();
+    for s in ss {
+        ts.push(String::from(*s));
+    }
+    ts
+}
+
 #[test]
 fn test_getopts_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
-    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let shared_env = SharedEnv::new(OsString::from("."), OsString::from("."), str_vec(&["aaa", "bbb", "-a", "xxx", "-b", "-c", "yyy"]));
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
@@ -93,6 +105,26 @@ fn test_getopts_is_applied_with_success()
                     let mut fields2: BTreeMap<String, Value> = BTreeMap::new();
                     fields2.insert(String::from("opts"), Value::Ref(Arc::new(RwLock::new(MutObject::Struct(opt_fields)))));
                     fields2.insert(String::from("free"), str_array(&["xxx", "yyy"]));
+                    let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
+                    assert_eq!(value2, value);
+                },
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone()]) {
+                Ok(value) => {
+                    let mut opt_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    opt_fields.insert(String::from("a_a"), str_array(&["xxx"]));
+                    opt_fields.insert(String::from("b_b"), str_array(&[]));
+                    opt_fields.insert(String::from("c_c"), str_array(&["yyy"]));
+                    opt_fields.insert(String::from("d_d"), Value::None);
+                    opt_fields.insert(String::from("e_e"), Value::None);
+                    opt_fields.insert(String::from("f_f"), Value::None);
+                    opt_fields.insert(String::from("g_g"), Value::None);
+                    opt_fields.insert(String::from("h_h"), Value::None);
+                    opt_fields.insert(String::from("i_i"), Value::None);
+                    let mut fields2: BTreeMap<String, Value> = BTreeMap::new();
+                    fields2.insert(String::from("opts"), Value::Ref(Arc::new(RwLock::new(MutObject::Struct(opt_fields)))));
+                    fields2.insert(String::from("free"), str_array(&["aaa", "bbb"]));
                     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
                     assert_eq!(value2, value);
                 },
