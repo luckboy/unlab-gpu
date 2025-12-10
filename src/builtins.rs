@@ -1128,7 +1128,7 @@ pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
-pub fn max(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn max(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -1161,18 +1161,32 @@ pub fn max(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
         },
         (Some(Value::Int(a)), Some(Value::Int(b))) => Ok(Value::Int((*a).max(*b))),
         (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(value.to_f32().max(value2.to_f32()))),
-        (Some(value), Some(value2)) => {
-            if value2 > value {
-                Ok(value2.clone())
-            } else {
-                Ok(value.clone())
+        (Some(Value::Object(object)), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => {
+            match &**object {
+                Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_max_for_scalar(a, value2.to_f32())?)))),
+                _ => Err(Error::Interp(String::from("unsupported types for function max"))),
             }
         },
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(Value::Object(object2))) => {
+            match &**object2 {
+                Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_max_for_scalar(b, value.to_f32())?)))),
+                _ => Err(Error::Interp(String::from("unsupported types for function max"))),
+            }
+        },
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_max(a, b)?)))),
+                _ => Err(Error::Interp(String::from("unsupported types for function max"))),
+            }
+        },
+        (Some(value @ Value::Ref(_)), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => value.dot1("unsupported types for function max", |a| max(interp, env, &[a.clone(), value2.clone()])),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ Value::Ref(_))) => value2.dot1("unsupported types for function max", |b| max(interp, env, &[value.clone(), b.clone()])),
+        (Some(value), Some(value2)) => value.dot2(value2, "unsupported types for function max", |a, b| max(interp, env, &[a.clone(), b.clone()])),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
-pub fn min(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn min(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -1205,13 +1219,27 @@ pub fn min(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
         },
         (Some(Value::Int(a)), Some(Value::Int(b))) => Ok(Value::Int((*a).min(*b))),
         (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Float(value.to_f32().min(value2.to_f32()))),
-        (Some(value), Some(value2)) => {
-            if value2 < value {
-                Ok(value2.clone())
-            } else {
-                Ok(value.clone())
+        (Some(Value::Object(object)), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => {
+            match &**object {
+                Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_min_for_scalar(a, value2.to_f32())?)))),
+                _ => Err(Error::Interp(String::from("unsupported types for function min"))),
             }
         },
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(Value::Object(object2))) => {
+            match &**object2 {
+                Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_min_for_scalar(b, value.to_f32())?)))),
+                _ => Err(Error::Interp(String::from("unsupported types for function min"))),
+            }
+        },
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::Matrix(a), Object::Matrix(b)) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_min(a, b)?)))),
+                _ => Err(Error::Interp(String::from("unsupported types for function min"))),
+            }
+        },
+        (Some(value @ Value::Ref(_)), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => value.dot1("unsupported types for function min", |a| min(interp, env, &[a.clone(), value2.clone()])),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ Value::Ref(_))) => value2.dot1("unsupported types for function min", |b| min(interp, env, &[value.clone(), b.clone()])),
+        (Some(value), Some(value2)) => value.dot2(value2, "unsupported types for function min", |a, b| min(interp, env, &[a.clone(), b.clone()])),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }

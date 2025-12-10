@@ -894,3 +894,67 @@ pub fn matrix_trunc(a: &Matrix) -> Result<Matrix>
         Err(err) => Err(Error::Matrix(err)),
     }
 }
+
+fn matrix_res_max(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.max(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_max(a: &Matrix, b: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_max(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_max_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.max_for_scalar(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_max_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
+{
+    match matrix_res_max_for_scalar(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_min(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.min(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_min(a: &Matrix, b: &Matrix) -> Result<Matrix>
+{
+    match matrix_res_min(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
+
+fn matrix_res_min_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
+{
+    let frontend = Frontend::new()?;
+    let c = unsafe { frontend.create_matrix(a.row_count(), a.col_count())? };
+    frontend.min_for_scalar(a, b, &c)?;
+    Ok(c)
+}
+
+pub fn matrix_min_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
+{
+    match matrix_res_min_for_scalar(a, b) {
+        Ok(c) => Ok(c),
+        Err(err) => Err(Error::Matrix(err)),
+    }
+}
