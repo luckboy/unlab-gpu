@@ -190,3 +190,6 @@ pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;
