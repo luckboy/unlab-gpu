@@ -4704,6 +4704,7 @@ fn test_uselib_is_applied_with_success()
     let s = "
 uselib(\"c\")
 X = 1
+P = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4714,6 +4715,7 @@ X = 1
     file_path_buf.push("lib.un");
     let s = "
 Y = 2
+Q = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4730,6 +4732,7 @@ Y = 2
     file_path_buf.push("lib.un");
     let s = "
 Z = 3
+R = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4740,6 +4743,7 @@ Z = 3
     }
     let s = "
 Z = 4
+R = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4759,6 +4763,33 @@ Z = 4
     }
     match root_mod_g.var(&String::from("Z")) {
         Some(value) => assert_eq!(Value::Int(3), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("P")) {
+        Some(value) => {
+            let mut path_buf = PathBuf::from("lib");
+            path_buf.push("a");
+            path_buf.push("b");
+            assert_eq!(Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned()))), *value);
+        },
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Q")) {
+        Some(value) => {
+            let mut path_buf = PathBuf::from("lib");
+            path_buf.push("a");
+            path_buf.push("c");
+            assert_eq!(Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned()))), *value);
+        },
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("R")) {
+        Some(value) => {
+            let mut path_buf = PathBuf::from("lib2");
+            path_buf.push("d");
+            path_buf.push("e");
+            assert_eq!(Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned()))), *value);
+        },
         None => assert!(false),
     }
 }
@@ -4792,6 +4823,7 @@ fn test_reuselib_is_applied_with_success()
     let s = "
 uselib(\"c\")
 X = 1
+P = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4802,6 +4834,7 @@ X = 1
     file_path_buf.push("lib.un");
     let s = "
 Y = 2
+Q = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4818,6 +4851,7 @@ Y = 2
     file_path_buf.push("lib.un");
     let s = "
 Z = 3
+R = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4828,6 +4862,7 @@ Z = 3
     }
     let s = "
 Z = 4
+R = scriptdir()
 ";
     let s2 = &s[1..];
     fs::write(file_path_buf.as_path(), s2).unwrap();
@@ -4847,6 +4882,33 @@ Z = 4
     }
     match root_mod_g.var(&String::from("Z")) {
         Some(value) => assert_eq!(Value::Int(4), *value),
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("P")) {
+        Some(value) => {
+            let mut path_buf = PathBuf::from("lib");
+            path_buf.push("a");
+            path_buf.push("b");
+            assert_eq!(Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned()))), *value);
+        },
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("Q")) {
+        Some(value) => {
+            let mut path_buf = PathBuf::from("lib");
+            path_buf.push("a");
+            path_buf.push("c");
+            assert_eq!(Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned()))), *value);
+        },
+        None => assert!(false),
+    }
+    match root_mod_g.var(&String::from("R")) {
+        Some(value) => {
+            let mut path_buf = PathBuf::from("lib2");
+            path_buf.push("d");
+            path_buf.push("e");
+            assert_eq!(Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned()))), *value);
+        },
         None => assert!(false),
     }
 }
