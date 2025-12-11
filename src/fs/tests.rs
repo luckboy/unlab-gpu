@@ -128,6 +128,7 @@ fn test_recursively_copy_creates_destination_directories()
     path_buf.push("a");
     match recursively_copy("test", path_buf.as_path()) {
         Ok(()) => {
+            assert_eq!(true, fs::metadata("test").unwrap().is_dir());
             let mut path_buf = PathBuf::from("test2");
             assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
             path_buf.push("a");
@@ -149,7 +150,7 @@ fn test_recursively_copy_overwrites_file()
     match recursively_copy("test.txt", "test2.txt") {
         Ok(()) => {
             assert_eq!(String::from("some text"), fs::read_to_string("test.txt").unwrap());
-            assert_eq!(String::from("some text"), fs::read_to_string("test2.txt").unwrap())
+            assert_eq!(String::from("some text"), fs::read_to_string("test2.txt").unwrap());
         },
         Err(_) => assert!(false),
     }
