@@ -2190,6 +2190,26 @@ pub fn copy(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn rename(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let (src_file_name, dst_file_name) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(src_file_name_value), Some(dst_file_name_value)) => {
+            match (src_file_name_value.to_opt_string(), dst_file_name_value.to_opt_string()) {
+                (Some(tmp_src_file_name), Some(tmp_dst_file_name)) => (tmp_src_file_name, tmp_dst_file_name),
+                (_, _) => return Err(Error::Interp(String::from("unsupported types for function rename"))),
+            }
+        },
+        (_, _) => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match fs::rename(src_file_name.as_str(), dst_file_name.as_str()) {
+        Ok(_) => Ok(Value::Bool(true)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -2875,6 +2895,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("rmdir"), rmdir);
     add_builtin_fun(root_mod, String::from("rmfile"), rmfile);
     add_builtin_fun(root_mod, String::from("copy"), copy);
+    add_builtin_fun(root_mod, String::from("rename"), rename);
     add_builtin_fun(root_mod, String::from("spawn"), spawn);
     add_builtin_fun(root_mod, String::from("exit"), exit);
     add_builtin_fun(root_mod, String::from("load"), load);

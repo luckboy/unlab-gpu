@@ -4384,6 +4384,50 @@ fn test_copy_is_applied_with_success()
     }
 }
 
+#[sealed_test]
+fn test_rename_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rename")) {
+        Some(fun_value) => {
+            fs::write("test.txt", "some text").unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.txt"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("test2.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::metadata("test.txt") {
+                        Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                        Ok(_) => assert!(false),
+                    }
+                    match fs::read_to_string("test2.txt") {
+                        Ok(s) => assert_eq!(String::from("some text"), s),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test3.txt"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("test4.txt"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
 #[test]
 fn test_spawn_is_existent()
 { shared_test_fun_is_existent("spawn", spawn); }
