@@ -4357,6 +4357,10 @@ fn test_copy_is_applied_with_success()
             match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
                 Ok(value) => {
                     assert_eq!(Value::Bool(true), value);
+                    match fs::read_to_string("test.txt") {
+                        Ok(s) => assert_eq!(String::from("some text"), s),
+                        Err(_) => assert!(false),
+                    }
                     match fs::read_to_string("test2.txt") {
                         Ok(s) => assert_eq!(String::from("some text"), s),
                         Err(_) => assert!(false),

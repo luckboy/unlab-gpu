@@ -14,7 +14,10 @@ fn test_recursively_copy_copies_file()
 {
     fs::write("test.txt", "some text").unwrap();
     match recursively_copy("test.txt", "test2.txt") {
-        Ok(()) => assert_eq!(String::from("some text"), fs::read_to_string("test2.txt").unwrap()),
+        Ok(()) => {
+            assert_eq!(String::from("some text"), fs::read_to_string("test.txt").unwrap());
+            assert_eq!(String::from("some text"), fs::read_to_string("test2.txt").unwrap());
+        },
         Err(_) => assert!(false),
     }
 }
@@ -50,6 +53,7 @@ fn test_recursively_copy_copies_directory()
     path_buf.pop();
     match recursively_copy("test", "test2") {
         Ok(()) => {
+            assert_eq!(true, fs::metadata("test").unwrap().is_dir());
             let mut path_buf = PathBuf::from("test2");
             assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
             path_buf.push("a");
@@ -98,6 +102,7 @@ fn test_recursively_copy_copies_directory_for_existent_directory()
     fs::create_dir(path_buf.as_path()).unwrap();
     match recursively_copy("test", "test2") {
         Ok(()) => {
+            assert_eq!(true, fs::metadata("test").unwrap().is_dir());
             let mut path_buf = PathBuf::from("test2");
             assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
             path_buf.push("a");
@@ -142,7 +147,10 @@ fn test_recursively_copy_overwrites_file()
     fs::write("test.txt", "some text").unwrap();
     fs::write("test2.txt", "second some text").unwrap();
     match recursively_copy("test.txt", "test2.txt") {
-        Ok(()) => assert_eq!(String::from("some text"), fs::read_to_string("test2.txt").unwrap()),
+        Ok(()) => {
+            assert_eq!(String::from("some text"), fs::read_to_string("test.txt").unwrap());
+            assert_eq!(String::from("some text"), fs::read_to_string("test2.txt").unwrap())
+        },
         Err(_) => assert!(false),
     }
 }
@@ -187,12 +195,14 @@ fn test_recursively_copy_complains_on_not_a_directory()
 fn test_recursively_remove_removes_file()
 {
     fs::write("test.txt", "some text").unwrap();
+    fs::write("test2.txt", "second some text").unwrap();
     match recursively_remove("test.txt") {
         Ok(()) => {
             match fs::metadata("test.txt") {
                 Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
                 Ok(_) => assert!(false),
             }
+            assert_eq!(String::from("second some text"), fs::read_to_string("test2.txt").unwrap());
         },
         Err(_) => assert!(false),
     }
@@ -227,12 +237,14 @@ fn test_recursively_remove_removes_directory()
     path_buf.push("test5.txt");
     fs::write(path_buf.as_path(), "fifth some text").unwrap();
     path_buf.pop();
+    fs::write("test2.txt", "second some text").unwrap();
     match recursively_remove("test") {
         Ok(()) => {
             match fs::metadata("test") {
                 Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
                 Ok(_) => assert!(false),
             }
+            assert_eq!(String::from("second some text"), fs::read_to_string("test2.txt").unwrap());
         },
         Err(_) => assert!(false),
     }
