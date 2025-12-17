@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 clap = { version = "4.5", default-features = false, features = ["std", "help", "usage", "error-context", "derive"] }
 ctrlc = "3.5"
-dlopen2_derive = ">=0.4.0,<=0.4.1"
 getopts = "0.2"
 home = ">=0.5.0,<=0.5.9"
 image = { version = "0.24", optional = true, default-features = false, features = ["png"] }
@@ -18,9 +17,12 @@ rand = "0.9"
 rustyline = { version = "14.0", default-features = false, features = ["with-file-history"] }
 serde = { version = "1.0", features = ["derive"] }
 softbuffer = { version = "0.4", optional = true }
-toml = "0.6"
+toml = "0.8"
 unmtx-gpu = { version = "0.1.7", default-features = false }
 winit = { version = "0.30", optional = true }
+# Holded versions.
+dlopen2_derive = ">=0.4.0,<=0.4.1"
+indexmap = ">=2.0.0,<=2.11.4"
 
 [dev-dependencies]
 sealed_test = "1.1.0"
