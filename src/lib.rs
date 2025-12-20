@@ -33,6 +33,7 @@ pub mod plot;
 pub mod tree;
 pub mod utils;
 pub mod value;
+pub mod version;
 
 pub use backend::initialize_backend;
 pub use backend::finalize_backend;
