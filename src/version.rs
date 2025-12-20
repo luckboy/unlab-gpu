@@ -125,7 +125,12 @@ impl Ord for Version
                 ordering => return ordering,
             }
         }
-        self.pre_release_idents.cmp(&other.pre_release_idents)
+        match (&self.pre_release_idents, &other.pre_release_idents) {
+            (Some(pre_release_idents), Some(pre_release_idents2)) => pre_release_idents.cmp(&pre_release_idents2),
+            (Some(_), None) => Ordering::Less,
+            (None, Some(_)) => Ordering::Greater,
+            (None, None) => Ordering::Equal,
+        }
     }
 }
 
