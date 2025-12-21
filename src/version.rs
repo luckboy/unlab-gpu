@@ -329,10 +329,14 @@ impl SingleVersionReq
                         version >= version2 && version.eq_numeric_idents(version2, count)
                     },
                     VersionOp::Tilde => {
-                        let count = if version2.numeric_idents.len() >= 2 {
-                            2
+                        let count = if !version2.numeric_idents.is_empty() {
+                            if version2.numeric_idents.len() >= 2 {
+                                2
+                            } else {
+                                1
+                            }
                         } else {
-                            1
+                            0
                         };
                         version >= version2 && version.eq_numeric_idents(version2, count)
                     },
