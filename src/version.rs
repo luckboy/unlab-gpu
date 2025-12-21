@@ -11,12 +11,7 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
-pub enum VersionError
-{
-    InvalidVersion,
-    NoVersion,
-    NoComma,
-}
+pub struct VersionError;
 
 impl Error for VersionError
 {}
@@ -24,13 +19,7 @@ impl Error for VersionError
 impl fmt::Display for VersionError
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    {
-        match self {
-            VersionError::InvalidVersion => write!(f, "invalid version"),
-            VersionError::NoVersion => write!(f, "no version"),
-            VersionError::NoComma => write!(f, "no comma"),
-        }
-    }
+    { write!(f, "invalid version") }
 }
 
 pub type VersionResult<T> = Result<T, VersionError>;
@@ -108,7 +97,7 @@ impl Version
         for t in version_core.split('.') {
             match t.parse::<u32>() {
                 Ok(n) => numeric_idents.push(n),
-                Err(_) => return Err(VersionError::InvalidVersion),
+                Err(_) => return Err(VersionError),
             }
         }
         let pre_release_idents = if !s.is_empty() {
@@ -303,6 +292,37 @@ pub enum SingleVersionReq
 
 impl SingleVersionReq
 {
+    pub fn parse(s: &str) -> VersionResult<Self>
+    {
+        let trimmed_s = s.trim();
+        if trimmed_s != "*" {
+            let (op, t) = if trimmed_s.starts_with("=") {
+                (VersionOp::Eq, &trimmed_s[1..])
+            } else if trimmed_s.starts_with("!=") {
+                (VersionOp::Ne, &trimmed_s[2..])
+            } else if trimmed_s.starts_with("<=") {
+                (VersionOp::Le, &trimmed_s[2..])
+            } else if trimmed_s.starts_with("<") {
+                (VersionOp::Lt, &trimmed_s[1..])
+            } else if trimmed_s.starts_with(">=") {
+                (VersionOp::Ge, &trimmed_s[2..])
+            } else if trimmed_s.starts_with(">") {
+                (VersionOp::Gt, &trimmed_s[1..])
+            } else if trimmed_s.starts_with("^") {
+                (VersionOp::Default, &trimmed_s[1..])
+            } else if trimmed_s.starts_with("~") {
+                (VersionOp::Tilde, &trimmed_s[1..])
+            } else {
+                (VersionOp::Default, trimmed_s)
+            };
+            let trimmed_t = t.trim();
+            let version = Version::parse(trimmed_t)?;
+            Ok(SingleVersionReq::Pair(op, version))
+        } else {
+            Ok(SingleVersionReq::Wildcard)
+        }
+    }
+    
     pub fn matches(&self, version: &Version) -> bool
     {
         match self {
@@ -370,54 +390,9 @@ impl VersionReq
     
     pub fn parse(s: &str) -> VersionResult<Self>
     {
-        let trimmed_s = s.trim();
-        let mut iter = trimmed_s.split_whitespace();
         let mut single_reqs: Vec<SingleVersionReq> = Vec::new();
-        loop {
-            match iter.next() {
-                Some(t) => {
-                    if t != "*" {
-                        let tmp_op = if t == "=" {
-                            Some(VersionOp::Eq)
-                        } else if t == "!=" {
-                            Some(VersionOp::Ne)
-                        } else if t == "<" {
-                            Some(VersionOp::Lt)
-                        } else if t == ">=" {
-                            Some(VersionOp::Ge)
-                        } else if t == ">" {
-                            Some(VersionOp::Gt)
-                        } else if t == "<=" {
-                            Some(VersionOp::Le)
-                        } else if t == "^" {
-                            Some(VersionOp::Default)
-                        } else if t == "~" {
-                            Some(VersionOp::Tilde)
-                        } else {
-                            None
-                        };
-                        let version_s = if tmp_op.is_some() {
-                            match iter.next() {
-                                Some(u) => u,
-                                None => return Err(VersionError::NoVersion),
-                            }
-                        } else {
-                            t
-                        };
-                        let op = tmp_op.unwrap_or(VersionOp::Default);
-                        let version = Version::parse(version_s)?;
-                        single_reqs.push(SingleVersionReq::Pair(op, version));
-                    } else {
-                        single_reqs.push(SingleVersionReq::Wildcard);
-                    }
-                    match iter.next() {
-                        Some(u) if u == "," => (),
-                        Some(_) => return Err(VersionError::NoComma),
-                        None => break,
-                    }
-                },
-                None => break,
-            }
+        for t in s.split(',') {
+            single_reqs.push(SingleVersionReq::parse(t)?);
         }
         Ok(VersionReq::new(single_reqs))
     }
