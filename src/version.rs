@@ -316,10 +316,16 @@ impl SingleVersionReq
                     VersionOp::Gt => version > version2,
                     VersionOp::Le => version <= version2,
                     VersionOp::Default => {
-                        let count = match version2.numeric_idents.first() {
-                            Some(0) if version2.numeric_idents.len() >= 2 => 2,
-                            _ => 1,
-                        };
+                        let mut count = 0usize;
+                        if !version2.numeric_idents.is_empty() {
+                            count += 1;
+                            for i in 0..version2.numeric_idents.len() {
+                                match version2.numeric_idents.get(i) {
+                                    Some(0) if version2.numeric_idents.len() >= i + 2 => count += 1,
+                                    _ => break,
+                                }
+                            }
+                        }
                         version >= version2 && version.eq_numeric_idents(version2, count)
                     },
                     VersionOp::Tilde => {
