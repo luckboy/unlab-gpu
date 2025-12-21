@@ -28,12 +28,11 @@ fn find_cycle<T: Clone + Eq + Hash>(u: &T, vs: &[T], stack: &[(T, Vec<T>)], proc
     }
 }
 
-pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, data: &mut U, mut f: F, mut g: G) -> Result<DfsResult<T>, E>
+pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, visiteds: &mut HashSet<T>, data: &mut U, mut f: F, mut g: G) -> Result<DfsResult<T>, E>
     where F: FnMut(&T, &mut U) -> Result<Vec<T>, E>,
           G: FnMut(&T, &mut U) -> Result<(), E>
 {
     let mut stack: Vec<(T, Vec<T>)> = Vec::new();
-    let mut visiteds: HashSet<T> = HashSet::new();
     let mut processeds: HashSet<T> = HashSet::new();
     processeds.insert(start.clone());
     let mut us = f(start, data)?;
