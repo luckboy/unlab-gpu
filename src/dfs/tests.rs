@@ -51,9 +51,10 @@ fn test_dfs_traverses_graph_from_two_vertices()
         vec![2, 4], // 1
         vec![5, 6], // 2
         Vec::new(), // 3
-        vec![6], // 4
+        vec![6, 7], // 4
         Vec::new(), // 5
-        Vec::new() // 6
+        Vec::new(), // 6
+        Vec::new() // 7
     ];
     let mut visiteds: HashSet<usize> = HashSet::new();
     let mut data: (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
@@ -89,8 +90,8 @@ fn test_dfs_traverses_graph_from_two_vertices()
         Ok(DfsResult::Success) => assert!(true),
         _ => assert!(false),
     }
-    assert_eq!(vec![1, 4], data.0);
-    assert_eq!(vec![4, 1], data.1);
+    assert_eq!(vec![1, 4, 7], data.0);
+    assert_eq!(vec![7, 4, 1], data.1);
     let mut expected_visiteds: HashSet<usize> = HashSet::new();
     expected_visiteds.insert(0);
     expected_visiteds.insert(1);
@@ -99,6 +100,7 @@ fn test_dfs_traverses_graph_from_two_vertices()
     expected_visiteds.insert(4);
     expected_visiteds.insert(5);
     expected_visiteds.insert(6);
+    expected_visiteds.insert(7);
     assert_eq!(expected_visiteds, visiteds);
 }
 
