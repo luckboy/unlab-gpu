@@ -127,6 +127,26 @@ impl Version
             None => None,
         }
     }
+
+    pub fn eq_numeric_idents(&self, version: &Version, count: usize) -> bool
+    {
+        for i in 0..count {
+            let n = if i < self.numeric_idents.len() {
+                self.numeric_idents[i]
+            } else {
+                0
+            };
+            let m = if i < version.numeric_idents.len() {
+                version.numeric_idents[i]
+            } else {
+                0
+            };
+            if n != m {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl Eq for Version
@@ -213,6 +233,180 @@ impl fmt::Display for Version
                 }
             },
             None => (),
+        }
+        Ok(())
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum VersionOp
+{
+    Eq,
+    Ne,
+    Lt,
+    Ge,
+    Gt,
+    Le,
+    Default,
+    Tilde,
+}
+
+impl fmt::Display for VersionOp
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        match self {
+            VersionOp::Eq => write!(f, "="),
+            VersionOp::Ne => write!(f, "!="),
+            VersionOp::Lt => write!(f, "<"),
+            VersionOp::Ge => write!(f, ">="),
+            VersionOp::Gt => write!(f, ">"),
+            VersionOp::Le => write!(f, "<="),
+            VersionOp::Default => write!(f, "^"),
+            VersionOp::Tilde => write!(f, "~"),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum SingleVersionReq
+{
+    Wildcard,
+    Pair(VersionOp, Version),
+}
+
+impl SingleVersionReq
+{
+    pub fn matches(&self, version: &Version) -> bool
+    {
+        match self {
+            SingleVersionReq::Wildcard => true,
+            SingleVersionReq::Pair(op, version2) => {
+                match op {
+                    VersionOp::Eq => version == version2,
+                    VersionOp::Ne => version != version2,
+                    VersionOp::Lt => version < version2,
+                    VersionOp::Ge => version >= version2,
+                    VersionOp::Gt => version > version2,
+                    VersionOp::Le => version <= version2,
+                    VersionOp::Default => {
+                        let count = match version2.numeric_idents.first() {
+                            Some(0) if version2.numeric_idents.len() >= 2 => 2,
+                            _ => 1,
+                        };
+                        version >= version2 && version.eq_numeric_idents(version2, count)
+                    },
+                    VersionOp::Tilde => {
+                        let count = if version2.numeric_idents.len() >= 2 {
+                            2
+                        } else {
+                            1
+                        };
+                        version >= version2 && version.eq_numeric_idents(version2, count)
+                    },
+                }
+            },
+        }
+    }
+}
+
+impl fmt::Display for SingleVersionReq
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        match self {
+            SingleVersionReq::Wildcard => write!(f, "*"),
+            SingleVersionReq::Pair(op, version) => write!(f, "{}{}", op, version),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct VersionReq
+{
+    single_reqs: Vec<SingleVersionReq>,
+}
+
+impl VersionReq
+{
+    pub fn new(single_reqs: Vec<SingleVersionReq>) -> Self
+    { VersionReq { single_reqs, } }
+    
+    pub fn parse(s: &str) -> Option<Self>
+    {
+        let trimmed_s = s.trim();
+        let mut iter = trimmed_s.split_whitespace();
+        let mut single_reqs: Vec<SingleVersionReq> = Vec::new();
+        loop {
+            match iter.next() {
+                Some(t) => {
+                    if t != "*" {
+                        let tmp_op = if t == "=" {
+                            Some(VersionOp::Eq)
+                        } else if t == "!=" {
+                            Some(VersionOp::Ne)
+                        } else if t == "<" {
+                            Some(VersionOp::Lt)
+                        } else if t == ">=" {
+                            Some(VersionOp::Ge)
+                        } else if t == ">" {
+                            Some(VersionOp::Gt)
+                        } else if t == "<=" {
+                            Some(VersionOp::Le)
+                        } else if t == "^" {
+                            Some(VersionOp::Default)
+                        } else if t == "~" {
+                            Some(VersionOp::Tilde)
+                        } else {
+                            None
+                        };
+                        let version_s = if tmp_op.is_some() {
+                            match iter.next() {
+                                Some(u) => u,
+                                None => return None,
+                            }
+                        } else {
+                            t
+                        };
+                        let op = tmp_op.unwrap_or(VersionOp::Default);
+                        let version = match Version::parse(version_s) {
+                            Some(tmp_version) => tmp_version,
+                            None => return None,
+                        };
+                        single_reqs.push(SingleVersionReq::Pair(op, version));
+                    } else {
+                        single_reqs.push(SingleVersionReq::Wildcard);
+                    }
+                    match iter.next() {
+                        Some(u) if u == "," => (),
+                        Some(_) => return None,
+                        None => break,
+                    }
+                },
+                None => break,
+            }
+        }
+        Some(VersionReq::new(single_reqs))
+    }
+    
+    pub fn single_reqs(&self) -> &[SingleVersionReq]
+    { self.single_reqs.as_slice() }
+
+    pub fn matches(&self, version: &Version) -> bool
+    { self.single_reqs.iter().all(|sr| sr.matches(version)) }
+}
+
+impl fmt::Display for VersionReq
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        let mut is_first = true;
+        for single_req in &self.single_reqs {
+            if !is_first {
+                write!(f, ",")?;
+            }
+            write!(f, "{}", single_req)?;
+            is_first = false;
         }
         Ok(())
     }
