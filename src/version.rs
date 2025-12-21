@@ -7,7 +7,33 @@
 //
 use std::cmp::Ordering;
 use std::cmp::max;
+use std::error::Error;
 use std::fmt;
+
+#[derive(Debug)]
+pub enum VersionError
+{
+    InvalidVersion,
+    NoVersion,
+    NoComma,
+}
+
+impl Error for VersionError
+{}
+
+impl fmt::Display for VersionError
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        match self {
+            VersionError::InvalidVersion => write!(f, "invalid version"),
+            VersionError::NoVersion => write!(f, "no version"),
+            VersionError::NoComma => write!(f, "no comma"),
+        }
+    }
+}
+
+pub type VersionResult<T> = Result<T, VersionError>;
 
 #[derive(Clone, Debug)]
 pub enum PreReleaseIdent
@@ -68,7 +94,7 @@ impl Version
     pub fn new(numeric_idents: Vec<u32>, pre_release_idents: Option<Vec<PreReleaseIdent>>, build_idents: Option<Vec<String>>) -> Self
     { Version { numeric_idents, pre_release_idents, build_idents, } }
     
-    pub fn parse(s: &str) -> Option<Self>
+    pub fn parse(s: &str) -> VersionResult<Self>
     {
         let (pair_s, build) = match s.split_once('+') {
             Some(pair) => pair,
@@ -82,7 +108,7 @@ impl Version
         for t in version_core.split('.') {
             match t.parse::<u32>() {
                 Ok(n) => numeric_idents.push(n),
-                Err(_) => return None,
+                Err(_) => return Err(VersionError::InvalidVersion),
             }
         }
         let pre_release_idents = if !s.is_empty() {
@@ -106,7 +132,7 @@ impl Version
         } else {
             None
         };
-        Some(Self::new(numeric_idents, pre_release_idents, build_idents))
+        Ok(Self::new(numeric_idents, pre_release_idents, build_idents))
     }
     
     pub fn numeric_idents(&self) -> &[u32]
@@ -332,7 +358,7 @@ impl VersionReq
     pub fn new(single_reqs: Vec<SingleVersionReq>) -> Self
     { VersionReq { single_reqs, } }
     
-    pub fn parse(s: &str) -> Option<Self>
+    pub fn parse(s: &str) -> VersionResult<Self>
     {
         let trimmed_s = s.trim();
         let mut iter = trimmed_s.split_whitespace();
@@ -363,30 +389,27 @@ impl VersionReq
                         let version_s = if tmp_op.is_some() {
                             match iter.next() {
                                 Some(u) => u,
-                                None => return None,
+                                None => return Err(VersionError::NoVersion),
                             }
                         } else {
                             t
                         };
                         let op = tmp_op.unwrap_or(VersionOp::Default);
-                        let version = match Version::parse(version_s) {
-                            Some(tmp_version) => tmp_version,
-                            None => return None,
-                        };
+                        let version = Version::parse(version_s)?;
                         single_reqs.push(SingleVersionReq::Pair(op, version));
                     } else {
                         single_reqs.push(SingleVersionReq::Wildcard);
                     }
                     match iter.next() {
                         Some(u) if u == "," => (),
-                        Some(_) => return None,
+                        Some(_) => return Err(VersionError::NoComma),
                         None => break,
                     }
                 },
                 None => break,
             }
         }
-        Some(VersionReq::new(single_reqs))
+        Ok(VersionReq::new(single_reqs))
     }
     
     pub fn single_reqs(&self) -> &[SingleVersionReq]
