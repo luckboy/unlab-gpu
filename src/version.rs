@@ -8,6 +8,13 @@
 use std::cmp::Ordering;
 use std::cmp::max;
 use std::fmt;
+use std::result;
+use crate::serde::de;
+use crate::serde::de::Visitor;
+use crate::serde::Deserialize;
+use crate::serde::Deserializer;
+use crate::serde::Serialize;
+use crate::serde::Serializer;
 use crate::error::*;
 
 #[derive(Clone, Debug)]
@@ -239,6 +246,39 @@ impl fmt::Display for Version
     }
 }
 
+impl Serialize for Version
+{
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
+        where S: Serializer
+    { serializer.serialize_str(format!("{}", self).as_str()) }
+}
+
+struct VersionVisitor;
+
+impl<'de> Visitor<'de> for VersionVisitor
+{
+    type Value = Version;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
+    { write!(formatter, "a version") }
+
+    fn visit_str<E>(self, v: &str) -> result::Result<Self::Value, E>
+        where E: de::Error
+    {
+        match Version::parse(v) {
+            Ok(version) => Ok(version),
+            Err(err) => Err(E::custom(format!("{}", err))),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Version
+{
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>
+    { deserializer.deserialize_str(VersionVisitor) }
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum VersionOp
 {
@@ -404,4 +444,37 @@ impl fmt::Display for VersionReq
         }
         Ok(())
     }
+}
+
+impl Serialize for VersionReq
+{
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
+        where S: Serializer
+    { serializer.serialize_str(format!("{}", self).as_str()) }
+}
+
+struct VersionReqVisitor;
+
+impl<'de> Visitor<'de> for VersionReqVisitor
+{
+    type Value = VersionReq;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
+    { write!(formatter, "a version requirement") }
+
+    fn visit_str<E>(self, v: &str) -> result::Result<Self::Value, E>
+        where E: de::Error
+    {
+        match VersionReq::parse(v) {
+            Ok(req) => Ok(req),
+            Err(err) => Err(E::custom(format!("{}", err))),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for VersionReq
+{
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>
+    { deserializer.deserialize_str(VersionReqVisitor) }
 }
