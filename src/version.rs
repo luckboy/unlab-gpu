@@ -7,22 +7,8 @@
 //
 use std::cmp::Ordering;
 use std::cmp::max;
-use std::error::Error;
 use std::fmt;
-
-#[derive(Debug)]
-pub struct VersionError;
-
-impl Error for VersionError
-{}
-
-impl fmt::Display for VersionError
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    { write!(f, "invalid version") }
-}
-
-pub type VersionResult<T> = Result<T, VersionError>;
+use crate::error::*;
 
 #[derive(Clone, Debug)]
 pub enum PreReleaseIdent
@@ -83,7 +69,7 @@ impl Version
     pub fn new(numeric_idents: Vec<u32>, pre_release_idents: Option<Vec<PreReleaseIdent>>, build_idents: Option<Vec<String>>) -> Self
     { Version { numeric_idents, pre_release_idents, build_idents, } }
     
-    pub fn parse(s: &str) -> VersionResult<Self>
+    pub fn parse(s: &str) -> Result<Self>
     {
         let (pair_s, build) = match s.split_once('+') {
             Some(pair) => pair,
@@ -97,7 +83,7 @@ impl Version
         for t in version_core.split('.') {
             match t.parse::<u32>() {
                 Ok(n) => numeric_idents.push(n),
-                Err(_) => return Err(VersionError),
+                Err(_) => return Err(Error::InvalidVersion),
             }
         }
         let pre_release_idents = if !s.is_empty() {
@@ -292,7 +278,7 @@ pub enum SingleVersionReq
 
 impl SingleVersionReq
 {
-    pub fn parse(s: &str) -> VersionResult<Self>
+    pub fn parse(s: &str) -> Result<Self>
     {
         let trimmed_s = s.trim();
         if trimmed_s != "*" {
@@ -388,7 +374,7 @@ impl VersionReq
     pub fn new(single_reqs: Vec<SingleVersionReq>) -> Self
     { VersionReq { single_reqs, } }
     
-    pub fn parse(s: &str) -> VersionResult<Self>
+    pub fn parse(s: &str) -> Result<Self>
     {
         let mut single_reqs: Vec<SingleVersionReq> = Vec::new();
         for t in s.split(',') {
