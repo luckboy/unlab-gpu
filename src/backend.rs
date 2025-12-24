@@ -29,10 +29,11 @@ use crate::matrix::cuda::CudaBackend;
 use crate::matrix::set_default_backend;
 use crate::matrix::unset_default_backend;
 use crate::serde::Deserialize;
+use crate::serde::Serialize;
 use crate::toml;
 use crate::error::*;
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Deserialize)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 pub enum Backend
 {
     #[serde(rename = "OpenCL")]
@@ -41,7 +42,7 @@ pub enum Backend
     Cuda,
 }
 
-#[derive(Copy, Clone, Debug, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct BackendConfig
 {
     pub backend: Option<Backend>,
