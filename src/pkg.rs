@@ -35,8 +35,8 @@ pub enum VersionSrcInfo
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SrcInfo
 {
-    #[serde(rename = "origin")]
-    Origin(String),
+    #[serde(rename = "renamed")]
+    Renamed(String),
     #[serde(rename = "versions")]
     Versions(BTreeMap<Version, VersionSrcInfo>),
 }
