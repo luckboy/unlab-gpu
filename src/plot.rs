@@ -272,7 +272,7 @@ const POINT_SIZE: i32 = 1;
 const SURFACE_MIX: f64 = 0.2;
 const HISTOGRAM_MIX: f64 = 0.6;
 
-const COLORS: [RGBColor; 6] = [RED, BLUE, GREEN, CYAN, YELLOW, MAGENTA];
+static COLORS: [RGBColor; 6] = [RED, BLUE, GREEN, CYAN, YELLOW, MAGENTA];
 
 fn draw_chart2d<T: IntoDrawingArea>(backend: T, chart_desc: &Chart, axes: &Axes2d, serieses: &[Series2d]) -> result::Result<(), Box<dyn error::Error>>
     where T::ErrorType: 'static
