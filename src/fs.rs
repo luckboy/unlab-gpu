@@ -207,5 +207,22 @@ pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf
     Ok(())
 }
 
+pub fn only_one_dir_in_dir<P: AsRef<Path>>(path: P) -> Result<Option<PathBuf>>
+{
+    let entries = read_dir(path)?;
+    let mut is_first = true;
+    let mut path_buf: Option<PathBuf> = None;
+    for entry in entries {
+        let tmp_entry = entry?;
+        if is_first && tmp_entry.metadata()?.is_dir() {
+            path_buf = Some(tmp_entry.path());
+        } else {
+            path_buf = None;
+        }
+        is_first = false;
+    }
+    Ok(path_buf)
+}
+
 #[cfg(test)]
 mod tests;

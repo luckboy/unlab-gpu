@@ -832,3 +832,71 @@ fn test_recursively_remove_paths_in_dir_complains_on_not_found()
         Ok(()) => assert!(false),
     }
 }
+
+#[sealed_test]
+fn test_only_one_dir_in_dir_returns_path_to_one_directory_for_one_directory_in_directory()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("a");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.pop();
+    match only_one_dir_in_dir("test") {
+        Ok(Some(path_buf)) => {
+            let mut expected_path_buf = PathBuf::from("test");
+            expected_path_buf.push("a");
+            assert_eq!(expected_path_buf, path_buf);
+        },
+        _ => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_only_one_dir_in_dir_does_not_returns_path_to_one_directory_for_one_file_in_directory()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test.txt");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    match only_one_dir_in_dir("test") {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_only_one_dir_in_dir_does_not_returns_path_to_one_directory_for_two_directories_in_directory()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("a");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.pop();
+    path_buf.push("b");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.pop();
+    match only_one_dir_in_dir("test") {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_only_one_dir_in_dir_does_not_returns_path_to_one_directory_for_empty_directory()
+{
+    fs::create_dir("test").unwrap();
+    match only_one_dir_in_dir("test") {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_only_one_dir_in_dir_complains_on_not_found()
+{
+    match only_one_dir_in_dir("test") {
+        Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+        Ok(_) => assert!(false),
+    }
+}
