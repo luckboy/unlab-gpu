@@ -197,7 +197,7 @@ fn test_recursively_remove_removes_file()
 {
     fs::write("test.txt", "some text").unwrap();
     fs::write("test2.txt", "second some text").unwrap();
-    match recursively_remove("test.txt") {
+    match recursively_remove("test.txt", false) {
         Ok(()) => {
             match fs::metadata("test.txt") {
                 Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
@@ -239,7 +239,7 @@ fn test_recursively_remove_removes_directory()
     fs::write(path_buf.as_path(), "fifth some text").unwrap();
     path_buf.pop();
     fs::write("test2.txt", "second some text").unwrap();
-    match recursively_remove("test") {
+    match recursively_remove("test", false) {
         Ok(()) => {
             match fs::metadata("test") {
                 Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
@@ -248,6 +248,29 @@ fn test_recursively_remove_removes_directory()
             assert_eq!(String::from("second some text"), fs::read_to_string("test2.txt").unwrap());
         },
         Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_recursively_remove_non_existent_file_for_force_flag()
+{
+    match recursively_remove("test.txt", true) {
+        Ok(()) => {
+            match fs::metadata("test.txt") {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_recursively_remove_complains_on_not_found()
+{
+    match recursively_remove("test.txt", false) {
+        Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+        Ok(()) => assert!(false),
     }
 }
 
@@ -678,7 +701,7 @@ fn test_recursively_remove_paths_in_dir_removes_directories()
     let mut path_buf = PathBuf::from("c");
     path_buf.push("d");
     paths.push(path_buf);
-    match recursively_remove_paths_in_dir("test", paths.as_slice()) {
+    match recursively_remove_paths_in_dir("test", paths.as_slice(), false) {
         Ok(()) => {
             let mut path_buf = PathBuf::from("test");
             assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
@@ -708,5 +731,104 @@ fn test_recursively_remove_paths_in_dir_removes_directories()
             path_buf.pop();
         },
         Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_recursively_remove_paths_in_dir_removes_non_existent_file_and_directory_for_force_flag()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("c");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("d");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test3.txt");
+    fs::write(path_buf.as_path(), "third some text").unwrap();
+    path_buf.pop();
+    path_buf.push("test4.txt");
+    fs::write(path_buf.as_path(), "fourth some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("e");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("f");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test5.txt");
+    fs::write(path_buf.as_path(), "fifth some text").unwrap();
+    path_buf.pop();
+    path_buf.push("test6.txt");
+    fs::write(path_buf.as_path(), "sixth some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.pop();
+    let mut paths: Vec<PathBuf> = Vec::new();
+    let mut path_buf = PathBuf::from("a");
+    path_buf.push("b");
+    paths.push(path_buf);
+    let mut path_buf = PathBuf::from("c");
+    path_buf.push("d");
+    paths.push(path_buf);
+    match recursively_remove_paths_in_dir("test", paths.as_slice(), true) {
+        Ok(()) => {
+            let mut path_buf = PathBuf::from("test");
+            assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
+            path_buf.push("a");
+            match fs::metadata(path_buf.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            path_buf.pop();
+            path_buf.push("c");
+            match fs::metadata(path_buf.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            path_buf.pop();
+            path_buf.push("e");
+            assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
+            path_buf.push("f");
+            assert_eq!(true, fs::metadata(path_buf.as_path()).unwrap().is_dir());
+            path_buf.push("test5.txt");
+            assert_eq!(String::from("fifth some text"), fs::read_to_string(path_buf.as_path()).unwrap());
+            path_buf.pop();
+            path_buf.push("test6.txt");
+            assert_eq!(String::from("sixth some text"), fs::read_to_string(path_buf.as_path()).unwrap());
+            path_buf.pop();
+            path_buf.pop();
+            path_buf.pop();
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_recursively_remove_paths_in_dir_complains_on_not_found()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("c");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("d");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test3.txt");
+    fs::write(path_buf.as_path(), "third some text").unwrap();
+    path_buf.pop();
+    path_buf.push("test4.txt");
+    fs::write(path_buf.as_path(), "fourth some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.pop();
+    let mut paths: Vec<PathBuf> = Vec::new();
+    let mut path_buf = PathBuf::from("a");
+    path_buf.push("b");
+    paths.push(path_buf);
+    let mut path_buf = PathBuf::from("c");
+    path_buf.push("d");
+    paths.push(path_buf);
+    match recursively_remove_paths_in_dir("test", paths.as_slice(), false) {
+        Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+        Ok(()) => assert!(false),
     }
 }

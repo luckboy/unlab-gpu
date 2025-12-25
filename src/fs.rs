@@ -78,28 +78,44 @@ pub fn recursively_copy<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Resul
     recursively_copy_with_path_bufs(&mut src_path_buf, &mut dst_path_buf)
 }
 
-fn recursively_remove_with_path_buf(path_buf: &mut PathBuf) -> Result<()>
+fn recursively_remove_with_path_buf(path_buf: &mut PathBuf, is_force: bool) -> Result<()>
 {
-    let metadata = symlink_metadata(path_buf.as_path())?;
+    let metadata = match symlink_metadata(path_buf.as_path()) {
+        Ok(tmp_metadata) => tmp_metadata,
+        Err(err) if is_force && err.kind() == ErrorKind::NotFound => return Ok(()),
+        Err(err) => return Err(err),
+    };
     if metadata.is_dir() {
-        let entries = read_dir(path_buf.as_path())?;
+        let entries = match read_dir(path_buf.as_path()) {
+            Ok(tmp_entries) => tmp_entries,
+            Err(err) if is_force && err.kind() == ErrorKind::NotFound => return Ok(()),
+            Err(err) => return Err(err),
+        };
         for entry in entries {
             let tmp_entry = entry?;
             path_buf.push(tmp_entry.file_name());
-            recursively_remove_with_path_buf(path_buf)?;
+            recursively_remove_with_path_buf(path_buf, is_force)?;
             path_buf.pop();
         }
-        remove_dir(path_buf.as_path())?;
+        match remove_dir(path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) if is_force && err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(err),
+        }
     } else {
-        remove_file(path_buf.as_path())?;
+        match remove_file(path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) if is_force && err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(err),
+        }
     }
     Ok(())
 }
 
-pub fn recursively_remove<P: AsRef<Path>>(path: P) -> Result<()>
+pub fn recursively_remove<P: AsRef<Path>>(path: P, is_force: bool) -> Result<()>
 {
     let mut path_buf = PathBuf::from(path.as_ref());
-    recursively_remove_with_path_buf(&mut path_buf)
+    recursively_remove_with_path_buf(&mut path_buf, is_force)
 }
 
 fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, dir_paths: &mut HashSet<PathBuf>, paths: &mut HashSet<PathBuf>, path_vec: &mut Option<Vec<PathBuf>>, depth: Option<usize>) -> Result<()>
@@ -168,12 +184,12 @@ pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst
     Ok(())
 }
 
-pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf]) -> Result<()>
+pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf], is_force: bool) -> Result<()>
 {
     for suffix_path_buf in paths {
         let mut path_buf = PathBuf::from(path.as_ref());
         path_buf.push(suffix_path_buf.as_path());
-        recursively_remove(path_buf.as_path())?;
+        recursively_remove(path_buf.as_path(), is_force)?;
         let mut tmp_suffix_path_buf = suffix_path_buf.clone();
         if tmp_suffix_path_buf != PathBuf::from("") {
             tmp_suffix_path_buf.pop();
