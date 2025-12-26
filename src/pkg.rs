@@ -45,7 +45,7 @@ pub enum SrcInfo
 pub struct Manifest
 {
     pub package: PkgInfo,
-    pub constraints: Option<Arc<HashMap<String, VersionReq>>>,
     pub dependencies: Option<HashMap<String, VersionReq>>,
+    pub constraints: Option<Arc<HashMap<String, VersionReq>>>,
     pub sources: Option<Arc<HashMap<String, SrcInfo>>>,
 }
