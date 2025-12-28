@@ -32,18 +32,18 @@ impl PkgName
     pub fn new(name: String) -> Self
     { PkgName { name, } }
 
-    pub fn parse(name: &str) -> Result<Self>
+    pub fn parse(s: &str) -> Result<Self>
     {
-        if name.split('/').count() < 2 {
+        if s.split('/').count() < 2 {
             return Err(Error::InvalidPkgName);
         }
-        let ss = name.split('/');
-        for s in ss {
-            if s.contains('\\') || s == "." || s == ".." {
+        let ss = s.split('/');
+        for t in ss {
+            if t.is_empty() || t.contains('\\') || t == "." || t == ".." {
                 return Err(Error::InvalidPkgName);
             }
         }
-        Ok(Self::new(String::from(name)))
+        Ok(Self::new(String::from(s)))
     }
     
     pub fn name(&self) -> &str

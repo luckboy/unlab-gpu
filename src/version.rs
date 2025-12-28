@@ -99,7 +99,7 @@ impl Version
                 match t.parse::<u32>() {
                     Ok(n) => tmp_pre_release_idents.push(PreReleaseIdent::Numeric(n)),
                     Err(_) => {
-                        if t.contains('/') || t.contains('\\') {
+                        if t.is_empty() || t.contains('/') || t.contains('\\') {
                             return Err(Error::InvalidVersion);
                         }
                         tmp_pre_release_idents.push(PreReleaseIdent::Alphanumeric(String::from(t)))
@@ -113,7 +113,7 @@ impl Version
         let build_idents = if !s.is_empty() {
             let mut tmp_build_idents: Vec<String> = Vec::new();
             for t in build.split('.') {
-                if t.contains('/') || t.contains('\\') {
+                if t.is_empty() || t.contains('/') || t.contains('\\') {
                     return Err(Error::InvalidVersion);
                 }
                 tmp_build_idents.push(String::from(t));
