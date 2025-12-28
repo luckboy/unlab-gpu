@@ -33,6 +33,8 @@ pub trait Source
     
     fn versions(&mut self) -> Result<&BTreeSet<Version>>;
     
+    fn set_current_version(&mut self, version: &Version) -> Result<()>;
+    
     fn dir(&mut self) -> Result<&Path>;
 }
 
@@ -149,29 +151,25 @@ pub struct Manifest
 pub struct PkgManager
 {
     pkg_db: DB,
-    index_dir: PathBuf,
-    cache_dir: PathBuf,
-    info_dir: PathBuf,
-    new_part_info_dir: PathBuf,
-    new_info_dir: PathBuf,
+    home_var_dir: PathBuf,
+    var_dir: PathBuf,
     tmp_dir: PathBuf,
 }
 
 impl PkgManager
 {
-    pub fn new<P: AsRef<Path>>(pkg_db_file: P, index_dir: PathBuf, cache_dir: PathBuf, info_dir: PathBuf, new_part_info_dir: PathBuf, new_info_dir: PathBuf, tmp_dir: PathBuf) -> Result<Self>
+    pub fn new(home_var_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf) -> Result<Self>
     {
+        let mut pkg_db_file = var_dir.clone();
+        pkg_db_file.push("pkg.db");
         let pkg_db = match DB::open(pkg_db_file) {
             Ok(tmp_pkg_db) => tmp_pkg_db,
             Err(err) => return Err(Error::Jammdb(err)),
         };
         Ok(PkgManager {
                 pkg_db,
-                index_dir,
-                cache_dir,
-                info_dir,
-                new_part_info_dir,
-                new_info_dir,
+                home_var_dir,
+                var_dir,
                 tmp_dir,
         })
     }
@@ -179,6 +177,57 @@ impl PkgManager
     fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
     { Err(Error::Pkg(String::from("no source"))) }
     
+    pub fn home_var_dir(&self) -> &Path
+    { self.home_var_dir.as_path() }
+
+    pub fn var_dir(&self) -> &Path
+    { self.var_dir.as_path() }
+    
+    pub fn tmp_dir(&self) -> &Path
+    { self.tmp_dir.as_path() }
+    
+    pub fn info_dir(&self) -> PathBuf
+    {
+        let mut dir = self.var_dir.clone();
+        dir.push("info");
+        dir
+    }
+
+    pub fn new_part_info_dir(&self) -> PathBuf
+    {
+        let mut dir = self.var_dir.clone();
+        dir.push("info.new.part");
+        dir
+    }
+    
+    pub fn new_info_dir(&self) -> PathBuf
+    {
+        let mut dir = self.var_dir.clone();
+        dir.push("info.new");
+        dir
+    }
+    
+    pub fn pkg_info_dir(&self, name: &PkgName) -> PathBuf
+    {
+        let mut dir = self.info_dir();
+        dir.push(name.to_path_buf());
+        dir
+    }
+
+    pub fn pkg_new_part_info_dir(&self, name: &PkgName) -> PathBuf
+    {
+        let mut dir = self.new_part_info_dir();
+        dir.push(name.to_path_buf());
+        dir
+    }
+    
+    pub fn pkg_new_info_dir(&self, name: &PkgName) -> PathBuf
+    {
+        let mut dir = self.new_info_dir();
+        dir.push(name.to_path_buf());
+        dir
+    }
+
     fn pkg_version(&self, name: &PkgName, bucket_name: &str) -> Result<Option<Version>>
     {
         match self.pkg_db.tx(false) {
