@@ -8,6 +8,8 @@
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fmt;
+use std::path;
+use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
 use crate::serde::de;
@@ -43,6 +45,12 @@ impl PkgName
         }
         Ok(Self::new(String::from(name)))
     }
+    
+    pub fn name(&self) -> &str
+    { self.name.as_str() }
+    
+    pub fn to_path_buf(&self) -> PathBuf
+    { PathBuf::from(self.name.replace('/', path::MAIN_SEPARATOR_STR)) }
 }
 
 impl fmt::Display for PkgName
