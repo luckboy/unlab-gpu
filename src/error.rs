@@ -11,8 +11,10 @@ use std::io;
 use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
+use crate::jammdb;
 use crate::toml;
 use crate::matrix;
+use crate::pkg::PkgName;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Pos
@@ -53,6 +55,8 @@ pub enum Error
     ParserEof(Arc<String>, ParserEofFlag),
     Parser(Pos, String),
     Interp(String),
+    Pkg(String),
+    PkgDepCycle(Vec<PkgName>),
     Matrix(matrix::Error),
     RwLockRead,
     RwLockWrite,
@@ -63,6 +67,7 @@ pub enum Error
     Ctrlc(ctrlc::Error),
     Toml(toml::de::Error),
     Winit(Box<dyn error::Error>),
+    Jammdb(jammdb::Error),
     InvalidVersion,
     InvalidPkgName,
     NoOpenClBackend,
@@ -83,6 +88,19 @@ impl fmt::Display for Error
             Error::ParserEof(path, _) => write!(f, "{}: end of file", path),
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
             Error::Interp(msg) => write!(f, "{}", msg),
+            Error::Pkg(msg) => write!(f, "package error: {}", msg),
+            Error::PkgDepCycle(names) => {
+                write!(f, "package error: occurred cycle of dependencies: ")?;
+                let mut is_first = true;
+                for name in names {
+                    if !is_first {
+                        write!(f, " -> ")?;
+                    }
+                    write!(f, "{}", name)?;
+                    is_first = false;
+                }
+                Ok(())
+            },
             Error::Matrix(err) => write!(f, "matrix error: {}", err),
             Error::RwLockRead => write!(f, "can't read r/w lock"),
             Error::RwLockWrite => write!(f, "can't write r/w lock"),
@@ -93,6 +111,7 @@ impl fmt::Display for Error
             Error::Ctrlc(err) => write!(f, "ctrl-c error: {}", err),
             Error::Toml(err) => write!(f, "toml error: {}", err),
             Error::Winit(err) => write!(f, "winit error: {}", err),
+            Error::Jammdb(err) => write!(f, "jammdb error: {}", err),
             Error::InvalidVersion => write!(f, "invalid version"),
             Error::InvalidPkgName => write!(f, "invalid package name"),
             Error::NoOpenClBackend => write!(f, "no OpenCL backend"),

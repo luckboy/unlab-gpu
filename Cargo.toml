@@ -11,14 +11,17 @@ clap = { version = "4.5", default-features = false, features = ["std", "help", "
 ctrlc = "3.5"
 getopts = "0.2"
 home = ">=0.5.0,<=0.5.9"
-image = { version = "0.24", optional = true, default-features = false, features = ["png"] }
-plotters = { version = ">=0.3.3,<=0.3.6", optional = true, default-features = false, features = ["bitmap_backend", "bitmap_encoder", "svg_backend", "ttf", "all_series", "all_elements"] }
 rand = "0.9"
 rustyline = { version = "14.0", default-features = false, features = ["with-file-history"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
-softbuffer = { version = "0.4", optional = true }
 toml = "0.8"
 unmtx-gpu = { version = "0.1.7", default-features = false }
+# pkg
+jammdb = "0.11"
+# plot
+image = { version = "0.24", optional = true, default-features = false, features = ["png"] }
+plotters = { version = ">=0.3.3,<=0.3.6", optional = true, default-features = false, features = ["bitmap_backend", "bitmap_encoder", "svg_backend", "ttf", "all_series", "all_elements"] }
+softbuffer = { version = "0.4", optional = true }
 winit = { version = "0.30", optional = true }
 # Holded versions.
 dlopen2_derive = ">=0.4.0,<=0.4.1"
