@@ -225,6 +225,10 @@ impl PkgManager
                     }
                 }
                 match tx.delete_bucket("new_version") {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Jammdb(err)),
+                }
+                match tx.commit() {
                     Ok(()) => Ok(()),
                     Err(err) => Err(Error::Jammdb(err)),
                 }
@@ -268,7 +272,12 @@ impl PkgManager
                 match tx.get_or_create_bucket("new_version") {
                     Ok(version_bucket) => {
                         match version_bucket.put(name.name(), format!("{}", version)) {
-                            Ok(_) => Ok(()),
+                            Ok(_) => {
+                                match tx.commit() {
+                                    Ok(()) => Ok(()),
+                                    Err(err) => Err(Error::Jammdb(err)),
+                                }
+                            },
                             Err(err) => Err(Error::Jammdb(err)),
                         }
                     },
@@ -278,7 +287,7 @@ impl PkgManager
             Err(err) => Err(Error::Jammdb(err)),
         }
     }
-        
+    
     fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>) -> Result<()>
     {
         let res = dfs(name, visiteds, self, |name, data| {
