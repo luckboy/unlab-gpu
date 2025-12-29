@@ -14,6 +14,7 @@ use std::fs;
 use std::fs::File;
 use std::fs::copy;
 use std::fs::create_dir_all;
+use std::fs::rename;
 use std::io;
 use std::io::ErrorKind;
 use std::io::Read;
@@ -33,6 +34,7 @@ use crate::serde::Serialize;
 use crate::serde::Serializer;
 use crate::dfs::*;
 use crate::error::*;
+use crate::fs::*;
 use crate::version::*;
 
 pub trait Source
@@ -175,6 +177,62 @@ impl Manifest
     {
         match File::open(path) {
             Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Paths
+{
+    bin: Vec<String>,
+    lib: Vec<String>,
+}
+
+impl Paths
+{
+    pub fn new(bin: Vec<String>, lib: Vec<String>) -> Self
+    { Paths { bin, lib, } }
+    
+    pub fn read(r: &mut dyn Read) -> Result<Self>
+    {
+        let mut s = String::new();
+        match r.read_to_string(&mut s) {
+            Ok(_) => {
+                match toml::from_str(s.as_str()) {
+                    Ok(manifest) => Ok(manifest),
+                    Err(err) => Err(Error::TomlDe(err)),
+                }
+            },
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn write(&self, w: &mut dyn Write) -> Result<()>
+    {
+        match toml::to_string(self) {
+            Ok(s) => {
+                match write!(w, "{}", s) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) => Err(Error::TomlSer(err)),
+        }
+    }
+    
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
+    {
+        match File::open(path) {
+            Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
+    {
+        match File::create(path) {
+            Ok(mut file) => self.write(&mut file),
             Err(err) => Err(Error::Io(err)),
         }
     }
@@ -399,6 +457,8 @@ pub struct PkgManager
     home_var_dir: PathBuf,
     var_dir: PathBuf,
     tmp_dir: PathBuf,
+    bin_dir: PathBuf,
+    lib_dir: PathBuf,
     pkgs: HashMap<PkgName, Pkg>,
     locks: HashMap<PkgName, Version>,
     constraints: Arc<HashMap<PkgName, VersionReq>>,
@@ -407,7 +467,7 @@ pub struct PkgManager
 
 impl PkgManager
 {
-    pub fn new(home_var_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf) -> Result<Self>
+    pub fn new(home_var_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf) -> Result<Self>
     {
         let mut pkg_db_file = var_dir.clone();
         pkg_db_file.push("pkg.db");
@@ -420,6 +480,8 @@ impl PkgManager
                 home_var_dir,
                 var_dir,
                 tmp_dir,
+                bin_dir,
+                lib_dir,
                 pkgs: HashMap::new(),
                 locks: HashMap::new(),
                 constraints: Arc::new(HashMap::new()),
@@ -601,7 +663,7 @@ impl PkgManager
             }
         }
         max_version
-    }
+    }    
     
     fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
@@ -652,7 +714,7 @@ impl PkgManager
                                 data.pkgs.insert(name.clone(), Pkg::new_with_copy(dir, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
                                 data.pkgs.get(name).unwrap()
                             },
-                            None => return Err(Error::PkgName(name.clone(), String::from("any version isn't matched to version requirement"))),
+                            None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirement"))),
                         }
                     },
                 };
@@ -665,7 +727,7 @@ impl PkgManager
                                 dep_src.update()?;
                             }
                             let versions = dep_src.versions()?;
-                            let mut version_reqs: Vec<VersionReq> = vec![dep_version_req.clone()];
+                            let mut version_reqs = vec![dep_version_req.clone()];
                             match data.constraints.get(name) {
                                 Some(constraint) => version_reqs.push(constraint.clone()),
                                 None => (),
@@ -682,7 +744,7 @@ impl PkgManager
                                         return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
                                     }
                                 },
-                                None => return Err(Error::PkgName(name.clone(), String::from("any version isn't matched to version requirements"))),
+                                None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirements"))),
                             }
                         }
                         Ok(deps.keys().map(|dn| dn.clone()).collect())
@@ -736,6 +798,160 @@ impl PkgManager
         match res {
             DfsResult::Success => Ok(()),
             DfsResult::Cycle(names) => Err(Error::PkgDepCycle(names)),
+        }
+    }
+    
+    fn check_dependent_version_reqs(&self) -> Result<()>
+    {
+        let new_versions = self.pkg_versions("new_versions")?;
+        for (name, new_version) in &new_versions {
+            match self.pkgs.get(name) {
+                Some(pkg) => {
+                    let mut src = self.create_source(name)?;
+                    let versions = src.versions()?;
+                    let dependents = pkg.dependents()?;
+                    let mut version_reqs: Vec<VersionReq> = dependents.values().map(|r| r.clone()).collect();
+                    match self.constraints.get(name) {
+                        Some(constraint) => version_reqs.push(constraint.clone()),
+                        None => (),
+                    }
+                    let max_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), self.locks.get(name));
+                    match &max_version { 
+                        Some(max_version) => {
+                            if max_version != new_version {
+                                return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
+                            }
+                        },
+                        None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirement"))),
+                    }
+                },
+                None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
+            }
+        }
+        Ok(())
+    }
+
+    fn pkg_is_to_install(&self, name: &PkgName) -> Result<bool>
+    {
+        let mut manifest_file = self.pkg_new_part_info_dir(name);
+        manifest_file.push("manifest.toml");
+        match fs::metadata(manifest_file) {
+            Ok(_) => Ok(true),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(false),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    fn find_path_conflicts(&self) -> Result<()>
+    {
+        let new_versions = self.pkg_versions("new_versions")?;
+        let mut ignored_bin_paths: HashSet<PathBuf> = HashSet::new();
+        let mut ignored_lib_paths: HashSet<PathBuf> = HashSet::new();
+        for (name, _) in &new_versions {
+            if self.pkg_is_to_install(name)? {
+                let mut old_paths_file = self.pkg_info_dir(name);
+                old_paths_file.push("paths.toml");
+                let paths = Paths::load(old_paths_file)?;
+                for bin_path in &paths.bin {
+                    ignored_bin_paths.insert(PathBuf::from(bin_path));
+                }
+                for lib_path in &paths.lib {
+                    ignored_lib_paths.insert(PathBuf::from(lib_path));
+                }
+            }
+        }
+        for (name, new_version) in &new_versions {
+            if self.pkg_is_to_install(name)? {
+                let mut src = self.create_source(name)?;
+                src.set_current_version(new_version);
+                let mut pkg_bin_dir = PathBuf::from(src.dir()?);
+                pkg_bin_dir.push("bin");
+                let bin_paths = match conflicts(pkg_bin_dir, self.bin_dir.as_path(), &ignored_bin_paths, Some(1)) {
+                    Ok((conflict_paths, paths)) => {
+                        if conflict_paths.is_empty() {
+                            paths
+                        } else {
+                            return Err(Error::PkgPathConflict(name.clone(), None, conflict_paths, PkgPathConflict::Bin));
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                };
+                let mut pkg_lib_dir = PathBuf::from(src.dir()?);
+                pkg_lib_dir.push("lib");
+                let lib_paths = match conflicts(pkg_lib_dir, self.lib_dir.as_path(), &ignored_lib_paths, Some(2)) {
+                    Ok((conflict_paths, paths)) => {
+                        if conflict_paths.is_empty() {
+                            paths
+                        } else {
+                            return Err(Error::PkgPathConflict(name.clone(), None, conflict_paths, PkgPathConflict::Lib));
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                };
+                let mut bin_paths2: Vec<String> = Vec::new();
+                for bin_path in &bin_paths {
+                    match bin_path.to_str() {
+                        Some(s) => bin_paths2.push(String::from(s)),
+                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid UTF-8 character"))),
+                    }
+                }
+                let mut lib_paths2: Vec<String> = Vec::new();
+                for lib_path in &lib_paths {
+                    match lib_path.to_str() {
+                        Some(s) => lib_paths2.push(String::from(s)),
+                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid UTF-8 character"))),
+                    }
+                }
+                let paths = Paths::new(bin_paths2, lib_paths2);
+                let mut paths_file = self.pkg_new_part_info_dir(name);
+                paths_file.push("paths.toml");
+                paths.save(paths_file)?;
+            }
+        }
+        for (i, (name, new_version)) in new_versions.iter().enumerate() {
+            for (name2, new_version2) in &new_versions[(i + 1)..] {
+                if self.pkg_is_to_install(name)? && self.pkg_is_to_install(name2)? {
+                    let mut src = self.create_source(name)?;
+                    src.set_current_version(new_version);
+                    let mut src2 = self.create_source(name2)?;
+                    src2.set_current_version(new_version2);
+                    let mut pkg_bin_dir = PathBuf::from(src.dir()?);
+                    pkg_bin_dir.push("bin");
+                    let mut pkg_bin_dir2 = PathBuf::from(src2.dir()?);
+                    pkg_bin_dir2.push("bin");
+                    match conflicts(pkg_bin_dir, pkg_bin_dir2, &HashSet::new(), Some(1)) {
+                        Ok((conflict_paths, _)) => {
+                            if !conflict_paths.is_empty() {
+                                return Err(Error::PkgPathConflict(name.clone(), Some(name2.clone()), conflict_paths, PkgPathConflict::Bin));
+                            }
+                        },
+                        Err(err) => return Err(Error::Io(err)),
+                    }
+                    let mut pkg_lib_dir = PathBuf::from(src.dir()?);
+                    pkg_lib_dir.push("lib");
+                    let mut pkg_lib_dir2 = PathBuf::from(src2.dir()?);
+                    pkg_lib_dir2.push("lib");
+                    match conflicts(pkg_lib_dir, pkg_lib_dir2, &HashSet::new(), Some(2)) {
+                        Ok((conflict_paths, _)) => {
+                            if !conflict_paths.is_empty() {
+                                return Err(Error::PkgPathConflict(name.clone(), Some(name2.clone()), conflict_paths, PkgPathConflict::Lib));
+                            }
+                        },
+                        Err(err) => return Err(Error::Io(err)),
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn check_new_part_infos_for_pre_install(&self) -> Result<()>
+    {
+        self.check_dependent_version_reqs()?;
+        self.find_path_conflicts()?;
+        match rename(self.new_part_info_dir(), self.new_info_dir()) {
+           Ok(()) => Ok(()),
+           Err(err) => Err(Error::Io(err)),
         }
     }
 }

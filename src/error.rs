@@ -8,6 +8,7 @@
 use std::error;
 use std::fmt;
 use std::io;
+use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
@@ -38,6 +39,13 @@ pub enum ParserEofFlag
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum PkgPathConflict
+{
+    Bin,
+    Lib,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Stop
 {
     Break,
@@ -58,6 +66,7 @@ pub enum Error
     Pkg(String),
     PkgName(PkgName, String),
     PkgDepCycle(Vec<PkgName>),
+    PkgPathConflict(PkgName, Option<PkgName>, Vec<PathBuf>, PkgPathConflict),
     Matrix(matrix::Error),
     RwLockRead,
     RwLockWrite,
@@ -101,6 +110,20 @@ impl fmt::Display for Error
                     }
                     write!(f, "{}", name)?;
                     is_first = false;
+                }
+                Ok(())
+            },
+            Error::PkgPathConflict(name, name2, conflict_paths, conflict) => {
+                let conflict_name = match conflict {
+                    PkgPathConflict::Bin => "bin",
+                    PkgPathConflict::Lib => "lib",
+                };
+                match name2 {
+                    Some(name2) => write!(f, "package error: occurred conflict between {} and {} for directory {}:", name, name2, conflict_name)?,
+                    None => write!(f, "package error: occurred conflict between {} and installed packages for directory {}:", name, conflict_name)?,
+                }
+                for conflict_path in conflict_paths {
+                    write!(f, "\n{}", conflict_path.to_string_lossy().into_owned())?;
                 }
                 Ok(())
             },
