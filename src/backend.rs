@@ -61,7 +61,7 @@ impl BackendConfig
             Ok(_) => {
                 match toml::from_str(s.as_str()) {
                     Ok(config) => Ok(config),
-                    Err(err) => Err(Error::Toml(err)),
+                    Err(err) => Err(Error::TomlDe(err)),
                 }
             },
             Err(err) => Err(Error::Io(err)),

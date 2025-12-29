@@ -10,6 +10,14 @@ use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt;
+use std::fs;
+use std::fs::File;
+use std::fs::copy;
+use std::fs::create_dir_all;
+use std::io;
+use std::io::ErrorKind;
+use std::io::Read;
+use std::io::Write;
 use std::path;
 use std::path::Path;
 use std::path::PathBuf;
@@ -33,7 +41,7 @@ pub trait Source
     
     fn versions(&mut self) -> Result<&BTreeSet<Version>>;
     
-    fn set_current_version(&mut self, version: &Version) -> Result<()>;
+    fn set_current_version(&mut self, version: &Version);
     
     fn dir(&mut self) -> Result<&Path>;
 }
@@ -147,6 +155,231 @@ pub struct Manifest
     pub sources: Option<Arc<HashMap<PkgName, Arc<SrcInfo>>>>,
 }
 
+impl Manifest
+{
+    pub fn read(r: &mut dyn Read) -> Result<Self>
+    {
+        let mut s = String::new();
+        match r.read_to_string(&mut s) {
+            Ok(_) => {
+                match toml::from_str(s.as_str()) {
+                    Ok(manifest) => Ok(manifest),
+                    Err(err) => Err(Error::TomlDe(err)),
+                }
+            },
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
+    {
+        match File::open(path) {
+            Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+}
+
+pub fn read_dependents(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq>>
+{
+    let mut s = String::new();
+    match r.read_to_string(&mut s) {
+        Ok(_) => {
+            match toml::from_str::<HashMap<PkgName, VersionReq>>(s.as_str()) {
+                Ok(dependents) => Ok(dependents),
+                Err(err) => Err(Error::TomlDe(err)),
+            }
+        },
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn write_dependents(w: &mut dyn Write, dependents: &HashMap<PkgName, VersionReq>) -> Result<()>
+{
+    match toml::to_string(dependents) {
+        Ok(s) => {
+            match write!(w, "{}", s) {
+                Ok(()) => Ok(()),
+                Err(err) => Err(Error::Io(err)),
+            }
+        },
+        Err(err) => Err(Error::TomlSer(err)),
+    }
+}
+
+pub fn load_dependents<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
+{
+    match File::open(path) {
+        Ok(mut file) => read_dependents(&mut file),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn save_dependents<P: AsRef<Path>>(path: P, dependents: &HashMap<PkgName, VersionReq>) -> Result<()>
+{
+    match File::create(path) {
+        Ok(mut file) => write_dependents(&mut file, dependents),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Pkg
+{
+    dir: Option<PathBuf>,
+    info_dir: Option<PathBuf>,
+    new_part_info_dir: Option<PathBuf>,
+    is_to_install: bool,
+}
+
+impl Pkg
+{
+    fn new() -> Self
+    {
+        Pkg {
+            dir: Some(PathBuf::from(".")),
+            info_dir: None,
+            new_part_info_dir: None,
+            is_to_install: false,
+        }
+    }
+
+    fn res_copy_info_files(dir: &Option<PathBuf>, info_dir: &PathBuf, new_part_info_dir: &PathBuf) -> io::Result<()>
+    {
+        create_dir_all(new_part_info_dir)?;
+        match dir {
+            Some(dir) => {
+                let mut src_manifest_file = dir.clone();
+                src_manifest_file.push("Unlab.toml");
+                let mut dst_manifest_file = new_part_info_dir.clone();
+                dst_manifest_file.push("manifest.toml");
+                copy(src_manifest_file, dst_manifest_file)?;
+            },
+            None => (),
+        }
+        let mut src_dependents_file = info_dir.clone();
+        src_dependents_file.push("dependents.toml");
+        let mut dst_dependents_file = new_part_info_dir.clone();
+        dst_dependents_file.push("dependents.toml");
+        match fs::metadata(info_dir) {
+            Ok(_) => {
+                copy(src_dependents_file, dst_dependents_file)?;
+            },
+            Err(err) if err.kind() == ErrorKind::NotFound => {
+                let _file = File::create(dst_dependents_file)?;
+            }
+            Err(err) => return Err(err),
+        }
+        Ok(())
+    }
+
+    fn copy_info_files(dir: &Option<PathBuf>, info_dir: &PathBuf, new_part_info_dir: &PathBuf) -> Result<()>
+    {
+        match Self::res_copy_info_files(dir, info_dir, new_part_info_dir) {
+            Ok(()) => Ok(()),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+    
+    fn new_with_copy(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
+    {
+        Self::copy_info_files(&dir, &info_dir, &new_part_info_dir)?;
+        let is_to_install = dir.is_some();
+        Ok(Pkg {
+                dir,
+                info_dir: Some(info_dir),
+                new_part_info_dir: Some(new_part_info_dir),
+                is_to_install,
+        })
+    }
+
+    fn old_manifest(&self) -> Result<Option<Manifest>>
+    {
+        match &self.new_part_info_dir {
+            Some(new_part_info_dir) => {
+                match &self.info_dir {
+                    Some(info_dir) => {
+                        let mut new_manifest_file = new_part_info_dir.clone();
+                        new_manifest_file.push("manifest.toml");
+                        let is_new_manifest = match fs::metadata(new_manifest_file) {
+                            Ok(_) => true,
+                            Err(err) if err.kind() == ErrorKind::NotFound => false,
+                            Err(err) => return Err(Error::Io(err)),
+                        };
+                        if is_new_manifest {
+                            let mut old_manifest_file = info_dir.clone();
+                            old_manifest_file.push("manifest.toml");
+                            match Manifest::load(old_manifest_file) {
+                                Ok(tmp_old_manifest) => Ok(Some(tmp_old_manifest)),
+                                Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => Ok(None),
+                                Err(err) => Err(err),
+                            }
+                        } else {
+                            Ok(None)
+                        }
+                    },
+                    None => Ok(None),
+                }
+            },
+            None => Ok(None),
+        }
+    }
+
+    fn manifest(&self) -> Result<Manifest>
+    {
+        match &self.new_part_info_dir {
+            Some(new_part_info_dir) => {
+                let mut manifest_file = new_part_info_dir.clone();
+                manifest_file.push("manifest.toml");
+                Manifest::load(manifest_file)
+            },
+            None => {
+                match &self.info_dir {
+                    Some(info_dir) => {
+                        let mut manifest_file = info_dir.clone();
+                        manifest_file.push("manifest.toml");
+                        Manifest::load(manifest_file)
+                    },
+                    None => {
+                        match &self.dir {
+                            Some(dir) => {
+                                let mut manifest_file = dir.clone();
+                                manifest_file.push("Unlab.toml");
+                                Manifest::load(manifest_file)
+                            },
+                            None => Err(Error::Pkg(String::from("no manifest file"))),
+                        }
+                    },
+                }
+            },
+        }
+    }
+
+    fn dependents(&self) -> Result<HashMap<PkgName, VersionReq>>
+    {
+        match &self.new_part_info_dir {
+            Some(new_part_info_dir) => {
+                let mut dependents_file = new_part_info_dir.clone();
+                dependents_file.push("dependents.toml");
+                load_dependents(dependents_file)
+            },
+            None => Ok(HashMap::new()),
+        }
+    }
+
+    fn save_dependents(&self, dependents: &HashMap<PkgName, VersionReq>) -> Result<()>
+    {
+        match &self.new_part_info_dir {
+            Some(new_part_info_dir) => {
+                let mut dependents_file = new_part_info_dir.clone();
+                dependents_file.push("dependents.toml");
+                save_dependents(dependents_file, dependents)
+            },
+            None => Ok(()),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct PkgManager
 {
@@ -154,6 +387,10 @@ pub struct PkgManager
     home_var_dir: PathBuf,
     var_dir: PathBuf,
     tmp_dir: PathBuf,
+    pkgs: HashMap<PkgName, Pkg>,
+    locks: HashMap<PkgName, Version>,
+    constraints: Arc<HashMap<PkgName, VersionReq>>,
+    srcs: Arc<HashMap<PkgName, Arc<SrcInfo>>>,
 }
 
 impl PkgManager
@@ -171,6 +408,10 @@ impl PkgManager
                 home_var_dir,
                 var_dir,
                 tmp_dir,
+                pkgs: HashMap::new(),
+                locks: HashMap::new(),
+                constraints: Arc::new(HashMap::new()),
+                srcs: Arc::new(HashMap::new()),
         })
     }
     
@@ -228,17 +469,45 @@ impl PkgManager
         dir
     }
 
-    fn pkg_version(&self, name: &PkgName, bucket_name: &str) -> Result<Option<Version>>
+    fn pkg_versions(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
     {
         match self.pkg_db.tx(false) {
             Ok(tx) => {
-                match tx.get_bucket("versions") {
+                match tx.get_bucket(bucket_name) {
+                    Ok(version_bucket) => {
+                        let mut pairs: Vec<(PkgName, Version)> = Vec::new();
+                        for data in version_bucket.cursor() {
+                            let name = match String::from_utf8(data.kv().key().to_vec()) {
+                                Ok(s) => PkgName::parse(s.as_str())?,
+                                Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                            };
+                            let version = match String::from_utf8(data.kv().value().to_vec()) {
+                                Ok(s) => Version::parse(s.as_str())?,
+                                Err(_) => return Err(Error::Pkg(format!("invalid version data"))),
+                            };
+                            pairs.push((name, version));
+                        }
+                        Ok(pairs)
+                    },
+                    Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }
+    
+    fn pkg_version(&self, bucket_name: &str, name: &PkgName) -> Result<Option<Version>>
+    {
+        match self.pkg_db.tx(false) {
+            Ok(tx) => {
+                match tx.get_bucket(bucket_name) {
                     Ok(version_bucket) => {
                         match version_bucket.get(name.name()) {
                             Some(data) => {
                                 match String::from_utf8(data.kv().value().to_vec()) {
                                     Ok(s) => Ok(Some(Version::parse(s.as_str())?)),
-                                    Err(err) => Err(Error::Pkg(format!("invalid version data"))),
+                                    Err(_) => Err(Error::Pkg(format!("invalid version data"))),
                                 }
                             },
                             None => Ok(None),
@@ -252,73 +521,11 @@ impl PkgManager
         }
     }
 
-    fn move_new_pkg_versions_to_pkg_versions(&self, name: &PkgName, version: &Version) -> Result<()>
-    { 
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                {
-                    let new_version_bucket = match tx.get_bucket("new_version") {
-                        Ok(tmp_new_version_bucket) => tmp_new_version_bucket,
-                        Err(jammdb::Error::BucketMissing) => return Ok(()),
-                        Err(err) => return Err(Error::Jammdb(err)),
-                    };
-                    let version_bucket = match tx.get_or_create_bucket("version") {
-                        Ok(tmp_version_bucket) => tmp_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(err)),
-                    };
-                    for data in new_version_bucket.cursor() {
-                        match version_bucket.put(data.kv().key().to_vec(), data.kv().value().to_vec()) {
-                            Ok(_) => (),
-                            Err(err) => return Err(Error::Jammdb(err)),
-                        }
-                    }
-                }
-                match tx.delete_bucket("new_version") {
-                    Ok(()) => (),
-                    Err(err) => return Err(Error::Jammdb(err)),
-                }
-                match tx.commit() {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(err)),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(err)),
-        }
-    }
-
-    fn new_pkg_versions(&self, name: &PkgName, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
-    {
-        match self.pkg_db.tx(false) {
-            Ok(tx) => {
-                match tx.get_bucket("new_versions") {
-                    Ok(new_version_bucket) => {
-                        let mut pairs: Vec<(PkgName, Version)> = Vec::new();
-                        for data in new_version_bucket.cursor() {
-                            let name = match String::from_utf8(data.kv().key().to_vec()) {
-                                Ok(s) => PkgName::parse(s.as_str())?,
-                                Err(err) => return Err(Error::Pkg(format!("invalid package name data"))),
-                            };
-                            let version = match String::from_utf8(data.kv().value().to_vec()) {
-                                Ok(s) => Version::parse(s.as_str())?,
-                                Err(err) => return Err(Error::Pkg(format!("invalid version data"))),
-                            };
-                            pairs.push((name, version));
-                        }
-                        Ok(pairs)
-                    },
-                    Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
-                    Err(err) => Err(Error::Jammdb(err)),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(err)),
-        }
-    }    
-    
-    fn add_new_pkg_version(&self, name: &PkgName, version: &Version) -> Result<()>
+    fn add_pkg_version(&self, bucket_name: &str, name: &PkgName, version: &Version) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
-                match tx.get_or_create_bucket("new_version") {
+                match tx.get_or_create_bucket(bucket_name) {
                     Ok(version_bucket) => {
                         match version_bucket.put(name.name(), format!("{}", version)) {
                             Ok(_) => {
@@ -335,13 +542,181 @@ impl PkgManager
             },
             Err(err) => Err(Error::Jammdb(err)),
         }
+    }    
+    
+    fn move_pkg_versions(&self, src_bucket_name: &str, dst_bucket_name: &str) -> Result<()>
+    { 
+        match self.pkg_db.tx(true) {
+            Ok(tx) => {
+                {
+                    let src_version_bucket = match tx.get_bucket(src_bucket_name) {
+                        Ok(tmp_src_version_bucket) => tmp_src_version_bucket,
+                        Err(jammdb::Error::BucketMissing) => return Ok(()),
+                        Err(err) => return Err(Error::Jammdb(err)),
+                    };
+                    let dst_version_bucket = match tx.get_or_create_bucket(dst_bucket_name) {
+                        Ok(tmp_dst_version_bucket) => tmp_dst_version_bucket,
+                        Err(err) => return Err(Error::Jammdb(err)),
+                    };
+                    for data in src_version_bucket.cursor() {
+                        match dst_version_bucket.put(data.kv().key().to_vec(), data.kv().value().to_vec()) {
+                            Ok(_) => (),
+                            Err(err) => return Err(Error::Jammdb(err)),
+                        }
+                    }
+                }
+                match tx.delete_bucket(src_bucket_name) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Jammdb(err)),
+                }
+                match tx.commit() {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }
+
+    fn max_pkg_version(versions: &BTreeSet<Version>, version_reqs: &[VersionReq], locked_version: Option<&Version>) -> Option<Version>
+    {
+        let mut max_version: Option<Version> = None;
+        for version in versions {
+            if version_reqs.iter().all(|r| r.matches(version)) {
+                if locked_version.map(|lv| lv == version).unwrap_or(true) { 
+                    max_version = Some(version.clone());
+                }
+            }
+        }
+        max_version
     }
     
-    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>) -> Result<()>
+    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
+        if visiteds.contains(name) {
+            return Ok(());
+        }
         let res = dfs(name, visiteds, self, |name, data| {
-                Ok(Vec::new())
+                let pkg = match data.pkgs.get(name) {
+                    Some(tmp_pkg) => tmp_pkg,
+                    None => {
+                        let mut src = data.create_source(name)?;
+                        let old_version = data.pkg_version("versions", name)?;
+                        let tmp_new_version = data.pkg_version("new_versions", name)?;
+                        let version = tmp_new_version.clone().or(old_version.clone());
+                        let new_version = match &version {
+                            Some(tmp_version) if !is_update || tmp_new_version.is_some() => Some(tmp_version.clone()),
+                            _ => {
+                                if old_version.is_some() {
+                                    if is_update {
+                                        src.update()?;
+                                    }
+                                    let versions = src.versions()?;
+                                    let mut old_dependents_file = data.pkg_info_dir(name);
+                                    old_dependents_file.push("dependents.toml");
+                                    let old_dependants = load_dependents(old_dependents_file)?;
+                                    let mut version_reqs: Vec<VersionReq> = old_dependants.values().map(|r| r.clone()).collect();
+                                    match data.constraints.get(name) {
+                                        Some(constraint) => version_reqs.push(constraint.clone()),
+                                        None => (),
+                                    }
+                                    Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name))
+                                } else {
+                                    old_version.clone()
+                                }
+                            },
+                        };
+                        match &new_version {
+                            Some(new_version) => {
+                                src.set_current_version(new_version);
+                                if tmp_new_version.is_none() {
+                                    data.add_pkg_version("new_versions", name, &new_version)?;
+                                }
+                                let dir = if is_force || old_version.as_ref().map(|ov| ov != new_version).unwrap_or(true) {
+                                    Some(PathBuf::from(src.dir()?))
+                                } else {
+                                    None
+                                };
+                                data.pkgs.insert(name.clone(), Pkg::new_with_copy(dir, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
+                                data.pkgs.get(name).unwrap()
+                            },
+                            None => return Err(Error::PkgName(name.clone(), String::from("any version isn't matched to version requirement"))),
+                        }
+                    },
+                };
+                let manifest = pkg.manifest()?;
+                match &manifest.dependencies {
+                    Some(deps) => {
+                        for (dep_name, dep_version_req) in deps {
+                            let mut dep_src = data.create_source(name)?;
+                            if is_update {
+                                dep_src.update()?;
+                            }
+                            let versions = dep_src.versions()?;
+                            let mut version_reqs: Vec<VersionReq> = vec![dep_version_req.clone()];
+                            match data.constraints.get(name) {
+                                Some(constraint) => version_reqs.push(constraint.clone()),
+                                None => (),
+                            }
+                            let dep_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name));
+                            match &dep_version {
+                                Some(dep_version) => {
+                                    let dep_new_version = data.pkg_version("new_versions", name)?;
+                                    if dep_new_version.as_ref().map(|dnv| dnv == dep_version).unwrap_or(true) {
+                                        data.add_pkg_version("new_version", dep_name, &dep_version)?;
+                                    } else {
+                                        return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
+                                    }
+                                },
+                                None => return Err(Error::PkgName(name.clone(), String::from("any version isn't matched to version requirements"))),
+                            }
+                        }
+                        Ok(deps.keys().map(|dn| dn.clone()).collect())
+                    },
+                    None => Ok(Vec::new()),
+                }
         }, |name, data| {
+                let pkg = match data.pkgs.get(name) {
+                    Some(tmp_pkg) => tmp_pkg,
+                    None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
+                };
+                let old_manifest = pkg.old_manifest()?;
+                match old_manifest {
+                    Some(old_manifest) => {
+                        match &old_manifest.dependencies {
+                            Some(old_deps) => {
+                                for old_dep_name in old_deps.keys() {
+                                    match data.pkgs.get(old_dep_name) {
+                                        Some(old_dep_pkg) => {
+                                            let mut depentents = old_dep_pkg.dependents()?;
+                                            depentents.remove(name);
+                                            pkg.save_dependents(&depentents)?;
+                                        },
+                                        None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no package"))),
+                                    }
+                                }
+                            },
+                            None => (),
+                        }
+                    },
+                    None => (),
+                }
+                let manifest = pkg.manifest()?;
+                match &manifest.dependencies {
+                    Some(deps) => {
+                        for (dep_name, dep_version_req) in deps {
+                            match data.pkgs.get(dep_name) {
+                                Some(dep_pkg) => {
+                                    let mut depentents = dep_pkg.dependents()?;
+                                    depentents.insert(name.clone(), dep_version_req.clone());
+                                    pkg.save_dependents(&depentents)?;
+                                },
+                                None => return Err(Error::PkgName(dep_name.clone(), String::from("no package"))),
+                            }
+                        }
+                    },
+                    None => (),
+                }
                 Ok(())
         })?;
         match res {

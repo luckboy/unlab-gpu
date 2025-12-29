@@ -56,6 +56,7 @@ pub enum Error
     Parser(Pos, String),
     Interp(String),
     Pkg(String),
+    PkgName(PkgName, String),
     PkgDepCycle(Vec<PkgName>),
     Matrix(matrix::Error),
     RwLockRead,
@@ -65,7 +66,8 @@ pub enum Error
     NoFunMod,
     Io(io::Error),
     Ctrlc(ctrlc::Error),
-    Toml(toml::de::Error),
+    TomlDe(toml::de::Error),
+    TomlSer(toml::ser::Error),
     Winit(Box<dyn error::Error>),
     Jammdb(jammdb::Error),
     InvalidVersion,
@@ -89,6 +91,7 @@ impl fmt::Display for Error
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
             Error::Interp(msg) => write!(f, "{}", msg),
             Error::Pkg(msg) => write!(f, "package error: {}", msg),
+            Error::PkgName(name, msg) => write!(f, "package error: {}: {}", name, msg),
             Error::PkgDepCycle(names) => {
                 write!(f, "package error: occurred cycle of dependencies: ")?;
                 let mut is_first = true;
@@ -109,7 +112,8 @@ impl fmt::Display for Error
             Error::NoFunMod => write!(f, "no function module"),
             Error::Io(err) => write!(f, "i/o error: {}", err),
             Error::Ctrlc(err) => write!(f, "ctrl-c error: {}", err),
-            Error::Toml(err) => write!(f, "toml error: {}", err),
+            Error::TomlDe(err) => write!(f, "toml error: {}", err),
+            Error::TomlSer(err) => write!(f, "toml error: {}", err),
             Error::Winit(err) => write!(f, "winit error: {}", err),
             Error::Jammdb(err) => write!(f, "jammdb error: {}", err),
             Error::InvalidVersion => write!(f, "invalid version"),
