@@ -673,9 +673,11 @@ impl PkgManager
                             let dep_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name));
                             match &dep_version {
                                 Some(dep_version) => {
-                                    let dep_new_version = data.pkg_version("new_versions", name)?;
+                                    let dep_new_version = data.pkg_version("new_versions", dep_name)?;
                                     if dep_new_version.as_ref().map(|dnv| dnv == dep_version).unwrap_or(true) {
-                                        data.add_pkg_version("new_version", dep_name, &dep_version)?;
+                                        if dep_new_version.is_none() {
+                                            data.add_pkg_version("new_versions", dep_name, dep_version)?;
+                                        }
                                     } else {
                                         return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
                                     }
