@@ -229,7 +229,6 @@ pub struct Pkg
     dir: Option<PathBuf>,
     info_dir: Option<PathBuf>,
     new_part_info_dir: Option<PathBuf>,
-    is_to_install: bool,
 }
 
 impl Pkg
@@ -240,7 +239,6 @@ impl Pkg
             dir: Some(PathBuf::from(".")),
             info_dir: None,
             new_part_info_dir: None,
-            is_to_install: false,
         }
     }
 
@@ -284,12 +282,10 @@ impl Pkg
     fn new_with_copy(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
     {
         Self::copy_info_files(&dir, &info_dir, &new_part_info_dir)?;
-        let is_to_install = dir.is_some();
         Ok(Pkg {
                 dir,
                 info_dir: Some(info_dir),
                 new_part_info_dir: Some(new_part_info_dir),
-                is_to_install,
         })
     }
 
@@ -378,6 +374,22 @@ impl Pkg
             None => Ok(()),
         }
     }
+
+    fn is_to_install(&self) -> Result<bool>
+    {
+        match &self.new_part_info_dir {
+            Some(new_part_info_dir) => {
+                let mut manifest_file = new_part_info_dir.clone();
+                manifest_file.push("manifest.toml");
+                match fs::metadata(manifest_file) {
+                    Ok(_) => Ok(true),
+                    Err(err) if err.kind() == ErrorKind::NotFound => Ok(false),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            None => Ok(false),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -390,7 +402,7 @@ pub struct PkgManager
     pkgs: HashMap<PkgName, Pkg>,
     locks: HashMap<PkgName, Version>,
     constraints: Arc<HashMap<PkgName, VersionReq>>,
-    srcs: Arc<HashMap<PkgName, Arc<SrcInfo>>>,
+    sources: Arc<HashMap<PkgName, Arc<SrcInfo>>>,
 }
 
 impl PkgManager
@@ -411,7 +423,7 @@ impl PkgManager
                 pkgs: HashMap::new(),
                 locks: HashMap::new(),
                 constraints: Arc::new(HashMap::new()),
-                srcs: Arc::new(HashMap::new()),
+                sources: Arc::new(HashMap::new()),
         })
     }
     
