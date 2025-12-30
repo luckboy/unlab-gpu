@@ -39,6 +39,31 @@ use crate::error::*;
 use crate::fs::*;
 use crate::version::*;
 
+pub trait Print
+{
+    fn print_pre_installing(&self);
+    
+    fn print_installing(&self);
+
+    fn print_pre_removing(&self);
+
+    fn print_removing(&self);
+    
+    fn print_checking_dependent_version_reqs(&self, is_done: bool);
+
+    fn print_searching_path_conflicts(&self, is_done: bool);
+    
+    fn print_installing_pkg(&self, name: &PkgName, is_done: bool);
+
+    fn print_removing_pkg(&self, name: &PkgName, is_done: bool);
+
+    fn print_cleaning_after_install(&self, is_done: bool);
+
+    fn print_cleaning_after_error(&self, is_done: bool);
+    
+    fn print_nl_for_error(&self);
+}
+
 pub trait Source
 {
     fn update(&mut self) -> Result<()>;
@@ -527,11 +552,12 @@ pub struct PkgManager
     locks: HashMap<PkgName, Version>,
     constraints: Arc<HashMap<PkgName, VersionReq>>,
     sources: Arc<HashMap<PkgName, Arc<SrcInfo>>>,
+    printer: Arc<dyn Print + Send + Sync>,
 }
 
 impl PkgManager
 {
-    pub fn new(home_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf) -> Result<Self>
+    pub fn new(home_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
     {
         let mut pkg_db_file = var_dir.clone();
         pkg_db_file.push("pkg.db");
@@ -551,6 +577,7 @@ impl PkgManager
                 locks: HashMap::new(),
                 constraints: Arc::new(HashMap::new()),
                 sources: Arc::new(HashMap::new()),
+                printer,
         })
     }
     
@@ -825,16 +852,23 @@ impl PkgManager
         }
     }
 
-    fn add_pkg_names(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
+    fn add_pkg_names_for_remove(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
                 match tx.get_or_create_bucket(bucket_name) {
                     Ok(name_bucket) => {
                         for name in names {
-                            match name_bucket.put(name.name(), "t") {
-                                Ok(_) => (),
-                                Err(err) => return Err(Error::Jammdb(err)),
+                            let mut dependents_file = self.pkg_new_info_dir(&name);
+                            dependents_file.push("dependents.toml");
+                            let dependents = load_version_reqs(dependents_file)?;
+                            if dependents.is_empty() {
+                                match name_bucket.put(name.name(), "t") {
+                                    Ok(_) => (),
+                                    Err(err) => return Err(Error::Jammdb(err)),
+                                }
+                            } else {
+                                return Err(Error::PkgName(name.clone(), String::from("can't remove package")))
                             }
                         }
                         match tx.commit() {
@@ -849,7 +883,7 @@ impl PkgManager
         }
     }    
 
-    fn add_pkg_names_to_autoremove(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
+    fn add_pkg_names_for_autoremove(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -943,10 +977,13 @@ impl PkgManager
     
     fn remove_dirs_after_error(&self) -> Result<()>
     {
+        self.printer.print_cleaning_after_error(false);
         match self.res_remove_dirs_after_error() {
-            Ok(()) => Ok(()),
-            Err(err) => Err(Error::Io(err)),
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
         }
+        self.printer.print_cleaning_after_error(true);
+        Ok(())
     }
 
     fn prepare_new_part_infos_for_pre_install_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
@@ -1111,6 +1148,7 @@ impl PkgManager
     
     fn check_dependent_version_reqs(&self) -> Result<()>
     {
+        self.printer.print_checking_dependent_version_reqs(false);
         let new_versions = self.pkg_versions("new_versions")?;
         for (name, new_version) in &new_versions {
             match self.pkgs.get(name) {
@@ -1136,6 +1174,7 @@ impl PkgManager
                 None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
             }
         }
+        self.printer.print_checking_dependent_version_reqs(true);
         Ok(())
     }
 
@@ -1150,8 +1189,9 @@ impl PkgManager
         }
     }
     
-    fn find_path_conflicts(&self) -> Result<()>
+    fn search_path_conflicts(&self) -> Result<()>
     {
+        self.printer.print_searching_path_conflicts(false);
         match fs::metadata(self.bin_dir.as_path()) {
             Ok(metadata) if metadata.is_dir() => (),
             Ok(_) => return Err(Error::Pkg(String::from("bin isn't directery"))),
@@ -1280,13 +1320,14 @@ impl PkgManager
                 }
             }
         }
+        self.printer.print_searching_path_conflicts(true);
         Ok(())
     }
     
     fn check_new_part_infos_for_pre_install_without_reset(&self) -> Result<()>
     {
         self.check_dependent_version_reqs()?;
-        self.find_path_conflicts()?;
+        self.search_path_conflicts()?;
         match rename(self.new_part_info_dir(), self.new_info_dir()) {
            Ok(()) => Ok(()),
            Err(err) => Err(Error::Io(err)),
@@ -1364,6 +1405,7 @@ impl PkgManager
             Ok(paths) => {
                 match self.pkg_version("new_versions", name)? {
                     Some(new_version) => {
+                        self.printer.print_installing_pkg(name, false);
                         let mut src = self.create_source(name)?;
                         src.set_current_version(&new_version);
                         match self.res_copy_pkg_files(src.dir()?, &paths) {
@@ -1372,9 +1414,11 @@ impl PkgManager
                         }
                         // Line for documentation installation.
                         match self.res_copy_info_files_and_move_paths_file(name) {
-                            Ok(()) => Ok(()),
-                            Err(err) => Err(Error::Io(err)),
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Io(err)),
                         }
+                        self.printer.print_installing_pkg(name, true);
+                        Ok(())
                     },
                     None => Err(Error::PkgName(name.clone(), String::from("no new version"))),
                 }
@@ -1440,10 +1484,13 @@ impl PkgManager
         paths_file.push("paths.toml");
         match Paths::load(paths_file) {
             Ok(paths) => {
+                self.printer.print_removing_pkg(name, false);
                 match self.res_remove_pkg(name, &paths) {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Io(err)),
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
                 }
+                self.printer.print_removing_pkg(name, true);
+                Ok(())
             },
             Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => Ok(()),
             Err(err) => Err(err),
@@ -1472,15 +1519,18 @@ impl PkgManager
         for (name, _) in &new_versions {
             self.install_pkg(name, is_doc)?;
         }
+        self.printer.print_cleaning_after_install(false);
         match recursively_remove(self.tmp_dir(), true) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
         self.move_pkg_versions("new_versions", "versions")?;
         match recursively_remove(self.new_info_dir(), true) {
-            Ok(()) => Ok(()),
-            Err(err) => Err(Error::Io(err)),
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
         }
+        self.printer.print_cleaning_after_install(true);
+        Ok(())
     }
     
     fn remove_pkgs(&self) -> Result<()>
@@ -1494,29 +1544,34 @@ impl PkgManager
     
     pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
+        self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         for name in names {
             self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
         }
         self.check_new_part_infos_for_pre_install()?;
+        self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
     }
 
     pub fn install_all(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
+        self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         let versions = self.pkg_versions("versions")?;
         for (name, _) in &versions {
             self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
         }
         self.check_new_part_infos_for_pre_install()?;
+        self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
     }
     
     pub fn install_deps(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
+        self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         let current_pkg = Pkg::new();
         let manifest = current_pkg.manifest()?;
@@ -1526,7 +1581,8 @@ impl PkgManager
         self.pkgs.insert(start_name.clone(), current_pkg);
         self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force)?;
         self.check_new_part_infos_for_pre_install()?;
-        self.add_pkg_names_to_autoremove("pkgs_to_remove", "new_versions")?;
+        self.add_pkg_names_for_autoremove("pkgs_to_remove", "new_versions")?;
+        self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         self.remove_pkgs()?;
         Ok(())
@@ -1534,7 +1590,9 @@ impl PkgManager
     
     pub fn remove(&self, names: &[PkgName]) -> Result<()>
     {
-        self.add_pkg_names("pkgs_to_remove", names)?;
+        self.printer.print_pre_removing();
+        self.add_pkg_names_for_remove("pkgs_to_remove", names)?;
+        self.printer.print_removing();
         self.remove_pkgs()?;
         Ok(())
     }
@@ -1559,16 +1617,23 @@ impl PkgManager
             Err(err) if err.kind() == ErrorKind::NotFound => false,
             Err(err) => return Err(Error::Io(err)),
         };
+        let mut is_install = false;
         if is_new_info_dir && self.has_bucket("new_versions")? {
+            self.printer.print_installing();
             self.install_pkgs(is_doc)?;
+            is_install = true;
         }
         if is_new_info_dir {
             match recursively_remove(self.new_info_dir(), true) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
+            is_install = true;
         }
         if self.has_bucket("pkgs_to_remove")? {
+            if !is_install {
+                self.printer.print_removing();
+            }
             self.remove_pkgs()?;
         }
         Ok(())
