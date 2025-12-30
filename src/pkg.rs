@@ -932,8 +932,23 @@ impl PkgManager
             }
         }
         max_version
-    }    
+    }
     
+    fn res_remove_dirs_after_error(&self) -> io::Result<()>
+    {
+        recursively_remove(self.tmp_dir(), true)?;
+        recursively_remove(self.new_part_info_dir(), true)?;
+        Ok(())
+    }
+    
+    fn remove_dirs_after_error(&self) -> Result<()>
+    {
+        match self.res_remove_dirs_after_error() {
+            Ok(()) => Ok(()),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
     fn prepare_new_part_infos_for_pre_install_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
         if visiteds.contains(name) {
@@ -1088,14 +1103,7 @@ impl PkgManager
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
-                match recursively_remove(self.tmp_dir(), true) {
-                    Ok(()) => (),
-                    Err(err2) => return Err(Error::Io(err2)),
-                }
-                match recursively_remove(self.new_part_info_dir(), true) {
-                    Ok(()) => (),
-                    Err(err2) => return Err(Error::Io(err2)),
-                }
+                self.remove_dirs_after_error()?;
                 Err(err)
             },
         }
@@ -1144,6 +1152,24 @@ impl PkgManager
     
     fn find_path_conflicts(&self) -> Result<()>
     {
+        match fs::metadata(self.bin_dir.as_path()) {
+            Ok(metadata) if metadata.is_dir() => (),
+            Ok(_) => return Err(Error::Pkg(String::from("bin isn't directery"))),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        match fs::metadata(self.lib_dir.as_path()) {
+            Ok(metadata) if metadata.is_dir() => (),
+            Ok(_) => return Err(Error::Pkg(String::from("lib isn't directery"))),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        match fs::metadata(self.doc_dir.as_path()) {
+            Ok(metadata) if metadata.is_dir() => (),
+            Ok(_) => return Err(Error::Pkg(String::from("doc isn't directery"))),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
         let new_versions = self.pkg_versions("new_versions")?;
         let mut ignored_bin_paths: HashSet<PathBuf> = HashSet::new();
         let mut ignored_lib_paths: HashSet<PathBuf> = HashSet::new();
@@ -1166,6 +1192,12 @@ impl PkgManager
                 src.set_current_version(new_version);
                 let mut pkg_bin_dir = PathBuf::from(src.dir()?);
                 pkg_bin_dir.push("bin");
+                match fs::metadata(pkg_bin_dir.as_path()) {
+                    Ok(metadata) if metadata.is_dir() => (),
+                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("bin in package isn't directery"))),
+                    Err(err) if err.kind() == ErrorKind::NotFound => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
                 let bin_paths = match conflicts(pkg_bin_dir, self.bin_dir.as_path(), &ignored_bin_paths, Some(1)) {
                     Ok((conflict_paths, paths)) => {
                         if conflict_paths.is_empty() {
@@ -1178,6 +1210,12 @@ impl PkgManager
                 };
                 let mut pkg_lib_dir = PathBuf::from(src.dir()?);
                 pkg_lib_dir.push("lib");
+                match fs::metadata(pkg_lib_dir.as_path()) {
+                    Ok(metadata) if metadata.is_dir() => (),
+                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("lib in package isn't directery"))),
+                    Err(err) if err.kind() == ErrorKind::NotFound => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
                 let lib_paths = match conflicts(pkg_lib_dir, self.lib_dir.as_path(), &ignored_lib_paths, Some(2)) {
                     Ok((conflict_paths, paths)) => {
                         if conflict_paths.is_empty() {
@@ -1262,14 +1300,7 @@ impl PkgManager
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
-                match recursively_remove(self.tmp_dir(), true) {
-                    Ok(()) => (),
-                    Err(err2) => return Err(Error::Io(err2)),
-                }
-                match recursively_remove(self.new_part_info_dir(), true) {
-                    Ok(()) => (),
-                    Err(err2) => return Err(Error::Io(err2)),
-                }
+                self.remove_dirs_after_error()?;
                 Err(err)
             },
         }
