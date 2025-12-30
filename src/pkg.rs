@@ -15,6 +15,8 @@ use std::fs::File;
 use std::fs::copy;
 use std::fs::create_dir_all;
 use std::fs::rename;
+use std::fs::remove_dir;
+use std::fs::remove_file;
 use std::io;
 use std::io::ErrorKind;
 use std::io::Read;
@@ -337,7 +339,7 @@ impl Pkg
         }
     }
     
-    fn new_with_copy(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
+    fn new_with_copying(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
     {
         Self::copy_info_files(&dir, &info_dir, &new_part_info_dir)?;
         Ok(Pkg {
@@ -432,22 +434,6 @@ impl Pkg
             None => Ok(()),
         }
     }
-
-    fn is_to_install(&self) -> Result<bool>
-    {
-        match &self.new_part_info_dir {
-            Some(new_part_info_dir) => {
-                let mut manifest_file = new_part_info_dir.clone();
-                manifest_file.push("manifest.toml");
-                match fs::metadata(manifest_file) {
-                    Ok(_) => Ok(true),
-                    Err(err) if err.kind() == ErrorKind::NotFound => Ok(false),
-                    Err(err) => Err(Error::Io(err)),
-                }
-            },
-            None => Ok(false),
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -459,6 +445,7 @@ pub struct PkgManager
     tmp_dir: PathBuf,
     bin_dir: PathBuf,
     lib_dir: PathBuf,
+    doc_dir: PathBuf,
     pkgs: HashMap<PkgName, Pkg>,
     locks: HashMap<PkgName, Version>,
     constraints: Arc<HashMap<PkgName, VersionReq>>,
@@ -467,7 +454,7 @@ pub struct PkgManager
 
 impl PkgManager
 {
-    pub fn new(home_var_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf) -> Result<Self>
+    pub fn new(home_var_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf) -> Result<Self>
     {
         let mut pkg_db_file = var_dir.clone();
         pkg_db_file.push("pkg.db");
@@ -482,6 +469,7 @@ impl PkgManager
                 tmp_dir,
                 bin_dir,
                 lib_dir,
+                doc_dir,
                 pkgs: HashMap::new(),
                 locks: HashMap::new(),
                 constraints: Arc::new(HashMap::new()),
@@ -489,8 +477,6 @@ impl PkgManager
         })
     }
     
-    fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
-    { Err(Error::Pkg(String::from("no source"))) }
     
     pub fn home_var_dir(&self) -> &Path
     { self.home_var_dir.as_path() }
@@ -500,7 +486,16 @@ impl PkgManager
     
     pub fn tmp_dir(&self) -> &Path
     { self.tmp_dir.as_path() }
+
+    pub fn bin_dir(&self) -> &Path
+    { self.bin_dir.as_path() }
+
+    pub fn lib_dir(&self) -> &Path
+    { self.lib_dir.as_path() }
     
+    pub fn doc_dir(&self) -> &Path
+    { self.doc_dir.as_path() }
+
     pub fn info_dir(&self) -> PathBuf
     {
         let mut dir = self.var_dir.clone();
@@ -521,22 +516,25 @@ impl PkgManager
         dir.push("info.new");
         dir
     }
+
+    fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
+    { Err(Error::Pkg(String::from("no source"))) }
     
-    pub fn pkg_info_dir(&self, name: &PkgName) -> PathBuf
+    fn pkg_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.info_dir();
         dir.push(name.to_path_buf());
         dir
     }
 
-    pub fn pkg_new_part_info_dir(&self, name: &PkgName) -> PathBuf
+    fn pkg_new_part_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.new_part_info_dir();
         dir.push(name.to_path_buf());
         dir
     }
     
-    pub fn pkg_new_info_dir(&self, name: &PkgName) -> PathBuf
+    fn pkg_new_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.new_info_dir();
         dir.push(name.to_path_buf());
@@ -672,7 +670,7 @@ impl PkgManager
         }
         let res = dfs(name, visiteds, self, |name, data| {
                 let pkg = match data.pkgs.get(name) {
-                    Some(tmp_pkg) => tmp_pkg,
+                    Some(tmp_pkg) => tmp_pkg.clone(),
                     None => {
                         let mut src = data.create_source(name)?;
                         let old_version = data.pkg_version("versions", name)?;
@@ -711,8 +709,8 @@ impl PkgManager
                                 } else {
                                     None
                                 };
-                                data.pkgs.insert(name.clone(), Pkg::new_with_copy(dir, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
-                                data.pkgs.get(name).unwrap()
+                                data.pkgs.insert(name.clone(), Pkg::new_with_copying(dir, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
+                                data.pkgs.get(name).unwrap().clone()
                             },
                             None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirement"))),
                         }
@@ -753,7 +751,7 @@ impl PkgManager
                 }
         }, |name, data| {
                 let pkg = match data.pkgs.get(name) {
-                    Some(tmp_pkg) => tmp_pkg,
+                    Some(tmp_pkg) => tmp_pkg.clone(),
                     None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
                 };
                 let old_manifest = pkg.old_manifest()?;
@@ -762,6 +760,15 @@ impl PkgManager
                         match &old_manifest.dependencies {
                             Some(old_deps) => {
                                 for old_dep_name in old_deps.keys() {
+                                    if data.pkg_version("new_versions", old_dep_name)?.is_none() {
+                                        match data.pkg_version("version", old_dep_name)? {
+                                            Some(version) => {
+                                                data.add_pkg_version("new_versions", name, &version)?;
+                                                data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
+                                            },
+                                            None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
+                                        }
+                                    }
                                     match data.pkgs.get(old_dep_name) {
                                         Some(old_dep_pkg) => {
                                             let mut depentents = old_dep_pkg.dependents()?;
@@ -831,7 +838,7 @@ impl PkgManager
         Ok(())
     }
 
-    fn pkg_is_to_install(&self, name: &PkgName) -> Result<bool>
+    fn pkg_is_to_install_for_pre_install(&self, name: &PkgName) -> Result<bool>
     {
         let mut manifest_file = self.pkg_new_part_info_dir(name);
         manifest_file.push("manifest.toml");
@@ -841,14 +848,14 @@ impl PkgManager
             Err(err) => Err(Error::Io(err)),
         }
     }
-
+    
     fn find_path_conflicts(&self) -> Result<()>
     {
         let new_versions = self.pkg_versions("new_versions")?;
         let mut ignored_bin_paths: HashSet<PathBuf> = HashSet::new();
         let mut ignored_lib_paths: HashSet<PathBuf> = HashSet::new();
         for (name, _) in &new_versions {
-            if self.pkg_is_to_install(name)? {
+            if self.pkg_is_to_install_for_pre_install(name)? {
                 let mut old_paths_file = self.pkg_info_dir(name);
                 old_paths_file.push("paths.toml");
                 let paths = Paths::load(old_paths_file)?;
@@ -861,7 +868,7 @@ impl PkgManager
             }
         }
         for (name, new_version) in &new_versions {
-            if self.pkg_is_to_install(name)? {
+            if self.pkg_is_to_install_for_pre_install(name)? {
                 let mut src = self.create_source(name)?;
                 src.set_current_version(new_version);
                 let mut pkg_bin_dir = PathBuf::from(src.dir()?);
@@ -910,7 +917,7 @@ impl PkgManager
         }
         for (i, (name, new_version)) in new_versions.iter().enumerate() {
             for (name2, new_version2) in &new_versions[(i + 1)..] {
-                if self.pkg_is_to_install(name)? && self.pkg_is_to_install(name2)? {
+                if self.pkg_is_to_install_for_pre_install(name)? && self.pkg_is_to_install_for_pre_install(name2)? {
                     let mut src = self.create_source(name)?;
                     src.set_current_version(new_version);
                     let mut src2 = self.create_source(name2)?;
@@ -944,7 +951,7 @@ impl PkgManager
         }
         Ok(())
     }
-
+    
     fn check_new_part_infos_for_pre_install(&self) -> Result<()>
     {
         self.check_dependent_version_reqs()?;
@@ -953,5 +960,189 @@ impl PkgManager
            Ok(()) => Ok(()),
            Err(err) => Err(Error::Io(err)),
         }
+    }
+
+    fn res_copy_pkg_files(&self, dir: &Path, paths: &Paths) -> io::Result<()>
+    {
+        let mut src_bin_dir = PathBuf::from(dir);
+        src_bin_dir.push("bin");
+        let dst_bin_dir = self.bin_dir.clone();
+        let bin_paths: Vec<PathBuf> = paths.bin.iter().map(|s| PathBuf::from(s)).collect();
+        recursively_copy_paths_in_dir(src_bin_dir, dst_bin_dir, bin_paths.as_slice())?;
+        let mut src_lib_dir = PathBuf::from(dir);
+        src_lib_dir.push("bin");
+        let dst_lib_dir = self.lib_dir.clone();
+        let lib_paths: Vec<PathBuf> = paths.lib.iter().map(|s| PathBuf::from(s)).collect();
+        recursively_copy_paths_in_dir(src_lib_dir, dst_lib_dir, lib_paths.as_slice())?;
+        Ok(())
+    }
+
+    fn res_copy_info_files_and_move_paths_file(&self, name: &PkgName) -> io::Result<()>
+    {
+        create_dir_all(self.pkg_info_dir(name))?;
+        let mut src_manifest_file = self.pkg_new_info_dir(name);
+        src_manifest_file.push("manifest.toml");
+        let mut dst_manifest_file = self.pkg_info_dir(name);
+        dst_manifest_file.push("manifest.toml");
+        copy(src_manifest_file, dst_manifest_file)?;
+        let mut src_dependents_file = self.pkg_new_info_dir(name);
+        src_dependents_file.push("dependents.toml");
+        let mut dst_dependents_file = self.pkg_info_dir(name);
+        dst_dependents_file.push("dependents.toml");
+        copy(src_dependents_file, dst_dependents_file)?;
+        let mut src_paths_file = self.pkg_new_info_dir(name);
+        src_paths_file.push("paths.toml");
+        let mut dst_paths_file = self.pkg_info_dir(name);
+        dst_paths_file.push("paths.toml");
+        rename(src_paths_file, dst_paths_file)?;
+        Ok(())
+    }
+
+    fn res_copy_dependents_file(&self, name: &PkgName) -> io::Result<()>
+    {
+        create_dir_all(self.pkg_info_dir(name))?;
+        let mut src_dependents_file = self.pkg_new_info_dir(name);
+        src_dependents_file.push("dependents.toml");
+        let mut dst_dependents_file = self.pkg_info_dir(name);
+        dst_dependents_file.push("dependents.toml");
+        match copy(src_dependents_file, dst_dependents_file) {
+            Ok(_) => Ok(()),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(err),
+        }
+    }
+    
+    fn install_pkg(&self, name: &PkgName, is_doc: bool) -> Result<()>
+    {
+        let mut paths_file = self.pkg_new_info_dir(name);
+        paths_file.push("paths.toml");
+        match Paths::load(paths_file) {
+            Ok(paths) => {
+                match self.pkg_version("new_versions", name)? {
+                    Some(new_version) => {
+                        let mut src = self.create_source(name)?;
+                        src.set_current_version(&new_version);
+                        match self.res_copy_pkg_files(src.dir()?, &paths) {
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Io(err)),
+                        }
+                        // Line for documentation installation.
+                        match self.res_copy_info_files_and_move_paths_file(name) {
+                            Ok(()) => Ok(()),
+                            Err(err) => Err(Error::Io(err)),
+                        }
+                    },
+                    None => Err(Error::PkgName(name.clone(), String::from("no new version"))),
+                }
+            },
+            Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => {
+                match self.res_copy_dependents_file(name) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) => Err(err),
+        }
+    }
+    
+    fn res_remove_pkg(&self, name: &PkgName, paths: &Paths) -> io::Result<()>
+    {
+        let bin_dir = self.bin_dir.clone();
+        let bin_paths: Vec<PathBuf> = paths.bin.iter().map(|s| PathBuf::from(s)).collect();
+        recursively_remove_paths_in_dir(bin_dir, bin_paths.as_slice(), true)?;
+        let lib_dir = self.lib_dir.clone();
+        let lib_paths: Vec<PathBuf> = paths.lib.iter().map(|s| PathBuf::from(s)).collect();
+        recursively_remove_paths_in_dir(lib_dir, lib_paths.as_slice(), true)?;
+        let doc_dir = self.doc_dir.clone();
+        recursively_remove_paths_in_dir(doc_dir, lib_paths.as_slice(), true)?;
+        let mut manifest_file = self.pkg_info_dir(name);
+        manifest_file.push("manifest.toml");
+        match remove_file(manifest_file) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(err),
+        }
+        let mut dependents_file = self.pkg_info_dir(name);
+        dependents_file.push("depentents.toml");
+        match remove_file(dependents_file) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(err),
+        }
+        let mut paths_file = self.pkg_info_dir(name);
+        paths_file.push("paths.toml");
+        match remove_file(paths_file) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(err),
+        }
+        let mut tmp_suffix_path_buf = name.to_path_buf();
+        tmp_suffix_path_buf.pop();
+        while tmp_suffix_path_buf != PathBuf::from("") {
+            let mut dir_path_buf = self.info_dir();
+            dir_path_buf.push(tmp_suffix_path_buf.as_path());
+            match remove_dir(dir_path_buf.as_path()) {
+                Ok(()) => (),
+                Err(_) => break,
+            }
+            tmp_suffix_path_buf.pop();
+        }
+        Ok(())
+    }
+
+    fn remove_pkg(&self, name: &PkgName) -> Result<()>
+    {
+        let mut paths_file = self.pkg_info_dir(name);
+        paths_file.push("paths.toml");
+        match Paths::load(paths_file) {
+            Ok(paths) => {
+                match self.res_remove_pkg(name, &paths) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn pkg_is_to_install(&self, name: &PkgName) -> Result<bool>
+    {
+        let mut paths_file = self.pkg_new_info_dir(name);
+        paths_file.push("paths.toml");
+        match fs::metadata(paths_file) {
+            Ok(_) => Ok(true),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(false),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    fn install_pkgs(&self, is_doc: bool) -> Result<()>
+    {
+        let new_versions = self.pkg_versions("new_versions")?;
+        for (name, _) in &new_versions {
+            if self.pkg_is_to_install(name)? {
+                self.remove_pkg(name)?;
+            }
+        }
+        for (name, _) in &new_versions {
+            self.install_pkg(name, is_doc)?;
+        }
+        self.move_pkg_versions("new_versions", "versions")?;
+        match recursively_remove(self.new_info_dir(), true) {
+            Ok(()) => Ok(()),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+    
+    pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
+    {
+        let mut visiteds: HashSet<PkgName> = HashSet::new();
+        for name in names {
+            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
+        }
+        self.check_new_part_infos_for_pre_install()?;
+        self.install_pkgs(is_doc)?;
+        Ok(())
     }
 }
