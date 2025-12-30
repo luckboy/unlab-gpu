@@ -868,7 +868,7 @@ impl PkgManager
                                     Err(err) => return Err(Error::Jammdb(err)),
                                 }
                             } else {
-                                return Err(Error::PkgName(name.clone(), String::from("can't remove package")))
+                                return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
                             }
                         }
                         match tx.commit() {
@@ -1584,6 +1584,7 @@ impl PkgManager
         self.add_pkg_names_for_autoremove("pkgs_to_remove", "new_versions")?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
+        self.printer.print_removing();
         self.remove_pkgs()?;
         Ok(())
     }
@@ -1597,7 +1598,7 @@ impl PkgManager
         Ok(())
     }
     
-    pub fn check_incompleted_op(&self) -> Result<()>
+    pub fn check_last_op(&self) -> Result<()>
     {
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
@@ -1617,23 +1618,18 @@ impl PkgManager
             Err(err) if err.kind() == ErrorKind::NotFound => false,
             Err(err) => return Err(Error::Io(err)),
         };
-        let mut is_install = false;
         if is_new_info_dir && self.has_bucket("new_versions")? {
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
-            is_install = true;
         }
         if is_new_info_dir {
             match recursively_remove(self.new_info_dir(), true) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
-            is_install = true;
         }
         if self.has_bucket("pkgs_to_remove")? {
-            if !is_install {
-                self.printer.print_removing();
-            }
+            self.printer.print_removing();
             self.remove_pkgs()?;
         }
         Ok(())
