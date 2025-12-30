@@ -719,7 +719,7 @@ impl PkgManager
         }
     }
     
-    fn pkg_versions(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
+    fn pkg_versions_for_bucket(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
     {
         match self.pkg_db.tx(false) {
             Ok(tx) => {
@@ -746,8 +746,36 @@ impl PkgManager
             Err(err) => Err(Error::Jammdb(err)),
         }
     }
+
+    fn pkg_versions_for_bucket_in<F>(&self, bucket_name: &str, mut f: F) -> Result<()>
+        where F: FnMut(&PkgName, &Version) -> Result<()>
+    {
+        match self.pkg_db.tx(false) {
+            Ok(tx) => {
+                match tx.get_bucket(bucket_name) {
+                    Ok(version_bucket) => {
+                        for data in version_bucket.cursor() {
+                            let name = match String::from_utf8(data.kv().key().to_vec()) {
+                                Ok(s) => PkgName::parse(s.as_str())?,
+                                Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                            };
+                            let version = match String::from_utf8(data.kv().value().to_vec()) {
+                                Ok(s) => Version::parse(s.as_str())?,
+                                Err(_) => return Err(Error::Pkg(format!("invalid version data"))),
+                            };
+                            f(&name, &version)?;
+                        }
+                        Ok(())
+                    },
+                    Err(jammdb::Error::BucketMissing) => Ok(()),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }
     
-    fn pkg_version(&self, bucket_name: &str, name: &PkgName) -> Result<Option<Version>>
+    fn pkg_version_for_bucket(&self, bucket_name: &str, name: &PkgName) -> Result<Option<Version>>
     {
         match self.pkg_db.tx(false) {
             Ok(tx) => {
@@ -771,7 +799,7 @@ impl PkgManager
         }
     }
 
-    fn add_pkg_version(&self, bucket_name: &str, name: &PkgName, version: &Version) -> Result<()>
+    fn add_pkg_version_for_bucket(&self, bucket_name: &str, name: &PkgName, version: &Version) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -794,7 +822,7 @@ impl PkgManager
         }
     }    
     
-    fn move_pkg_versions(&self, src_bucket_name: &str, dst_bucket_name: &str) -> Result<()>
+    fn move_pkg_versions_for_buckets(&self, src_bucket_name: &str, dst_bucket_name: &str) -> Result<()>
     { 
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -828,7 +856,7 @@ impl PkgManager
         }
     }
 
-    fn pkg_names(&self, bucket_name: &str) -> Result<Vec<PkgName>>
+    fn pkg_names_for_bucket(&self, bucket_name: &str) -> Result<Vec<PkgName>>
     {
         match self.pkg_db.tx(false) {
             Ok(tx) => {
@@ -852,7 +880,7 @@ impl PkgManager
         }
     }
 
-    fn add_pkg_names_for_remove(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
+    fn add_pkg_names_for_bucket_and_remove(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -883,7 +911,7 @@ impl PkgManager
         }
     }    
 
-    fn add_pkg_names_for_autoremove(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
+    fn add_pkg_names_for_buckets_and_autoremove(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -921,7 +949,7 @@ impl PkgManager
         }
     }    
     
-    fn remove_pkg_versions(&self, removal_bucket_name: &str, bucket_name: &str) -> Result<()>
+    fn remove_pkg_versions_for_buckets(&self, removal_bucket_name: &str, bucket_name: &str) -> Result<()>
     { 
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -953,7 +981,17 @@ impl PkgManager
             },
             Err(err) => Err(Error::Jammdb(err)),
         }
-    }    
+    }
+    
+    pub fn pkg_versions(&self) -> Result<Vec<(PkgName, Version)>>
+    { self.pkg_versions_for_bucket("versions") }
+
+    pub fn pkg_versions_in<F>(&self, f: F) -> Result<()>
+        where F: FnMut(&PkgName, &Version) -> Result<()>
+    { self.pkg_versions_for_bucket_in("versions", f) }
+
+    pub fn pkg_version(&self, name: &PkgName) -> Result<Option<Version>>
+    { self.pkg_version_for_bucket("versions", name) }
     
     fn max_pkg_version(versions: &BTreeSet<Version>, version_reqs: &[VersionReq], locked_version: Option<&Version>) -> Option<Version>
     {
@@ -996,8 +1034,8 @@ impl PkgManager
                     Some(tmp_pkg) => tmp_pkg.clone(),
                     None => {
                         let mut src = data.create_source(name)?;
-                        let old_version = data.pkg_version("versions", name)?;
-                        let tmp_new_version = data.pkg_version("new_versions", name)?;
+                        let old_version = data.pkg_version_for_bucket("versions", name)?;
+                        let tmp_new_version = data.pkg_version_for_bucket("new_versions", name)?;
                         let version = tmp_new_version.clone().or(old_version.clone());
                         let new_version = match &version {
                             Some(tmp_version) if !is_update || tmp_new_version.is_some() => Some(tmp_version.clone()),
@@ -1025,7 +1063,7 @@ impl PkgManager
                             Some(new_version) => {
                                 src.set_current_version(new_version);
                                 if tmp_new_version.is_none() {
-                                    data.add_pkg_version("new_versions", name, &new_version)?;
+                                    data.add_pkg_version_for_bucket("new_versions", name, &new_version)?;
                                 }
                                 let dir = if is_force || old_version.as_ref().map(|ov| ov != new_version).unwrap_or(true) {
                                     Some(PathBuf::from(src.dir()?))
@@ -1056,10 +1094,10 @@ impl PkgManager
                             let dep_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name));
                             match &dep_version {
                                 Some(dep_version) => {
-                                    let dep_new_version = data.pkg_version("new_versions", dep_name)?;
+                                    let dep_new_version = data.pkg_version_for_bucket("new_versions", dep_name)?;
                                     if dep_new_version.as_ref().map(|dnv| dnv == dep_version).unwrap_or(true) {
                                         if dep_new_version.is_none() {
-                                            data.add_pkg_version("new_versions", dep_name, dep_version)?;
+                                            data.add_pkg_version_for_bucket("new_versions", dep_name, dep_version)?;
                                         }
                                     } else {
                                         return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
@@ -1084,10 +1122,10 @@ impl PkgManager
                             match &old_manifest.dependencies {
                                 Some(old_deps) => {
                                     for old_dep_name in old_deps.keys() {
-                                        if data.pkg_version("new_versions", old_dep_name)?.is_none() {
-                                            match data.pkg_version("version", old_dep_name)? {
+                                        if data.pkg_version_for_bucket("new_versions", old_dep_name)?.is_none() {
+                                            match data.pkg_version_for_bucket("version", old_dep_name)? {
                                                 Some(version) => {
-                                                    data.add_pkg_version("new_versions", name, &version)?;
+                                                    data.add_pkg_version_for_bucket("new_versions", name, &version)?;
                                                     data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
                                                 },
                                                 None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
@@ -1149,7 +1187,7 @@ impl PkgManager
     fn check_dependent_version_reqs(&self) -> Result<()>
     {
         self.printer.print_checking_dependent_version_reqs(false);
-        let new_versions = self.pkg_versions("new_versions")?;
+        let new_versions = self.pkg_versions_for_bucket("new_versions")?;
         for (name, new_version) in &new_versions {
             match self.pkgs.get(name) {
                 Some(pkg) => {
@@ -1210,7 +1248,7 @@ impl PkgManager
             Err(err) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => return Err(Error::Io(err)),
         }
-        let new_versions = self.pkg_versions("new_versions")?;
+        let new_versions = self.pkg_versions_for_bucket("new_versions")?;
         let mut ignored_bin_paths: HashSet<PathBuf> = HashSet::new();
         let mut ignored_lib_paths: HashSet<PathBuf> = HashSet::new();
         for (name, _) in &new_versions {
@@ -1403,7 +1441,7 @@ impl PkgManager
         paths_file.push("paths.toml");
         match Paths::load(paths_file) {
             Ok(paths) => {
-                match self.pkg_version("new_versions", name)? {
+                match self.pkg_version_for_bucket("new_versions", name)? {
                     Some(new_version) => {
                         self.printer.print_installing_pkg(name, false);
                         let mut src = self.create_source(name)?;
@@ -1510,7 +1548,7 @@ impl PkgManager
 
     fn install_pkgs(&self, is_doc: bool) -> Result<()>
     {
-        let new_versions = self.pkg_versions("new_versions")?;
+        let new_versions = self.pkg_versions_for_bucket("new_versions")?;
         for (name, _) in &new_versions {
             if self.pkg_is_to_install(name)? {
                 self.remove_pkg(name)?;
@@ -1524,7 +1562,7 @@ impl PkgManager
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
-        self.move_pkg_versions("new_versions", "versions")?;
+        self.move_pkg_versions_for_buckets("new_versions", "versions")?;
         match recursively_remove(self.new_info_dir(), true) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
@@ -1535,11 +1573,11 @@ impl PkgManager
     
     fn remove_pkgs(&self) -> Result<()>
     {
-        let names = self.pkg_names("pkgs_to_remove")?;
+        let names = self.pkg_names_for_bucket("pkgs_to_remove")?;
         for name in &names {
             self.remove_pkg(name)?;
         }
-        self.remove_pkg_versions("pkgs_to_removal", "versions")
+        self.remove_pkg_versions_for_buckets("pkgs_to_removal", "versions")
     }
     
     pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
@@ -1559,7 +1597,7 @@ impl PkgManager
     {
         self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
-        let versions = self.pkg_versions("versions")?;
+        let versions = self.pkg_versions_for_bucket("versions")?;
         for (name, _) in &versions {
             self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
         }
@@ -1581,7 +1619,7 @@ impl PkgManager
         self.pkgs.insert(start_name.clone(), current_pkg);
         self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force)?;
         self.check_new_part_infos_for_pre_install()?;
-        self.add_pkg_names_for_autoremove("pkgs_to_remove", "new_versions")?;
+        self.add_pkg_names_for_buckets_and_autoremove("pkgs_to_remove", "new_versions")?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         self.printer.print_removing();
@@ -1592,7 +1630,7 @@ impl PkgManager
     pub fn remove(&self, names: &[PkgName]) -> Result<()>
     {
         self.printer.print_pre_removing();
-        self.add_pkg_names_for_remove("pkgs_to_remove", names)?;
+        self.add_pkg_names_for_bucket_and_remove("pkgs_to_remove", names)?;
         self.printer.print_removing();
         self.remove_pkgs()?;
         Ok(())
