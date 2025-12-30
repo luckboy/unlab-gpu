@@ -240,13 +240,13 @@ impl Paths
     }
 }
 
-pub fn read_dependents(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq>>
+pub fn read_version_reqs(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq>>
 {
     let mut s = String::new();
     match r.read_to_string(&mut s) {
         Ok(_) => {
             match toml::from_str::<HashMap<PkgName, VersionReq>>(s.as_str()) {
-                Ok(dependents) => Ok(dependents),
+                Ok(version_reqs) => Ok(version_reqs),
                 Err(err) => Err(Error::TomlDe(err)),
             }
         },
@@ -254,9 +254,9 @@ pub fn read_dependents(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq>>
     }
 }
 
-pub fn write_dependents(w: &mut dyn Write, dependents: &HashMap<PkgName, VersionReq>) -> Result<()>
+pub fn write_version_reqs(w: &mut dyn Write, version_reqs: &HashMap<PkgName, VersionReq>) -> Result<()>
 {
-    match toml::to_string(dependents) {
+    match toml::to_string(version_reqs) {
         Ok(s) => {
             match write!(w, "{}", s) {
                 Ok(()) => Ok(()),
@@ -267,18 +267,79 @@ pub fn write_dependents(w: &mut dyn Write, dependents: &HashMap<PkgName, Version
     }
 }
 
-pub fn load_dependents<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
+pub fn load_version_reqs<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
 {
     match File::open(path) {
-        Ok(mut file) => read_dependents(&mut file),
+        Ok(mut file) => read_version_reqs(&mut file),
         Err(err) => Err(Error::Io(err)),
     }
 }
 
-pub fn save_dependents<P: AsRef<Path>>(path: P, dependents: &HashMap<PkgName, VersionReq>) -> Result<()>
+pub fn load_opt_version_reqs<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
+{
+    match File::open(path) {
+        Ok(mut file) => read_version_reqs(&mut file),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(HashMap::new()),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn save_version_reqs<P: AsRef<Path>>(path: P, version_reqs: &HashMap<PkgName, VersionReq>) -> Result<()>
 {
     match File::create(path) {
-        Ok(mut file) => write_dependents(&mut file, dependents),
+        Ok(mut file) => write_version_reqs(&mut file, version_reqs),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn read_src_infos(r: &mut dyn Read) -> Result<HashMap<PkgName, Arc<SrcInfo>>>
+{
+    let mut s = String::new();
+    match r.read_to_string(&mut s) {
+        Ok(_) => {
+            match toml::from_str::<HashMap<PkgName, Arc<SrcInfo>>>(s.as_str()) {
+                Ok(src_infos) => Ok(src_infos),
+                Err(err) => Err(Error::TomlDe(err)),
+            }
+        },
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn write_src_infos(w: &mut dyn Write, src_infos: &HashMap<PkgName, Arc<SrcInfo>>) -> Result<()>
+{
+    match toml::to_string(src_infos) {
+        Ok(s) => {
+            match write!(w, "{}", s) {
+                Ok(()) => Ok(()),
+                Err(err) => Err(Error::Io(err)),
+            }
+        },
+        Err(err) => Err(Error::TomlSer(err)),
+    }
+}
+
+pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Arc<SrcInfo>>>
+{
+    match File::open(path) {
+        Ok(mut file) => read_src_infos(&mut file),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Arc<SrcInfo>>>
+{
+    match File::open(path) {
+        Ok(mut file) => read_src_infos(&mut file),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(HashMap::new()),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, Arc<SrcInfo>>) -> Result<()>
+{
+    match File::create(path) {
+        Ok(mut file) => write_src_infos(&mut file, src_infos),
         Err(err) => Err(Error::Io(err)),
     }
 }
@@ -417,7 +478,7 @@ impl Pkg
             Some(new_part_info_dir) => {
                 let mut dependents_file = new_part_info_dir.clone();
                 dependents_file.push("dependents.toml");
-                load_dependents(dependents_file)
+                load_version_reqs(dependents_file)
             },
             None => Ok(HashMap::new()),
         }
@@ -429,9 +490,25 @@ impl Pkg
             Some(new_part_info_dir) => {
                 let mut dependents_file = new_part_info_dir.clone();
                 dependents_file.push("dependents.toml");
-                save_dependents(dependents_file, dependents)
+                save_version_reqs(dependents_file, dependents)
             },
             None => Ok(()),
+        }
+    }
+
+    fn is_to_install(&self) -> Result<bool>
+    {
+        match &self.new_part_info_dir {
+            Some(new_part_info_dir) => {
+                let mut manifest_file = new_part_info_dir.clone();
+                manifest_file.push("manifest.toml");
+                match fs::metadata(manifest_file) {
+                    Ok(_) => Ok(true),
+                    Err(err) if err.kind() == ErrorKind::NotFound => Ok(false),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            None => Ok(false),
         }
     }
 }
@@ -440,7 +517,7 @@ impl Pkg
 pub struct PkgManager
 {
     pkg_db: DB,
-    home_var_dir: PathBuf,
+    home_dir: PathBuf,
     var_dir: PathBuf,
     tmp_dir: PathBuf,
     bin_dir: PathBuf,
@@ -454,7 +531,7 @@ pub struct PkgManager
 
 impl PkgManager
 {
-    pub fn new(home_var_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf) -> Result<Self>
+    pub fn new(home_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf) -> Result<Self>
     {
         let mut pkg_db_file = var_dir.clone();
         pkg_db_file.push("pkg.db");
@@ -464,7 +541,7 @@ impl PkgManager
         };
         Ok(PkgManager {
                 pkg_db,
-                home_var_dir,
+                home_dir,
                 var_dir,
                 tmp_dir,
                 bin_dir,
@@ -477,9 +554,8 @@ impl PkgManager
         })
     }
     
-    
-    pub fn home_var_dir(&self) -> &Path
-    { self.home_var_dir.as_path() }
+    pub fn home_dir(&self) -> &Path
+    { self.home_dir.as_path() }
 
     pub fn var_dir(&self) -> &Path
     { self.var_dir.as_path() }
@@ -496,6 +572,67 @@ impl PkgManager
     pub fn doc_dir(&self) -> &Path
     { self.doc_dir.as_path() }
 
+    pub fn locks(&self) -> &HashMap<PkgName, Version>
+    { &self.locks }
+
+    pub fn set_locks(&mut self, locks: HashMap<PkgName, Version>)
+    { self.locks = locks; }
+    
+    pub fn constraints(&self) -> &Arc<HashMap<PkgName, VersionReq>>
+    { &self.constraints }
+
+    pub fn set_constraints(&mut self, constraints: Arc<HashMap<PkgName, VersionReq>>)
+    { self.constraints = constraints; }
+
+    pub fn load_constraints(&mut self) -> Result<()>
+    {
+        self.constraints = Arc::new(load_opt_version_reqs(self.constraints_file())?);
+        Ok(())
+    }
+    
+    pub fn sources(&self) -> &Arc<HashMap<PkgName, Arc<SrcInfo>>>
+    { &self.sources }
+
+    pub fn set_sources(&mut self, sources: Arc<HashMap<PkgName, Arc<SrcInfo>>>)
+    { self.sources = sources; }
+
+    pub fn load_sources(&mut self) -> Result<()>
+    {
+        self.sources = Arc::new(load_opt_src_infos(self.sources_file())?);
+        Ok(())
+    }
+
+    pub fn reset(&mut self)
+    { self.pkgs.clear(); }
+    
+    pub fn pkg_config_file(&self) -> PathBuf
+    {
+        let mut file = self.home_dir.clone();
+        file.push("pkg.toml");
+        file
+    }
+
+    pub fn constraints_file(&self) -> PathBuf
+    {
+        let mut file = self.home_dir.clone();
+        file.push("constraints.toml");
+        file
+    }
+
+    pub fn sources_file(&self) -> PathBuf
+    {
+        let mut file = self.home_dir.clone();
+        file.push("sources.toml");
+        file
+    }
+    
+    pub fn home_var_dir(&self) -> PathBuf
+    {
+        let mut dir = self.home_dir.clone();
+        dir.push("var");
+        dir
+    }
+    
     pub fn info_dir(&self) -> PathBuf
     {
         let mut dir = self.var_dir.clone();
@@ -517,30 +654,44 @@ impl PkgManager
         dir
     }
 
-    fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
-    { Err(Error::Pkg(String::from("no source"))) }
-    
-    fn pkg_info_dir(&self, name: &PkgName) -> PathBuf
+    pub fn pkg_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.info_dir();
         dir.push(name.to_path_buf());
         dir
     }
 
-    fn pkg_new_part_info_dir(&self, name: &PkgName) -> PathBuf
+    pub fn pkg_new_part_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.new_part_info_dir();
         dir.push(name.to_path_buf());
         dir
     }
     
-    fn pkg_new_info_dir(&self, name: &PkgName) -> PathBuf
+    pub fn pkg_new_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.new_info_dir();
         dir.push(name.to_path_buf());
         dir
     }
-
+    
+    fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
+    { Err(Error::Pkg(String::from("no source"))) }
+    
+    fn has_bucket(&self, bucket_name: &str) -> Result<bool>
+    {
+        match self.pkg_db.tx(false) {
+            Ok(tx) => {
+                match tx.get_bucket(bucket_name) {
+                    Ok(_) => Ok(true),
+                    Err(jammdb::Error::BucketMissing) => Ok(false),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }
+    
     fn pkg_versions(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
     {
         match self.pkg_db.tx(false) {
@@ -650,6 +801,126 @@ impl PkgManager
         }
     }
 
+    fn pkg_names(&self, bucket_name: &str) -> Result<Vec<PkgName>>
+    {
+        match self.pkg_db.tx(false) {
+            Ok(tx) => {
+                match tx.get_bucket(bucket_name) {
+                    Ok(version_bucket) => {
+                        let mut names: Vec<PkgName> = Vec::new();
+                        for data in version_bucket.cursor() {
+                            let name = match String::from_utf8(data.kv().key().to_vec()) {
+                                Ok(s) => PkgName::parse(s.as_str())?,
+                                Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                            };
+                            names.push(name);
+                        }
+                        Ok(names)
+                    },
+                    Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }
+
+    fn add_pkg_names(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
+    {
+        match self.pkg_db.tx(true) {
+            Ok(tx) => {
+                match tx.get_or_create_bucket(bucket_name) {
+                    Ok(name_bucket) => {
+                        for name in names {
+                            match name_bucket.put(name.name(), "t") {
+                                Ok(_) => (),
+                                Err(err) => return Err(Error::Jammdb(err)),
+                            }
+                        }
+                        match tx.commit() {
+                            Ok(()) => Ok(()),
+                            Err(err) => Err(Error::Jammdb(err)),
+                        }
+                    },
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }    
+
+    fn add_pkg_names_to_autoremove(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
+    {
+        match self.pkg_db.tx(true) {
+            Ok(tx) => {
+                {
+                    let version_bucket = match tx.get_bucket(version_bucket_name) {
+                        Ok(tmp_version_bucket) => tmp_version_bucket,
+                        Err(err) => return Err(Error::Jammdb(err)),
+                    };
+                    let name_bucket = match tx.get_or_create_bucket(bucket_name) {
+                        Ok(tmp_name_bucket) => tmp_name_bucket,
+                        Err(err) => return Err(Error::Jammdb(err)),
+                    };
+                    for data in version_bucket.cursor() {
+                        let name = match String::from_utf8(data.kv().key().to_vec()) {
+                            Ok(s) => PkgName::parse(s.as_str())?,
+                            Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                        };
+                        let mut dependents_file = self.pkg_new_info_dir(&name);
+                        dependents_file.push("dependents.toml");
+                        let dependents = load_version_reqs(dependents_file)?;
+                        if dependents.is_empty() {
+                            match name_bucket.put(data.kv().key().to_vec(), "t") {
+                                Ok(_) => (),
+                                Err(err) => return Err(Error::Jammdb(err)),
+                            }
+                        }
+                    }
+                }
+                match tx.commit() {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }    
+    
+    fn remove_pkg_versions(&self, removal_bucket_name: &str, bucket_name: &str) -> Result<()>
+    { 
+        match self.pkg_db.tx(true) {
+            Ok(tx) => {
+                {
+                    let removal_bucket = match tx.get_bucket(removal_bucket_name) {
+                        Ok(tmp_removal_bucket) => tmp_removal_bucket,
+                        Err(jammdb::Error::BucketMissing) => return Ok(()),
+                        Err(err) => return Err(Error::Jammdb(err)),
+                    };
+                    let version_bucket = match tx.get_or_create_bucket(bucket_name) {
+                        Ok(tmp_version_bucket) => tmp_version_bucket,
+                        Err(err) => return Err(Error::Jammdb(err)),
+                    };
+                    for data in removal_bucket.cursor() {
+                        match version_bucket.delete(data.kv().key()) {
+                            Ok(_) => (),
+                            Err(err) => return Err(Error::Jammdb(err)),
+                        }
+                    }
+                }
+                match tx.delete_bucket(removal_bucket_name) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Jammdb(err)),
+                }
+                match tx.commit() {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Jammdb(err)),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(err)),
+        }
+    }    
+    
     fn max_pkg_version(versions: &BTreeSet<Version>, version_reqs: &[VersionReq], locked_version: Option<&Version>) -> Option<Version>
     {
         let mut max_version: Option<Version> = None;
@@ -663,7 +934,7 @@ impl PkgManager
         max_version
     }    
     
-    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_part_infos_for_pre_install_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
         if visiteds.contains(name) {
             return Ok(());
@@ -686,7 +957,7 @@ impl PkgManager
                                     let versions = src.versions()?;
                                     let mut old_dependents_file = data.pkg_info_dir(name);
                                     old_dependents_file.push("dependents.toml");
-                                    let old_dependants = load_dependents(old_dependents_file)?;
+                                    let old_dependants = load_version_reqs(old_dependents_file)?;
                                     let mut version_reqs: Vec<VersionReq> = old_dependants.values().map(|r| r.clone()).collect();
                                     match data.constraints.get(name) {
                                         Some(constraint) => version_reqs.push(constraint.clone()),
@@ -755,56 +1026,78 @@ impl PkgManager
                     None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
                 };
                 let old_manifest = pkg.old_manifest()?;
-                match old_manifest {
-                    Some(old_manifest) => {
-                        match &old_manifest.dependencies {
-                            Some(old_deps) => {
-                                for old_dep_name in old_deps.keys() {
-                                    if data.pkg_version("new_versions", old_dep_name)?.is_none() {
-                                        match data.pkg_version("version", old_dep_name)? {
-                                            Some(version) => {
-                                                data.add_pkg_version("new_versions", name, &version)?;
-                                                data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
+                if pkg.is_to_install()? {
+                    match old_manifest {
+                        Some(old_manifest) => {
+                            match &old_manifest.dependencies {
+                                Some(old_deps) => {
+                                    for old_dep_name in old_deps.keys() {
+                                        if data.pkg_version("new_versions", old_dep_name)?.is_none() {
+                                            match data.pkg_version("version", old_dep_name)? {
+                                                Some(version) => {
+                                                    data.add_pkg_version("new_versions", name, &version)?;
+                                                    data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
+                                                },
+                                                None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
+                                            }
+                                        }
+                                        match data.pkgs.get(old_dep_name) {
+                                            Some(old_dep_pkg) => {
+                                                let mut depentents = old_dep_pkg.dependents()?;
+                                                depentents.remove(name);
+                                                pkg.save_dependents(&depentents)?;
                                             },
-                                            None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
+                                            None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no package"))),
                                         }
                                     }
-                                    match data.pkgs.get(old_dep_name) {
-                                        Some(old_dep_pkg) => {
-                                            let mut depentents = old_dep_pkg.dependents()?;
-                                            depentents.remove(name);
-                                            pkg.save_dependents(&depentents)?;
-                                        },
-                                        None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no package"))),
-                                    }
-                                }
-                            },
-                            None => (),
-                        }
-                    },
-                    None => (),
-                }
-                let manifest = pkg.manifest()?;
-                match &manifest.dependencies {
-                    Some(deps) => {
-                        for (dep_name, dep_version_req) in deps {
-                            match data.pkgs.get(dep_name) {
-                                Some(dep_pkg) => {
-                                    let mut depentents = dep_pkg.dependents()?;
-                                    depentents.insert(name.clone(), dep_version_req.clone());
-                                    pkg.save_dependents(&depentents)?;
                                 },
-                                None => return Err(Error::PkgName(dep_name.clone(), String::from("no package"))),
+                                None => (),
                             }
-                        }
-                    },
-                    None => (),
+                        },
+                        None => (),
+                    }
+                    let manifest = pkg.manifest()?;
+                    match &manifest.dependencies {
+                        Some(deps) => {
+                            for (dep_name, dep_version_req) in deps {
+                                match data.pkgs.get(dep_name) {
+                                    Some(dep_pkg) => {
+                                        let mut depentents = dep_pkg.dependents()?;
+                                        depentents.insert(name.clone(), dep_version_req.clone());
+                                        pkg.save_dependents(&depentents)?;
+                                    },
+                                    None => return Err(Error::PkgName(dep_name.clone(), String::from("no package"))),
+                                }
+                            }
+                        },
+                        None => (),
+                    }
                 }
                 Ok(())
         })?;
         match res {
             DfsResult::Success => Ok(()),
             DfsResult::Cycle(names) => Err(Error::PkgDepCycle(names)),
+        }
+    }
+
+    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    {
+        let res = self.prepare_new_part_infos_for_pre_install_without_reset(name, visiteds, is_update, is_force);
+        self.pkgs.clear();
+        match res {
+            Ok(()) => Ok(()),
+            Err(err) => {
+                match recursively_remove(self.tmp_dir(), true) {
+                    Ok(()) => (),
+                    Err(err2) => return Err(Error::Io(err2)),
+                }
+                match recursively_remove(self.new_part_info_dir(), true) {
+                    Ok(()) => (),
+                    Err(err2) => return Err(Error::Io(err2)),
+                }
+                Err(err)
+            },
         }
     }
     
@@ -878,7 +1171,7 @@ impl PkgManager
                         if conflict_paths.is_empty() {
                             paths
                         } else {
-                            return Err(Error::PkgPathConflict(name.clone(), None, conflict_paths, PkgPathConflict::Bin));
+                            return Err(Error::PkgPathConflicts(name.clone(), None, conflict_paths, PkgPathConflict::Bin));
                         }
                     },
                     Err(err) => return Err(Error::Io(err)),
@@ -890,7 +1183,7 @@ impl PkgManager
                         if conflict_paths.is_empty() {
                             paths
                         } else {
-                            return Err(Error::PkgPathConflict(name.clone(), None, conflict_paths, PkgPathConflict::Lib));
+                            return Err(Error::PkgPathConflicts(name.clone(), None, conflict_paths, PkgPathConflict::Lib));
                         }
                     },
                     Err(err) => return Err(Error::Io(err)),
@@ -929,7 +1222,7 @@ impl PkgManager
                     match conflicts(pkg_bin_dir, pkg_bin_dir2, &HashSet::new(), Some(1)) {
                         Ok((conflict_paths, _)) => {
                             if !conflict_paths.is_empty() {
-                                return Err(Error::PkgPathConflict(name.clone(), Some(name2.clone()), conflict_paths, PkgPathConflict::Bin));
+                                return Err(Error::PkgPathConflicts(name.clone(), Some(name2.clone()), conflict_paths, PkgPathConflict::Bin));
                             }
                         },
                         Err(err) => return Err(Error::Io(err)),
@@ -941,7 +1234,7 @@ impl PkgManager
                     match conflicts(pkg_lib_dir, pkg_lib_dir2, &HashSet::new(), Some(2)) {
                         Ok((conflict_paths, _)) => {
                             if !conflict_paths.is_empty() {
-                                return Err(Error::PkgPathConflict(name.clone(), Some(name2.clone()), conflict_paths, PkgPathConflict::Lib));
+                                return Err(Error::PkgPathConflicts(name.clone(), Some(name2.clone()), conflict_paths, PkgPathConflict::Lib));
                             }
                         },
                         Err(err) => return Err(Error::Io(err)),
@@ -952,7 +1245,7 @@ impl PkgManager
         Ok(())
     }
     
-    fn check_new_part_infos_for_pre_install(&self) -> Result<()>
+    fn check_new_part_infos_for_pre_install_without_reset(&self) -> Result<()>
     {
         self.check_dependent_version_reqs()?;
         self.find_path_conflicts()?;
@@ -962,6 +1255,26 @@ impl PkgManager
         }
     }
 
+    fn check_new_part_infos_for_pre_install(&mut self) -> Result<()>
+    {
+        let res = self.check_new_part_infos_for_pre_install_without_reset();
+        self.pkgs.clear();
+        match res {
+            Ok(()) => Ok(()),
+            Err(err) => {
+                match recursively_remove(self.tmp_dir(), true) {
+                    Ok(()) => (),
+                    Err(err2) => return Err(Error::Io(err2)),
+                }
+                match recursively_remove(self.new_part_info_dir(), true) {
+                    Ok(()) => (),
+                    Err(err2) => return Err(Error::Io(err2)),
+                }
+                Err(err)
+            },
+        }
+    }
+    
     fn res_copy_pkg_files(&self, dir: &Path, paths: &Paths) -> io::Result<()>
     {
         let mut src_bin_dir = PathBuf::from(dir);
@@ -1012,7 +1325,7 @@ impl PkgManager
         }
     }
     
-    fn install_pkg(&self, name: &PkgName, is_doc: bool) -> Result<()>
+    fn install_pkg(&self, name: &PkgName, _is_doc: bool) -> Result<()>
     {
         let mut paths_file = self.pkg_new_info_dir(name);
         paths_file.push("paths.toml");
@@ -1128,11 +1441,24 @@ impl PkgManager
         for (name, _) in &new_versions {
             self.install_pkg(name, is_doc)?;
         }
+        match recursively_remove(self.tmp_dir(), true) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
         self.move_pkg_versions("new_versions", "versions")?;
         match recursively_remove(self.new_info_dir(), true) {
             Ok(()) => Ok(()),
             Err(err) => Err(Error::Io(err)),
         }
+    }
+    
+    fn remove_pkgs(&self) -> Result<()>
+    {
+        let names = self.pkg_names("pkgs_to_remove")?;
+        for name in &names {
+            self.remove_pkg(name)?;
+        }
+        self.remove_pkg_versions("pkgs_to_removal", "versions")
     }
     
     pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
@@ -1143,6 +1469,77 @@ impl PkgManager
         }
         self.check_new_part_infos_for_pre_install()?;
         self.install_pkgs(is_doc)?;
+        Ok(())
+    }
+
+    pub fn install_all(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
+    {
+        let mut visiteds: HashSet<PkgName> = HashSet::new();
+        let versions = self.pkg_versions("versions")?;
+        for (name, _) in &versions {
+            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
+        }
+        self.check_new_part_infos_for_pre_install()?;
+        self.install_pkgs(is_doc)?;
+        Ok(())
+    }
+    
+    pub fn install_deps(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
+    {
+        let mut visiteds: HashSet<PkgName> = HashSet::new();
+        let current_pkg = Pkg::new();
+        let manifest = current_pkg.manifest()?;
+        let start_name = manifest.package.name.clone();
+        self.constraints = manifest.constraints.map(|cs| cs.clone()).unwrap_or(Arc::new(HashMap::new()));
+        self.sources = manifest.sources.map(|ss| ss.clone()).unwrap_or(Arc::new(HashMap::new()));
+        self.pkgs.insert(start_name.clone(), current_pkg);
+        self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force)?;
+        self.check_new_part_infos_for_pre_install()?;
+        self.add_pkg_names_to_autoremove("pkgs_to_remove", "new_versions")?;
+        self.install_pkgs(is_doc)?;
+        self.remove_pkgs()?;
+        Ok(())
+    }
+    
+    pub fn remove(&self, names: &[PkgName]) -> Result<()>
+    {
+        self.add_pkg_names("pkgs_to_remove", names)?;
+        self.remove_pkgs()?;
+        Ok(())
+    }
+    
+    pub fn check_incompleted_op(&self) -> Result<()>
+    {
+        let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
+            Ok(_) => true,
+            Err(err) if err.kind() == ErrorKind::NotFound => false,
+            Err(err) => return Err(Error::Io(err)),
+        };
+        if (is_new_info_dir && self.has_bucket("new_versions")?) || is_new_info_dir || self.has_bucket("pkgs_to_remove")? {
+            return Err(Error::Pkg(String::from("Operation is incompleted. Please execute continue command to complete operation.")));
+        }
+        Ok(())
+    }
+
+    pub fn cont(&self, is_doc: bool) -> Result<()>
+    {
+        let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
+            Ok(_) => true,
+            Err(err) if err.kind() == ErrorKind::NotFound => false,
+            Err(err) => return Err(Error::Io(err)),
+        };
+        if is_new_info_dir && self.has_bucket("new_versions")? {
+            self.install_pkgs(is_doc)?;
+        }
+        if is_new_info_dir {
+            match recursively_remove(self.new_info_dir(), true) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
+        }
+        if self.has_bucket("pkgs_to_remove")? {
+            self.remove_pkgs()?;
+        }
         Ok(())
     }
 }

@@ -66,7 +66,7 @@ pub enum Error
     Pkg(String),
     PkgName(PkgName, String),
     PkgDepCycle(Vec<PkgName>),
-    PkgPathConflict(PkgName, Option<PkgName>, Vec<PathBuf>, PkgPathConflict),
+    PkgPathConflicts(PkgName, Option<PkgName>, Vec<PathBuf>, PkgPathConflict),
     Matrix(matrix::Error),
     RwLockRead,
     RwLockWrite,
@@ -113,14 +113,14 @@ impl fmt::Display for Error
                 }
                 Ok(())
             },
-            Error::PkgPathConflict(name, name2, conflict_paths, conflict) => {
+            Error::PkgPathConflicts(name, name2, conflict_paths, conflict) => {
                 let conflict_name = match conflict {
                     PkgPathConflict::Bin => "bin",
                     PkgPathConflict::Lib => "lib",
                 };
                 match name2 {
-                    Some(name2) => write!(f, "package error: occurred conflict between {} and {} for directory {}:", name, name2, conflict_name)?,
-                    None => write!(f, "package error: occurred conflict between {} and installed packages for directory {}:", name, conflict_name)?,
+                    Some(name2) => write!(f, "package error: occurred conflicts between {} and {} for directory {}:", name, name2, conflict_name)?,
+                    None => write!(f, "package error: occurred conflicts between {} and installed packages for directory {}:", name, conflict_name)?,
                 }
                 for conflict_path in conflict_paths {
                     write!(f, "\n{}", conflict_path.to_string_lossy().into_owned())?;
