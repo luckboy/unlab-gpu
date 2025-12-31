@@ -68,7 +68,15 @@ impl BackendConfig
         }
     }
 
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
+    {
+        match File::open(path) {
+            Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
             Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
@@ -164,7 +172,7 @@ pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<
 
 pub fn initialize_backend<P: AsRef<Path>>(path: P) -> Result<()>
 {
-    let config = BackendConfig::load(path)?;
+    let config = BackendConfig::load_opt(path)?;
     initialize_backend_with_config(&config)
 }
 
