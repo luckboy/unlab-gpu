@@ -160,8 +160,13 @@ impl Env
     pub fn script_dir(&self) -> &Path
     { self.script_dir.as_path() }
 
-    pub fn domain(&self) -> &Option<String>
-    { &self.domain }
+    pub fn domain(&self) -> Option<&str>
+    { 
+        match &self.domain {
+            Some(domain) => Some(domain.as_str()),
+            None => None,
+        }
+    }
     
     pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
     { &self.shared_env }

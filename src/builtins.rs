@@ -2358,7 +2358,7 @@ pub fn domain(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match env.domain() {
-        Some(domain) => Ok(Value::Object(Arc::new(Object::String(domain.clone())))),
+        Some(domain) => Ok(Value::Object(Arc::new(Object::String(String::from(domain))))),
         None => Ok(Value::None),
     }
 }
@@ -2370,7 +2370,7 @@ fn name_with_domain(name: &str, env: &Env) -> Result<String>
     } else {
         match env.domain() {
             Some(domain) => {
-                let mut new_name = domain.clone();
+                let mut new_name = String::from(domain);
                 new_name.push('/');
                 new_name.push_str(name);
                 Ok(new_name)
