@@ -1677,12 +1677,14 @@ impl PkgManager
         if is_new_info_dir && self.has_bucket("new_versions")? {
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
-        }
-        if is_new_info_dir {
+        } else if is_new_info_dir {
+            self.printer.print_installing();
+            self.printer.print_cleaning_after_install(false);
             match recursively_remove(self.new_info_dir(), true) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
+            self.printer.print_cleaning_after_install(true);
         }
         if self.has_bucket("pkgs_to_remove")? {
             self.printer.print_removing();
