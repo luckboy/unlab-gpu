@@ -207,6 +207,15 @@ impl Manifest
             Err(err) => Err(Error::Io(err)),
         }
     }
+
+    pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
+    {
+        match File::open(path) {
+            Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None), 
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
