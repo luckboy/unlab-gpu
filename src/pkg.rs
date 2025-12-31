@@ -172,7 +172,7 @@ pub enum SrcInfo
     #[serde(rename = "renamed")]
     Renamed(String),
     #[serde(rename = "versions")]
-    Versions(BTreeMap<Version, VersionSrcInfo>),
+    Versions(Arc<BTreeMap<Version, VersionSrcInfo>>),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -181,7 +181,7 @@ pub struct Manifest
     pub package: PkgInfo,
     pub dependencies: Option<HashMap<PkgName, VersionReq>>,
     pub constraints: Option<Arc<HashMap<PkgName, VersionReq>>>,
-    pub sources: Option<Arc<HashMap<PkgName, Arc<SrcInfo>>>>,
+    pub sources: Option<Arc<HashMap<PkgName, SrcInfo>>>,
 }
 
 impl Manifest
@@ -335,12 +335,12 @@ pub fn save_version_reqs<P: AsRef<Path>>(path: P, version_reqs: &HashMap<PkgName
     }
 }
 
-pub fn read_src_infos(r: &mut dyn Read) -> Result<HashMap<PkgName, Arc<SrcInfo>>>
+pub fn read_src_infos(r: &mut dyn Read) -> Result<HashMap<PkgName, SrcInfo>>
 {
     let mut s = String::new();
     match r.read_to_string(&mut s) {
         Ok(_) => {
-            match toml::from_str::<HashMap<PkgName, Arc<SrcInfo>>>(s.as_str()) {
+            match toml::from_str::<HashMap<PkgName, SrcInfo>>(s.as_str()) {
                 Ok(src_infos) => Ok(src_infos),
                 Err(err) => Err(Error::TomlDe(err)),
             }
@@ -349,7 +349,7 @@ pub fn read_src_infos(r: &mut dyn Read) -> Result<HashMap<PkgName, Arc<SrcInfo>>
     }
 }
 
-pub fn write_src_infos(w: &mut dyn Write, src_infos: &HashMap<PkgName, Arc<SrcInfo>>) -> Result<()>
+pub fn write_src_infos(w: &mut dyn Write, src_infos: &HashMap<PkgName, SrcInfo>) -> Result<()>
 {
     match toml::to_string(src_infos) {
         Ok(s) => {
@@ -362,7 +362,7 @@ pub fn write_src_infos(w: &mut dyn Write, src_infos: &HashMap<PkgName, Arc<SrcIn
     }
 }
 
-pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Arc<SrcInfo>>>
+pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInfo>>
 {
     match File::open(path) {
         Ok(mut file) => read_src_infos(&mut file),
@@ -370,7 +370,7 @@ pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Arc<Sr
     }
 }
 
-pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Arc<SrcInfo>>>
+pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInfo>>
 {
     match File::open(path) {
         Ok(mut file) => read_src_infos(&mut file),
@@ -379,7 +379,7 @@ pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Ar
     }
 }
 
-pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, Arc<SrcInfo>>) -> Result<()>
+pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcInfo>) -> Result<()>
 {
     match File::create(path) {
         Ok(mut file) => write_src_infos(&mut file, src_infos),
@@ -569,7 +569,7 @@ pub struct PkgManager
     pkgs: HashMap<PkgName, Pkg>,
     locks: HashMap<PkgName, Version>,
     constraints: Arc<HashMap<PkgName, VersionReq>>,
-    sources: Arc<HashMap<PkgName, Arc<SrcInfo>>>,
+    sources: Arc<HashMap<PkgName, SrcInfo>>,
     printer: Arc<dyn Print + Send + Sync>,
 }
 
@@ -635,10 +635,10 @@ impl PkgManager
         Ok(())
     }
     
-    pub fn sources(&self) -> &Arc<HashMap<PkgName, Arc<SrcInfo>>>
+    pub fn sources(&self) -> &Arc<HashMap<PkgName, SrcInfo>>
     { &self.sources }
 
-    pub fn set_sources(&mut self, sources: Arc<HashMap<PkgName, Arc<SrcInfo>>>)
+    pub fn set_sources(&mut self, sources: Arc<HashMap<PkgName, SrcInfo>>)
     { self.sources = sources; }
 
     pub fn load_sources(&mut self) -> Result<()>
