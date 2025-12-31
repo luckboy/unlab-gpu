@@ -70,7 +70,7 @@ pub trait Source
     
     fn versions(&mut self) -> Result<&BTreeSet<Version>>;
     
-    fn set_current_version(&mut self, version: &Version);
+    fn set_current_version(&mut self, version: Version);
     
     fn dir(&mut self) -> Result<&Path>;
 }
@@ -1079,7 +1079,7 @@ impl PkgManager
                         };
                         match &new_version {
                             Some(new_version) => {
-                                src.set_current_version(new_version);
+                                src.set_current_version(new_version.clone());
                                 if tmp_new_version.is_none() {
                                     data.add_pkg_version_for_bucket("new_versions", name, &new_version)?;
                                 }
@@ -1285,7 +1285,7 @@ impl PkgManager
         for (name, new_version) in &new_versions {
             if self.pkg_is_to_install_for_pre_install(name)? {
                 let mut src = self.create_source(name)?;
-                src.set_current_version(new_version);
+                src.set_current_version(new_version.clone());
                 let mut pkg_bin_dir = PathBuf::from(src.dir()?);
                 pkg_bin_dir.push("bin");
                 match fs::metadata(pkg_bin_dir.as_path()) {
@@ -1346,9 +1346,9 @@ impl PkgManager
             for (name2, new_version2) in &new_versions[(i + 1)..] {
                 if self.pkg_is_to_install_for_pre_install(name)? && self.pkg_is_to_install_for_pre_install(name2)? {
                     let mut src = self.create_source(name)?;
-                    src.set_current_version(new_version);
+                    src.set_current_version(new_version.clone());
                     let mut src2 = self.create_source(name2)?;
-                    src2.set_current_version(new_version2);
+                    src2.set_current_version(new_version2.clone());
                     let mut pkg_bin_dir = PathBuf::from(src.dir()?);
                     pkg_bin_dir.push("bin");
                     let mut pkg_bin_dir2 = PathBuf::from(src2.dir()?);
@@ -1463,7 +1463,7 @@ impl PkgManager
                     Some(new_version) => {
                         self.printer.print_installing_pkg(name, false);
                         let mut src = self.create_source(name)?;
-                        src.set_current_version(&new_version);
+                        src.set_current_version(new_version);
                         match self.res_copy_pkg_files(src.dir()?, &paths) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Io(err)),
