@@ -26,8 +26,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
-use crate::jammdb;
-use crate::jammdb::DB;
+use jammdb::DB;
 use crate::serde::de;
 use crate::serde::de::Visitor;
 use crate::serde::Deserialize;
@@ -665,7 +664,7 @@ impl PkgManager
         pkg_db_file.push("pkg.db");
         let pkg_db = match DB::open(pkg_db_file) {
             Ok(tmp_pkg_db) => tmp_pkg_db,
-            Err(err) => return Err(Error::Jammdb(err)),
+            Err(err) => return Err(Error::Jammdb(Box::new(err))),
         };
         Ok(PkgManager {
                 pkg_db,
@@ -848,10 +847,10 @@ impl PkgManager
                 match tx.get_bucket(bucket_name) {
                     Ok(_) => Ok(true),
                     Err(jammdb::Error::BucketMissing) => Ok(false),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
     
@@ -876,10 +875,10 @@ impl PkgManager
                         Ok(pairs)
                     },
                     Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
@@ -904,10 +903,10 @@ impl PkgManager
                         Ok(())
                     },
                     Err(jammdb::Error::BucketMissing) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
     
@@ -928,10 +927,10 @@ impl PkgManager
                         }
                     },
                     Err(jammdb::Error::BucketMissing) => Ok(None),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
@@ -945,16 +944,16 @@ impl PkgManager
                             Ok(_) => {
                                 match tx.commit() {
                                     Ok(()) => Ok(()),
-                                    Err(err) => Err(Error::Jammdb(err)),
+                                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                                 }
                             },
-                            Err(err) => Err(Error::Jammdb(err)),
+                            Err(err) => Err(Error::Jammdb(Box::new(err))),
                         }
                     },
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }    
     
@@ -966,29 +965,29 @@ impl PkgManager
                     let src_version_bucket = match tx.get_bucket(src_bucket_name) {
                         Ok(tmp_src_version_bucket) => tmp_src_version_bucket,
                         Err(jammdb::Error::BucketMissing) => return Ok(()),
-                        Err(err) => return Err(Error::Jammdb(err)),
+                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
                     };
                     let dst_version_bucket = match tx.get_or_create_bucket(dst_bucket_name) {
                         Ok(tmp_dst_version_bucket) => tmp_dst_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(err)),
+                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
                     };
                     for data in src_version_bucket.cursor() {
                         match dst_version_bucket.put(data.kv().key().to_vec(), data.kv().value().to_vec()) {
                             Ok(_) => (),
-                            Err(err) => return Err(Error::Jammdb(err)),
+                            Err(err) => return Err(Error::Jammdb(Box::new(err))),
                         }
                     }
                 }
                 match tx.delete_bucket(src_bucket_name) {
                     Ok(()) => (),
-                    Err(err) => return Err(Error::Jammdb(err)),
+                    Err(err) => return Err(Error::Jammdb(Box::new(err))),
                 }
                 match tx.commit() {
                     Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
@@ -1009,10 +1008,10 @@ impl PkgManager
                         Ok(names)
                     },
                     Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
@@ -1029,7 +1028,7 @@ impl PkgManager
                             if dependents.is_empty() {
                                 match name_bucket.put(name.name(), "t") {
                                     Ok(_) => (),
-                                    Err(err) => return Err(Error::Jammdb(err)),
+                                    Err(err) => return Err(Error::Jammdb(Box::new(err))),
                                 }
                             } else {
                                 return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
@@ -1037,13 +1036,13 @@ impl PkgManager
                         }
                         match tx.commit() {
                             Ok(()) => Ok(()),
-                            Err(err) => Err(Error::Jammdb(err)),
+                            Err(err) => Err(Error::Jammdb(Box::new(err))),
                         }
                     },
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }    
 
@@ -1054,11 +1053,11 @@ impl PkgManager
                 {
                     let version_bucket = match tx.get_bucket(version_bucket_name) {
                         Ok(tmp_version_bucket) => tmp_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(err)),
+                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
                     };
                     let name_bucket = match tx.get_or_create_bucket(bucket_name) {
                         Ok(tmp_name_bucket) => tmp_name_bucket,
-                        Err(err) => return Err(Error::Jammdb(err)),
+                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
                     };
                     for data in version_bucket.cursor() {
                         let name = match String::from_utf8(data.kv().key().to_vec()) {
@@ -1071,17 +1070,17 @@ impl PkgManager
                         if dependents.is_empty() {
                             match name_bucket.put(data.kv().key().to_vec(), "t") {
                                 Ok(_) => (),
-                                Err(err) => return Err(Error::Jammdb(err)),
+                                Err(err) => return Err(Error::Jammdb(Box::new(err))),
                             }
                         }
                     }
                 }
                 match tx.commit() {
                     Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }    
     
@@ -1093,29 +1092,29 @@ impl PkgManager
                     let removal_bucket = match tx.get_bucket(removal_bucket_name) {
                         Ok(tmp_removal_bucket) => tmp_removal_bucket,
                         Err(jammdb::Error::BucketMissing) => return Ok(()),
-                        Err(err) => return Err(Error::Jammdb(err)),
+                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
                     };
                     let version_bucket = match tx.get_or_create_bucket(bucket_name) {
                         Ok(tmp_version_bucket) => tmp_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(err)),
+                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
                     };
                     for data in removal_bucket.cursor() {
                         match version_bucket.delete(data.kv().key()) {
                             Ok(_) => (),
-                            Err(err) => return Err(Error::Jammdb(err)),
+                            Err(err) => return Err(Error::Jammdb(Box::new(err))),
                         }
                     }
                 }
                 match tx.delete_bucket(removal_bucket_name) {
                     Ok(()) => (),
-                    Err(err) => return Err(Error::Jammdb(err)),
+                    Err(err) => return Err(Error::Jammdb(Box::new(err))),
                 }
                 match tx.commit() {
                     Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(err)),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
                 }
             },
-            Err(err) => Err(Error::Jammdb(err)),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
     

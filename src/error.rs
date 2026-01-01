@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,6 @@ use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
-use crate::jammdb;
 use crate::toml;
 use crate::matrix;
 use crate::pkg::PkgName;
@@ -78,7 +77,7 @@ pub enum Error
     TomlDe(toml::de::Error),
     TomlSer(toml::ser::Error),
     Winit(Box<dyn error::Error>),
-    Jammdb(jammdb::Error),
+    Jammdb(Box<dyn error::Error>),
     InvalidVersion,
     InvalidPkgName,
     NoOpenClBackend,
