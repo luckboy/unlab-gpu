@@ -18,6 +18,7 @@ use std::fs::rename;
 use std::fs::remove_dir;
 use std::fs::remove_file;
 use std::io;
+use std::io::BufReader;
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Write;
@@ -26,10 +27,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
-use curl::easy::Easy;
 use flate2::read::GzDecoder;
 use jammdb::DB;
-use tar::Archive;
 use zip::read::ZipArchive;
 use crate::serde::de;
 use crate::serde::de::Visitor;
@@ -479,7 +478,7 @@ pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcI
 
 fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, printer: &Arc<dyn Print + Send + Sync>) -> result::Result<(), curl::Error>
 {
-    let mut easy = Easy::new();
+    let mut easy = curl::easy::Easy::new();
     easy.url(url)?;
     easy.follow_location(true)?;
     easy.fail_on_error(true)?;
@@ -567,7 +566,8 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
             if archive_path.to_string_lossy().into_owned().ends_with(".zip") {
                 match File::open(archive_path) {
                     Ok(mut file) => {
-                        let mut archive = match ZipArchive::new(&mut file) {
+                        let mut br = BufReader::new(&mut file); 
+                        let mut archive = match ZipArchive::new(&mut br) {
                             Ok(tmp_archive) => tmp_archive,
                             Err(err) => return Err(Error::Zip(Box::new(err))),
                         };
@@ -581,8 +581,9 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
             } else {
                 match File::open(archive_path) {
                     Ok(mut file) => {
-                        let mut decoder = GzDecoder::new(&mut file);
-                        let mut archive = Archive::new(&mut decoder);
+                        let mut br = BufReader::new(&mut file); 
+                        let mut decoder = GzDecoder::new(&mut br);
+                        let mut archive = tar::Archive::new(&mut decoder);
                         match archive.unpack(part_path.as_ref()) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Io(err)),
