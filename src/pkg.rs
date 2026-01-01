@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -283,6 +283,67 @@ impl Paths
     }
 }
 
+pub fn read_versions(r: &mut dyn Read) -> Result<HashMap<PkgName, Version>>
+{
+    let mut s = String::new();
+    match r.read_to_string(&mut s) {
+        Ok(_) => {
+            match toml::from_str::<HashMap<PkgName, Version>>(s.as_str()) {
+                Ok(src_infos) => Ok(src_infos),
+                Err(err) => Err(Error::TomlDe(err)),
+            }
+        },
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn write_versions(w: &mut dyn Write, versions: &HashMap<PkgName, Version>) -> Result<()>
+{
+    match toml::to_string(versions) {
+        Ok(s) => {
+            match write!(w, "{}", s) {
+                Ok(()) => Ok(()),
+                Err(err) => Err(Error::Io(err)),
+            }
+        },
+        Err(err) => Err(Error::TomlSer(err)),
+    }
+}
+
+pub fn load_versions<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Version>>
+{
+    match File::open(path) {
+        Ok(mut file) => read_versions(&mut file),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn load_opt_versions<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgName, Version>>>
+{
+    match File::open(path) {
+        Ok(mut file) => Ok(Some(read_versions(&mut file)?)),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn load_versions_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Version>>
+{
+    match File::open(path) {
+        Ok(mut file) => read_versions(&mut file),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(HashMap::new()),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn save_versions<P: AsRef<Path>>(path: P, versions: &HashMap<PkgName, Version>) -> Result<()>
+{
+    match File::create(path) {
+        Ok(mut file) => write_versions(&mut file, versions),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
 pub fn read_version_reqs(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq>>
 {
     let mut s = String::new();
@@ -318,7 +379,16 @@ pub fn load_version_reqs<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Ver
     }
 }
 
-pub fn load_opt_version_reqs<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
+pub fn load_opt_version_reqs<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgName, VersionReq>>>
+{
+    match File::open(path) {
+        Ok(mut file) => Ok(Some(read_version_reqs(&mut file)?)),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn load_version_reqs_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
 {
     match File::open(path) {
         Ok(mut file) => read_version_reqs(&mut file),
@@ -370,7 +440,16 @@ pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInf
     }
 }
 
-pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInfo>>
+pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgName, SrcInfo>>>
+{
+    match File::open(path) {
+        Ok(mut file) => Ok(Some(read_src_infos(&mut file)?)),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn load_src_infos_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInfo>>
 {
     match File::open(path) {
         Ok(mut file) => read_src_infos(&mut file),
@@ -561,8 +640,7 @@ pub struct PkgManager
 {
     pkg_db: DB,
     home_dir: PathBuf,
-    var_dir: PathBuf,
-    tmp_dir: PathBuf,
+    work_dir: PathBuf,
     bin_dir: PathBuf,
     lib_dir: PathBuf,
     doc_dir: PathBuf,
@@ -575,9 +653,15 @@ pub struct PkgManager
 
 impl PkgManager
 {
-    pub fn new(home_dir: PathBuf, var_dir: PathBuf, tmp_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
+    pub fn new(home_dir: PathBuf, work_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
     {
-        let mut pkg_db_file = var_dir.clone();
+        let mut work_var_dir = work_dir.clone();
+        work_var_dir.push("var");
+        match create_dir_all(work_var_dir.as_path()) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        let mut pkg_db_file = work_var_dir.clone();
         pkg_db_file.push("pkg.db");
         let pkg_db = match DB::open(pkg_db_file) {
             Ok(tmp_pkg_db) => tmp_pkg_db,
@@ -586,8 +670,7 @@ impl PkgManager
         Ok(PkgManager {
                 pkg_db,
                 home_dir,
-                var_dir,
-                tmp_dir,
+                work_dir,
                 bin_dir,
                 lib_dir,
                 doc_dir,
@@ -602,12 +685,9 @@ impl PkgManager
     pub fn home_dir(&self) -> &Path
     { self.home_dir.as_path() }
 
-    pub fn var_dir(&self) -> &Path
-    { self.var_dir.as_path() }
+    pub fn work_dir(&self) -> &Path
+    { self.work_dir.as_path() }
     
-    pub fn tmp_dir(&self) -> &Path
-    { self.tmp_dir.as_path() }
-
     pub fn bin_dir(&self) -> &Path
     { self.bin_dir.as_path() }
 
@@ -622,6 +702,22 @@ impl PkgManager
 
     pub fn set_locks(&mut self, locks: HashMap<PkgName, Version>)
     { self.locks = locks; }
+
+    pub fn load_locks(&mut self) -> Result<()>
+    {
+        self.locks = load_versions_or_empty("Unlab.lock")?;
+        Ok(())
+    }
+    
+    pub fn save_locks_from_pkg_versions(&self) -> Result<()>
+    {
+        let versions = self.pkg_versions_for_bucket("versions")?;
+        let mut locks: HashMap<PkgName, Version> = HashMap::new();
+        for (name, version) in versions {
+            locks.insert(name.clone(), version.clone());
+        }
+        save_versions("Unlab.lock", &locks)
+    }
     
     pub fn constraints(&self) -> &Arc<HashMap<PkgName, VersionReq>>
     { &self.constraints }
@@ -631,7 +727,7 @@ impl PkgManager
 
     pub fn load_constraints(&mut self) -> Result<()>
     {
-        self.constraints = Arc::new(load_opt_version_reqs(self.constraints_file())?);
+        self.constraints = Arc::new(load_version_reqs_or_empty(self.constraints_file())?);
         Ok(())
     }
     
@@ -643,7 +739,7 @@ impl PkgManager
 
     pub fn load_sources(&mut self) -> Result<()>
     {
-        self.sources = Arc::new(load_opt_src_infos(self.sources_file())?);
+        self.sources = Arc::new(load_src_infos_or_empty(self.sources_file())?);
         Ok(())
     }
 
@@ -677,24 +773,38 @@ impl PkgManager
         dir.push("var");
         dir
     }
+
+    pub fn work_var_dir(&self) -> PathBuf
+    {
+        let mut dir = self.work_dir.clone();
+        dir.push("var");
+        dir
+    }    
+
+    pub fn work_tmp_dir(&self) -> PathBuf
+    {
+        let mut dir = self.work_dir.clone();
+        dir.push("var");
+        dir
+    }    
     
     pub fn info_dir(&self) -> PathBuf
     {
-        let mut dir = self.var_dir.clone();
+        let mut dir = self.work_var_dir();
         dir.push("info");
         dir
     }
 
     pub fn new_part_info_dir(&self) -> PathBuf
     {
-        let mut dir = self.var_dir.clone();
+        let mut dir = self.work_var_dir();
         dir.push("info.new.part");
         dir
     }
     
     pub fn new_info_dir(&self) -> PathBuf
     {
-        let mut dir = self.var_dir.clone();
+        let mut dir = self.work_var_dir();
         dir.push("info.new");
         dir
     }
@@ -717,6 +827,14 @@ impl PkgManager
     {
         let mut dir = self.new_info_dir();
         dir.push(name.to_path_buf());
+        dir
+    }
+    
+    pub fn pkg_tmp_doc_dir(&self, name: &PkgName) -> PathBuf
+    {
+        let mut dir = self.work_tmp_dir();
+        dir.push(name.to_path_buf());
+        dir.push("doc");
         dir
     }
     
@@ -1011,6 +1129,27 @@ impl PkgManager
     pub fn pkg_version(&self, name: &PkgName) -> Result<Option<Version>>
     { self.pkg_version_for_bucket("versions", name) }
     
+    pub fn pkg_manifest(&self, name: &PkgName) -> Result<Option<Manifest>>
+    {
+        let mut manifest_file = self.pkg_info_dir(name);
+        manifest_file.push("manifest.toml");
+        Manifest::load_opt(manifest_file)
+    }
+
+    pub fn pkg_dependents(&self, name: &PkgName) -> Result<Option<HashMap<PkgName, VersionReq>>>
+    {
+        let mut dependents_file = self.pkg_info_dir(name);
+        dependents_file.push("dependents.toml");
+        load_opt_version_reqs(dependents_file)
+    }
+
+    pub fn pkg_paths(&self, name: &PkgName) -> Result<Option<Paths>>
+    {
+        let mut paths_file = self.pkg_info_dir(name);
+        paths_file.push("paths.toml");
+        Paths::load_opt(paths_file)
+    }    
+    
     fn max_pkg_version(versions: &BTreeSet<Version>, version_reqs: &[VersionReq], locked_version: Option<&Version>) -> Option<Version>
     {
         let mut max_version: Option<Version> = None;
@@ -1026,7 +1165,7 @@ impl PkgManager
     
     fn res_remove_dirs_after_error(&self) -> io::Result<()>
     {
-        recursively_remove(self.tmp_dir(), true)?;
+        recursively_remove(self.work_tmp_dir(), true)?;
         recursively_remove(self.new_part_info_dir(), true)?;
         Ok(())
     }
@@ -1250,19 +1389,19 @@ impl PkgManager
         self.printer.print_searching_path_conflicts(false);
         match fs::metadata(self.bin_dir.as_path()) {
             Ok(metadata) if metadata.is_dir() => (),
-            Ok(_) => return Err(Error::Pkg(String::from("bin isn't directery"))),
+            Ok(_) => return Err(Error::Pkg(String::from("bin isn't directory"))),
             Err(err) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => return Err(Error::Io(err)),
         }
         match fs::metadata(self.lib_dir.as_path()) {
             Ok(metadata) if metadata.is_dir() => (),
-            Ok(_) => return Err(Error::Pkg(String::from("lib isn't directery"))),
+            Ok(_) => return Err(Error::Pkg(String::from("lib isn't directory"))),
             Err(err) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => return Err(Error::Io(err)),
         }
         match fs::metadata(self.doc_dir.as_path()) {
             Ok(metadata) if metadata.is_dir() => (),
-            Ok(_) => return Err(Error::Pkg(String::from("doc isn't directery"))),
+            Ok(_) => return Err(Error::Pkg(String::from("doc isn't directory"))),
             Err(err) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -1290,7 +1429,7 @@ impl PkgManager
                 pkg_bin_dir.push("bin");
                 match fs::metadata(pkg_bin_dir.as_path()) {
                     Ok(metadata) if metadata.is_dir() => (),
-                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("bin in package isn't directery"))),
+                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("bin in package isn't directory"))),
                     Err(err) if err.kind() == ErrorKind::NotFound => (),
                     Err(err) => return Err(Error::Io(err)),
                 }
@@ -1308,7 +1447,7 @@ impl PkgManager
                 pkg_lib_dir.push("lib");
                 match fs::metadata(pkg_lib_dir.as_path()) {
                     Ok(metadata) if metadata.is_dir() => (),
-                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("lib in package isn't directery"))),
+                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("lib in package isn't directory"))),
                     Err(err) if err.kind() == ErrorKind::NotFound => (),
                     Err(err) => return Err(Error::Io(err)),
                 }
@@ -1326,14 +1465,14 @@ impl PkgManager
                 for bin_path in &bin_paths {
                     match bin_path.to_str() {
                         Some(s) => bin_paths2.push(String::from(s)),
-                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid UTF-8 character"))),
+                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid utf-8 character"))),
                     }
                 }
                 let mut lib_paths2: Vec<String> = Vec::new();
                 for lib_path in &lib_paths {
                     match lib_path.to_str() {
                         Some(s) => lib_paths2.push(String::from(s)),
-                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid UTF-8 character"))),
+                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid utf-8 character"))),
                     }
                 }
                 let paths = Paths::new(bin_paths2, lib_paths2);
@@ -1379,20 +1518,26 @@ impl PkgManager
         self.printer.print_searching_path_conflicts(true);
         Ok(())
     }
+
+    fn generate_docs(&self) -> Result<()>
+    { Err(Error::Pkg(String::from("unimplemented documentation generation"))) }
     
-    fn check_new_part_infos_for_pre_install_without_reset(&self) -> Result<()>
+    fn check_new_part_infos_and_generate_docs_for_pre_install_without_reset(&self, is_doc: bool) -> Result<()>
     {
         self.check_dependent_version_reqs()?;
         self.search_path_conflicts()?;
+        if is_doc {
+            self.generate_docs()?;
+        }
         match rename(self.new_part_info_dir(), self.new_info_dir()) {
            Ok(()) => Ok(()),
            Err(err) => Err(Error::Io(err)),
         }
     }
 
-    fn check_new_part_infos_for_pre_install(&mut self) -> Result<()>
+    fn check_new_part_infos_and_generate_docs_for_pre_install(&mut self, is_doc: bool) -> Result<()>
     {
-        let res = self.check_new_part_infos_for_pre_install_without_reset();
+        let res = self.check_new_part_infos_and_generate_docs_for_pre_install_without_reset(is_doc);
         self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
@@ -1403,7 +1548,7 @@ impl PkgManager
         }
     }
     
-    fn res_copy_pkg_files(&self, dir: &Path, paths: &Paths) -> io::Result<()>
+    fn res_install_pkg(&self, name: &PkgName, dir: &Path, paths: &Paths, is_doc: bool) -> io::Result<()>
     {
         let mut src_bin_dir = PathBuf::from(dir);
         src_bin_dir.push("bin");
@@ -1415,11 +1560,11 @@ impl PkgManager
         let dst_lib_dir = self.lib_dir.clone();
         let lib_paths: Vec<PathBuf> = paths.lib.iter().map(|s| PathBuf::from(s)).collect();
         recursively_copy_paths_in_dir(src_lib_dir, dst_lib_dir, lib_paths.as_slice())?;
-        Ok(())
-    }
-
-    fn res_copy_info_files_and_move_paths_file(&self, name: &PkgName) -> io::Result<()>
-    {
+        if is_doc {
+            let src_doc_dir = self.pkg_tmp_doc_dir(name);
+            let dst_doc_dir = self.doc_dir.clone();
+            recursively_copy_paths_in_dir(src_doc_dir, dst_doc_dir, lib_paths.as_slice())?;
+        }
         create_dir_all(self.pkg_info_dir(name))?;
         let mut src_manifest_file = self.pkg_new_info_dir(name);
         src_manifest_file.push("manifest.toml");
@@ -1453,7 +1598,7 @@ impl PkgManager
         }
     }
     
-    fn install_pkg(&self, name: &PkgName, _is_doc: bool) -> Result<()>
+    fn install_pkg(&self, name: &PkgName, is_doc: bool) -> Result<()>
     {
         let mut paths_file = self.pkg_new_info_dir(name);
         paths_file.push("paths.toml");
@@ -1464,12 +1609,7 @@ impl PkgManager
                         self.printer.print_installing_pkg(name, false);
                         let mut src = self.create_source(name)?;
                         src.set_current_version(new_version);
-                        match self.res_copy_pkg_files(src.dir()?, &paths) {
-                            Ok(()) => (),
-                            Err(err) => return Err(Error::Io(err)),
-                        }
-                        // Line for documentation installation.
-                        match self.res_copy_info_files_and_move_paths_file(name) {
+                        match self.res_install_pkg(name, src.dir()?, &paths, is_doc) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Io(err)),
                         }
@@ -1576,7 +1716,7 @@ impl PkgManager
             self.install_pkg(name, is_doc)?;
         }
         self.printer.print_cleaning_after_install(false);
-        match recursively_remove(self.tmp_dir(), true) {
+        match recursively_remove(self.work_tmp_dir(), true) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -1605,7 +1745,7 @@ impl PkgManager
         for name in names {
             self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
         }
-        self.check_new_part_infos_for_pre_install()?;
+        self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
@@ -1619,7 +1759,7 @@ impl PkgManager
         for (name, _) in &versions {
             self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
         }
-        self.check_new_part_infos_for_pre_install()?;
+        self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
@@ -1636,7 +1776,7 @@ impl PkgManager
         self.sources = manifest.sources.map(|ss| ss.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.pkgs.insert(start_name.clone(), current_pkg);
         self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force)?;
-        self.check_new_part_infos_for_pre_install()?;
+        self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
         self.add_pkg_names_for_buckets_and_autoremove("pkgs_to_remove", "new_versions")?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
@@ -1654,7 +1794,7 @@ impl PkgManager
         Ok(())
     }
     
-    pub fn check_last_op(&self) -> Result<()>
+    pub fn check_last_op(&self, are_deps: bool) -> Result<()>
     {
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
@@ -1662,7 +1802,11 @@ impl PkgManager
             Err(err) => return Err(Error::Io(err)),
         };
         if (is_new_info_dir && self.has_bucket("new_versions")?) || is_new_info_dir || self.has_bucket("pkgs_to_remove")? {
-            return Err(Error::Pkg(String::from("Operation is incompleted. Please execute continue command to complete operation.")));
+            if are_deps {
+                return Err(Error::Pkg(String::from("Operation is incompleted. Please execute continue-deps command to complete operation.")));
+            } else {
+                return Err(Error::Pkg(String::from("Operation is incompleted. Please execute continue command to complete operation.")));
+            }
         }
         Ok(())
     }
