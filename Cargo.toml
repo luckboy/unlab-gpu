@@ -17,7 +17,11 @@ serde = { version = "1.0", features = ["derive", "rc"] }
 toml = "0.8"
 unmtx-gpu = { version = "0.1.7", default-features = false }
 # pkg
+curl = ">=0.4.0,<=0.4.47"
+flate2 = "1.1.5"
 jammdb = "0.11"
+tar = "0.4"
+zip = ">=4.0,<=4.2"
 # plot
 image = { version = "0.24", optional = true, default-features = false, features = ["png"] }
 plotters = { version = ">=0.3.3,<=0.3.6", optional = true, default-features = false, features = ["bitmap_backend", "bitmap_encoder", "svg_backend", "ttf", "all_series", "all_elements"] }
@@ -26,6 +30,7 @@ winit = { version = "0.30", optional = true }
 # Holded versions.
 dlopen2_derive = ">=0.4.0,<=0.4.1"
 indexmap = ">=2.0.0,<=2.11.4"
+time = ">=0.3.37,<=0.3.41"
 
 [dev-dependencies]
 sealed_test = "1.1.0"

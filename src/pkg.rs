@@ -26,7 +26,11 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
+use curl::easy::Easy;
+use flate2::read::GzDecoder;
 use jammdb::DB;
+use tar::Archive;
+use zip::read::ZipArchive;
 use crate::serde::de;
 use crate::serde::de::Visitor;
 use crate::serde::Deserialize;
@@ -47,6 +51,12 @@ pub trait Print
     fn print_pre_removing(&self);
 
     fn print_removing(&self);
+
+    fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool);
+
+    fn print_downloading_pkg_file_for_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64);
+    
+    fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool);
     
     fn print_checking_dependent_version_reqs(&self, is_done: bool);
 
@@ -61,6 +71,8 @@ pub trait Print
     fn print_cleaning_after_error(&self, is_done: bool);
     
     fn print_nl_for_error(&self);
+    
+    fn eprint_io_error(&self, err: &io::Error);
 }
 
 pub trait Source
@@ -461,6 +473,147 @@ pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcI
 {
     match File::create(path) {
         Ok(mut file) => write_src_infos(&mut file, src_infos),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, printer: &Arc<dyn Print + Send + Sync>) -> result::Result<(), curl::Error>
+{
+    let mut easy = Easy::new();
+    easy.url(url)?;
+    easy.follow_location(true)?;
+    easy.fail_on_error(true)?;
+    easy.progress(true)?;
+    let pkg_name2 = pkg_name.clone();
+    let printer2 = printer.clone();
+    easy.progress_function(move |total_byte_count, byte_count, _, _| {
+            printer2.print_downloading_pkg_file_for_progress(&pkg_name2, byte_count, total_byte_count);
+            true
+    })?;
+    let part_file_path_buf = PathBuf::from(part_file_path);
+    let printer2 = printer.clone();
+    easy.write_function(move |data| {
+            match File::options().create(true).append(true).open(part_file_path_buf.as_path()) {
+                Ok(mut file) => {
+                    match file.write_all(data) {
+                        Ok(()) => (),
+                        Err(err) => printer2.eprint_io_error(&err),
+                    }
+                },
+                Err(err) => printer2.eprint_io_error(&err),
+            }
+            Ok(data.len())
+    })?;
+    easy.perform()
+}
+
+pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
+{
+    match create_dir_all(path.as_ref()) {
+        Ok(()) => (),
+        Err(err) => return Err(Error::Io(err)),
+    }
+    let (part_name, name) = if url.ends_with(".zip") {
+        ("file.zip.part", "file.zip")
+    } else if url.ends_with(".tar.gz") {
+        ("file.tar.gz.part", "file.tar.gz")
+    } else {
+        ("file.part", "file")
+    };
+    let mut part_file_path_buf = PathBuf::from(path.as_ref());
+    part_file_path_buf.push(part_name);
+    let mut file_path_buf = PathBuf::from(path.as_ref());
+    file_path_buf.push(name);
+    match remove_file(part_file_path_buf.as_path()) {
+        Ok(()) => (),
+        Err(err) if err.kind() == ErrorKind::NotFound => (),
+        Err(err) => return Err(Error::Io(err)),
+    }
+    match fs::metadata(file_path_buf.as_path()) {
+        Ok(_) => (),
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            printer.print_downloading_pkg_file(pkg_name, false);
+            match res_download_file(pkg_name, url, part_file_path_buf.as_path(), printer) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Curl(Box::new(err))),
+            }
+            match rename(part_file_path_buf.as_path(), file_path_buf.as_path()) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
+            printer.print_downloading_pkg_file(pkg_name, true);
+        },
+        Err(err) => return Err(Error::Io(err)),
+    }
+    Ok(file_path_buf)
+}
+
+pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_path: P, path: Q, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
+    where F: FnOnce() -> Result<PathBuf>
+{
+    match recursively_remove(part_path.as_ref(), true) {
+        Ok(()) => (),
+        Err(err) => return Err(Error::Io(err)),
+    }
+    match fs::metadata(path.as_ref()) {
+        Ok(_) => (),
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            let archive_path = f()?;
+            printer.print_extracting_pkg_file(pkg_name, false);
+            match create_dir_all(part_path.as_ref()) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
+            if archive_path.to_string_lossy().into_owned().ends_with(".zip") {
+                match File::open(archive_path) {
+                    Ok(mut file) => {
+                        let mut archive = match ZipArchive::new(&mut file) {
+                            Ok(tmp_archive) => tmp_archive,
+                            Err(err) => return Err(Error::Zip(Box::new(err))),
+                        };
+                        match archive.extract(part_path.as_ref()) {
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Zip(Box::new(err))),
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                }
+            } else {
+                match File::open(archive_path) {
+                    Ok(mut file) => {
+                        let mut decoder = GzDecoder::new(&mut file);
+                        let mut archive = Archive::new(&mut decoder);
+                        match archive.unpack(part_path.as_ref()) {
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Io(err)),
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                }
+            }
+            let mut part_path_buf = PathBuf::from(part_path.as_ref());
+            part_path_buf.pop();
+            let mut path_buf = PathBuf::from(path.as_ref());
+            path_buf.pop();
+            if part_path_buf != path_buf {
+                if path_buf != PathBuf::from("") {
+                    match create_dir_all(path_buf) {
+                        Ok(()) => (),
+                        Err(err) => return Err(Error::Io(err)),
+                    }
+                }
+            }
+            match rename(part_path.as_ref(), path.as_ref()) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
+            printer.print_extracting_pkg_file(pkg_name, true);
+        },
+        Err(err) => return Err(Error::Io(err)),
+    }
+    match only_one_dir_in_dir(path.as_ref()) {
+        Ok(Some(only_one_dir)) => Ok(only_one_dir),
+        Ok(None) => Ok(PathBuf::from(path.as_ref())),
         Err(err) => Err(Error::Io(err)),
     }
 }
