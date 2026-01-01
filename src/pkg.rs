@@ -85,6 +85,11 @@ pub trait Source
     fn dir(&mut self) -> Result<&Path>;
 }
 
+pub trait SourceCreate
+{
+    fn create(&self, name: PkgName, new_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Box<dyn Source + Send + Sync>>;
+}
+
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct PkgName
 {
@@ -180,7 +185,7 @@ pub enum VersionSrcInfo
 pub enum SrcInfo
 {
     #[serde(rename = "renamed")]
-    Renamed(String),
+    Renamed(PkgName),
     #[serde(rename = "versions")]
     Versions(Arc<BTreeMap<Version, VersionSrcInfo>>),
 }
@@ -506,6 +511,50 @@ fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, print
     easy.perform()
 }
 
+pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
+{
+    let mut dir = PathBuf::from(home_dir.as_ref());
+    dir.push("cache");
+    dir
+}
+
+pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
+{
+    let mut dir = PathBuf::from(work_dir.as_ref());
+    dir.push("tmp");
+    dir
+}
+
+pub fn pkg_cache_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = cache_dir(home_dir);
+    dir.push(name.to_path_buf());
+    dir.push(format!("{}", version).as_str());
+    dir
+}
+
+pub fn pkg_tmp_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = tmp_dir(work_dir);
+    dir.push(name.to_path_buf());
+    dir.push(format!("{}", version).as_str());
+    dir
+}
+
+pub fn pkg_part_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = pkg_tmp_dir(work_dir, name, version);
+    dir.push("dir.part");
+    dir
+}
+
+pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = pkg_tmp_dir(work_dir, name, version);
+    dir.push("dir");
+    dir
+}
+
 pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
 {
     match create_dir_all(path.as_ref()) {
@@ -616,6 +665,110 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
         Ok(Some(only_one_dir)) => Ok(only_one_dir),
         Ok(None) => Ok(PathBuf::from(path.as_ref())),
         Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
+{ download_file(name, url, pkg_cache_dir(home_dir.as_ref(), name, version), printer) }
+
+pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, work_dir: P, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
+    where F: FnOnce() -> Result<PathBuf>
+{ extract_file(name, pkg_part_dir(work_dir.as_ref(), name, version), pkg_dir(work_dir.as_ref(), name, version), printer, f) }
+
+#[derive(Clone)]
+pub struct CustomSrc
+{
+    name: PkgName,
+    home_dir: PathBuf,
+    work_dir: PathBuf,
+    version_src_infos: Arc<BTreeMap<Version, VersionSrcInfo>>,
+    versions: BTreeSet<Version>,
+    printer: Arc<dyn Print + Send + Sync>,
+    current_version: Option<Version>,
+    dir: Option<PathBuf>,
+}
+
+impl CustomSrc
+{
+    pub fn new(name: PkgName, home_dir: PathBuf, work_dir: PathBuf, version_src_infos: Arc<BTreeMap<Version, VersionSrcInfo>>, printer: Arc<dyn Print + Send + Sync>) -> Self
+    {
+        let versions: BTreeSet<Version> = version_src_infos.keys().map(|v| v.clone()).collect(); 
+        CustomSrc {
+            name,
+            home_dir,
+            work_dir,
+            version_src_infos,
+            printer,
+            versions,
+            current_version: None,
+            dir: None,
+        }
+    }
+    
+    pub fn name(&self) -> &PkgName
+    { &self.name }
+
+    pub fn home_dir(&self) -> &Path
+    { self.home_dir.as_path() }
+
+    pub fn work_dir(&self) -> &Path
+    { self.work_dir.as_path() }
+
+    pub fn version_src_infos(&self) -> &Arc<BTreeMap<Version, VersionSrcInfo>>
+    { &self.version_src_infos }
+
+    pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
+    { &self.printer }
+
+    pub fn current_version(&self) -> Option<&Version>
+    { 
+        match &self.current_version {
+            Some(current_version) => Some(current_version),
+            None => None,
+        }
+    }
+}
+
+impl Source for CustomSrc
+{
+    fn update(&mut self) -> Result<()>
+    { Ok(()) }
+    
+    fn versions(&mut self) -> Result<&BTreeSet<Version>>
+    { Ok(&self.versions) }
+    
+    fn set_current_version(&mut self, version: Version)
+    { self.current_version = Some(version); }
+    
+    fn dir(&mut self) -> Result<&Path>
+    {
+        let dir = if self.dir.is_none() {
+            match &self.current_version {
+                Some(current_version) => {
+                    match self.version_src_infos.get(current_version) {
+                        Some(version_src_info) => {
+                            match version_src_info {
+                                VersionSrcInfo::Dir(tmp_dir) => Some(PathBuf::from(tmp_dir.replace('/', path::MAIN_SEPARATOR_STR))),
+                                VersionSrcInfo::File(file) => Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || Ok(PathBuf::from(file.replace('/', path::MAIN_SEPARATOR_STR))))?),
+                                VersionSrcInfo::Url(url) => {
+                                    Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || {
+                                            download_pkg_file(&self.name, current_version, url, &self.home_dir, &self.printer)
+                                    })?)
+                                },
+                            }
+                        },
+                        None => return Err(Error::PkgName(self.name.clone(), String::from("not found version"))),
+                    }
+                },
+                None => return Err(Error::PkgName(self.name.clone(), String::from("no current version"))),
+            }
+        } else {
+            None
+        };
+        if dir.is_some() {
+            self.dir = dir;
+        }
+        Ok(self.dir.as_ref().unwrap().as_path())
     }
 }
 
@@ -801,12 +954,13 @@ pub struct PkgManager
     locks: HashMap<PkgName, Version>,
     constraints: Arc<HashMap<PkgName, VersionReq>>,
     sources: Arc<HashMap<PkgName, SrcInfo>>,
+    src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>,
     printer: Arc<dyn Print + Send + Sync>,
 }
 
 impl PkgManager
 {
-    pub fn new(home_dir: PathBuf, work_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
+    pub fn new(home_dir: PathBuf, work_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
     {
         let mut work_var_dir = work_dir.clone();
         work_var_dir.push("var");
@@ -831,6 +985,7 @@ impl PkgManager
                 locks: HashMap::new(),
                 constraints: Arc::new(HashMap::new()),
                 sources: Arc::new(HashMap::new()),
+                src_factories,
                 printer,
         })
     }
@@ -896,6 +1051,12 @@ impl PkgManager
         Ok(())
     }
 
+    pub fn src_factories(&self) -> &[Arc<dyn SourceCreate + Send + Sync>]
+    { self.src_factories.as_slice() }
+    
+    pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
+    { &self.printer }
+    
     pub fn reset(&mut self)
     { self.pkgs.clear(); }
     
@@ -991,8 +1152,34 @@ impl PkgManager
         dir
     }
     
-    fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
-    { Err(Error::Pkg(String::from("no source"))) }
+    pub fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
+    {
+        match self.sources.get(name) {
+            Some(src_info) => {
+                match src_info {
+                    SrcInfo::Renamed(old_name) => {
+                        for src_factory in &self.src_factories {
+                            match src_factory.create(old_name.clone(), Some(name.clone()), self.home_dir.clone(), self.work_dir.clone(), self.printer.clone()) {
+                                Some(src) => return Ok(src),
+                                None => (),
+                            }
+                        }
+                        Err(Error::PkgName(name.clone(), String::from("unrecognized source for renamed package")))
+                    },
+                    SrcInfo::Versions(version_src_infos) => Ok(Box::new(CustomSrc::new(name.clone(), self.home_dir.clone(), self.work_dir.clone(), version_src_infos.clone(), self.printer.clone()))),
+                }
+            },
+            None => {
+                for src_factory in &self.src_factories {
+                    match src_factory.create(name.clone(), None, self.home_dir.clone(), self.work_dir.clone(), self.printer.clone()) {
+                        Some(src) => return Ok(src),
+                        None => (),
+                    }
+                }
+                Err(Error::PkgName(name.clone(), String::from("unrecognized source for package")))
+            },
+        }
+    }
     
     fn has_bucket(&self, bucket_name: &str) -> Result<bool>
     {
