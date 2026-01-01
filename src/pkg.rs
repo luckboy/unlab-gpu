@@ -524,15 +524,15 @@ pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, pri
     part_file_path_buf.push(part_name);
     let mut file_path_buf = PathBuf::from(path.as_ref());
     file_path_buf.push(name);
-    match remove_file(part_file_path_buf.as_path()) {
-        Ok(()) => (),
-        Err(err) if err.kind() == ErrorKind::NotFound => (),
-        Err(err) => return Err(Error::Io(err)),
-    }
     match fs::metadata(file_path_buf.as_path()) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
             printer.print_downloading_pkg_file(pkg_name, false);
+            match remove_file(part_file_path_buf.as_path()) {
+                Ok(()) => (),
+                Err(err) if err.kind() == ErrorKind::NotFound => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
             match res_download_file(pkg_name, url, part_file_path_buf.as_path(), printer) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Curl(Box::new(err))),
@@ -551,15 +551,15 @@ pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, pri
 pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_path: P, path: Q, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
     where F: FnOnce() -> Result<PathBuf>
 {
-    match recursively_remove(part_path.as_ref(), true) {
-        Ok(()) => (),
-        Err(err) => return Err(Error::Io(err)),
-    }
     match fs::metadata(path.as_ref()) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
             let archive_path = f()?;
             printer.print_extracting_pkg_file(pkg_name, false);
+            match recursively_remove(part_path.as_ref(), true) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
             match create_dir_all(part_path.as_ref()) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
