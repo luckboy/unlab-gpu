@@ -164,10 +164,10 @@ impl Print for StdPrinter
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Downloading {} file (100%) ... done", name);
+            println!("Downloading {} (100%) ... done", name);
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Downloading {} file (???%) ...\r", name);
+            print!("Downloading {} (???%) ...\r", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -176,7 +176,7 @@ impl Print for StdPrinter
     fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64)
     {
         if total_byte_count != 0.0 {
-            print!("Downloading {} file ({:3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
+            print!("Downloading {} ({:3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -185,10 +185,10 @@ impl Print for StdPrinter
     fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Extracting {} file ... done", name);
+            println!("Extracting {} ... done", name);
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Extracting {} file ...\r", name);
+            print!("Extracting {} ...\r", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
