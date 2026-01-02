@@ -136,18 +136,18 @@ impl Print for EmptyPrinter
 }
 
 #[derive(Debug)]
-pub struct Printer
+pub struct StdPrinter
 {
     is_nl_for_error: AtomicBool,
 }
 
-impl Printer
+impl StdPrinter
 {
     pub fn new() -> Self
-    { Printer { is_nl_for_error: AtomicBool::new(false), } }
+    { StdPrinter { is_nl_for_error: AtomicBool::new(false), } }
 }
 
-impl Print for Printer
+impl Print for StdPrinter
 {
     fn print_pre_installing(&self)
     { println!("Pre-installing:"); }
