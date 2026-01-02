@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
+use crate::curl;
 use crate::toml;
 use crate::matrix;
 use crate::pkg::PkgName;
@@ -79,7 +80,7 @@ pub enum Error
     Winit(Box<dyn error::Error>),
     Jammdb(Box<dyn error::Error>),
     Zip(Box<dyn error::Error>),
-    Curl(Box<dyn error::Error>),
+    Curl(curl::Error),
     InvalidVersion,
     InvalidPkgName,
     NoOpenClBackend,

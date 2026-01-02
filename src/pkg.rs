@@ -30,6 +30,7 @@ use std::sync::Arc;
 use flate2::read::GzDecoder;
 use jammdb::DB;
 use zip::read::ZipArchive;
+use crate::curl;
 use crate::serde::de;
 use crate::serde::de::Visitor;
 use crate::serde::Deserialize;
@@ -53,7 +54,7 @@ pub trait Print
 
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool);
 
-    fn print_downloading_pkg_file_for_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64);
+    fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64);
     
     fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool);
     
@@ -491,7 +492,7 @@ fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, print
     let pkg_name2 = pkg_name.clone();
     let printer2 = printer.clone();
     easy.progress_function(move |total_byte_count, byte_count, _, _| {
-            printer2.print_downloading_pkg_file_for_progress(&pkg_name2, byte_count, total_byte_count);
+            printer2.print_downloading_pkg_file_with_progress(&pkg_name2, byte_count, total_byte_count);
             true
     })?;
     let part_file_path_buf = PathBuf::from(part_file_path);
@@ -509,50 +510,6 @@ fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, print
             Ok(data.len())
     })?;
     easy.perform()
-}
-
-pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
-{
-    let mut dir = PathBuf::from(home_dir.as_ref());
-    dir.push("cache");
-    dir
-}
-
-pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
-{
-    let mut dir = PathBuf::from(work_dir.as_ref());
-    dir.push("tmp");
-    dir
-}
-
-pub fn pkg_cache_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName, version: &Version) -> PathBuf
-{
-    let mut dir = cache_dir(home_dir);
-    dir.push(name.to_path_buf());
-    dir.push(format!("{}", version).as_str());
-    dir
-}
-
-pub fn pkg_tmp_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
-{
-    let mut dir = tmp_dir(work_dir);
-    dir.push(name.to_path_buf());
-    dir.push(format!("{}", version).as_str());
-    dir
-}
-
-pub fn pkg_part_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
-{
-    let mut dir = pkg_tmp_dir(work_dir, name, version);
-    dir.push("dir.part");
-    dir
-}
-
-pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
-{
-    let mut dir = pkg_tmp_dir(work_dir, name, version);
-    dir.push("dir");
-    dir
 }
 
 pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
@@ -583,7 +540,7 @@ pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, pri
             }
             match res_download_file(pkg_name, url, part_file_path_buf.as_path(), printer) {
                 Ok(()) => (),
-                Err(err) => return Err(Error::Curl(Box::new(err))),
+                Err(err) => return Err(Error::Curl(err)),
             }
             match rename(part_file_path_buf.as_path(), file_path_buf.as_path()) {
                 Ok(()) => (),
@@ -666,6 +623,50 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
         Ok(None) => Ok(PathBuf::from(path.as_ref())),
         Err(err) => Err(Error::Io(err)),
     }
+}
+
+pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
+{
+    let mut dir = PathBuf::from(home_dir.as_ref());
+    dir.push("cache");
+    dir
+}
+
+pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
+{
+    let mut dir = PathBuf::from(work_dir.as_ref());
+    dir.push("tmp");
+    dir
+}
+
+pub fn pkg_cache_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = cache_dir(home_dir);
+    dir.push(name.to_path_buf());
+    dir.push(format!("{}", version).as_str());
+    dir
+}
+
+pub fn pkg_tmp_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = tmp_dir(work_dir);
+    dir.push(name.to_path_buf());
+    dir.push(format!("{}", version).as_str());
+    dir
+}
+
+pub fn pkg_part_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = pkg_tmp_dir(work_dir, name, version);
+    dir.push("dir.part");
+    dir
+}
+
+pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
+{
+    let mut dir = pkg_tmp_dir(work_dir, name, version);
+    dir.push("dir");
+    dir
 }
 
 pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
