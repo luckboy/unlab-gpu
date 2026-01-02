@@ -719,9 +719,9 @@ fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, print
     easy.perform()
 }
 
-pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
+fn download_file(pkg_name: &PkgName, url: &str, path: &Path, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
 {
-    match create_dir_all(path.as_ref()) {
+    match create_dir_all(path) {
         Ok(()) => (),
         Err(err) => return Err(Error::Io(err)),
     }
@@ -732,9 +732,9 @@ pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, pri
     } else {
         ("file.part", "file")
     };
-    let mut part_file_path_buf = PathBuf::from(path.as_ref());
+    let mut part_file_path_buf = PathBuf::from(path);
     part_file_path_buf.push(part_name);
-    let mut file_path_buf = PathBuf::from(path.as_ref());
+    let mut file_path_buf = PathBuf::from(path);
     file_path_buf.push(name);
     match fs::metadata(file_path_buf.as_path()) {
         Ok(_) => (),
@@ -760,19 +760,19 @@ pub fn download_file<P: AsRef<Path>>(pkg_name: &PkgName, url: &str, path: P, pri
     Ok(file_path_buf)
 }
 
-pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_path: P, path: Q, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
+fn extract_file<F>(pkg_name: &PkgName, part_path: &Path, path: &Path, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
     where F: FnOnce() -> Result<PathBuf>
 {
-    match fs::metadata(path.as_ref()) {
+    match fs::metadata(path) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
             let archive_path = f()?;
             printer.print_extracting_pkg_file(pkg_name, false);
-            match recursively_remove(part_path.as_ref(), true) {
+            match recursively_remove(part_path, true) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
-            match create_dir_all(part_path.as_ref()) {
+            match create_dir_all(part_path) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
@@ -784,7 +784,7 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
                             Ok(tmp_archive) => tmp_archive,
                             Err(err) => return Err(Error::Zip(Box::new(err))),
                         };
-                        match archive.extract(part_path.as_ref()) {
+                        match archive.extract(part_path) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Zip(Box::new(err))),
                         }
@@ -797,7 +797,7 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
                         let mut br = BufReader::new(&mut file); 
                         let mut decoder = GzDecoder::new(&mut br);
                         let mut archive = tar::Archive::new(&mut decoder);
-                        match archive.unpack(part_path.as_ref()) {
+                        match archive.unpack(part_path) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Io(err)),
                         }
@@ -805,9 +805,9 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
                     Err(err) => return Err(Error::Io(err)),
                 }
             }
-            let mut part_path_buf = PathBuf::from(part_path.as_ref());
+            let mut part_path_buf = PathBuf::from(part_path);
             part_path_buf.pop();
-            let mut path_buf = PathBuf::from(path.as_ref());
+            let mut path_buf = PathBuf::from(path);
             path_buf.pop();
             if part_path_buf != path_buf {
                 if path_buf != PathBuf::from("") {
@@ -817,7 +817,7 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
                     }
                 }
             }
-            match rename(part_path.as_ref(), path.as_ref()) {
+            match rename(part_path, path) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
@@ -825,9 +825,9 @@ pub fn extract_file<P: AsRef<Path>, Q: AsRef<Path>, F>(pkg_name: &PkgName, part_
         },
         Err(err) => return Err(Error::Io(err)),
     }
-    match only_one_dir_in_dir(path.as_ref()) {
+    match only_one_dir_in_dir(path) {
         Ok(Some(only_one_dir)) => Ok(only_one_dir),
-        Ok(None) => Ok(PathBuf::from(path.as_ref())),
+        Ok(None) => Ok(PathBuf::from(path)),
         Err(err) => Err(Error::Io(err)),
     }
 }
@@ -877,11 +877,11 @@ pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -
 }
 
 pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
-{ download_file(name, url, pkg_cache_dir(home_dir.as_ref(), name, version), printer) }
+{ download_file(name, url, pkg_cache_dir(home_dir.as_ref(), name, version).as_path(), printer) }
 
 pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, work_dir: P, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
     where F: FnOnce() -> Result<PathBuf>
-{ extract_file(name, pkg_part_dir(work_dir.as_ref(), name, version), pkg_dir(work_dir.as_ref(), name, version), printer, f) }
+{ extract_file(name, pkg_part_dir(work_dir.as_ref(), name, version).as_path(), pkg_dir(work_dir.as_ref(), name, version).as_path(), printer, f) }
 
 #[derive(Clone)]
 pub struct CustomSrc
