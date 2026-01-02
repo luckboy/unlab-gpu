@@ -138,13 +138,13 @@ impl Print for EmptyPrinter
 #[derive(Debug)]
 pub struct StdPrinter
 {
-    is_nl_for_error: AtomicBool,
+    has_nl_for_error: AtomicBool,
 }
 
 impl StdPrinter
 {
     pub fn new() -> Self
-    { StdPrinter { is_nl_for_error: AtomicBool::new(false), } }
+    { StdPrinter { has_nl_for_error: AtomicBool::new(false), } }
 }
 
 impl Print for StdPrinter
@@ -165,11 +165,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Downloading {} file (100%) ... done", name);
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Downloading {} file (???%) ...\r", name);
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -178,7 +178,7 @@ impl Print for StdPrinter
         if total_byte_count != 0.0 {
             print!("Downloading {} file ({:3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -186,11 +186,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Extracting {} file ... done", name);
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Extracting {} file ...\r", name);
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -198,11 +198,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Checking dependent version requirements ... done");
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Checking dependent version requirements ...\r");
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -210,11 +210,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Searching path conflicts ... done");
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Searching path conflicts ...\r");
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -222,11 +222,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Installing {} ... done", name);
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Installing {} ...\r", name);
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -234,11 +234,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Removing {} ... done", name);
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Removing {} ...\r", name);
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -246,11 +246,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Cleaning after installation ... done");
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Cleaning after installation ...\r");
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -258,24 +258,24 @@ impl Print for StdPrinter
     {
         if is_done {
             println!("Cleaning after error ... done");
-            self.is_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Cleaning after error ...\r");
             let _res = stdout().flush();
-            self.is_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
     }
     
     fn print_nl_for_error(&self)
     {
-        if self.is_nl_for_error.swap(false, Ordering::SeqCst) {
+        if self.has_nl_for_error.swap(false, Ordering::SeqCst) {
             println!("");
         }
     }
     
     fn eprint_error(&self, err: &Error)
     {
-        if self.is_nl_for_error.swap(false, Ordering::SeqCst) {
+        if self.has_nl_for_error.swap(false, Ordering::SeqCst) {
             println!("");
         }
         eprintln!("{}", err);
