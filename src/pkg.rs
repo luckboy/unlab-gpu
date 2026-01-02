@@ -2084,22 +2084,17 @@ impl PkgManager
         Ok(())
     }
 
-    fn generate_pkg_doc(&self, name: &PkgName) -> Result<()>
+    fn generate_pkg_doc(&self, name: &PkgName, new_version: &Version) -> Result<()>
     {
         if self.pkg_is_to_install_for_pre_install(name)? {
-            match self.pkg_version_for_bucket("new_versions", name)? {
-                Some(new_version) => {
-                    self.printer.print_documenting_pkg(name, false);
-                    let doc_dir = self.pkg_tmp_doc_dir(name, &new_version);
-                    match create_dir_all(doc_dir.as_path()) {
-                        Ok(()) => (),
-                        Err(err) => return Err(Error::Io(err)),
-                    }
-                    // Line for documentation generation.
-                    self.printer.print_documenting_pkg(name, true);
-                },
-                None => return Err(Error::PkgName(name.clone(), String::from("no new version"))),
+            self.printer.print_documenting_pkg(name, false);
+            let doc_dir = self.pkg_tmp_doc_dir(name, &new_version);
+            match create_dir_all(doc_dir.as_path()) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
             }
+            // Line for documentation generation.
+            self.printer.print_documenting_pkg(name, true);
         }
         Ok(())
     }
@@ -2107,8 +2102,8 @@ impl PkgManager
     fn generate_docs(&self) -> Result<()>
     {
         let new_versions = self.pkg_versions_for_bucket("new_versions")?;
-        for (name, _) in &new_versions {
-            self.generate_pkg_doc(name)?;
+        for (name, new_version) in &new_versions {
+            self.generate_pkg_doc(name, new_version)?;
         }
         Ok(())
     }
@@ -2189,26 +2184,21 @@ impl PkgManager
         }
     }
     
-    fn install_pkg(&self, name: &PkgName, is_doc: bool) -> Result<()>
+    fn install_pkg(&self, name: &PkgName, new_version: &Version, is_doc: bool) -> Result<()>
     {
         let mut paths_file = self.pkg_new_info_dir(name);
         paths_file.push("paths.toml");
         match Paths::load(paths_file) {
             Ok(paths) => {
-                match self.pkg_version_for_bucket("new_versions", name)? {
-                    Some(new_version) => {
-                        self.printer.print_installing_pkg(name, false);
-                        let mut src = self.create_source(name)?;
-                        src.set_current_version(new_version.clone());
-                        match self.res_install_pkg(name, &new_version, src.dir()?, &paths, is_doc) {
-                            Ok(()) => (),
-                            Err(err) => return Err(Error::Io(err)),
-                        }
-                        self.printer.print_installing_pkg(name, true);
-                        Ok(())
-                    },
-                    None => Err(Error::PkgName(name.clone(), String::from("no new version"))),
+                self.printer.print_installing_pkg(name, false);
+                let mut src = self.create_source(name)?;
+                src.set_current_version(new_version.clone());
+                match self.res_install_pkg(name, new_version, src.dir()?, &paths, is_doc) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
                 }
+                self.printer.print_installing_pkg(name, true);
+                Ok(())
             },
             Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => {
                 match self.res_copy_dependents_file(name) {
@@ -2303,8 +2293,8 @@ impl PkgManager
                 self.remove_pkg(name)?;
             }
         }
-        for (name, _) in &new_versions {
-            self.install_pkg(name, is_doc)?;
+        for (name, new_version) in &new_versions {
+            self.install_pkg(name, new_version, is_doc)?;
         }
         self.printer.print_cleaning_after_install(false);
         match recursively_remove(self.work_tmp_dir(), true) {
