@@ -224,7 +224,7 @@ impl Print for StdPrinter
             println!("Installing {} ... done", name);
             self.is_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            println!("Installing {} ...\r", name);
+            print!("Installing {} ...\r", name);
             let _res = stdout().flush();
             self.is_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -236,7 +236,7 @@ impl Print for StdPrinter
             println!("Removing {} ... done", name);
             self.is_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            println!("Removing {} ...\r", name);
+            print!("Removing {} ...\r", name);
             let _res = stdout().flush();
             self.is_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -245,10 +245,10 @@ impl Print for StdPrinter
     fn print_cleaning_after_install(&self, is_done: bool)
     {
         if is_done {
-            println!("Cleaning after install ... done");
+            println!("Cleaning after installation ... done");
             self.is_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            println!("Cleaning after install ...\r");
+            print!("Cleaning after installation ...\r");
             let _res = stdout().flush();
             self.is_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -260,7 +260,7 @@ impl Print for StdPrinter
             println!("Cleaning after error ... done");
             self.is_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            println!("Cleaning after error ...\r");
+            print!("Cleaning after error ...\r");
             let _res = stdout().flush();
             self.is_nl_for_error.store(true, Ordering::SeqCst);
         }
