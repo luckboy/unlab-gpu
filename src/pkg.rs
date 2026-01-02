@@ -64,6 +64,8 @@ pub trait Print
     fn print_checking_dependent_version_reqs(&self, is_done: bool);
 
     fn print_searching_path_conflicts(&self, is_done: bool);
+
+    fn print_documenting_pkg(&self, name: &PkgName, is_done: bool);
     
     fn print_installing_pkg(&self, name: &PkgName, is_done: bool);
 
@@ -114,6 +116,9 @@ impl Print for EmptyPrinter
     {}
 
     fn print_searching_path_conflicts(&self, _is_done: bool)
+    {}
+
+    fn print_documenting_pkg(&self, _name: &PkgName, _is_done: bool)
     {}
     
     fn print_installing_pkg(&self, _name: &PkgName, _is_done: bool)
@@ -213,6 +218,18 @@ impl Print for StdPrinter
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Searching path conflicts ...\r");
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_documenting_pkg(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!("Documenting {} ... done", name);
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Documenting {} ...\r", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -1351,10 +1368,11 @@ impl PkgManager
         dir
     }
     
-    pub fn pkg_tmp_doc_dir(&self, name: &PkgName) -> PathBuf
+    pub fn pkg_tmp_doc_dir(&self, name: &PkgName, version: &Version) -> PathBuf
     {
         let mut dir = self.work_tmp_dir();
         dir.push(name.to_path_buf());
+        dir.push(format!("{}", version));
         dir.push("doc");
         dir
     }
@@ -2066,8 +2084,34 @@ impl PkgManager
         Ok(())
     }
 
+    fn generate_pkg_doc(&self, name: &PkgName) -> Result<()>
+    {
+        if self.pkg_is_to_install_for_pre_install(name)? {
+            match self.pkg_version_for_bucket("new_versions", name)? {
+                Some(new_version) => {
+                    self.printer.print_documenting_pkg(name, false);
+                    let doc_dir = self.pkg_tmp_doc_dir(name, &new_version);
+                    match create_dir_all(doc_dir.as_path()) {
+                        Ok(()) => (),
+                        Err(err) => return Err(Error::Io(err)),
+                    }
+                    // Line for documentation generation.
+                    self.printer.print_documenting_pkg(name, true);
+                },
+                None => return Err(Error::PkgName(name.clone(), String::from("no new version"))),
+            }
+        }
+        Ok(())
+    }
+    
     fn generate_docs(&self) -> Result<()>
-    { Err(Error::Pkg(String::from("unimplemented documentation generation"))) }
+    {
+        let new_versions = self.pkg_versions_for_bucket("new_versions")?;
+        for (name, _) in &new_versions {
+            self.generate_pkg_doc(name)?;
+        }
+        Ok(())
+    }
     
     fn check_new_part_infos_and_generate_docs_for_pre_install_without_reset(&self, is_doc: bool) -> Result<()>
     {
@@ -2095,7 +2139,7 @@ impl PkgManager
         }
     }
     
-    fn res_install_pkg(&self, name: &PkgName, dir: &Path, paths: &Paths, is_doc: bool) -> io::Result<()>
+    fn res_install_pkg(&self, name: &PkgName, new_version: &Version, dir: &Path, paths: &Paths, is_doc: bool) -> io::Result<()>
     {
         let mut src_bin_dir = PathBuf::from(dir);
         src_bin_dir.push("bin");
@@ -2108,7 +2152,7 @@ impl PkgManager
         let lib_paths: Vec<PathBuf> = paths.lib.iter().map(|s| PathBuf::from(s)).collect();
         recursively_copy_paths_in_dir(src_lib_dir, dst_lib_dir, lib_paths.as_slice())?;
         if is_doc {
-            let src_doc_dir = self.pkg_tmp_doc_dir(name);
+            let src_doc_dir = self.pkg_tmp_doc_dir(name, new_version);
             let dst_doc_dir = self.doc_dir.clone();
             recursively_copy_paths_in_dir(src_doc_dir, dst_doc_dir, lib_paths.as_slice())?;
         }
@@ -2155,8 +2199,8 @@ impl PkgManager
                     Some(new_version) => {
                         self.printer.print_installing_pkg(name, false);
                         let mut src = self.create_source(name)?;
-                        src.set_current_version(new_version);
-                        match self.res_install_pkg(name, src.dir()?, &paths, is_doc) {
+                        src.set_current_version(new_version.clone());
+                        match self.res_install_pkg(name, &new_version, src.dir()?, &paths, is_doc) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Io(err)),
                         }
