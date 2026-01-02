@@ -72,7 +72,7 @@ pub trait Print
     
     fn print_nl_for_error(&self);
     
-    fn eprint_io_error(&self, err: &io::Error);
+    fn eprint_error(&self, err: &Error);
 }
 
 pub trait Source
@@ -502,10 +502,10 @@ fn res_download_file(pkg_name: &PkgName, url: &str, part_file_path: &Path, print
                 Ok(mut file) => {
                     match file.write_all(data) {
                         Ok(()) => (),
-                        Err(err) => printer2.eprint_io_error(&err),
+                        Err(err) => printer2.eprint_error(&Error::Io(err)),
                     }
                 },
-                Err(err) => printer2.eprint_io_error(&err),
+                Err(err) => printer2.eprint_error(&Error::Io(err)),
             }
             Ok(data.len())
     })?;
