@@ -260,6 +260,7 @@ impl Print for StdPrinter
             println!("Cleaning after error ... done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
+            self.print_nl_for_error();
             print!("Cleaning after error ...\r");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
@@ -275,9 +276,7 @@ impl Print for StdPrinter
     
     fn eprint_error(&self, err: &Error)
     {
-        if self.has_nl_for_error.swap(false, Ordering::SeqCst) {
-            println!("");
-        }
+        self.print_nl_for_error();
         eprintln!("{}", err);
     }
 }
