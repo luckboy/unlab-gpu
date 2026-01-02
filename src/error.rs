@@ -101,10 +101,10 @@ impl fmt::Display for Error
             Error::ParserEof(path, _) => write!(f, "{}: end of file", path),
             Error::Parser(pos, msg) => write!(f, "{}: {}.{}: {}", pos.path, pos.line, pos.column, msg),
             Error::Interp(msg) => write!(f, "{}", msg),
-            Error::Pkg(msg) => write!(f, "package error: {}", msg),
-            Error::PkgName(name, msg) => write!(f, "package error: {}: {}", name, msg),
+            Error::Pkg(msg) => write!(f, "{}", msg),
+            Error::PkgName(name, msg) => write!(f, "{}: {}", name, msg),
             Error::PkgDepCycle(names) => {
-                write!(f, "package error: occurred cycle of dependencies: ")?;
+                write!(f, "occurred cycle of dependencies: ")?;
                 let mut is_first = true;
                 for name in names {
                     if !is_first {
@@ -121,8 +121,8 @@ impl fmt::Display for Error
                     PkgPathConflict::Lib => "lib",
                 };
                 match name2 {
-                    Some(name2) => write!(f, "package error: occurred conflicts between {} and {} for directory {}:", name, name2, conflict_name)?,
-                    None => write!(f, "package error: occurred conflicts between {} and installed packages for directory {}:", name, conflict_name)?,
+                    Some(name2) => write!(f, "occurred conflicts between {} and {} for directory {}:", name, name2, conflict_name)?,
+                    None => write!(f, "occurred conflicts between {} and installed packages for directory {}:", name, conflict_name)?,
                 }
                 for conflict_path in conflict_paths {
                     write!(f, "\n{}", conflict_path.to_string_lossy().into_owned())?;

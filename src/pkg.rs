@@ -1571,7 +1571,7 @@ impl PkgManager
                                 data.pkgs.insert(name.clone(), Pkg::new_with_copying(dir, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
                                 data.pkgs.get(name).unwrap().clone()
                             },
-                            None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirement"))),
+                            None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
                         }
                     },
                 };
@@ -1601,7 +1601,7 @@ impl PkgManager
                                         return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
                                     }
                                 },
-                                None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirements"))),
+                                None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
                             }
                         }
                         Ok(deps.keys().map(|dn| dn.clone()).collect())
@@ -1704,7 +1704,7 @@ impl PkgManager
                                 return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
                             }
                         },
-                        None => return Err(Error::PkgName(name.clone(), String::from("each version isn't matched to version requirement"))),
+                        None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
                     }
                 },
                 None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
@@ -2144,9 +2144,9 @@ impl PkgManager
         };
         if (is_new_info_dir && self.has_bucket("new_versions")?) || is_new_info_dir || self.has_bucket("pkgs_to_remove")? {
             if are_deps {
-                return Err(Error::Pkg(String::from("Operation is incompleted. Please execute continue-deps command to complete operation.")));
+                return Err(Error::Pkg(String::from("Last operation is incompleted. Please execute continue-deps command to complete operation.")));
             } else {
-                return Err(Error::Pkg(String::from("Operation is incompleted. Please execute continue command to complete operation.")));
+                return Err(Error::Pkg(String::from("Last operation is incompleted. Please execute continue command to complete operation.")));
             }
         }
         Ok(())
