@@ -22,10 +22,13 @@ use std::io::BufReader;
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Write;
+use std::io::stdout;
 use std::path;
 use std::path::Path;
 use std::path::PathBuf;
 use std::result;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use flate2::read::GzDecoder;
 use jammdb::DB;
@@ -73,6 +76,210 @@ pub trait Print
     fn print_nl_for_error(&self);
     
     fn eprint_error(&self, err: &Error);
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct EmptyPrinter;
+
+impl EmptyPrinter
+{
+    pub fn new() -> Self
+    { EmptyPrinter }
+}
+
+impl Print for EmptyPrinter
+{
+    fn print_pre_installing(&self)
+    {}
+    
+    fn print_installing(&self)
+    {}
+
+    fn print_pre_removing(&self)
+    {}
+
+    fn print_removing(&self)
+    {}
+
+    fn print_downloading_pkg_file(&self, _name: &PkgName, _is_done: bool)
+    {}
+
+    fn print_downloading_pkg_file_with_progress(&self, _name: &PkgName, _byte_count: f64, _total_byte_count: f64)
+    {}
+    
+    fn print_extracting_pkg_file(&self, _name: &PkgName, _is_done: bool)
+    {}
+    
+    fn print_checking_dependent_version_reqs(&self, _is_done: bool)
+    {}
+
+    fn print_searching_path_conflicts(&self, _is_done: bool)
+    {}
+    
+    fn print_installing_pkg(&self, _name: &PkgName, _is_done: bool)
+    {}
+
+    fn print_removing_pkg(&self, _name: &PkgName, _is_done: bool)
+    {}
+
+    fn print_cleaning_after_install(&self, _is_done: bool)
+    {}
+
+    fn print_cleaning_after_error(&self, _is_done: bool)
+    {}
+    
+    fn print_nl_for_error(&self)
+    {}
+    
+    fn eprint_error(&self, _err: &Error)
+    {}
+}
+
+#[derive(Debug)]
+pub struct Printer
+{
+    is_nl_for_error: AtomicBool,
+}
+
+impl Printer
+{
+    pub fn new() -> Self
+    { Printer { is_nl_for_error: AtomicBool::new(false), } }
+}
+
+impl Print for Printer
+{
+    fn print_pre_installing(&self)
+    { println!("Pre-installing:"); }
+    
+    fn print_installing(&self)
+    { println!("Installing:"); }
+
+    fn print_pre_removing(&self)
+    { println!("Pre-removing:"); }
+
+    fn print_removing(&self)
+    { println!("Removing:"); }
+
+    fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!("Downloading {} file (100%) ... done", name);
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Downloading {} file (???%) ...\r", name);
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64)
+    {
+        if total_byte_count != 0.0 {
+            print!("Downloading {} file ({:3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+    
+    fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!("Extracting {} file ... done", name);
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Extracting {} file ...\r", name);
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+    
+    fn print_checking_dependent_version_reqs(&self, is_done: bool)
+    {
+        if is_done {
+            println!("Checking dependent version requirements ... done");
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Checking dependent version requirements ...\r");
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_searching_path_conflicts(&self, is_done: bool)
+    {
+        if is_done {
+            println!("Searching path conflicts ... done");
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Searching path conflicts ...\r");
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+    
+    fn print_installing_pkg(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!("Installing {} ... done", name);
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            println!("Installing {} ...\r", name);
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_removing_pkg(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!("Removing {} ... done", name);
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            println!("Removing {} ...\r", name);
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_cleaning_after_install(&self, is_done: bool)
+    {
+        if is_done {
+            println!("Cleaning after install ... done");
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            println!("Cleaning after install ...\r");
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_cleaning_after_error(&self, is_done: bool)
+    {
+        if is_done {
+            println!("Cleaning after error ... done");
+            self.is_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            println!("Cleaning after error ...\r");
+            let _res = stdout().flush();
+            self.is_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+    
+    fn print_nl_for_error(&self)
+    {
+        if self.is_nl_for_error.swap(false, Ordering::SeqCst) {
+            println!("");
+        }
+    }
+    
+    fn eprint_error(&self, err: &Error)
+    {
+        if self.is_nl_for_error.swap(false, Ordering::SeqCst) {
+            println!("");
+        }
+        eprintln!("{}", err);
+    }
 }
 
 pub trait Source
