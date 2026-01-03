@@ -30,6 +30,7 @@ use std::result;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::Mutex;
 use flate2::read::GzDecoder;
 use jammdb::DB;
 use zip::read::ZipArchive;
@@ -143,13 +144,14 @@ impl Print for EmptyPrinter
 #[derive(Debug)]
 pub struct StdPrinter
 {
+    byte_count: Mutex<f64>,
     has_nl_for_error: AtomicBool,
 }
 
 impl StdPrinter
 {
     pub fn new() -> Self
-    { StdPrinter { has_nl_for_error: AtomicBool::new(false), } }
+    { StdPrinter { byte_count: Mutex::new(0.0), has_nl_for_error: AtomicBool::new(false), } }
 }
 
 impl Print for StdPrinter
@@ -169,31 +171,43 @@ impl Print for StdPrinter
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Downloading {} (100%) ... done", name);
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            let byte_count = {
+                let byte_count_g = self.byte_count.lock().unwrap();
+                *byte_count_g
+            };
+            println!("  progress: {}KiB (100%)", (byte_count / 1024.0).ceil());
         } else {
-            print!("Downloading {} (???%) ...\r", name);
-            let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            {
+                let mut byte_count_g = self.byte_count.lock().unwrap();
+                *byte_count_g = 0.0;
+            }
+            println!("Downloading {} ...", name);
         }
+        self.has_nl_for_error.store(false, Ordering::SeqCst);
     }
 
-    fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64)
+    fn print_downloading_pkg_file_with_progress(&self, _name: &PkgName, byte_count: f64, total_byte_count: f64)
     {
         if total_byte_count != 0.0 {
-            print!("Downloading {} ({:>3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
-            let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            print!("  progress: {}KiB ({}%)\r", (byte_count / 1024.0).ceil(), ((byte_count * 100.0) / total_byte_count).floor());
+        } else {
+            print!("  progress: {}KiB (?%)\r", (byte_count / 1024.0).ceil());
         }
+        let _res = stdout().flush();
+        {
+            let mut byte_count_g = self.byte_count.lock().unwrap();
+            *byte_count_g = byte_count;
+        }
+        self.has_nl_for_error.store(true, Ordering::SeqCst);
     }
     
     fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Extracting {} ... done", name);
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Extracting {} ...\r", name);
+            print!("Extracting {} ...", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -202,10 +216,10 @@ impl Print for StdPrinter
     fn print_checking_dependent_version_reqs(&self, is_done: bool)
     {
         if is_done {
-            println!("Checking dependent version requirements ... done");
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Checking dependent version requirements ...\r");
+            print!("Checking dependent version requirements ...");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -214,10 +228,10 @@ impl Print for StdPrinter
     fn print_searching_path_conflicts(&self, is_done: bool)
     {
         if is_done {
-            println!("Searching path conflicts ... done");
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Searching path conflicts ...\r");
+            print!("Searching path conflicts ...");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -226,10 +240,10 @@ impl Print for StdPrinter
     fn print_documenting_pkg(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Documenting {} ... done", name);
+            println!("done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Documenting {} ...\r", name);
+            print!("Documenting {} ...", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -238,10 +252,10 @@ impl Print for StdPrinter
     fn print_installing_pkg(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Installing {} ... done", name);
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Installing {} ...\r", name);
+            print!("Installing {} ...", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -250,10 +264,10 @@ impl Print for StdPrinter
     fn print_removing_pkg(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("Removing {} ... done", name);
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Removing {} ...\r", name);
+            print!("Removing {} ...", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -262,10 +276,10 @@ impl Print for StdPrinter
     fn print_cleaning_after_install(&self, is_done: bool)
     {
         if is_done {
-            println!("Cleaning after installation ... done");
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Cleaning after installation ...\r");
+            print!("Cleaning after installation ...");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -274,11 +288,11 @@ impl Print for StdPrinter
     fn print_cleaning_after_error(&self, is_done: bool)
     {
         if is_done {
-            println!("Cleaning after error ... done");
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             self.print_nl_for_error();
-            print!("Cleaning after error ...\r");
+            print!("Cleaning after error ...");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
