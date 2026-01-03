@@ -868,18 +868,6 @@ pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, wo
                     Err(err) => return Err(Error::Io(err)),
                 }
             }
-            let mut part_dir_path_buf = part_path_buf.clone();
-            part_dir_path_buf.pop();
-            let mut dir_path_buf = path_buf.clone();
-            dir_path_buf.pop();
-            if part_dir_path_buf != dir_path_buf {
-                if dir_path_buf != PathBuf::from("") {
-                    match create_dir_all(dir_path_buf) {
-                        Ok(()) => (),
-                        Err(err) => return Err(Error::Io(err)),
-                    }
-                }
-            }
             match rename(part_path_buf.as_path(), path_buf.as_path()) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
