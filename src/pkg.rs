@@ -1755,34 +1755,34 @@ impl PkgManager
                     None => {
                         let mut src = data.create_source(name)?;
                         let old_version = data.pkg_version_for_bucket("versions", name)?;
-                        let tmp_new_version = data.pkg_version_for_bucket("new_versions", name)?;
-                        let version = tmp_new_version.clone().or(old_version.clone());
+                        let new_version_from_bucket = data.pkg_version_for_bucket("new_versions", name)?;
+                        let version = new_version_from_bucket.clone().or(old_version.clone());
                         let new_version = match &version {
-                            Some(tmp_version) if !is_update || tmp_new_version.is_some() => Some(tmp_version.clone()),
+                            Some(tmp_version) if !is_update || new_version_from_bucket.is_some() => Some(tmp_version.clone()),
                             _ => {
-                                if old_version.is_some() {
-                                    if is_update {
-                                        src.update()?;
-                                    }
-                                    let versions = src.versions()?;
+                                if is_update {
+                                    src.update()?;
+                                }
+                                let versions = src.versions()?;
+                                let mut version_reqs = if old_version.is_some() {
                                     let mut old_dependents_file = data.pkg_info_dir(name);
                                     old_dependents_file.push("dependents.toml");
                                     let old_dependants = load_version_reqs(old_dependents_file)?;
-                                    let mut version_reqs: Vec<VersionReq> = old_dependants.values().map(|r| r.clone()).collect();
-                                    match data.constraints.get(name) {
-                                        Some(constraint) => version_reqs.push(constraint.clone()),
-                                        None => (),
-                                    }
-                                    Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name))
+                                    old_dependants.values().map(|r| r.clone()).collect::<Vec<VersionReq>>()
                                 } else {
-                                    old_version.clone()
+                                    Vec::new()
+                                };
+                                match data.constraints.get(name) {
+                                    Some(constraint) => version_reqs.push(constraint.clone()),
+                                    None => (),
                                 }
+                                Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name))
                             },
                         };
                         match &new_version {
                             Some(new_version) => {
                                 src.set_current_version(new_version.clone());
-                                if tmp_new_version.is_none() {
+                                if new_version_from_bucket.is_none() {
                                     data.add_pkg_version_for_bucket("new_versions", name, &new_version)?;
                                 }
                                 let dir = if is_force || old_version.as_ref().map(|ov| ov != new_version).unwrap_or(true) {
@@ -1811,13 +1811,13 @@ impl PkgManager
                                 Some(constraint) => version_reqs.push(constraint.clone()),
                                 None => (),
                             }
-                            let dep_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name));
-                            match &dep_version {
-                                Some(dep_version) => {
-                                    let dep_new_version = data.pkg_version_for_bucket("new_versions", dep_name)?;
-                                    if dep_new_version.as_ref().map(|dnv| dnv == dep_version).unwrap_or(true) {
-                                        if dep_new_version.is_none() {
-                                            data.add_pkg_version_for_bucket("new_versions", dep_name, dep_version)?;
+                            let dep_new_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name));
+                            match &dep_new_version {
+                                Some(dep_new_version) => {
+                                    let dep_new_version_from_bucket = data.pkg_version_for_bucket("new_versions", dep_name)?;
+                                    if dep_new_version_from_bucket.as_ref().map(|dnvfb| dnvfb == dep_new_version).unwrap_or(true) {
+                                        if dep_new_version_from_bucket.is_none() {
+                                            data.add_pkg_version_for_bucket("new_versions", dep_name, dep_new_version)?;
                                         }
                                     } else {
                                         return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
@@ -1843,7 +1843,7 @@ impl PkgManager
                                 Some(old_deps) => {
                                     for old_dep_name in old_deps.keys() {
                                         if data.pkg_version_for_bucket("new_versions", old_dep_name)?.is_none() {
-                                            match data.pkg_version_for_bucket("version", old_dep_name)? {
+                                            match data.pkg_version_for_bucket("versions", old_dep_name)? {
                                                 Some(version) => {
                                                     data.add_pkg_version_for_bucket("new_versions", name, &version)?;
                                                     data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
@@ -1926,7 +1926,7 @@ impl PkgManager
                                 return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
                             }
                         },
-                        None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
+                        None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
                     }
                 },
                 None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
