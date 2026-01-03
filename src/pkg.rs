@@ -1835,8 +1835,8 @@ impl PkgManager
                     Some(tmp_pkg) => tmp_pkg.clone(),
                     None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
                 };
-                let old_manifest = pkg.old_manifest()?;
                 if pkg.is_to_install()? {
+                    let old_manifest = pkg.old_manifest()?;
                     match old_manifest {
                         Some(old_manifest) => {
                             match &old_manifest.dependencies {
