@@ -843,7 +843,7 @@ pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, wo
     match fs::metadata(path_buf.as_path()) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
-            let archive_path = f()?;
+            let archive_path_buf = f()?;
             printer.print_extracting_pkg_file(name, false);
             match recursively_remove(part_path_buf.as_path(), true) {
                 Ok(()) => (),
@@ -853,8 +853,8 @@ pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, wo
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
-            if archive_path.to_string_lossy().into_owned().ends_with(".zip") {
-                match File::open(archive_path) {
+            if archive_path_buf.to_string_lossy().into_owned().ends_with(".zip") {
+                match File::open(archive_path_buf) {
                     Ok(mut file) => {
                         let mut br = BufReader::new(&mut file); 
                         let mut archive = match ZipArchive::new(&mut br) {
@@ -869,7 +869,7 @@ pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, wo
                     Err(err) => return Err(Error::Io(err)),
                 }
             } else {
-                match File::open(archive_path) {
+                match File::open(archive_path_buf) {
                     Ok(mut file) => {
                         let mut br = BufReader::new(&mut file); 
                         let mut decoder = GzDecoder::new(&mut br);
