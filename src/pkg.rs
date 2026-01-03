@@ -181,7 +181,7 @@ impl Print for StdPrinter
     fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64)
     {
         if total_byte_count != 0.0 {
-            print!("Downloading {} ({:3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
+            print!("Downloading {} ({:>3}%) ...\r", name, ((byte_count * 100.0) / total_byte_count).floor());
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
