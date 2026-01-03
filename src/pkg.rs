@@ -31,8 +31,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
+use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
 use jammdb::DB;
+use liblzma::read::XzDecoder;
 use zip::read::ZipArchive;
 use crate::curl;
 use crate::serde::de;
@@ -804,6 +806,12 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url:
         ("file.zip.part", "file.zip")
     } else if url.ends_with(".tar.gz") {
         ("file.tar.gz.part", "file.tar.gz")
+    } else if url.ends_with(".tar.bz2") {
+        ("file.tar.bz2.part", "file.tar.bz2")
+    } else if url.ends_with(".tar.xz") {
+        ("file.tar.xz.part", "file.tar.xz")
+    } else if url.ends_with(".tar") {
+        ("file.tar.part", "file.tar")
     } else {
         ("file.part", "file")
     };
@@ -868,12 +876,50 @@ pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, wo
                     },
                     Err(err) => return Err(Error::Io(err)),
                 }
-            } else {
+            } else if archive_path_buf.to_string_lossy().into_owned().ends_with(".tar.gz") {
                 match File::open(archive_path_buf) {
                     Ok(mut file) => {
                         let mut br = BufReader::new(&mut file); 
                         let mut decoder = GzDecoder::new(&mut br);
                         let mut archive = tar::Archive::new(&mut decoder);
+                        match archive.unpack(part_path_buf.as_path()) {
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Io(err)),
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                }
+            } else if archive_path_buf.to_string_lossy().into_owned().ends_with(".tar.bz2") {
+                match File::open(archive_path_buf) {
+                    Ok(mut file) => {
+                        let mut br = BufReader::new(&mut file); 
+                        let mut decoder = BzDecoder::new(&mut br);
+                        let mut archive = tar::Archive::new(&mut decoder);
+                        match archive.unpack(part_path_buf.as_path()) {
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Io(err)),
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                }
+            } else if archive_path_buf.to_string_lossy().into_owned().ends_with(".tar.xz") {
+                match File::open(archive_path_buf) {
+                    Ok(mut file) => {
+                        let mut br = BufReader::new(&mut file); 
+                        let mut decoder = XzDecoder::new(&mut br);
+                        let mut archive = tar::Archive::new(&mut decoder);
+                        match archive.unpack(part_path_buf.as_path()) {
+                            Ok(()) => (),
+                            Err(err) => return Err(Error::Io(err)),
+                        }
+                    },
+                    Err(err) => return Err(Error::Io(err)),
+                }
+            } else {
+                match File::open(archive_path_buf) {
+                    Ok(mut file) => {
+                        let mut br = BufReader::new(&mut file); 
+                        let mut archive = tar::Archive::new(&mut br);
                         match archive.unpack(part_path_buf.as_path()) {
                             Ok(()) => (),
                             Err(err) => return Err(Error::Io(err)),
