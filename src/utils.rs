@@ -1,11 +1,13 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::sync::mpsc::Receiver;
+use std::sync::Mutex;
+use std::sync::MutexGuard;
 use std::sync::RwLock;
 use std::sync::RwLockReadGuard;
 use std::sync::RwLockWriteGuard;
@@ -61,6 +63,14 @@ pub fn str_without_crnl(s: &str) -> &str
         }
     } else {
         s
+    }
+}
+
+pub fn mutex_lock<T>(mutex: &Mutex<T>) -> Result<MutexGuard<'_, T>>
+{
+    match mutex.lock() {
+        Ok(guard) => Ok(guard),
+        Err(_) => Err(Error::Mutex),
     }
 }
 

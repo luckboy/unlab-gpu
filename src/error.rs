@@ -68,6 +68,7 @@ pub enum Error
     PkgDepCycle(Vec<PkgName>),
     PkgPathConflicts(PkgName, Option<PkgName>, Vec<PathBuf>, PkgPathConflict),
     Matrix(matrix::Error),
+    Mutex,
     RwLockRead,
     RwLockWrite,
     Recv,
@@ -130,6 +131,7 @@ impl fmt::Display for Error
                 Ok(())
             },
             Error::Matrix(err) => write!(f, "matrix error: {}", err),
+            Error::Mutex => write!(f, "can't lock mutex"),
             Error::RwLockRead => write!(f, "can't read r/w lock"),
             Error::RwLockWrite => write!(f, "can't write r/w lock"),
             Error::Recv => write!(f, "can't receive object"),

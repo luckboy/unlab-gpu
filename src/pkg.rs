@@ -14,9 +14,9 @@ use std::fs;
 use std::fs::File;
 use std::fs::copy;
 use std::fs::create_dir_all;
-use std::fs::rename;
 use std::fs::remove_dir;
 use std::fs::remove_file;
+use std::fs::rename;
 use std::io;
 use std::io::BufReader;
 use std::io::ErrorKind;
@@ -46,6 +46,7 @@ use crate::serde::Serializer;
 use crate::dfs::*;
 use crate::error::*;
 use crate::fs::*;
+use crate::utils::*;
 use crate::version::*;
 
 pub trait Print
@@ -58,6 +59,8 @@ pub trait Print
 
     fn print_removing(&self);
 
+    fn print_updating_pkg_versions(&self, name: &PkgName, is_done: bool);
+    
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool);
 
     fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64);
@@ -104,6 +107,9 @@ impl Print for EmptyPrinter
     {}
 
     fn print_removing(&self)
+    {}
+
+    fn print_updating_pkg_versions(&self, _name: &PkgName, _is_done: bool)
     {}
 
     fn print_downloading_pkg_file(&self, _name: &PkgName, _is_done: bool)
@@ -170,6 +176,18 @@ impl Print for StdPrinter
     fn print_removing(&self)
     { println!("Removing:"); }
 
+    fn print_updating_pkg_versions(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!(" done");
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Updating versions of {} ...", name);
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+    
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
@@ -318,7 +336,7 @@ pub trait Source
 {
     fn update(&mut self) -> Result<()>;
     
-    fn versions(&mut self) -> Result<&BTreeSet<Version>>;
+    fn versions(&mut self) -> Result<&Arc<BTreeSet<Version>>>;
     
     fn set_current_version(&mut self, version: Version);
     
@@ -491,7 +509,71 @@ impl Paths
         match r.read_to_string(&mut s) {
             Ok(_) => {
                 match toml::from_str(s.as_str()) {
-                    Ok(manifest) => Ok(manifest),
+                    Ok(paths) => Ok(paths),
+                    Err(err) => Err(Error::TomlDe(err)),
+                }
+            },
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn write(&self, w: &mut dyn Write) -> Result<()>
+    {
+        match toml::to_string(self) {
+            Ok(s) => {
+                match write!(w, "{}", s) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) => Err(Error::TomlSer(err)),
+        }
+    }
+    
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
+    {
+        match File::open(path) {
+            Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
+    {
+        match File::open(path) {
+            Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None), 
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
+    {
+        match File::create(path) {
+            Ok(mut file) => self.write(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Versions
+{
+    versions: Arc<BTreeSet<Version>>,
+}
+
+impl Versions
+{
+    pub fn new(versions: Arc<BTreeSet<Version>>) -> Self
+    { Versions { versions, } }
+    
+    pub fn read(r: &mut dyn Read) -> Result<Self>
+    {
+        let mut s = String::new();
+        match r.read_to_string(&mut s) {
+            Ok(_) => {
+                match toml::from_str(s.as_str()) {
+                    Ok(versions) => Ok(versions),
                     Err(err) => Err(Error::TomlDe(err)),
                 }
             },
@@ -721,6 +803,13 @@ pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcI
     }
 }
 
+pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
+{
+    let mut dir = PathBuf::from(home_dir.as_ref());
+    dir.push("index");
+    dir
+}
+
 pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(home_dir.as_ref());
@@ -732,6 +821,13 @@ pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(work_dir.as_ref());
     dir.push("tmp");
+    dir
+}
+
+pub fn pkg_index_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName) -> PathBuf
+{
+    let mut dir = index_dir(home_dir);
+    dir.push(name.to_path_buf());
     dir
 }
 
@@ -763,6 +859,104 @@ pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -
     let mut dir = pkg_tmp_dir(work_dir, name, version);
     dir.push("dir");
     dir
+}
+
+pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<Arc<BTreeSet<Version>>>
+    where F: FnOnce() -> result::Result<curl::easy::Easy, curl::Error>,
+        G: FnOnce(&[u8]) -> Result<Versions>
+{
+    let path_buf = pkg_index_dir(home_dir.as_ref(), name);
+    match create_dir_all(path_buf.as_path()) {
+        Ok(()) => (),
+        Err(err) => return Err(Error::Io(err)),
+    }
+    let mut new_part_versions_path_buf = path_buf.clone();
+    new_part_versions_path_buf.push("versions.toml.new.part");
+    let mut new_versions_path_buf = path_buf.clone();
+    new_versions_path_buf.push("versions.toml.new");
+    let mut versions_path_buf = path_buf.clone();
+    versions_path_buf.push("versions.toml");
+    let can_update = match fs::metadata(versions_path_buf.as_path()) {
+        Ok(_) => is_update,
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            match fs::metadata(new_versions_path_buf.as_path()) {
+                Ok(_) => is_update,
+                Err(err) if err.kind() == ErrorKind::NotFound => true,
+                Err(err) => return Err(Error::Io(err)),
+            }
+        },
+        Err(err) => return Err(Error::Io(err)),
+    };
+    if can_update {
+        printer.print_updating_pkg_versions(name, false);
+        match remove_file(new_part_versions_path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        let new_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
+        let new_data2 = new_data.clone();
+        let mut easy = match f() {
+            Ok(tmp_easy) => tmp_easy,
+            Err(err) => return Err(Error::Curl(err)),
+        };
+        match easy.write_function(move |data| {
+                let mut new_data2_g = new_data2.lock().unwrap();
+                new_data2_g.extend_from_slice(data);
+                Ok(data.len())
+        }) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Curl(err)),
+        }
+        match easy.perform() {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Curl(err)),
+        }
+        {
+            let new_data_g = mutex_lock(&new_data)?;
+            g(new_data_g.as_slice())?.save(new_part_versions_path_buf.as_path())?;
+        }
+        match remove_file(new_versions_path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        match rename(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        match remove_file(versions_path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        match rename(new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        printer.print_updating_pkg_versions(name, true);
+    } else {
+        match remove_file(new_part_versions_path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        match fs::metadata(new_versions_path_buf.as_path()) {
+            Ok(_) => {
+                match remove_file(versions_path_buf.as_path()) {
+                    Ok(()) => (),
+                    Err(err) if err.kind() == ErrorKind::NotFound => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
+                match rename(new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
+            },
+            Err(err) => return Err(Error::Io(err)),
+        }
+    }
+    Ok(Versions::load(versions_path_buf)?.versions)
 }
 
 fn res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, printer: &Arc<dyn Print + Send + Sync>) -> result::Result<(), curl::Error>
@@ -954,7 +1148,7 @@ pub struct CustomSrc
     home_dir: PathBuf,
     work_dir: PathBuf,
     version_src_infos: Arc<BTreeMap<Version, VersionSrcInfo>>,
-    versions: BTreeSet<Version>,
+    versions: Arc<BTreeSet<Version>>,
     printer: Arc<dyn Print + Send + Sync>,
     current_version: Option<Version>,
     dir: Option<PathBuf>,
@@ -964,7 +1158,7 @@ impl CustomSrc
 {
     pub fn new(name: PkgName, home_dir: PathBuf, work_dir: PathBuf, version_src_infos: Arc<BTreeMap<Version, VersionSrcInfo>>, printer: Arc<dyn Print + Send + Sync>) -> Self
     {
-        let versions: BTreeSet<Version> = version_src_infos.keys().map(|v| v.clone()).collect(); 
+        let versions: Arc<BTreeSet<Version>> = Arc::new(version_src_infos.keys().map(|v| v.clone()).collect()); 
         CustomSrc {
             name,
             home_dir,
@@ -1006,7 +1200,7 @@ impl Source for CustomSrc
     fn update(&mut self) -> Result<()>
     { Ok(()) }
     
-    fn versions(&mut self) -> Result<&BTreeSet<Version>>
+    fn versions(&mut self) -> Result<&Arc<BTreeSet<Version>>>
     { Ok(&self.versions) }
     
     fn set_current_version(&mut self, version: Version)
