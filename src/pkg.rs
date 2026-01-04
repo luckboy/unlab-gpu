@@ -182,7 +182,7 @@ impl Print for StdPrinter
             println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Updating versions of {} ...", name);
+            print!("Updating {} ...", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
