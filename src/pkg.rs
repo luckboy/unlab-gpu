@@ -641,6 +641,71 @@ impl Versions
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PkgConfig
+{
+    account: Option<String>,
+    domain: Option<String>,
+}
+
+impl PkgConfig
+{
+    pub fn new(account: Option<String>, domain: Option<String>) -> Self
+    { PkgConfig { account, domain, } }
+    
+    pub fn read(r: &mut dyn Read) -> Result<Self>
+    {
+        let mut s = String::new();
+        match r.read_to_string(&mut s) {
+            Ok(_) => {
+                match toml::from_str(s.as_str()) {
+                    Ok(config) => Ok(config),
+                    Err(err) => Err(Error::TomlDe(err)),
+                }
+            },
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn write(&self, w: &mut dyn Write) -> Result<()>
+    {
+        match toml::to_string(self) {
+            Ok(s) => {
+                match write!(w, "{}", s) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) => Err(Error::TomlSer(err)),
+        }
+    }
+    
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
+    {
+        match File::open(path) {
+            Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
+    {
+        match File::open(path) {
+            Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None), 
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
+    {
+        match File::create(path) {
+            Ok(mut file) => self.write(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+}
+
 pub fn read_versions(r: &mut dyn Read) -> Result<HashMap<PkgName, Version>>
 {
     let mut s = String::new();
@@ -1553,7 +1618,13 @@ impl PkgManager
 
     pub fn save_manifest(manifest: &Manifest) -> Result<()>
     { manifest.save("Unlab.toml") }
+
+    pub fn pkg_config(&self) -> Result<Option<PkgConfig>>
+    { PkgConfig::load_opt(self.pkg_config_file()) }
     
+    pub fn save_pkg_config(&self, config: &PkgConfig) -> Result<()>
+    { config.save(self.pkg_config_file()) }
+
     pub fn reset(&mut self)
     { self.pkgs.clear(); }
     
