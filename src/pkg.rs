@@ -459,6 +459,21 @@ pub struct Manifest
 
 impl Manifest
 {
+    pub fn new(name: PkgName) -> Self
+    {
+        Manifest {
+            package: PkgInfo {
+                name,
+                description: None,
+                authors: None,
+                license: None,
+            },
+            dependencies: Some(HashMap::new()),
+            constraints: None,
+            sources: None,
+        }
+    }
+    
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
