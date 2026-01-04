@@ -900,6 +900,10 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
             Ok(tmp_easy) => tmp_easy,
             Err(err) => return Err(Error::Curl(err)),
         };
+        match easy.fail_on_error(true) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Curl(err)),
+        }
         match easy.write_function(move |data| {
                 let mut new_data2_g = new_data2.lock().unwrap();
                 new_data2_g.extend_from_slice(data);
