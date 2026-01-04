@@ -473,6 +473,19 @@ impl Manifest
         }
     }
 
+    pub fn write(&self, w: &mut dyn Write) -> Result<()>
+    {
+        match toml::to_string(self) {
+            Ok(s) => {
+                match write!(w, "{}", s) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) => Err(Error::TomlSer(err)),
+        }
+    }
+
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -486,6 +499,14 @@ impl Manifest
         match File::open(path) {
             Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
             Err(err) if err.kind() == ErrorKind::NotFound => Ok(None), 
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
+    {
+        match File::create(path) {
+            Ok(mut file) => self.write(&mut file),
             Err(err) => Err(Error::Io(err)),
         }
     }
@@ -1526,6 +1547,12 @@ impl PkgManager
     
     pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
     { &self.printer }
+    
+    pub fn manifest() -> Result<Manifest>
+    { Manifest::load("Unlab.toml") }
+
+    pub fn save_manifest(manifest: &Manifest) -> Result<()>
+    { manifest.save("Unlab.toml") }
     
     pub fn reset(&mut self)
     { self.pkgs.clear(); }
