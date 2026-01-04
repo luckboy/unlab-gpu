@@ -336,7 +336,7 @@ pub trait Source
 {
     fn update(&mut self) -> Result<()>;
     
-    fn versions(&mut self) -> Result<&Arc<BTreeSet<Version>>>;
+    fn versions(&mut self) -> Result<&BTreeSet<Version>>;
     
     fn set_current_version(&mut self, version: Version);
     
@@ -559,12 +559,12 @@ impl Paths
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Versions
 {
-    versions: Arc<BTreeSet<Version>>,
+    versions: BTreeSet<Version>,
 }
 
 impl Versions
 {
-    pub fn new(versions: Arc<BTreeSet<Version>>) -> Self
+    pub fn new(versions: BTreeSet<Version>) -> Self
     { Versions { versions, } }
     
     pub fn read(r: &mut dyn Read) -> Result<Self>
@@ -861,7 +861,7 @@ pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -
     dir
 }
 
-pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<Arc<BTreeSet<Version>>>
+pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<BTreeSet<Version>>
     where F: FnOnce() -> result::Result<curl::easy::Easy, curl::Error>,
         G: FnOnce(&[u8]) -> Result<Versions>
 {
@@ -1204,7 +1204,7 @@ impl Source for CustomSrc
     fn update(&mut self) -> Result<()>
     { Ok(()) }
     
-    fn versions(&mut self) -> Result<&Arc<BTreeSet<Version>>>
+    fn versions(&mut self) -> Result<&BTreeSet<Version>>
     { Ok(&self.versions) }
     
     fn set_current_version(&mut self, version: Version)
