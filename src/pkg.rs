@@ -802,15 +802,19 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url:
         Ok(()) => (),
         Err(err) => return Err(Error::Io(err)),
     }
-    let (part_file_name, file_name) = if url.ends_with(".zip") {
+    let first_url_part = match url.split_once('?') {
+        Some((tmp_first_url_part, _)) => tmp_first_url_part,
+        None => url,
+    };
+    let (part_file_name, file_name) = if first_url_part.ends_with(".zip") {
         ("file.zip.part", "file.zip")
-    } else if url.ends_with(".tar.gz") {
+    } else if first_url_part.ends_with(".tar.gz") {
         ("file.tar.gz.part", "file.tar.gz")
-    } else if url.ends_with(".tar.bz2") {
+    } else if first_url_part.ends_with(".tar.bz2") {
         ("file.tar.bz2.part", "file.tar.bz2")
-    } else if url.ends_with(".tar.xz") {
+    } else if first_url_part.ends_with(".tar.xz") {
         ("file.tar.xz.part", "file.tar.xz")
-    } else if url.ends_with(".tar") {
+    } else if first_url_part.ends_with(".tar") {
         ("file.tar.part", "file.tar")
     } else {
         ("file.part", "file")
