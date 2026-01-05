@@ -15,7 +15,6 @@ use std::fs::File;
 use std::fs::copy;
 use std::fs::create_dir_all;
 use std::fs::remove_dir;
-use std::fs::remove_file;
 use std::fs::rename;
 use std::io;
 use std::io::BufReader;
@@ -962,6 +961,29 @@ pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -
     dir
 }
 
+fn res_remove_and_rename_for_updated_pkg_versions(new_part_path: &Path, new_path: &Path, path: &Path) -> io::Result<()>
+{
+    recursively_remove(new_path, true)?;
+    rename(new_part_path, new_path)?;
+    recursively_remove(path, true)?;
+    rename(new_path, path)?;
+    Ok(())
+}
+
+fn res_remove_and_rename_for_unupdated_pkg_versions(new_part_path: &Path, new_path: &Path, path: &Path) -> io::Result<()>
+{
+    recursively_remove(new_part_path, true)?;
+    match fs::metadata(new_path) {
+        Ok(_) => {
+            recursively_remove(path, true)?;
+            rename(new_path, path)?;
+            Ok(())
+        },
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(()), 
+        Err(err) => Err(err),
+    }
+}
+
 pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<BTreeSet<Version>>
     where F: FnOnce() -> result::Result<curl::easy::Easy, curl::Error>,
         G: FnOnce(&[u8]) -> Result<BTreeSet<Version>>
@@ -990,9 +1012,8 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
     };
     if can_update {
         printer.print_updating_pkg_versions(name, false);
-        match remove_file(new_part_versions_path_buf.as_path()) {
+        match recursively_remove(new_part_versions_path_buf.as_path(), true) {
             Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => return Err(Error::Io(err)),
         }
         let new_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
@@ -1022,43 +1043,14 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
             let versions = Versions::new(g(new_data_g.as_slice())?);
             versions.save(new_part_versions_path_buf.as_path())?;
         }
-        match remove_file(new_versions_path_buf.as_path()) {
-            Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
-        match rename(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path()) {
-            Ok(()) => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
-        match remove_file(versions_path_buf.as_path()) {
-            Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
-        match rename(new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
+        match res_remove_and_rename_for_updated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
         printer.print_updating_pkg_versions(name, true);
     } else {
-        match remove_file(new_part_versions_path_buf.as_path()) {
+        match res_remove_and_rename_for_unupdated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
             Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
-        match fs::metadata(new_versions_path_buf.as_path()) {
-            Ok(_) => {
-                match remove_file(versions_path_buf.as_path()) {
-                    Ok(()) => (),
-                    Err(err) if err.kind() == ErrorKind::NotFound => (),
-                    Err(err) => return Err(Error::Io(err)),
-                }
-                match rename(new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
-                    Ok(()) => (),
-                    Err(err) => return Err(Error::Io(err)),
-                }
-            },
             Err(err) => return Err(Error::Io(err)),
         }
     }
@@ -1127,9 +1119,8 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url:
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
             printer.print_downloading_pkg_file(name, false);
-            match remove_file(part_file_path_buf.as_path()) {
+            match recursively_remove(part_file_path_buf.as_path(), true) {
                 Ok(()) => (),
-                Err(err) if err.kind() == ErrorKind::NotFound => (),
                 Err(err) => return Err(Error::Io(err)),
             }
             match res_download_pkg_file(name, url, part_file_path_buf.as_path(), printer) {
@@ -2312,27 +2303,32 @@ impl PkgManager
         }
     }
     
+    fn check_dir(path: &Path, err_msg: &str) -> Result<()>
+    {
+        match fs::metadata(path) {
+            Ok(metadata) if metadata.is_dir() => Ok(()),
+            Ok(_) => Err(Error::Pkg(String::from(err_msg))),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    fn check_dir_for_pkg(path: &Path, name: &PkgName, err_msg: &str) -> Result<()>
+    {
+        match fs::metadata(path) {
+            Ok(metadata) if metadata.is_dir() => Ok(()),
+            Ok(_) => Err(Error::PkgName(name.clone(), String::from(err_msg))),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+    
     fn search_path_conflicts(&self) -> Result<()>
     {
         self.printer.print_searching_path_conflicts(false);
-        match fs::metadata(self.bin_dir.as_path()) {
-            Ok(metadata) if metadata.is_dir() => (),
-            Ok(_) => return Err(Error::Pkg(String::from("bin isn't directory"))),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
-        match fs::metadata(self.lib_dir.as_path()) {
-            Ok(metadata) if metadata.is_dir() => (),
-            Ok(_) => return Err(Error::Pkg(String::from("lib isn't directory"))),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
-        match fs::metadata(self.doc_dir.as_path()) {
-            Ok(metadata) if metadata.is_dir() => (),
-            Ok(_) => return Err(Error::Pkg(String::from("doc isn't directory"))),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(Error::Io(err)),
-        }
+        Self::check_dir(self.bin_dir.as_path(), "bin isn't directory")?;
+        Self::check_dir(self.lib_dir.as_path(), "lib isn't directory")?;
+        Self::check_dir(self.doc_dir.as_path(), "doc isn't directory")?;
         let new_versions = self.pkg_versions_for_bucket("new_versions")?;
         let mut ignored_bin_paths: HashSet<PathBuf> = HashSet::new();
         let mut ignored_lib_paths: HashSet<PathBuf> = HashSet::new();
@@ -2355,12 +2351,7 @@ impl PkgManager
                 src.set_current_version(new_version.clone());
                 let mut pkg_bin_dir = PathBuf::from(src.dir()?);
                 pkg_bin_dir.push("bin");
-                match fs::metadata(pkg_bin_dir.as_path()) {
-                    Ok(metadata) if metadata.is_dir() => (),
-                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("bin in package isn't directory"))),
-                    Err(err) if err.kind() == ErrorKind::NotFound => (),
-                    Err(err) => return Err(Error::Io(err)),
-                }
+                Self::check_dir_for_pkg(pkg_bin_dir.as_path(), name, "bin in package isn't directory")?;
                 let bin_paths = match conflicts(pkg_bin_dir, self.bin_dir.as_path(), &ignored_bin_paths, Some(1)) {
                     Ok((conflict_paths, paths)) => {
                         if conflict_paths.is_empty() {
@@ -2373,12 +2364,7 @@ impl PkgManager
                 };
                 let mut pkg_lib_dir = PathBuf::from(src.dir()?);
                 pkg_lib_dir.push("lib");
-                match fs::metadata(pkg_lib_dir.as_path()) {
-                    Ok(metadata) if metadata.is_dir() => (),
-                    Ok(_) => return Err(Error::PkgName(name.clone(), String::from("lib in package isn't directory"))),
-                    Err(err) if err.kind() == ErrorKind::NotFound => (),
-                    Err(err) => return Err(Error::Io(err)),
-                }
+                Self::check_dir_for_pkg(pkg_lib_dir.as_path(), name, "lib in package isn't directory")?;
                 let lib_paths = match conflicts(pkg_lib_dir, self.lib_dir.as_path(), &ignored_lib_paths, Some(2)) {
                     Ok((conflict_paths, paths)) => {
                         if conflict_paths.is_empty() {
@@ -2585,25 +2571,13 @@ impl PkgManager
         recursively_remove_paths_in_dir(doc_dir, lib_paths.as_slice(), true)?;
         let mut manifest_file = self.pkg_info_dir(name);
         manifest_file.push("manifest.toml");
-        match remove_file(manifest_file) {
-            Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(err),
-        }
+        recursively_remove(manifest_file, true)?;
         let mut dependents_file = self.pkg_info_dir(name);
         dependents_file.push("depentents.toml");
-        match remove_file(dependents_file) {
-            Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(err),
-        }
+        recursively_remove(dependents_file, true)?;
         let mut paths_file = self.pkg_info_dir(name);
         paths_file.push("paths.toml");
-        match remove_file(paths_file) {
-            Ok(()) => (),
-            Err(err) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => return Err(err),
-        }
+        recursively_remove(paths_file, true)?;
         let mut tmp_suffix_path_buf = name.to_path_buf();
         tmp_suffix_path_buf.pop();
         while tmp_suffix_path_buf != PathBuf::from("") {
