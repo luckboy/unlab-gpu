@@ -1588,6 +1588,9 @@ impl PkgManager
         self.locks = load_versions_or_empty("Unlab.lock")?;
         Ok(())
     }
+
+    pub fn save_locks(&self) -> Result<()>
+    { save_versions("Unlab.lock", &self.locks) }
     
     pub fn save_locks_from_pkg_versions(&self) -> Result<()>
     {
