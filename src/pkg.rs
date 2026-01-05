@@ -1591,11 +1591,11 @@ impl PkgManager
     
     pub fn save_locks_from_pkg_versions(&self) -> Result<()>
     {
-        let versions = self.pkg_versions_for_bucket("versions")?;
         let mut locks: HashMap<PkgName, Version> = HashMap::new();
-        for (name, version) in versions {
-            locks.insert(name.clone(), version.clone());
-        }
+        self.pkg_versions_for_bucket_in("versions", |name, version| {
+                locks.insert(name.clone(), version.clone());
+                Ok(())
+        })?;
         save_versions("Unlab.lock", &locks)
     }
     
