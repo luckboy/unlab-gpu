@@ -964,7 +964,7 @@ pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -
 
 pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<BTreeSet<Version>>
     where F: FnOnce() -> result::Result<curl::easy::Easy, curl::Error>,
-        G: FnOnce(&[u8]) -> Result<Versions>
+        G: FnOnce(&[u8]) -> Result<BTreeSet<Version>>
 {
     let path_buf = pkg_index_dir(home_dir.as_ref(), name);
     match create_dir_all(path_buf.as_path()) {
@@ -1019,7 +1019,8 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
         }
         {
             let new_data_g = mutex_lock(&new_data)?;
-            g(new_data_g.as_slice())?.save(new_part_versions_path_buf.as_path())?;
+            let versions = Versions::new(g(new_data_g.as_slice())?);
+            versions.save(new_part_versions_path_buf.as_path())?;
         }
         match remove_file(new_versions_path_buf.as_path()) {
             Ok(()) => (),
