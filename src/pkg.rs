@@ -2380,14 +2380,14 @@ impl PkgManager
                 for bin_path in &bin_paths {
                     match bin_path.to_str() {
                         Some(s) => bin_paths2.push(String::from(s)),
-                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid utf-8 character"))),
+                        None => return Err(Error::PkgName(name.clone(), String::from("bin path contains invalid UTF-8 character"))),
                     }
                 }
                 let mut lib_paths2: Vec<String> = Vec::new();
                 for lib_path in &lib_paths {
                     match lib_path.to_str() {
                         Some(s) => lib_paths2.push(String::from(s)),
-                        None => return Err(Error::PkgName(name.clone(), String::from("path contains invalid utf-8 character"))),
+                        None => return Err(Error::PkgName(name.clone(), String::from("lib path contains invalid UTF-8 character"))),
                     }
                 }
                 let paths = Paths::new(bin_paths2, lib_paths2);
