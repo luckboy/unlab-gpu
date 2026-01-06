@@ -1016,8 +1016,8 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
-        let new_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
-        let new_data2 = new_data.clone();
+        let data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(Vec::new()));
+        let data2 = data.clone();
         let mut easy = match f() {
             Ok(tmp_easy) => tmp_easy,
             Err(err) => return Err(Error::Curl(err)),
@@ -1026,10 +1026,10 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
             Ok(()) => (),
             Err(err) => return Err(Error::Curl(err)),
         }
-        match easy.write_function(move |data| {
-                let mut new_data2_g = new_data2.lock().unwrap();
-                new_data2_g.extend_from_slice(data);
-                Ok(data.len())
+        match easy.write_function(move |buf| {
+                let mut data2_g = data2.lock().unwrap();
+                data2_g.extend_from_slice(buf);
+                Ok(buf.len())
         }) {
             Ok(()) => (),
             Err(err) => return Err(Error::Curl(err)),
@@ -1039,9 +1039,9 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
             Err(err) => return Err(Error::Curl(err)),
         }
         {
-            let mut new_data_g = mutex_lock(&new_data)?;
-            let versions = Versions::new(g(new_data_g.as_slice())?);
-            new_data_g.clear();
+            let mut data_g = mutex_lock(&data)?;
+            let versions = Versions::new(g(data_g.as_slice())?);
+            data_g.clear();
             versions.save(new_part_versions_path_buf.as_path())?;
         }
         match res_remove_and_rename_for_updated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
@@ -1073,17 +1073,17 @@ fn res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, print
     })?;
     let part_file_path_buf = PathBuf::from(part_file_path);
     let printer2 = printer.clone();
-    easy.write_function(move |data| {
+    easy.write_function(move |buf| {
             match File::options().create(true).append(true).open(part_file_path_buf.as_path()) {
                 Ok(mut file) => {
-                    match file.write_all(data) {
+                    match file.write_all(buf) {
                         Ok(()) => (),
                         Err(err) => printer2.eprint_error(&Error::Io(err)),
                     }
                 },
                 Err(err) => printer2.eprint_error(&Error::Io(err)),
             }
-            Ok(data.len())
+            Ok(buf.len())
     })?;
     easy.perform()
 }
@@ -2376,21 +2376,21 @@ impl PkgManager
                     },
                     Err(err) => return Err(Error::Io(err)),
                 };
-                let mut bin_paths2: Vec<String> = Vec::new();
+                let mut bin: Vec<String> = Vec::new();
                 for bin_path in &bin_paths {
                     match bin_path.to_str() {
-                        Some(s) => bin_paths2.push(String::from(s)),
+                        Some(s) => bin.push(String::from(s)),
                         None => return Err(Error::PkgName(name.clone(), String::from("bin path contains invalid UTF-8 character"))),
                     }
                 }
-                let mut lib_paths2: Vec<String> = Vec::new();
+                let mut lib: Vec<String> = Vec::new();
                 for lib_path in &lib_paths {
                     match lib_path.to_str() {
-                        Some(s) => lib_paths2.push(String::from(s)),
+                        Some(s) => lib.push(String::from(s)),
                         None => return Err(Error::PkgName(name.clone(), String::from("lib path contains invalid UTF-8 character"))),
                     }
                 }
-                let paths = Paths::new(bin_paths2, lib_paths2);
+                let paths = Paths::new(bin, lib);
                 let mut paths_file = self.pkg_new_part_info_dir(name);
                 paths_file.push("paths.toml");
                 paths.save(paths_file)?;
