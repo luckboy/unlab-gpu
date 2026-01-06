@@ -999,7 +999,7 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
     new_versions_path_buf.push("versions.toml.new");
     let mut versions_path_buf = path_buf.clone();
     versions_path_buf.push("versions.toml");
-    let can_update = match fs::metadata(versions_path_buf.as_path()) {
+    let is_to_update = match fs::metadata(versions_path_buf.as_path()) {
         Ok(_) => is_update,
         Err(err) if err.kind() == ErrorKind::NotFound => {
             match fs::metadata(new_versions_path_buf.as_path()) {
@@ -1010,7 +1010,7 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
         },
         Err(err) => return Err(Error::Io(err)),
     };
-    if can_update {
+    if is_to_update {
         printer.print_updating_pkg_versions(name, false);
         match recursively_remove(new_part_versions_path_buf.as_path(), true) {
             Ok(()) => (),
