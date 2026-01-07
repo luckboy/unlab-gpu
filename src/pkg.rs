@@ -1376,9 +1376,7 @@ impl Pkg
             Ok(_) => {
                 copy(src_dependents_file, dst_dependents_file)?;
             },
-            Err(err) if err.kind() == ErrorKind::NotFound => {
-                let _file = File::create(dst_dependents_file)?;
-            }
+            Err(err) if err.kind() == ErrorKind::NotFound => fs::write(dst_dependents_file, "\n")?,
             Err(err) => return Err(err),
         }
         Ok(())
