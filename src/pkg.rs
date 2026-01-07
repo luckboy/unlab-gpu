@@ -2270,7 +2270,7 @@ impl PkgManager
                     let versions = src.versions()?;
                     let dependents = pkg.dependents()?;
                     for dep_version_req in dependents.values() {
-                        let mut version_reqs: Vec<VersionReq> = vec![dep_version_req.clone()];
+                        let mut version_reqs = vec![dep_version_req.clone()];
                         match self.constraints.get(name) {
                             Some(constraint) => version_reqs.push(constraint.clone()),
                             None => (),
