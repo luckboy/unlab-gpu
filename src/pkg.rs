@@ -2068,8 +2068,17 @@ impl PkgManager
         Paths::load_opt(paths_file)
     }    
     
-    fn max_pkg_version(versions: &BTreeSet<Version>, version_reqs: &[VersionReq], locked_version: Option<&Version>) -> Option<Version>
+    fn max_pkg_version(versions: &BTreeSet<Version>, version_req: Option<&VersionReq>, constraint: Option<&VersionReq>, locked_version: Option<&Version>) -> Option<Version>
     {
+        let mut version_reqs: Vec<&VersionReq> = Vec::new();
+        match version_req {
+            Some(version_req) => version_reqs.push(version_req),
+            None => (),
+        }
+        match constraint {
+            Some(constraint) => version_reqs.push(constraint),
+            None => (),
+        }
         let mut max_version: Option<Version> = None;
         for version in versions {
             if version_reqs.iter().all(|r| r.matches(version)) {
@@ -2119,19 +2128,31 @@ impl PkgManager
                                     src.update()?;
                                 }
                                 let versions = src.versions()?;
-                                let mut version_reqs = if old_version.is_some() {
+                                let old_dependants = if old_version.is_some() {
                                     let mut old_dependents_file = data.pkg_info_dir(name);
                                     old_dependents_file.push("dependents.toml");
-                                    let old_dependants = load_version_reqs(old_dependents_file)?;
-                                    old_dependants.values().map(|r| r.clone()).collect::<Vec<VersionReq>>()
+                                    load_version_reqs(old_dependents_file)?
                                 } else {
-                                    Vec::new()
+                                    HashMap::new()
                                 };
-                                match data.constraints.get(name) {
-                                    Some(constraint) => version_reqs.push(constraint.clone()),
-                                    None => (),
+                                let mut tmp_new_version: Option<Version> = None; 
+                                for old_version_req in old_dependants.values() {
+                                    let max_version = Self::max_pkg_version(&versions, Some(old_version_req), data.constraints.get(name), data.locks.get(name));
+                                    match &max_version {
+                                        Some(max_version) => {
+                                            if tmp_new_version.as_ref().map(|tnv| tnv == max_version).unwrap_or(true) {
+                                                tmp_new_version = Some(max_version.clone());
+                                            } else {
+                                                return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
+                                            }
+                                        },
+                                        None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
+                                    }
                                 }
-                                Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name))
+                                match tmp_new_version {
+                                    Some(tmp_new_version) => Some(tmp_new_version),
+                                    None => Self::max_pkg_version(&versions, None, data.constraints.get(name), data.locks.get(name)),
+                                }
                             },
                         };
                         match &new_version {
@@ -2161,24 +2182,19 @@ impl PkgManager
                                 dep_src.update()?;
                             }
                             let versions = dep_src.versions()?;
-                            let mut version_reqs = vec![dep_version_req.clone()];
-                            match data.constraints.get(name) {
-                                Some(constraint) => version_reqs.push(constraint.clone()),
-                                None => (),
-                            }
-                            let dep_new_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), data.locks.get(name));
-                            match &dep_new_version {
-                                Some(dep_new_version) => {
+                            let max_version = Self::max_pkg_version(&versions, Some(dep_version_req), data.constraints.get(dep_name), data.locks.get(dep_name));
+                            match &max_version {
+                                Some(max_version) => {
                                     let dep_new_version_from_bucket = data.pkg_version_for_bucket("new_versions", dep_name)?;
-                                    if dep_new_version_from_bucket.as_ref().map(|dnvfb| dnvfb == dep_new_version).unwrap_or(true) {
+                                    if dep_new_version_from_bucket.as_ref().map(|dnvfb| dnvfb == max_version).unwrap_or(true) {
                                         if dep_new_version_from_bucket.is_none() {
-                                            data.add_pkg_version_for_bucket("new_versions", dep_name, dep_new_version)?;
+                                            data.add_pkg_version_for_bucket("new_versions", dep_name, max_version)?;
                                         }
                                     } else {
                                         return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
                                     }
                                 },
-                                None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
+                                None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
                             }
                         }
                         Ok(deps.keys().map(|dn| dn.clone()).collect())
@@ -2269,20 +2285,15 @@ impl PkgManager
                     let mut src = self.create_source(name)?;
                     let versions = src.versions()?;
                     let dependents = pkg.dependents()?;
-                    for dep_version_req in dependents.values() {
-                        let mut version_reqs = vec![dep_version_req.clone()];
-                        match self.constraints.get(name) {
-                            Some(constraint) => version_reqs.push(constraint.clone()),
-                            None => (),
-                        }
-                        let max_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), self.locks.get(name));
-                        match &max_version { 
+                    for version_req in dependents.values() {
+                        let max_version = Self::max_pkg_version(&versions, Some(version_req), self.constraints.get(name), self.locks.get(name));
+                        match &max_version {
                             Some(max_version) => {
-                                if max_version != new_version {
+                                if new_version != max_version {
                                     return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
                                 }
                             },
-                            None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
+                            None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
                         }
                     }
                 },
