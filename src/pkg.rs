@@ -2099,7 +2099,7 @@ impl PkgManager
         Ok(())
     }
 
-    fn prepare_new_part_infos_for_pre_install_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_part_infos_for_pre_install_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool, is_version_change: bool) -> Result<()>
     {
         if visiteds.contains(name) {
             return Ok(());
@@ -2113,7 +2113,7 @@ impl PkgManager
                         let new_version_from_bucket = data.pkg_version_for_bucket("new_versions", name)?;
                         let version = new_version_from_bucket.clone().or(old_version.clone());
                         let new_version = match &version {
-                            Some(tmp_version) if !is_update || new_version_from_bucket.is_some() => Some(tmp_version.clone()),
+                            Some(tmp_version) if !(is_update || is_version_change) || new_version_from_bucket.is_some() => Some(tmp_version.clone()),
                             _ => {
                                 if is_update {
                                     src.update()?;
@@ -2246,9 +2246,9 @@ impl PkgManager
         }
     }
 
-    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool, is_version_change: bool) -> Result<()>
     {
-        let res = self.prepare_new_part_infos_for_pre_install_without_reset(name, visiteds, is_update, is_force);
+        let res = self.prepare_new_part_infos_for_pre_install_without_reset(name, visiteds, is_update, is_force, is_version_change);
         self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
@@ -2657,12 +2657,12 @@ impl PkgManager
         self.remove_pkg_versions_for_buckets("pkgs_to_removal", "versions")
     }
     
-    pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
+    pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_version_change: bool, is_doc: bool) -> Result<()>
     {
         self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         for name in names {
-            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
+            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force, is_version_change)?;
         }
         self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
         self.printer.print_installing();
@@ -2670,13 +2670,13 @@ impl PkgManager
         Ok(())
     }
 
-    pub fn install_all(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
+    pub fn install_all(&mut self, is_update: bool, is_force: bool, is_version_change: bool, is_doc: bool) -> Result<()>
     {
         self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         let versions = self.pkg_versions_for_bucket("versions")?;
         for (name, _) in &versions {
-            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
+            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force, is_version_change)?;
         }
         self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
         self.printer.print_installing();
@@ -2694,7 +2694,7 @@ impl PkgManager
         self.constraints = manifest.constraints.map(|cs| cs.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.sources = manifest.sources.map(|ss| ss.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.pkgs.insert(start_name.clone(), current_pkg);
-        self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force)?;
+        self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force, false)?;
         self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
         self.add_pkg_names_for_buckets_and_autoremove("pkgs_to_remove", "new_versions")?;
         self.printer.print_installing();
