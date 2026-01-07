@@ -2156,7 +2156,9 @@ impl PkgManager
                                     match &max_version {
                                         Some(max_version) => {
                                             if tmp_new_version.as_ref().map(|tnv| tnv == max_version).unwrap_or(true) {
-                                                tmp_new_version = Some(max_version.clone());
+                                                if tmp_new_version.is_none() {
+                                                    tmp_new_version = Some(max_version.clone());
+                                                }
                                             } else {
                                                 return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
                                             }
