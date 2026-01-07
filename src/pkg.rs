@@ -1772,6 +1772,20 @@ impl PkgManager
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
+
+    fn remove_bucket(&self, bucket_name: &str) -> Result<()>
+    {
+        match self.pkg_db.tx(false) {
+            Ok(tx) => {
+                match tx.delete_bucket(bucket_name) {
+                    Ok(()) => Ok(()),
+                    Err(jammdb::Error::BucketMissing) => Ok(()),
+                    Err(err) => Err(Error::Jammdb(Box::new(err))),
+                }
+            },
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
+        }
+    }
     
     fn pkg_versions_for_bucket(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
     {
@@ -2097,9 +2111,10 @@ impl PkgManager
         Ok(())
     }
     
-    fn remove_dirs_after_error(&self) -> Result<()>
+    fn clean_after_error(&self) -> Result<()>
     {
         self.printer.print_cleaning_after_error(false);
+        self.remove_bucket("new_versions")?;
         match self.res_remove_dirs_after_error() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
@@ -2269,7 +2284,7 @@ impl PkgManager
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
-                self.remove_dirs_after_error()?;
+                self.clean_after_error()?;
                 Err(err)
             },
         }
@@ -2489,7 +2504,7 @@ impl PkgManager
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
-                self.remove_dirs_after_error()?;
+                self.clean_after_error()?;
                 Err(err)
             },
         }
