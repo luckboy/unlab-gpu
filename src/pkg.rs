@@ -2175,7 +2175,7 @@ impl PkgManager
                                             data.add_pkg_version_for_bucket("new_versions", dep_name, dep_new_version)?;
                                         }
                                     } else {
-                                        return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
+                                        return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
                                     }
                                 },
                                 None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
@@ -2269,19 +2269,21 @@ impl PkgManager
                     let mut src = self.create_source(name)?;
                     let versions = src.versions()?;
                     let dependents = pkg.dependents()?;
-                    let mut version_reqs: Vec<VersionReq> = dependents.values().map(|r| r.clone()).collect();
-                    match self.constraints.get(name) {
-                        Some(constraint) => version_reqs.push(constraint.clone()),
-                        None => (),
-                    }
-                    let max_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), self.locks.get(name));
-                    match &max_version { 
-                        Some(max_version) => {
-                            if max_version != new_version {
-                                return Err(Error::PkgName(name.clone(), String::from("version requirements of dependents are contradictory")));
-                            }
-                        },
-                        None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
+                    for dep_version_req in dependents.values() {
+                        let mut version_reqs: Vec<VersionReq> = vec![dep_version_req.clone()];
+                        match self.constraints.get(name) {
+                            Some(constraint) => version_reqs.push(constraint.clone()),
+                            None => (),
+                        }
+                        let max_version = Self::max_pkg_version(&versions, version_reqs.as_slice(), self.locks.get(name));
+                        match &max_version { 
+                            Some(max_version) => {
+                                if max_version != new_version {
+                                    return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
+                                }
+                            },
+                            None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirements"))),
+                        }
                     }
                 },
                 None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
