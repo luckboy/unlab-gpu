@@ -79,6 +79,8 @@ pub trait Print
     fn print_cleaning_after_install(&self, is_done: bool);
 
     fn print_cleaning_after_error(&self, is_done: bool);
+
+    fn print_cleaning_after_intr(&self, is_done: bool);
     
     fn print_nl_for_error(&self);
     
@@ -139,6 +141,9 @@ impl Print for EmptyPrinter
     {}
 
     fn print_cleaning_after_error(&self, _is_done: bool)
+    {}
+
+    fn print_cleaning_after_intr(&self, _is_done: bool)
     {}
     
     fn print_nl_for_error(&self)
@@ -312,6 +317,18 @@ impl Print for StdPrinter
         } else {
             self.print_nl_for_error();
             print!("Cleaning after error ...");
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_cleaning_after_intr(&self, is_done: bool)
+    {
+        if is_done {
+            println!(" done");
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Cleaning after interruption ...");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -2104,7 +2121,7 @@ impl PkgManager
         max_version
     }
     
-    fn res_remove_dirs_after_error(&self) -> io::Result<()>
+    fn res_remove_dirs(&self) -> io::Result<()>
     {
         recursively_remove(self.work_tmp_dir(), true)?;
         recursively_remove(self.new_part_info_dir(), true)?;
@@ -2115,7 +2132,7 @@ impl PkgManager
     {
         self.printer.print_cleaning_after_error(false);
         self.remove_bucket("new_versions")?;
-        match self.res_remove_dirs_after_error() {
+        match self.res_remove_dirs() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -2743,6 +2760,18 @@ impl PkgManager
     
     pub fn check_last_op(&self, are_deps: bool) -> Result<()>
     {
+        let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
+            Ok(_) => true,
+            Err(err) if err.kind() == ErrorKind::NotFound => false,
+            Err(err) => return Err(Error::Io(err)),
+        };
+        if is_new_part_info_dir {
+            if are_deps {
+                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean-intr-deps command to clean.")));
+            } else {
+                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean-intr command to clean.")));
+            }
+        }
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
             Err(err) if err.kind() == ErrorKind::NotFound => false,
@@ -2780,6 +2809,26 @@ impl PkgManager
         if self.has_bucket("pkgs_to_remove")? {
             self.printer.print_removing();
             self.remove_pkgs()?;
+        }
+        Ok(())
+    }
+
+    pub fn clean_after_intr(&self) -> Result<()>
+    {
+        let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
+            Ok(_) => true,
+            Err(err) if err.kind() == ErrorKind::NotFound => false,
+            Err(err) => return Err(Error::Io(err)),
+        };
+        if is_new_part_info_dir {
+            self.printer.print_cleaning_after_intr(false);
+            self.remove_bucket("new_versions")?;
+            self.remove_bucket("pkgs_to_remove")?;
+            match self.res_remove_dirs() {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
+            self.printer.print_cleaning_after_intr(true);
         }
         Ok(())
     }
