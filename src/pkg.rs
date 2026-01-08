@@ -2788,7 +2788,7 @@ impl PkgManager
         Ok(())
     }
 
-    pub fn cont(&self, is_doc: bool) -> Result<()>
+    pub fn cont(&self, is_doc: bool, are_deps: bool) -> Result<()>
     {
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
@@ -2796,6 +2796,9 @@ impl PkgManager
             Err(err) => return Err(Error::Io(err)),
         };
         if is_new_info_dir && self.has_bucket("new_versions")? {
+            if are_deps && !self.has_bucket("pkgs_to_remove")? {
+                self.add_pkg_names_for_buckets_and_autoremove("pkgs_to_remove", "new_versions")?;
+            }
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
         } else if is_new_info_dir {
