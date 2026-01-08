@@ -2121,7 +2121,7 @@ impl PkgManager
         max_version
     }
     
-    fn res_remove_dirs(&self) -> io::Result<()>
+    fn res_remove_dirs_for_clean(&self) -> io::Result<()>
     {
         recursively_remove(self.work_tmp_dir(), true)?;
         recursively_remove(self.new_part_info_dir(), true)?;
@@ -2133,7 +2133,7 @@ impl PkgManager
         self.printer.print_cleaning_after_error(false);
         self.remove_bucket("new_versions")?;
         self.remove_bucket("pkgs_to_remove")?;
-        match self.res_remove_dirs() {
+        match self.res_remove_dirs_for_clean() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -2825,7 +2825,7 @@ impl PkgManager
             self.printer.print_cleaning_after_intr(false);
             self.remove_bucket("new_versions")?;
             self.remove_bucket("pkgs_to_remove")?;
-            match self.res_remove_dirs() {
+            match self.res_remove_dirs_for_clean() {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
