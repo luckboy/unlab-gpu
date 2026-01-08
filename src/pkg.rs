@@ -2132,6 +2132,7 @@ impl PkgManager
     {
         self.printer.print_cleaning_after_error(false);
         self.remove_bucket("new_versions")?;
+        self.remove_bucket("pkgs_to_remove")?;
         match self.res_remove_dirs() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
