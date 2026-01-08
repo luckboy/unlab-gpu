@@ -1792,7 +1792,7 @@ impl PkgManager
 
     fn remove_bucket(&self, bucket_name: &str) -> Result<()>
     {
-        match self.pkg_db.tx(false) {
+        match self.pkg_db.tx(true) {
             Ok(tx) => {
                 match tx.delete_bucket(bucket_name) {
                     Ok(()) => Ok(()),
