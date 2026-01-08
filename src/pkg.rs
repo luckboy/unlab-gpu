@@ -1057,8 +1057,9 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
         }
         {
             let mut data_g = mutex_lock(&data)?;
-            let versions = Versions::new(g(data_g.as_slice())?);
+            let res = g(data_g.as_slice());
             data_g.clear();
+            let versions = Versions::new(res?);
             versions.save(new_part_versions_path_buf.as_path())?;
         }
         match res_remove_and_rename_for_updated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
