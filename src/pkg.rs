@@ -80,7 +80,7 @@ pub trait Print
 
     fn print_cleaning_after_error(&self, is_done: bool);
 
-    fn print_cleaning_after_intr(&self, is_done: bool);
+    fn print_cleaning(&self, is_done: bool);
     
     fn print_nl_for_error(&self);
     
@@ -143,7 +143,7 @@ impl Print for EmptyPrinter
     fn print_cleaning_after_error(&self, _is_done: bool)
     {}
 
-    fn print_cleaning_after_intr(&self, _is_done: bool)
+    fn print_cleaning(&self, _is_done: bool)
     {}
     
     fn print_nl_for_error(&self)
@@ -322,13 +322,13 @@ impl Print for StdPrinter
         }
     }
 
-    fn print_cleaning_after_intr(&self, is_done: bool)
+    fn print_cleaning(&self, is_done: bool)
     {
         if is_done {
             println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
-            print!("Cleaning after interruption ...");
+            print!("Cleaning ...");
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -2768,9 +2768,9 @@ impl PkgManager
         };
         if is_new_part_info_dir {
             if are_deps {
-                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean-intr-deps command to clean.")));
+                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean-deps command to clean.")));
             } else {
-                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean-intr command to clean.")));
+                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean command to clean.")));
             }
         }
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
@@ -2814,7 +2814,7 @@ impl PkgManager
         Ok(())
     }
 
-    pub fn clean_after_intr(&self) -> Result<()>
+    pub fn clean(&self) -> Result<()>
     {
         let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
             Ok(_) => true,
@@ -2822,14 +2822,14 @@ impl PkgManager
             Err(err) => return Err(Error::Io(err)),
         };
         if is_new_part_info_dir {
-            self.printer.print_cleaning_after_intr(false);
+            self.printer.print_cleaning(false);
             self.remove_bucket("new_versions")?;
             self.remove_bucket("pkgs_to_remove")?;
             match self.res_remove_dirs_for_clean() {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
-            self.printer.print_cleaning_after_intr(true);
+            self.printer.print_cleaning(true);
         }
         Ok(())
     }
