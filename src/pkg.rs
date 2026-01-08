@@ -2226,10 +2226,10 @@ impl PkgManager
                                             data.add_pkg_version_for_bucket("new_versions", dep_name, max_version)?;
                                         }
                                     } else {
-                                        return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
+                                        return Err(Error::PkgName(dep_name.clone(), String::from("version requirements indicate two different package versions")));
                                     }
                                 },
-                                None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
+                                None => return Err(Error::PkgName(dep_name.clone(), String::from("each package version isn't matched to version requirement"))),
                             }
                         }
                         Ok(deps.keys().map(|dn| dn.clone()).collect())
