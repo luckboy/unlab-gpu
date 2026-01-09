@@ -1966,7 +1966,7 @@ impl PkgManager
         }
     }
 
-    fn add_pkg_names_for_bucket_and_remove(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
+    fn add_pkg_names_for_bucket_and_removing(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -1997,7 +1997,7 @@ impl PkgManager
         }
     }    
 
-    fn add_pkg_names_for_buckets_and_autoremove(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
+    fn add_pkg_names_for_buckets_and_autoremoving(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
     {
         match self.pkg_db.tx(true) {
             Ok(tx) => {
@@ -2122,7 +2122,7 @@ impl PkgManager
         max_version
     }
     
-    fn res_remove_dirs_for_clean(&self) -> io::Result<()>
+    fn res_remove_dirs_for_cleaning(&self) -> io::Result<()>
     {
         recursively_remove(self.work_tmp_dir(), true)?;
         recursively_remove(self.new_part_info_dir(), true)?;
@@ -2134,7 +2134,7 @@ impl PkgManager
         self.printer.print_cleaning_after_error(false);
         self.remove_bucket("new_versions")?;
         self.remove_bucket("pkgs_to_remove")?;
-        match self.res_remove_dirs_for_clean() {
+        match self.res_remove_dirs_for_cleaning() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -2142,7 +2142,7 @@ impl PkgManager
         Ok(())
     }
 
-    fn prepare_new_part_infos_for_pre_install_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_part_infos_for_pre_installing_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
         if visiteds.contains(name) {
             return Ok(());
@@ -2297,9 +2297,9 @@ impl PkgManager
         }
     }
 
-    fn prepare_new_part_infos_for_pre_install(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_part_infos_for_pre_installing(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
-        let res = self.prepare_new_part_infos_for_pre_install_without_reset(name, visiteds, is_update, is_force);
+        let res = self.prepare_new_part_infos_for_pre_installing_without_reset(name, visiteds, is_update, is_force);
         self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
@@ -2504,7 +2504,7 @@ impl PkgManager
         Ok(())
     }
     
-    fn check_new_part_infos_and_generate_docs_for_pre_install_without_reset(&self, is_doc: bool) -> Result<()>
+    fn check_new_part_infos_and_generate_docs_for_pre_installing_without_reset(&self, is_doc: bool) -> Result<()>
     {
         self.check_dependent_version_reqs()?;
         self.search_path_conflicts()?;
@@ -2517,9 +2517,9 @@ impl PkgManager
         }
     }
 
-    fn check_new_part_infos_and_generate_docs_for_pre_install(&mut self, is_doc: bool) -> Result<()>
+    fn check_new_part_infos_and_generate_docs_for_pre_installing(&mut self, is_doc: bool) -> Result<()>
     {
-        let res = self.check_new_part_infos_and_generate_docs_for_pre_install_without_reset(is_doc);
+        let res = self.check_new_part_infos_and_generate_docs_for_pre_installing_without_reset(is_doc);
         self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
@@ -2708,9 +2708,9 @@ impl PkgManager
         self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         for name in names {
-            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
+            self.prepare_new_part_infos_for_pre_installing(name, &mut visiteds, is_update, is_force)?;
         }
-        self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
+        self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
@@ -2722,9 +2722,9 @@ impl PkgManager
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         let versions = self.pkg_versions_for_bucket("versions")?;
         for (name, _) in &versions {
-            self.prepare_new_part_infos_for_pre_install(name, &mut visiteds, is_update, is_force)?;
+            self.prepare_new_part_infos_for_pre_installing(name, &mut visiteds, is_update, is_force)?;
         }
-        self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
+        self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
@@ -2740,9 +2740,9 @@ impl PkgManager
         self.constraints = manifest.constraints.map(|cs| cs.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.sources = manifest.sources.map(|ss| ss.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.pkgs.insert(start_name.clone(), current_pkg);
-        self.prepare_new_part_infos_for_pre_install(&start_name, &mut visiteds, is_update, is_force)?;
-        self.check_new_part_infos_and_generate_docs_for_pre_install(is_doc)?;
-        self.add_pkg_names_for_buckets_and_autoremove("pkgs_to_remove", "new_versions")?;
+        self.prepare_new_part_infos_for_pre_installing(&start_name, &mut visiteds, is_update, is_force)?;
+        self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
+        self.add_pkg_names_for_buckets_and_autoremoving("pkgs_to_remove", "new_versions")?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         self.printer.print_removing();
@@ -2753,7 +2753,7 @@ impl PkgManager
     pub fn remove(&self, names: &[PkgName]) -> Result<()>
     {
         self.printer.print_pre_removing();
-        self.add_pkg_names_for_bucket_and_remove("pkgs_to_remove", names)?;
+        self.add_pkg_names_for_bucket_and_removing("pkgs_to_remove", names)?;
         self.printer.print_removing();
         self.remove_pkgs()?;
         Ok(())
@@ -2797,7 +2797,7 @@ impl PkgManager
         };
         if is_new_info_dir && self.has_bucket("new_versions")? {
             if are_deps && !self.has_bucket("pkgs_to_remove")? {
-                self.add_pkg_names_for_buckets_and_autoremove("pkgs_to_remove", "new_versions")?;
+                self.add_pkg_names_for_buckets_and_autoremoving("pkgs_to_remove", "new_versions")?;
             }
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
@@ -2828,7 +2828,7 @@ impl PkgManager
             self.printer.print_cleaning(false);
             self.remove_bucket("new_versions")?;
             self.remove_bucket("pkgs_to_remove")?;
-            match self.res_remove_dirs_for_clean() {
+            match self.res_remove_dirs_for_cleaning() {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
