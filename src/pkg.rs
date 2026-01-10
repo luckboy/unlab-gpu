@@ -2173,12 +2173,13 @@ impl PkgManager
                                     let max_version = Self::max_pkg_version(&versions, Some(old_version_req), data.constraints.get(name), data.locks.get(name));
                                     match &max_version {
                                         Some(max_version) => {
-                                            if tmp_new_version.as_ref().map(|tnv| tnv == max_version).unwrap_or(true) {
-                                                if tmp_new_version.is_none() {
-                                                    tmp_new_version = Some(max_version.clone());
-                                                }
-                                            } else {
-                                                return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
+                                            match &tmp_new_version {
+                                                Some(tmp_new_version) => {
+                                                    if tmp_new_version != max_version {
+                                                        return Err(Error::PkgName(name.clone(), format!("version requirements indicate two different package versions: {}, {}", tmp_new_version, max_version)));
+                                                    }
+                                                },
+                                                None => tmp_new_version = Some(max_version.clone()),
                                             }
                                         },
                                         None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
@@ -2221,12 +2222,13 @@ impl PkgManager
                             match &max_version {
                                 Some(max_version) => {
                                     let dep_new_version_from_bucket = data.pkg_version_for_bucket("new_versions", dep_name)?;
-                                    if dep_new_version_from_bucket.as_ref().map(|dnvfb| dnvfb == max_version).unwrap_or(true) {
-                                        if dep_new_version_from_bucket.is_none() {
-                                            data.add_pkg_version_for_bucket("new_versions", dep_name, max_version)?;
-                                        }
-                                    } else {
-                                        return Err(Error::PkgName(dep_name.clone(), String::from("version requirements indicate two different package versions")));
+                                    match &dep_new_version_from_bucket {
+                                        Some(dep_new_version_from_bucket) => {
+                                            if dep_new_version_from_bucket != max_version {
+                                                return Err(Error::PkgName(dep_name.clone(), format!("version requirements indicate two different package versions: {}, {}", dep_new_version_from_bucket, max_version)));
+                                            }
+                                        },
+                                        None => data.add_pkg_version_for_bucket("new_versions", dep_name, max_version)?,
                                     }
                                 },
                                 None => return Err(Error::PkgName(dep_name.clone(), String::from("each package version isn't matched to version requirement"))),
@@ -2325,7 +2327,7 @@ impl PkgManager
                         match &max_version {
                             Some(max_version) => {
                                 if new_version != max_version {
-                                    return Err(Error::PkgName(name.clone(), String::from("version requirements indicate two different package versions")));
+                                    return Err(Error::PkgName(name.clone(), format!("version requirements indicate two different package versions: {}, {}", new_version, max_version)));
                                 }
                             },
                             None => return Err(Error::PkgName(name.clone(), String::from("each package version isn't matched to version requirement"))),
