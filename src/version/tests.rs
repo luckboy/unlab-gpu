@@ -124,6 +124,39 @@ fn test_version_parse_parses_versions_with_pre_releases_and_builds()
 }
 
 #[test]
+fn test_version_parse_complains_on_invalid_version()
+{
+    match Version::parse("1.a.3") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+    match Version::parse("1.2.3-1..2") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+    match Version::parse("1.2.3-ab/cd") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+    match Version::parse("1.2.3-abcd.1.e\\f") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+    match Version::parse("1.2.3+1..2") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+    match Version::parse("1.2.3+ab/cd") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+    match Version::parse("1.2.3+abcd.1.e\\f") {
+        Err(Error::InvalidVersion) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
 fn test_version_cmp_compares_versions()
 {
     let version = Version::parse("1.2.3").unwrap();
@@ -219,4 +252,36 @@ fn test_version_cmp_compares_versions_with_pre_releases_and_builds()
     let version = Version::parse("1.2.3-alpha.4").unwrap();
     let version2 = Version::parse("1.2.3-alpha.4+build.12345").unwrap();
     assert_eq!(Ordering::Equal, version.cmp(&version2));
+}
+
+#[test]
+fn test_version_fmt_formats_versions()
+{
+    assert_eq!(String::from("1.2.3"), format!("{}", Version::parse("1.2.3").unwrap()));
+    assert_eq!(String::from("4.5"), format!("{}", Version::parse("4.5").unwrap()));
+    assert_eq!(String::from("1"), format!("{}", Version::parse("1").unwrap()));
+}
+
+#[test]
+fn test_version_fmt_formats_versions_with_pre_releases()
+{
+    assert_eq!(String::from("1.2.3-alpha.4"), format!("{}", Version::parse("1.2.3-alpha.4").unwrap()));
+    assert_eq!(String::from("4.5-2.beta.3"), format!("{}", Version::parse("4.5-2.beta.3").unwrap()));
+    assert_eq!(String::from("1-2.x-y.3"), format!("{}", Version::parse("1-2.x-y.3").unwrap()));
+}
+
+#[test]
+fn test_version_fmt_formats_versions_with_builds()
+{
+    assert_eq!(String::from("1.2.3+build.12345"), format!("{}", Version::parse("1.2.3+build.12345").unwrap()));
+    assert_eq!(String::from("4.5+12345.sha.67890"), format!("{}", Version::parse("4.5+12345.sha.67890").unwrap()));
+    assert_eq!(String::from("1+2345.x-y.3456"), format!("{}", Version::parse("1+2345.x-y.3456").unwrap()));
+}
+
+#[test]
+fn test_version_fmt_formats_versions_with_pre_releases_and_builds()
+{
+    assert_eq!(String::from("1.2.3-alpha.4+build.12345"), format!("{}", Version::parse("1.2.3-alpha.4+build.12345").unwrap()));
+    assert_eq!(String::from("4.5-2.beta.3+12345.sha.67890"), format!("{}", Version::parse("4.5-2.beta.3+12345.sha.67890").unwrap()));
+    assert_eq!(String::from("1-2.x-y.3+2345.x-y.3456"), format!("{}", Version::parse("1-2.x-y.3+2345.x-y.3456").unwrap()));
 }
