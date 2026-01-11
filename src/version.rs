@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -84,7 +84,7 @@ impl Version
         };
         let (version_core, pre_release) = match pair_s.split_once('-') {
             Some(pair) => pair,
-            None => (s, ""),
+            None => (pair_s, ""),
         };
         let mut numeric_idents: Vec<u32> = Vec::new();
         for t in version_core.split('.') {
@@ -93,7 +93,7 @@ impl Version
                 Err(_) => return Err(Error::InvalidVersion),
             }
         }
-        let pre_release_idents = if !s.is_empty() {
+        let pre_release_idents = if !pre_release.is_empty() {
             let mut tmp_pre_release_idents: Vec<PreReleaseIdent> = Vec::new();
             for t in pre_release.split('.') {
                 match t.parse::<u32>() {
@@ -110,7 +110,7 @@ impl Version
         } else {
             None
         };
-        let build_idents = if !s.is_empty() {
+        let build_idents = if !build.is_empty() {
             let mut tmp_build_idents: Vec<String> = Vec::new();
             for t in build.split('.') {
                 if t.is_empty() || t.contains('/') || t.contains('\\') {
@@ -486,3 +486,6 @@ impl<'de> Deserialize<'de> for VersionReq
         where D: Deserializer<'de>
     { deserializer.deserialize_str(VersionReqVisitor) }
 }
+
+#[cfg(test)]
+mod tests;
