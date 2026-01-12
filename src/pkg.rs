@@ -2839,3 +2839,6 @@ impl PkgManager
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;
