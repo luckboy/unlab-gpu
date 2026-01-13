@@ -2213,7 +2213,7 @@ impl PkgManager
                 match &manifest.dependencies {
                     Some(deps) => {
                         for (dep_name, dep_version_req) in deps {
-                            let mut dep_src = data.create_source(name)?;
+                            let mut dep_src = data.create_source(dep_name)?;
                             if is_update {
                                 dep_src.update()?;
                             }
@@ -2254,7 +2254,7 @@ impl PkgManager
                                             match data.pkg_version_for_bucket("versions", old_dep_name)? {
                                                 Some(version) => {
                                                     data.add_pkg_version_for_bucket("new_versions", name, &version)?;
-                                                    data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(name), data.pkg_new_part_info_dir(name))?);
+                                                    data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(old_dep_name), data.pkg_new_part_info_dir(old_dep_name))?);
                                                 },
                                                 None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
                                             }
@@ -2263,7 +2263,7 @@ impl PkgManager
                                             Some(old_dep_pkg) => {
                                                 let mut depentents = old_dep_pkg.dependents()?;
                                                 depentents.remove(name);
-                                                pkg.save_dependents(&depentents)?;
+                                                old_dep_pkg.save_dependents(&depentents)?;
                                             },
                                             None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no package"))),
                                         }
@@ -2282,7 +2282,7 @@ impl PkgManager
                                     Some(dep_pkg) => {
                                         let mut depentents = dep_pkg.dependents()?;
                                         depentents.insert(name.clone(), dep_version_req.clone());
-                                        pkg.save_dependents(&depentents)?;
+                                        dep_pkg.save_dependents(&depentents)?;
                                     },
                                     None => return Err(Error::PkgName(dep_name.clone(), String::from("no package"))),
                                 }
