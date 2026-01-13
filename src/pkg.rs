@@ -1360,6 +1360,8 @@ pub struct Pkg
     dir: Option<PathBuf>,
     info_dir: Option<PathBuf>,
     new_part_info_dir: Option<PathBuf>,
+    is_added_by_dependent: bool,
+    has_new_version_from_bucket: bool,
 }
 
 impl Pkg
@@ -1370,6 +1372,8 @@ impl Pkg
             dir: Some(PathBuf::from(".")),
             info_dir: None,
             new_part_info_dir: None,
+            is_added_by_dependent: false,
+            has_new_version_from_bucket: true,
         }
     }
 
@@ -1390,11 +1394,17 @@ impl Pkg
         src_dependents_file.push("dependents.toml");
         let mut dst_dependents_file = new_part_info_dir.clone();
         dst_dependents_file.push("dependents.toml");
-        match fs::metadata(info_dir) {
-            Ok(_) => {
-                copy(src_dependents_file, dst_dependents_file)?;
+        match fs::metadata(dst_dependents_file.as_path()) {
+            Ok(_) => (),
+            Err(err) if err.kind() == ErrorKind::NotFound => {
+                match fs::metadata(info_dir) {
+                    Ok(_) => {
+                        copy(src_dependents_file, dst_dependents_file)?;
+                    },
+                    Err(err) if err.kind() == ErrorKind::NotFound => fs::write(dst_dependents_file, "\n")?,
+                    Err(err) => return Err(err),
+                }
             },
-            Err(err) if err.kind() == ErrorKind::NotFound => fs::write(dst_dependents_file, "\n")?,
             Err(err) => return Err(err),
         }
         Ok(())
@@ -1408,15 +1418,20 @@ impl Pkg
         }
     }
     
-    fn new_with_copying(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
+    fn new_with_copying_and_flags(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf, is_added_by_dependent: bool, has_new_version_from_bucket: bool) -> Result<Self>
     {
         Self::copy_info_files(&dir, &info_dir, &new_part_info_dir)?;
         Ok(Pkg {
                 dir,
                 info_dir: Some(info_dir),
                 new_part_info_dir: Some(new_part_info_dir),
+                is_added_by_dependent,
+                has_new_version_from_bucket,
         })
     }
+
+    fn new_with_copying(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
+    { Self::new_with_copying_and_flags(dir, info_dir, new_part_info_dir, false, true) }
 
     fn old_manifest(&self) -> Result<Option<Manifest>>
     {
@@ -2149,11 +2164,23 @@ impl PkgManager
         }
         let res = dfs(name, visiteds, self, |name, data| {
                 let pkg = match data.pkgs.get(name) {
-                    Some(tmp_pkg) => tmp_pkg.clone(),
-                    None => {
+                    Some(tmp_pkg) if !tmp_pkg.is_added_by_dependent => tmp_pkg.clone(),
+                    _ => {
                         let mut src = data.create_source(name)?;
                         let old_version = data.pkg_version_for_bucket("versions", name)?;
-                        let new_version_from_bucket = data.pkg_version_for_bucket("new_versions", name)?;
+                        let is_new_version_from_bucket = match data.pkgs.get_mut(name) {
+                            Some(tmp_pkg) => {
+                                let tmp_is_new_version_from_bucket = tmp_pkg.has_new_version_from_bucket;
+                                tmp_pkg.has_new_version_from_bucket = true;
+                                tmp_is_new_version_from_bucket
+                            },
+                            None => true,
+                        };
+                        let new_version_from_bucket = if is_new_version_from_bucket {
+                            data.pkg_version_for_bucket("new_versions", name)?
+                        } else {
+                            None
+                        };
                         let new_version = match &new_version_from_bucket {
                             Some(tmp_new_version) => Some(tmp_new_version.clone()),
                             None => {
@@ -2221,7 +2248,19 @@ impl PkgManager
                             let max_version = Self::max_pkg_version(&versions, Some(dep_version_req), data.constraints.get(dep_name), data.locks.get(dep_name));
                             match &max_version {
                                 Some(max_version) => {
-                                    let dep_new_version_from_bucket = data.pkg_version_for_bucket("new_versions", dep_name)?;
+                                    let is_new_version_from_bucket = match data.pkgs.get_mut(dep_name) {
+                                        Some(tmp_pkg) => {
+                                            let tmp_is_new_version_from_bucket = tmp_pkg.has_new_version_from_bucket;
+                                            tmp_pkg.has_new_version_from_bucket = true;
+                                            tmp_is_new_version_from_bucket
+                                        },
+                                        None => true,
+                                    };
+                                    let dep_new_version_from_bucket = if is_new_version_from_bucket {
+                                        data.pkg_version_for_bucket("new_versions", dep_name)?
+                                    } else {
+                                        None
+                                    };
                                     match &dep_new_version_from_bucket {
                                         Some(dep_new_version_from_bucket) => {
                                             if dep_new_version_from_bucket != max_version {
@@ -2254,7 +2293,7 @@ impl PkgManager
                                             match data.pkg_version_for_bucket("versions", old_dep_name)? {
                                                 Some(version) => {
                                                     data.add_pkg_version_for_bucket("new_versions", name, &version)?;
-                                                    data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying(None, data.pkg_info_dir(old_dep_name), data.pkg_new_part_info_dir(old_dep_name))?);
+                                                    data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying_and_flags(None, data.pkg_info_dir(old_dep_name), data.pkg_new_part_info_dir(old_dep_name), true, false)?);
                                                 },
                                                 None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
                                             }
@@ -2305,6 +2344,7 @@ impl PkgManager
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
+                self.pkgs.clear();
                 self.clean_after_error()?;
                 Err(err)
             },
