@@ -419,7 +419,6 @@ file = \"../def.tar.gz\"
 [sources.\"example2.com/def\".versions.\"1.2.3\"]
 url = \"https://example2.com/def.tar.gz\"
 ";
-                    println!("{}", t);
                     assert_eq!(String::from(&expected_t[1..]), t);
                 },
                 Err(_) => assert!(false),
@@ -468,7 +467,489 @@ name = \"example1.com/abc\"
 [sources.\"example2.com/def\"]
 renamed = \"example3.com/def\"
 ";
-                    println!("{}", t);
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_paths_read_reads_paths()
+{
+    let s = "
+bin = [
+    \"abc\",
+    \"def\",
+    \"ghi\"
+]
+lib = [
+    \"abc/def\",
+    \"def/ghi\",
+    \"ghi/jkl\"
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match Paths::read(&mut cursor) {
+        Ok(paths) => {
+            assert_eq!(vec![String::from("abc"), String::from("def"), String::from("ghi")], paths.bin);
+            assert_eq!(vec![String::from("abc/def"), String::from("def/ghi"), String::from("ghi/jkl")], paths.lib);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_paths_write_writes_paths()
+{
+    let s = "
+bin = [
+    \"abc\",
+    \"def\",
+    \"ghi\"
+]
+lib = [
+    \"abc/def\",
+    \"def/ghi\",
+    \"ghi/jkl\"
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let paths = Paths::read(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match paths.write(&mut cursor2) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+bin = [\"abc\", \"def\", \"ghi\"]
+lib = [\"abc/def\", \"def/ghi\", \"ghi/jkl\"]
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_versions_read_reads_versions()
+{
+    let s = "
+versions = [\"1.2.3\", \"2.3.4\", \"3.4.5\"]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match Versions::read(&mut cursor) {
+        Ok(versions) => {
+            let mut expected_versions: BTreeSet<Version> = BTreeSet::new();
+            expected_versions.insert(Version::parse("1.2.3").unwrap());
+            expected_versions.insert(Version::parse("2.3.4").unwrap());
+            expected_versions.insert(Version::parse("3.4.5").unwrap());
+            assert_eq!(expected_versions, versions.versions);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_versions_write_writes_versions()
+{
+    let s = "
+versions = [\"1.2.3\", \"2.3.4\", \"3.4.5\"]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let versions = Versions::read(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match versions.write(&mut cursor2) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+versions = [\"1.2.3\", \"2.3.4\", \"3.4.5\"]
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_pkg_config_read_reads_pkg_config_with_first_field()
+{
+    let s = "
+account = \"example.com/abc\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match PkgConfig::read(&mut cursor) {
+        Ok(config) => {
+            assert_eq!(Some(String::from("example.com/abc")), config.account);
+            assert_eq!(None, config.domain);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_pkg_config_read_reads_pkg_config_with_second_field()
+{
+    let s = "
+domain = \"pl.jan.nowak\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match PkgConfig::read(&mut cursor) {
+        Ok(config) => {
+            assert_eq!(None, config.account);
+            assert_eq!(Some(String::from("pl.jan.nowak")), config.domain);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_pkg_config_read_reads_pkg_config_with_all_fields()
+{
+    let s = "
+account = \"example.com/abc\"
+domain = \"pl.jan.nowak\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match PkgConfig::read(&mut cursor) {
+        Ok(config) => {
+            assert_eq!(Some(String::from("example.com/abc")), config.account);
+            assert_eq!(Some(String::from("pl.jan.nowak")), config.domain);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_pkg_config_write_writes_pkg_config_with_first_field()
+{
+    let s = "
+account = \"example.com/abc\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let config = PkgConfig::read(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match config.write(&mut cursor2) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+account = \"example.com/abc\"
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_pkg_config_write_writes_pkg_config_with_second_field()
+{
+    let s = "
+domain = \"pl.jan.nowak\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let config = PkgConfig::read(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match config.write(&mut cursor2) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+domain = \"pl.jan.nowak\"
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_pkg_config_write_writes_pkg_config_with_all_fields()
+{
+    let s = "
+account = \"example.com/abc\"
+domain = \"pl.jan.nowak\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let config = PkgConfig::read(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match config.write(&mut cursor2) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+account = \"example.com/abc\"
+domain = \"pl.jan.nowak\"
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_read_versions_reads_versions()
+{
+    let s = "
+\"example1.com/abc\" = \"1.2.3\"
+\"example2.com/def\" = \"2.3.4\"
+\"example3.com/ghi\" = \"3.4.5\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match read_versions(&mut cursor) {
+        Ok(versions) => {
+            assert_eq!(3, versions.len());
+            let mut expected_versions: HashMap<PkgName, Version> = HashMap::new();
+            expected_versions.insert(PkgName::new(String::from("example1.com/abc")), Version::parse("1.2.3").unwrap());
+            expected_versions.insert(PkgName::new(String::from("example2.com/def")), Version::parse("2.3.4").unwrap());
+            expected_versions.insert(PkgName::new(String::from("example3.com/ghi")), Version::parse("3.4.5").unwrap());
+            assert_eq!(expected_versions, versions);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_write_versions_writes_version()
+{
+    let s = "
+\"example1.com/abc\" = \"1.2.3\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let versions = read_versions(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match write_versions(&mut cursor2, &versions) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+\"example1.com/abc\" = \"1.2.3\"
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_read_version_reqs_reads_version_requirements()
+{
+    let s = "
+\"example1.com/abc\" = \"1.2.3\"
+\"example2.com/def\" = \"2.3.4\"
+\"example3.com/ghi\" = \"3.4.5\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match read_version_reqs(&mut cursor) {
+        Ok(version_reqs) => {
+            assert_eq!(3, version_reqs.len());
+            match version_reqs.get(&PkgName::new(String::from("example1.com/abc"))) {
+                Some(version_req) => {
+                    assert_eq!(1, version_req.single_reqs().len());
+                    match &version_req.single_reqs()[0] {
+                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("1.2.3").unwrap(), *version),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match version_reqs.get(&PkgName::new(String::from("example2.com/def"))) {
+                Some(version_req) => {
+                    assert_eq!(1, version_req.single_reqs().len());
+                    match &version_req.single_reqs()[0] {
+                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("2.3.4").unwrap(), *version),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+            match version_reqs.get(&PkgName::new(String::from("example3.com/ghi"))) {
+                Some(version_req) => {
+                    assert_eq!(1, version_req.single_reqs().len());
+                    match &version_req.single_reqs()[0] {
+                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("3.4.5").unwrap(), *version),
+                        _ => assert!(false),
+                    }
+                },
+                None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_write_version_reqs_writes_version_requirement()
+{
+    let s = "
+\"example1.com/abc\" = \"1.2.3\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let version_reqs = read_version_reqs(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match write_version_reqs(&mut cursor2, &version_reqs) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+\"example1.com/abc\" = \"^1.2.3\"
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_read_src_infos_reads_source_infos()
+{
+    let s = "
+\"example1.com/abc\".versions.\"1.2.1\".dir = \"../abc\"
+\"example1.com/abc\".versions.\"1.2.2\".file = \"../abc.tar.gz\"
+\"example1.com/abc\".versions.\"1.2.3\".url = \"https://example1.com/abc.tar.gz\"
+\"example2.com/def\".renamed = \"example3.com/def\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match read_src_infos(&mut cursor) {
+        Ok(src_infos) => {
+            assert_eq!(2, src_infos.len());
+            match src_infos.get(&PkgName::new(String::from("example1.com/abc"))) {
+                Some(SrcInfo::Versions(version_src_infos)) => {
+                    match version_src_infos.get(&Version::parse("1.2.1").unwrap()) {
+                        Some(VersionSrcInfo::Dir(dir)) => assert_eq!(String::from("../abc"), *dir),
+                        _ => assert!(false),
+                    }
+                    match version_src_infos.get(&Version::parse("1.2.2").unwrap()) {
+                        Some(VersionSrcInfo::File(file)) => assert_eq!(String::from("../abc.tar.gz"), *file),
+                        _ => assert!(false),
+                    }
+                    match version_src_infos.get(&Version::parse("1.2.3").unwrap()) {
+                        Some(VersionSrcInfo::Url(url)) => assert_eq!(String::from("https://example1.com/abc.tar.gz"), *url),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match src_infos.get(&PkgName::new(String::from("example2.com/def"))) {
+                Some(SrcInfo::Renamed(pkg_name)) => assert_eq!(PkgName::new(String::from("example3.com/def")), *pkg_name),
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_write_src_infos_writes_source_info_for_first_case()
+{
+    let s = "
+\"example1.com/abc\".versions.\"1.2.1\".dir = \"../abc\"
+\"example1.com/abc\".versions.\"1.2.2\".file = \"../abc.tar.gz\"
+\"example1.com/abc\".versions.\"1.2.3\".url = \"https://example1.com/abc.tar.gz\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let src_infos = read_src_infos(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match write_src_infos(&mut cursor2, &src_infos) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+[\"example1.com/abc\".versions.\"1.2.1\"]
+dir = \"../abc\"
+
+[\"example1.com/abc\".versions.\"1.2.2\"]
+file = \"../abc.tar.gz\"
+
+[\"example1.com/abc\".versions.\"1.2.3\"]
+url = \"https://example1.com/abc.tar.gz\"
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_write_src_infos_writes_source_info_for_second_case()
+{
+    let s = "
+\"example2.com/def\".renamed = \"example3.com/def\"
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let src_infos = read_src_infos(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match write_src_infos(&mut cursor2, &src_infos) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+[\"example2.com/def\"]
+renamed = \"example3.com/def\"
+";
                     assert_eq!(String::from(&expected_t[1..]), t);
                 },
                 Err(_) => assert!(false),
