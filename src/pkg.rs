@@ -1693,7 +1693,7 @@ impl PkgManager
     pub fn work_tmp_dir(&self) -> PathBuf
     {
         let mut dir = self.work_dir.clone();
-        dir.push("var");
+        dir.push("tmp");
         dir
     }    
     
@@ -2302,7 +2302,6 @@ impl PkgManager
     fn prepare_new_part_infos_for_pre_installing(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
         let res = self.prepare_new_part_infos_for_pre_installing_without_reset(name, visiteds, is_update, is_force);
-        self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
@@ -2385,12 +2384,16 @@ impl PkgManager
             if self.pkg_is_to_install_for_pre_install(name)? {
                 let mut old_paths_file = self.pkg_info_dir(name);
                 old_paths_file.push("paths.toml");
-                let paths = Paths::load(old_paths_file)?;
-                for bin_path in &paths.bin {
-                    ignored_bin_paths.insert(PathBuf::from(bin_path));
-                }
-                for lib_path in &paths.lib {
-                    ignored_lib_paths.insert(PathBuf::from(lib_path));
+                match Paths::load_opt(old_paths_file)? {
+                    Some(paths) => {
+                        for bin_path in &paths.bin {
+                            ignored_bin_paths.insert(PathBuf::from(bin_path));
+                        }
+                        for lib_path in &paths.lib {
+                            ignored_lib_paths.insert(PathBuf::from(lib_path));
+                        }
+                    },
+                    None => (),
                 }
             }
         }
@@ -2540,7 +2543,7 @@ impl PkgManager
         let bin_paths: Vec<PathBuf> = paths.bin.iter().map(|s| PathBuf::from(s)).collect();
         recursively_copy_paths_in_dir(src_bin_dir, dst_bin_dir, bin_paths.as_slice())?;
         let mut src_lib_dir = PathBuf::from(dir);
-        src_lib_dir.push("bin");
+        src_lib_dir.push("lib");
         let dst_lib_dir = self.lib_dir.clone();
         let lib_paths: Vec<PathBuf> = paths.lib.iter().map(|s| PathBuf::from(s)).collect();
         recursively_copy_paths_in_dir(src_lib_dir, dst_lib_dir, lib_paths.as_slice())?;
