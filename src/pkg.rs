@@ -1467,31 +1467,41 @@ impl Pkg
 
     fn manifest(&self) -> Result<Manifest>
     {
-        match &self.new_part_info_dir {
+        let mut manifest = match &self.new_part_info_dir {
             Some(new_part_info_dir) => {
                 let mut manifest_file = new_part_info_dir.clone();
                 manifest_file.push("manifest.toml");
-                Manifest::load(manifest_file)
+                Manifest::load_opt(manifest_file)?
             },
-            None => {
-                match &self.info_dir {
-                    Some(info_dir) => {
-                        let mut manifest_file = info_dir.clone();
-                        manifest_file.push("manifest.toml");
-                        Manifest::load(manifest_file)
-                    },
-                    None => {
-                        match &self.dir {
-                            Some(dir) => {
-                                let mut manifest_file = dir.clone();
-                                manifest_file.push("Unlab.toml");
-                                Manifest::load(manifest_file)
-                            },
-                            None => Err(Error::Pkg(String::from("no manifest file"))),
-                        }
-                    },
-                }
-            },
+            None => None
+        };
+        if manifest.is_none() {
+            manifest = match &self.info_dir {
+                Some(info_dir) => {
+                    let mut manifest_file = info_dir.clone();
+                    manifest_file.push("manifest.toml");
+                    Manifest::load_opt(manifest_file)?
+                },
+                None => None,
+            };
+        }
+        if manifest.is_none() {
+            match &self.dir {
+                Some(dir) => {
+                    let mut manifest_file = dir.clone();
+                    manifest_file.push("Unlab.toml");
+                    match Manifest::load_opt(manifest_file)? {
+                        Some(manifest) => Ok(manifest),
+                        None => Err(Error::Pkg(String::from("no manifest file"))),
+                    }
+                },
+                None => Err(Error::Pkg(String::from("no manifest file"))),
+            }
+        } else {
+            match manifest {
+                Some(manifest) => Ok(manifest),
+                None => Err(Error::Pkg(String::from("no manifest file"))),
+            }
         }
     }
 
@@ -2292,7 +2302,7 @@ impl PkgManager
                                         if data.pkg_version_for_bucket("new_versions", old_dep_name)?.is_none() {
                                             match data.pkg_version_for_bucket("versions", old_dep_name)? {
                                                 Some(version) => {
-                                                    data.add_pkg_version_for_bucket("new_versions", name, &version)?;
+                                                    data.add_pkg_version_for_bucket("new_versions", old_dep_name, &version)?;
                                                     data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying_and_flags(None, data.pkg_info_dir(old_dep_name), data.pkg_new_part_info_dir(old_dep_name), true, false)?);
                                                 },
                                                 None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
