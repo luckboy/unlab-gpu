@@ -2295,7 +2295,7 @@ V = 5
 }
 
 #[sealed_test]
-fn test_pkg_manager_install_reinstalls_package_dependencies_and_nested_dependencies()
+fn test_pkg_manager_install_reinstalls_package_dependencies_and_nested_package_dependencies()
 {
     fs::create_dir("home").unwrap();
     let mut sources_file = PathBuf::from("home");
