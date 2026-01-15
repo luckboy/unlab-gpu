@@ -963,15 +963,16 @@ renamed = \"example3.com/def\"
 
 fn create_pkg(path: &str, manifest: &str, bin: Option<(&str, &str)>, lib: Option<(&str, &str)>)
 {
-    if path != "." {
-        fs::create_dir_all(path).unwrap();
+    let path_buf = PathBuf::from(path.replace('/', path::MAIN_SEPARATOR_STR));
+    if path_buf != PathBuf::from(".") {
+        fs::create_dir_all(path_buf.as_path()).unwrap();
     }
-    let mut manifest_file = PathBuf::from(path);
+    let mut manifest_file = path_buf.clone();
     manifest_file.push("Unlab.toml");
     fs::write(manifest_file, manifest).unwrap();
     match bin {
         Some((path_str, script_content)) => {
-            let mut bin_file = PathBuf::from(path);
+            let mut bin_file = path_buf.clone();
             bin_file.push(path_str.replace('/', path::MAIN_SEPARATOR_STR));
             let mut bin_dir = bin_file.clone();
             bin_dir.pop();
@@ -982,7 +983,7 @@ fn create_pkg(path: &str, manifest: &str, bin: Option<(&str, &str)>, lib: Option
     }
     match lib {
         Some((path_str, lib_content)) => {
-            let mut lib_file = PathBuf::from(path);
+            let mut lib_file = path_buf.clone();
             lib_file.push(path_str.replace('/', path::MAIN_SEPARATOR_STR));
             let mut lib_dir = lib_file.clone();
             lib_dir.pop();
