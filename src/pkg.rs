@@ -32,7 +32,11 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
+use jammdb::Bucket;
 use jammdb::DB;
+use jammdb::KVPair;
+use jammdb::ToBytes;
+use jammdb::Tx;
 use liblzma::read::XzDecoder;
 use zip::read::ZipArchive;
 use crate::curl;
@@ -1546,6 +1550,46 @@ impl Pkg
     }
 }
 
+fn db_tx(db: &DB, writable: bool) -> Result<Tx<'_>>
+{
+    match db.tx(writable) {
+        Ok(tx) => Ok(tx),
+        Err(err) => Err(Error::Jammdb(Box::new(err))),
+    }
+}
+
+fn tx_get_or_create_bucket<'b, 'tx, T: ToBytes<'tx>>(tx: &'b Tx<'tx>, name: T) -> Result<Bucket<'b, 'tx>>
+{
+    match tx.get_or_create_bucket(name) {
+        Ok(bucket) => Ok(bucket),
+        Err(err) => Err(Error::Jammdb(Box::new(err))),
+    }
+}
+
+fn tx_delete_bucket<'tx, T: ToBytes<'tx>>(tx: &Tx<'tx>, name: T) -> Result<()>
+{
+    match tx.delete_bucket(name) {
+        Ok(()) => Ok(()),
+        Err(err) => Err(Error::Jammdb(Box::new(err))),
+    }
+}
+
+fn tx_commit<'tx>(tx: Tx<'tx>) -> Result<()>
+{
+    match tx.commit() {
+        Ok(()) => Ok(()),
+        Err(err) => Err(Error::Jammdb(Box::new(err))),
+    }
+}
+
+fn bucket_put<'a, 'b, 'tx, T: ToBytes<'tx>, S: ToBytes<'tx>>(bucket: &'a Bucket<'b, 'tx>, key: T, value: S) -> Result<Option<KVPair<'b, 'tx>>>
+{
+    match bucket.put(key, value) {
+        Ok(kv_pair) => Ok(kv_pair),
+        Err(err) => Err(Error::Jammdb(Box::new(err))),
+    }
+}
+
 #[derive(Clone)]
 pub struct PkgManager
 {
@@ -1804,56 +1848,44 @@ impl PkgManager
     
     fn has_bucket(&self, bucket_name: &str) -> Result<bool>
     {
-        match self.pkg_db.tx(false) {
-            Ok(tx) => {
-                match tx.get_bucket(bucket_name) {
-                    Ok(_) => Ok(true),
-                    Err(jammdb::Error::BucketMissing) => Ok(false),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
+        let tx = db_tx(&self.pkg_db, false)?;
+        match tx.get_bucket(bucket_name) {
+            Ok(_) => Ok(true),
+            Err(jammdb::Error::BucketMissing) => Ok(false),
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
     fn remove_bucket(&self, bucket_name: &str) -> Result<()>
     {
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                match tx.delete_bucket(bucket_name) {
-                    Ok(()) => Ok(()),
-                    Err(jammdb::Error::BucketMissing) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
+        let tx = db_tx(&self.pkg_db, true)?;
+        match tx.delete_bucket(bucket_name) {
+            Ok(()) => Ok(()),
+            Err(jammdb::Error::BucketMissing) => Ok(()),
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
     
     fn pkg_versions_for_bucket(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
     {
-        match self.pkg_db.tx(false) {
-            Ok(tx) => {
-                match tx.get_bucket(bucket_name) {
-                    Ok(version_bucket) => {
-                        let mut pairs: Vec<(PkgName, Version)> = Vec::new();
-                        for data in version_bucket.cursor() {
-                            let name = match String::from_utf8(data.kv().key().to_vec()) {
-                                Ok(s) => PkgName::parse(s.as_str())?,
-                                Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
-                            };
-                            let version = match String::from_utf8(data.kv().value().to_vec()) {
-                                Ok(s) => Version::parse(s.as_str())?,
-                                Err(_) => return Err(Error::Pkg(format!("invalid version data"))),
-                            };
-                            pairs.push((name, version));
-                        }
-                        Ok(pairs)
-                    },
-                    Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
+        let tx = db_tx(&self.pkg_db, false)?;
+        match tx.get_bucket(bucket_name) {
+            Ok(version_bucket) => {
+                let mut pairs: Vec<(PkgName, Version)> = Vec::new();
+                for data in version_bucket.cursor() {
+                    let name = match String::from_utf8(data.kv().key().to_vec()) {
+                        Ok(s) => PkgName::parse(s.as_str())?,
+                        Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                    };
+                    let version = match String::from_utf8(data.kv().value().to_vec()) {
+                        Ok(s) => Version::parse(s.as_str())?,
+                        Err(_) => return Err(Error::Pkg(format!("invalid version data"))),
+                    };
+                    pairs.push((name, version));
                 }
+                Ok(pairs)
             },
+            Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
@@ -1861,237 +1893,159 @@ impl PkgManager
     fn pkg_versions_for_bucket_in<F>(&self, bucket_name: &str, mut f: F) -> Result<()>
         where F: FnMut(&PkgName, &Version) -> Result<()>
     {
-        match self.pkg_db.tx(false) {
-            Ok(tx) => {
-                match tx.get_bucket(bucket_name) {
-                    Ok(version_bucket) => {
-                        for data in version_bucket.cursor() {
-                            let name = match String::from_utf8(data.kv().key().to_vec()) {
-                                Ok(s) => PkgName::parse(s.as_str())?,
-                                Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
-                            };
-                            let version = match String::from_utf8(data.kv().value().to_vec()) {
-                                Ok(s) => Version::parse(s.as_str())?,
-                                Err(_) => return Err(Error::Pkg(format!("invalid version data"))),
-                            };
-                            f(&name, &version)?;
-                        }
-                        Ok(())
-                    },
-                    Err(jammdb::Error::BucketMissing) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
+        let tx = db_tx(&self.pkg_db, false)?;
+        match tx.get_bucket(bucket_name) {
+            Ok(version_bucket) => {
+                for data in version_bucket.cursor() {
+                    let name = match String::from_utf8(data.kv().key().to_vec()) {
+                        Ok(s) => PkgName::parse(s.as_str())?,
+                        Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                    };
+                    let version = match String::from_utf8(data.kv().value().to_vec()) {
+                        Ok(s) => Version::parse(s.as_str())?,
+                        Err(_) => return Err(Error::Pkg(format!("invalid version data"))),
+                    };
+                    f(&name, &version)?;
                 }
+                Ok(())
             },
+            Err(jammdb::Error::BucketMissing) => Ok(()),
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
     
     fn pkg_version_for_bucket(&self, bucket_name: &str, name: &PkgName) -> Result<Option<Version>>
     {
-        match self.pkg_db.tx(false) {
-            Ok(tx) => {
-                match tx.get_bucket(bucket_name) {
-                    Ok(version_bucket) => {
-                        match version_bucket.get(name.name()) {
-                            Some(data) => {
-                                match String::from_utf8(data.kv().value().to_vec()) {
-                                    Ok(s) => Ok(Some(Version::parse(s.as_str())?)),
-                                    Err(_) => Err(Error::Pkg(format!("invalid version data"))),
-                                }
-                            },
-                            None => Ok(None),
+        let tx = db_tx(&self.pkg_db, false)?;
+        match tx.get_bucket(bucket_name) {
+            Ok(version_bucket) => {
+                match version_bucket.get(name.name()) {
+                    Some(data) => {
+                        match String::from_utf8(data.kv().value().to_vec()) {
+                            Ok(s) => Ok(Some(Version::parse(s.as_str())?)),
+                            Err(_) => Err(Error::Pkg(format!("invalid version data"))),
                         }
                     },
-                    Err(jammdb::Error::BucketMissing) => Ok(None),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
+                    None => Ok(None),
                 }
             },
+            Err(jammdb::Error::BucketMissing) => Ok(None),
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
     fn add_pkg_version_for_bucket(&self, bucket_name: &str, name: &PkgName, version: &Version) -> Result<()>
     {
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                match tx.get_or_create_bucket(bucket_name) {
-                    Ok(version_bucket) => {
-                        match version_bucket.put(name.name(), format!("{}", version)) {
-                            Ok(_) => {
-                                match tx.commit() {
-                                    Ok(()) => Ok(()),
-                                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                                }
-                            },
-                            Err(err) => Err(Error::Jammdb(Box::new(err))),
-                        }
-                    },
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(Box::new(err))),
-        }
-    }    
+        let tx = db_tx(&self.pkg_db, true)?;
+        let version_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
+        bucket_put(&version_bucket, name.name(), format!("{}", version))?;
+        tx_commit(tx)?;
+        Ok(())
+    }
     
     fn move_pkg_versions_for_buckets(&self, src_bucket_name: &str, dst_bucket_name: &str) -> Result<()>
     { 
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                {
-                    let src_version_bucket = match tx.get_bucket(src_bucket_name) {
-                        Ok(tmp_src_version_bucket) => tmp_src_version_bucket,
-                        Err(jammdb::Error::BucketMissing) => return Ok(()),
-                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                    };
-                    let dst_version_bucket = match tx.get_or_create_bucket(dst_bucket_name) {
-                        Ok(tmp_dst_version_bucket) => tmp_dst_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                    };
-                    for data in src_version_bucket.cursor() {
-                        match dst_version_bucket.put(data.kv().key().to_vec(), data.kv().value().to_vec()) {
-                            Ok(_) => (),
-                            Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                        }
-                    }
-                }
-                match tx.delete_bucket(src_bucket_name) {
-                    Ok(()) => (),
-                    Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                }
-                match tx.commit() {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(Box::new(err))),
+        let tx = db_tx(&self.pkg_db, true)?;
+        {
+            let src_version_bucket = match tx.get_bucket(src_bucket_name) {
+                Ok(tmp_src_version_bucket) => tmp_src_version_bucket,
+                Err(jammdb::Error::BucketMissing) => return Ok(()),
+                Err(err) => return Err(Error::Jammdb(Box::new(err))),
+            };
+            let dst_version_bucket = tx_get_or_create_bucket(&tx, dst_bucket_name)?;
+            for data in src_version_bucket.cursor() {
+                bucket_put(&dst_version_bucket, data.kv().key().to_vec(), data.kv().value().to_vec())?;
+            }
         }
+        tx_delete_bucket(&tx, src_bucket_name)?;
+        tx_commit(tx)?;
+        Ok(())
     }
 
     fn pkg_names_for_bucket(&self, bucket_name: &str) -> Result<Vec<PkgName>>
     {
-        match self.pkg_db.tx(false) {
-            Ok(tx) => {
-                match tx.get_bucket(bucket_name) {
-                    Ok(version_bucket) => {
-                        let mut names: Vec<PkgName> = Vec::new();
-                        for data in version_bucket.cursor() {
-                            let name = match String::from_utf8(data.kv().key().to_vec()) {
-                                Ok(s) => PkgName::parse(s.as_str())?,
-                                Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
-                            };
-                            names.push(name);
-                        }
-                        Ok(names)
-                    },
-                    Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
+        let tx = db_tx(&self.pkg_db, false)?;
+        match tx.get_bucket(bucket_name) {
+            Ok(version_bucket) => {
+                let mut names: Vec<PkgName> = Vec::new();
+                for data in version_bucket.cursor() {
+                    let name = match String::from_utf8(data.kv().key().to_vec()) {
+                        Ok(s) => PkgName::parse(s.as_str())?,
+                        Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                    };
+                    names.push(name);
                 }
+                Ok(names)
             },
+            Err(jammdb::Error::BucketMissing) => Ok(Vec::new()),
             Err(err) => Err(Error::Jammdb(Box::new(err))),
         }
     }
 
     fn add_pkg_names_for_bucket_and_removing(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
     {
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                match tx.get_or_create_bucket(bucket_name) {
-                    Ok(name_bucket) => {
-                        for name in names {
-                            let mut dependents_file = self.pkg_new_info_dir(&name);
-                            dependents_file.push("dependents.toml");
-                            let dependents = load_version_reqs(dependents_file)?;
-                            if dependents.is_empty() {
-                                match name_bucket.put(name.name(), "t") {
-                                    Ok(_) => (),
-                                    Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                                }
-                            } else {
-                                return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
-                            }
-                        }
-                        match tx.commit() {
-                            Ok(()) => Ok(()),
-                            Err(err) => Err(Error::Jammdb(Box::new(err))),
-                        }
-                    },
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(Box::new(err))),
+        let tx = db_tx(&self.pkg_db, true)?;
+        let name_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
+        for name in names {
+            let mut dependents_file = self.pkg_new_info_dir(&name);
+            dependents_file.push("dependents.toml");
+            let dependents = load_version_reqs(dependents_file)?;
+            if dependents.is_empty() {
+                bucket_put(&name_bucket, name.name(), "t")?;
+            } else {
+                return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
+            }
         }
+        tx_commit(tx)?;
+        Ok(())
     }    
 
     fn add_pkg_names_for_buckets_and_autoremoving(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
     {
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                {
-                    let version_bucket = match tx.get_bucket(version_bucket_name) {
-                        Ok(tmp_version_bucket) => tmp_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                    };
-                    let name_bucket = match tx.get_or_create_bucket(bucket_name) {
-                        Ok(tmp_name_bucket) => tmp_name_bucket,
-                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                    };
-                    for data in version_bucket.cursor() {
-                        let name = match String::from_utf8(data.kv().key().to_vec()) {
-                            Ok(s) => PkgName::parse(s.as_str())?,
-                            Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
-                        };
-                        let mut dependents_file = self.pkg_new_info_dir(&name);
-                        dependents_file.push("dependents.toml");
-                        let dependents = load_version_reqs(dependents_file)?;
-                        if dependents.is_empty() {
-                            match name_bucket.put(data.kv().key().to_vec(), "t") {
-                                Ok(_) => (),
-                                Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                            }
-                        }
-                    }
+        let tx = db_tx(&self.pkg_db, true)?;
+        {
+            let version_bucket = match tx.get_bucket(version_bucket_name) {
+                Ok(tmp_version_bucket) => tmp_version_bucket,
+                Err(err) => return Err(Error::Jammdb(Box::new(err))),
+            };
+            let name_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
+            for data in version_bucket.cursor() {
+                let name = match String::from_utf8(data.kv().key().to_vec()) {
+                    Ok(s) => PkgName::parse(s.as_str())?,
+                    Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
+                };
+                let mut dependents_file = self.pkg_new_info_dir(&name);
+                dependents_file.push("dependents.toml");
+                let dependents = load_version_reqs(dependents_file)?;
+                if dependents.is_empty() {
+                    bucket_put(&name_bucket, data.kv().key().to_vec(), "t")?;
                 }
-                match tx.commit() {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(Box::new(err))),
+            }
         }
+        tx_commit(tx)?;
+        Ok(())
     }    
     
     fn remove_pkg_versions_for_buckets(&self, removal_bucket_name: &str, bucket_name: &str) -> Result<()>
     { 
-        match self.pkg_db.tx(true) {
-            Ok(tx) => {
-                {
-                    let removal_bucket = match tx.get_bucket(removal_bucket_name) {
-                        Ok(tmp_removal_bucket) => tmp_removal_bucket,
-                        Err(jammdb::Error::BucketMissing) => return Ok(()),
-                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                    };
-                    let version_bucket = match tx.get_or_create_bucket(bucket_name) {
-                        Ok(tmp_version_bucket) => tmp_version_bucket,
-                        Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                    };
-                    for data in removal_bucket.cursor() {
-                        match version_bucket.delete(data.kv().key()) {
-                            Ok(_) => (),
-                            Err(err) => return Err(Error::Jammdb(Box::new(err))),
-                        }
-                    }
-                }
-                match tx.delete_bucket(removal_bucket_name) {
-                    Ok(()) => (),
+        let tx = db_tx(&self.pkg_db, true)?;
+        {
+            let removal_bucket = match tx.get_bucket(removal_bucket_name) {
+                Ok(tmp_removal_bucket) => tmp_removal_bucket,
+                Err(jammdb::Error::BucketMissing) => return Ok(()),
+                Err(err) => return Err(Error::Jammdb(Box::new(err))),
+            };
+            let version_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
+            for data in removal_bucket.cursor() {
+                match version_bucket.delete(data.kv().key()) {
+                    Ok(_) => (),
                     Err(err) => return Err(Error::Jammdb(Box::new(err))),
                 }
-                match tx.commit() {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Jammdb(Box::new(err))),
-                }
-            },
-            Err(err) => Err(Error::Jammdb(Box::new(err))),
+            }
         }
+        tx_delete_bucket(&tx, removal_bucket_name)?;
+        tx_commit(tx)?;
+        Ok(())
     }
     
     pub fn pkg_versions(&self) -> Result<Vec<(PkgName, Version)>>
