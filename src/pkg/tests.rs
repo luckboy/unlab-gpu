@@ -6,7 +6,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::fs;
+use std::io::BufWriter;
 use std::io::Cursor;
+use bzip2::write::BzEncoder;
+use flate2::write::GzEncoder;
+use liblzma::write::XzEncoder;
+use zip::write::SimpleFileOptions;
+use zip::write::ZipWriter;
+use zip::CompressionMethod;
 use sealed_test::prelude::*;
 use super::*;
 
@@ -992,6 +999,113 @@ fn create_pkg(path: &str, manifest: &str, bin: Option<(&str, &str)>, lib: Option
         },
         None => (),
     }
+}
+
+fn dirs_from_path(path: &PathBuf) -> Vec<PathBuf>
+{
+    let mut dirs: Vec<PathBuf> = Vec::new();
+    let mut path_buf = path.clone();
+    while path_buf != PathBuf::from("") && path_buf != PathBuf::from(".") {
+        dirs.push(path_buf.clone());
+        path_buf.pop();
+    }
+    dirs.reverse();
+    dirs
+}
+
+fn create_zip(archive_path: &str, path: &str, manifest: &str, bin: Option<(&str, &str)>, lib: Option<(&str, &str)>)
+{
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::DEFLATE);
+    let mut file = File::create(archive_path).unwrap();
+    let mut bw = BufWriter::new(&mut file);
+    let mut zip_writer = ZipWriter::new(&mut bw);
+    let path_buf = PathBuf::from(path.replace('/', path::MAIN_SEPARATOR_STR));
+    if path_buf != PathBuf::from(".") {
+        let dirs = dirs_from_path(&path_buf);
+        for dir in  &dirs {
+            zip_writer.add_directory_from_path(dir.as_path(), options).unwrap();
+        }
+    }
+    let mut manifest_file = path_buf.clone();
+    manifest_file.push("Unlab.toml");
+    zip_writer.start_file_from_path(manifest_file.as_path(), options).unwrap();
+    write!(&mut zip_writer, "{}", manifest).unwrap();
+    match bin {
+        Some((bin_path, script_content)) => {
+            let tmp_bin_file = PathBuf::from(bin_path.replace('/', path::MAIN_SEPARATOR_STR));
+            let mut tmp_bin_dir = tmp_bin_file.clone();
+            tmp_bin_dir.pop();
+            let tmp_dirs = dirs_from_path(&tmp_bin_dir);
+            for tmp_dir in  &tmp_dirs {
+                let mut dir = path_buf.clone();
+                dir.push(tmp_dir.as_path());
+                zip_writer.add_directory_from_path(dir.as_path(), options).unwrap();
+            }
+            let mut bin_file = path_buf.clone();
+            bin_file.push(tmp_bin_file.as_path());
+            zip_writer.start_file_from_path(bin_file.as_path(), options).unwrap();
+            write!(&mut zip_writer, "{}", script_content).unwrap();
+        },
+        None => (),
+    }
+    match lib {
+        Some((lib_path, lib_content)) => {
+            let tmp_lib_file = PathBuf::from(lib_path.replace('/', path::MAIN_SEPARATOR_STR));
+            let mut tmp_lib_dir = tmp_lib_file.clone();
+            tmp_lib_dir.pop();
+            let tmp_dirs = dirs_from_path(&tmp_lib_dir);
+            for tmp_dir in  &tmp_dirs {
+                let mut dir = path_buf.clone();
+                dir.push(tmp_dir.as_path());
+                zip_writer.add_directory_from_path(dir.as_path(), options).unwrap();
+            }
+            let mut lib_file = path_buf.clone();
+            lib_file.push(tmp_lib_file.as_path());
+            zip_writer.start_file_from_path(lib_file.as_path(), options).unwrap();
+            write!(&mut zip_writer, "{}", lib_content).unwrap();
+        },
+        None => (),
+    }
+    zip_writer.finish().unwrap();
+}
+
+fn create_tar_gz_from_pkg(archive_path: &str, path: &str)
+{
+    let mut file = File::create(archive_path).unwrap();
+    let mut bw = BufWriter::new(&mut file);
+    let mut encoder = GzEncoder::new(&mut bw, flate2::Compression::default());
+    let mut builder = tar::Builder::new(&mut encoder);
+    builder.append_dir_all(path, path).unwrap();
+    builder.finish().unwrap();
+}
+
+fn create_tar_bz2_from_pkg(archive_path: &str, path: &str)
+{
+    let mut file = File::create(archive_path).unwrap();
+    let mut bw = BufWriter::new(&mut file);
+    let mut encoder = BzEncoder::new(&mut bw, bzip2::Compression::default());
+    let mut builder = tar::Builder::new(&mut encoder);
+    builder.append_dir_all(path, path).unwrap();
+    builder.finish().unwrap();
+}
+
+fn create_tar_xz_from_pkg(archive_path: &str, path: &str)
+{
+    let mut file = File::create(archive_path).unwrap();
+    let mut bw = BufWriter::new(&mut file);
+    let mut encoder = XzEncoder::new(&mut bw, 6);
+    let mut builder = tar::Builder::new(&mut encoder);
+    builder.append_dir_all(path, path).unwrap();
+    builder.finish().unwrap();
+}
+
+fn create_tar_from_pkg(archive_path: &str, path: &str)
+{
+    let mut file = File::create(archive_path).unwrap();
+    let mut bw = BufWriter::new(&mut file);
+    let mut builder = tar::Builder::new(&mut bw);
+    builder.append_dir_all(path, path).unwrap();
+    builder.finish().unwrap();
 }
 
 #[sealed_test]
@@ -3527,6 +3641,530 @@ W = 42
             assert_eq!(true, versions.contains(&(PkgName::new(String::from("example2.com/def")), Version::parse("2.3.4").unwrap())));
             assert_eq!(true, versions.contains(&(PkgName::new(String::from("example3.com/ghi")), Version::parse("3.4.5").unwrap())));
             assert_eq!(true, versions.contains(&(PkgName::new(String::from("example1.com/jkl")), Version::parse("4.5.6").unwrap())));
+            let new_versions = pkg_manager.pkg_versions_for_bucket("new_versions").unwrap();
+            assert_eq!(true, new_versions.is_empty());
+            let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
+            assert_eq!(true, pkgs_to_remove.is_empty());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_pkg_manager_install_installs_package_from_zip_archive()
+{
+    fs::create_dir("home").unwrap();
+    let mut sources_file = PathBuf::from("home");
+    sources_file.push("sources.toml");
+    let sources_content = "
+\"example.com/abc\".versions.\"1.2.3\".file = \"abc.zip\"
+";
+    fs::write(sources_file, &sources_content[1..]).unwrap();
+    let manifest = "
+[package]
+name = \"example.com/abc\"
+
+[dependencies]
+";
+    let script_content = "
+#!/usr/bin/env unlab-gpu --
+println(1 + 2)
+";
+    let lib_content = "
+X = 1
+";
+    create_zip("abc.zip", "abc", &manifest[1..], Some(("bin/script.un", &script_content[1..])), Some(("lib/pl.jan.nowak/abc/lib.un", &lib_content[1..])));
+    let mut bin_dir = PathBuf::from("work");
+    bin_dir.push("bin");
+    let mut lib_dir = PathBuf::from("work");
+    lib_dir.push("lib");
+    let mut doc_dir = PathBuf::from("work");
+    doc_dir.push("doc");
+    let printer = EmptyPrinter::new();
+    let mut pkg_manager = match PkgManager::new(PathBuf::from("home"), PathBuf::from("work"), bin_dir.clone(), lib_dir.clone(), doc_dir.clone(), Vec::new(), Arc::new(printer)) {
+        Ok(tmp_pkg_manager) => tmp_pkg_manager, 
+        Err(_) => {
+            assert!(false);
+            return;
+        },
+    };
+    pkg_manager.load_constraints().unwrap();
+    pkg_manager.load_sources().unwrap();
+    match pkg_manager.install(&[PkgName::new(String::from("example.com/abc"))], false, false, false) {
+        Ok(()) => {
+            let mut new_part_info_dir = PathBuf::from("work");
+            new_part_info_dir.push("var");
+            new_part_info_dir.push("info.new.part");
+            match fs::metadata(new_part_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut new_info_dir = PathBuf::from("work");
+            new_info_dir.push("var");
+            new_info_dir.push("info.new");
+            match fs::metadata(new_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut tmp_dir = PathBuf::from("work");
+            tmp_dir.push("tmp");
+            match fs::metadata(tmp_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut pkg_info_dir = PathBuf::from("work");
+            pkg_info_dir.push("var");
+            pkg_info_dir.push("info");
+            pkg_info_dir.push("example.com");
+            pkg_info_dir.push("abc");
+            let mut manifest_file = pkg_info_dir.clone();
+            manifest_file.push("manifest.toml");
+            assert_eq!(String::from(&manifest[1..]), fs::read_to_string(manifest_file).unwrap());
+            let mut dependents_file = pkg_info_dir.clone();
+            dependents_file.push("dependents.toml");
+            let dependents = load_version_reqs(dependents_file).unwrap();
+            assert_eq!(true, dependents.is_empty());
+            let mut paths_file = pkg_info_dir.clone();
+            paths_file.push("paths.toml");
+            let paths = Paths::load(paths_file).unwrap();
+            let bin = PathBuf::from("script.un");
+            assert_eq!(vec![bin.to_string_lossy().into_owned()], paths.bin);
+            let mut lib = PathBuf::from("pl.jan.nowak");
+            lib.push("abc");
+            assert_eq!(vec![lib.to_string_lossy().into_owned()], paths.lib);
+            let mut script_file = PathBuf::from("work");
+            script_file.push("bin");
+            script_file.push("script.un");
+            assert_eq!(String::from(&script_content[1..]), fs::read_to_string(script_file).unwrap());
+            let mut lib_file = PathBuf::from("work");
+            lib_file.push("lib");
+            lib_file.push("pl.jan.nowak");
+            lib_file.push("abc");
+            lib_file.push("lib.un");
+            assert_eq!(String::from(&lib_content[1..]), fs::read_to_string(lib_file).unwrap());
+            let versions = pkg_manager.pkg_versions_for_bucket("versions").unwrap();
+            assert_eq!(1, versions.len());
+            assert_eq!(true, versions.contains(&(PkgName::new(String::from("example.com/abc")), Version::parse("1.2.3").unwrap())));
+            let new_versions = pkg_manager.pkg_versions_for_bucket("new_versions").unwrap();
+            assert_eq!(true, new_versions.is_empty());
+            let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
+            assert_eq!(true, pkgs_to_remove.is_empty());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_pkg_manager_install_installs_package_from_tar_gz_archive()
+{
+    fs::create_dir("home").unwrap();
+    let mut sources_file = PathBuf::from("home");
+    sources_file.push("sources.toml");
+    let sources_content = "
+\"example.com/abc\".versions.\"1.2.3\".file = \"abc.tar.gz\"
+";
+    fs::write(sources_file, &sources_content[1..]).unwrap();
+    let manifest = "
+[package]
+name = \"example.com/abc\"
+
+[dependencies]
+";
+    let script_content = "
+#!/usr/bin/env unlab-gpu --
+println(1 + 2)
+";
+    let lib_content = "
+X = 1
+";
+    create_pkg("abc", &manifest[1..], Some(("bin/script.un", &script_content[1..])), Some(("lib/pl.jan.nowak/abc/lib.un", &lib_content[1..])));
+    create_tar_gz_from_pkg("abc.tar.gz", "abc");
+    let mut bin_dir = PathBuf::from("work");
+    bin_dir.push("bin");
+    let mut lib_dir = PathBuf::from("work");
+    lib_dir.push("lib");
+    let mut doc_dir = PathBuf::from("work");
+    doc_dir.push("doc");
+    let printer = EmptyPrinter::new();
+    let mut pkg_manager = match PkgManager::new(PathBuf::from("home"), PathBuf::from("work"), bin_dir.clone(), lib_dir.clone(), doc_dir.clone(), Vec::new(), Arc::new(printer)) {
+        Ok(tmp_pkg_manager) => tmp_pkg_manager, 
+        Err(_) => {
+            assert!(false);
+            return;
+        },
+    };
+    pkg_manager.load_constraints().unwrap();
+    pkg_manager.load_sources().unwrap();
+    match pkg_manager.install(&[PkgName::new(String::from("example.com/abc"))], false, false, false) {
+        Ok(()) => {
+            let mut new_part_info_dir = PathBuf::from("work");
+            new_part_info_dir.push("var");
+            new_part_info_dir.push("info.new.part");
+            match fs::metadata(new_part_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut new_info_dir = PathBuf::from("work");
+            new_info_dir.push("var");
+            new_info_dir.push("info.new");
+            match fs::metadata(new_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut tmp_dir = PathBuf::from("work");
+            tmp_dir.push("tmp");
+            match fs::metadata(tmp_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut pkg_info_dir = PathBuf::from("work");
+            pkg_info_dir.push("var");
+            pkg_info_dir.push("info");
+            pkg_info_dir.push("example.com");
+            pkg_info_dir.push("abc");
+            let mut manifest_file = pkg_info_dir.clone();
+            manifest_file.push("manifest.toml");
+            assert_eq!(String::from(&manifest[1..]), fs::read_to_string(manifest_file).unwrap());
+            let mut dependents_file = pkg_info_dir.clone();
+            dependents_file.push("dependents.toml");
+            let dependents = load_version_reqs(dependents_file).unwrap();
+            assert_eq!(true, dependents.is_empty());
+            let mut paths_file = pkg_info_dir.clone();
+            paths_file.push("paths.toml");
+            let paths = Paths::load(paths_file).unwrap();
+            let bin = PathBuf::from("script.un");
+            assert_eq!(vec![bin.to_string_lossy().into_owned()], paths.bin);
+            let mut lib = PathBuf::from("pl.jan.nowak");
+            lib.push("abc");
+            assert_eq!(vec![lib.to_string_lossy().into_owned()], paths.lib);
+            let mut script_file = PathBuf::from("work");
+            script_file.push("bin");
+            script_file.push("script.un");
+            assert_eq!(String::from(&script_content[1..]), fs::read_to_string(script_file).unwrap());
+            let mut lib_file = PathBuf::from("work");
+            lib_file.push("lib");
+            lib_file.push("pl.jan.nowak");
+            lib_file.push("abc");
+            lib_file.push("lib.un");
+            assert_eq!(String::from(&lib_content[1..]), fs::read_to_string(lib_file).unwrap());
+            let versions = pkg_manager.pkg_versions_for_bucket("versions").unwrap();
+            assert_eq!(1, versions.len());
+            assert_eq!(true, versions.contains(&(PkgName::new(String::from("example.com/abc")), Version::parse("1.2.3").unwrap())));
+            let new_versions = pkg_manager.pkg_versions_for_bucket("new_versions").unwrap();
+            assert_eq!(true, new_versions.is_empty());
+            let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
+            assert_eq!(true, pkgs_to_remove.is_empty());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_pkg_manager_install_installs_package_from_tar_bz2_archive()
+{
+    fs::create_dir("home").unwrap();
+    let mut sources_file = PathBuf::from("home");
+    sources_file.push("sources.toml");
+    let sources_content = "
+\"example.com/abc\".versions.\"1.2.3\".file = \"abc.tar.bz2\"
+";
+    fs::write(sources_file, &sources_content[1..]).unwrap();
+    let manifest = "
+[package]
+name = \"example.com/abc\"
+
+[dependencies]
+";
+    let script_content = "
+#!/usr/bin/env unlab-gpu --
+println(1 + 2)
+";
+    let lib_content = "
+X = 1
+";
+    create_pkg("abc", &manifest[1..], Some(("bin/script.un", &script_content[1..])), Some(("lib/pl.jan.nowak/abc/lib.un", &lib_content[1..])));
+    create_tar_bz2_from_pkg("abc.tar.bz2", "abc");
+    let mut bin_dir = PathBuf::from("work");
+    bin_dir.push("bin");
+    let mut lib_dir = PathBuf::from("work");
+    lib_dir.push("lib");
+    let mut doc_dir = PathBuf::from("work");
+    doc_dir.push("doc");
+    let printer = EmptyPrinter::new();
+    let mut pkg_manager = match PkgManager::new(PathBuf::from("home"), PathBuf::from("work"), bin_dir.clone(), lib_dir.clone(), doc_dir.clone(), Vec::new(), Arc::new(printer)) {
+        Ok(tmp_pkg_manager) => tmp_pkg_manager, 
+        Err(_) => {
+            assert!(false);
+            return;
+        },
+    };
+    pkg_manager.load_constraints().unwrap();
+    pkg_manager.load_sources().unwrap();
+    match pkg_manager.install(&[PkgName::new(String::from("example.com/abc"))], false, false, false) {
+        Ok(()) => {
+            let mut new_part_info_dir = PathBuf::from("work");
+            new_part_info_dir.push("var");
+            new_part_info_dir.push("info.new.part");
+            match fs::metadata(new_part_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut new_info_dir = PathBuf::from("work");
+            new_info_dir.push("var");
+            new_info_dir.push("info.new");
+            match fs::metadata(new_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut tmp_dir = PathBuf::from("work");
+            tmp_dir.push("tmp");
+            match fs::metadata(tmp_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut pkg_info_dir = PathBuf::from("work");
+            pkg_info_dir.push("var");
+            pkg_info_dir.push("info");
+            pkg_info_dir.push("example.com");
+            pkg_info_dir.push("abc");
+            let mut manifest_file = pkg_info_dir.clone();
+            manifest_file.push("manifest.toml");
+            assert_eq!(String::from(&manifest[1..]), fs::read_to_string(manifest_file).unwrap());
+            let mut dependents_file = pkg_info_dir.clone();
+            dependents_file.push("dependents.toml");
+            let dependents = load_version_reqs(dependents_file).unwrap();
+            assert_eq!(true, dependents.is_empty());
+            let mut paths_file = pkg_info_dir.clone();
+            paths_file.push("paths.toml");
+            let paths = Paths::load(paths_file).unwrap();
+            let bin = PathBuf::from("script.un");
+            assert_eq!(vec![bin.to_string_lossy().into_owned()], paths.bin);
+            let mut lib = PathBuf::from("pl.jan.nowak");
+            lib.push("abc");
+            assert_eq!(vec![lib.to_string_lossy().into_owned()], paths.lib);
+            let mut script_file = PathBuf::from("work");
+            script_file.push("bin");
+            script_file.push("script.un");
+            assert_eq!(String::from(&script_content[1..]), fs::read_to_string(script_file).unwrap());
+            let mut lib_file = PathBuf::from("work");
+            lib_file.push("lib");
+            lib_file.push("pl.jan.nowak");
+            lib_file.push("abc");
+            lib_file.push("lib.un");
+            assert_eq!(String::from(&lib_content[1..]), fs::read_to_string(lib_file).unwrap());
+            let versions = pkg_manager.pkg_versions_for_bucket("versions").unwrap();
+            assert_eq!(1, versions.len());
+            assert_eq!(true, versions.contains(&(PkgName::new(String::from("example.com/abc")), Version::parse("1.2.3").unwrap())));
+            let new_versions = pkg_manager.pkg_versions_for_bucket("new_versions").unwrap();
+            assert_eq!(true, new_versions.is_empty());
+            let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
+            assert_eq!(true, pkgs_to_remove.is_empty());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_pkg_manager_install_installs_package_from_tar_xz_archive()
+{
+    fs::create_dir("home").unwrap();
+    let mut sources_file = PathBuf::from("home");
+    sources_file.push("sources.toml");
+    let sources_content = "
+\"example.com/abc\".versions.\"1.2.3\".file = \"abc.tar.xz\"
+";
+    fs::write(sources_file, &sources_content[1..]).unwrap();
+    let manifest = "
+[package]
+name = \"example.com/abc\"
+
+[dependencies]
+";
+    let script_content = "
+#!/usr/bin/env unlab-gpu --
+println(1 + 2)
+";
+    let lib_content = "
+X = 1
+";
+    create_pkg("abc", &manifest[1..], Some(("bin/script.un", &script_content[1..])), Some(("lib/pl.jan.nowak/abc/lib.un", &lib_content[1..])));
+    create_tar_xz_from_pkg("abc.tar.xz", "abc");
+    let mut bin_dir = PathBuf::from("work");
+    bin_dir.push("bin");
+    let mut lib_dir = PathBuf::from("work");
+    lib_dir.push("lib");
+    let mut doc_dir = PathBuf::from("work");
+    doc_dir.push("doc");
+    let printer = EmptyPrinter::new();
+    let mut pkg_manager = match PkgManager::new(PathBuf::from("home"), PathBuf::from("work"), bin_dir.clone(), lib_dir.clone(), doc_dir.clone(), Vec::new(), Arc::new(printer)) {
+        Ok(tmp_pkg_manager) => tmp_pkg_manager, 
+        Err(_) => {
+            assert!(false);
+            return;
+        },
+    };
+    pkg_manager.load_constraints().unwrap();
+    pkg_manager.load_sources().unwrap();
+    match pkg_manager.install(&[PkgName::new(String::from("example.com/abc"))], false, false, false) {
+        Ok(()) => {
+            let mut new_part_info_dir = PathBuf::from("work");
+            new_part_info_dir.push("var");
+            new_part_info_dir.push("info.new.part");
+            match fs::metadata(new_part_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut new_info_dir = PathBuf::from("work");
+            new_info_dir.push("var");
+            new_info_dir.push("info.new");
+            match fs::metadata(new_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut tmp_dir = PathBuf::from("work");
+            tmp_dir.push("tmp");
+            match fs::metadata(tmp_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut pkg_info_dir = PathBuf::from("work");
+            pkg_info_dir.push("var");
+            pkg_info_dir.push("info");
+            pkg_info_dir.push("example.com");
+            pkg_info_dir.push("abc");
+            let mut manifest_file = pkg_info_dir.clone();
+            manifest_file.push("manifest.toml");
+            assert_eq!(String::from(&manifest[1..]), fs::read_to_string(manifest_file).unwrap());
+            let mut dependents_file = pkg_info_dir.clone();
+            dependents_file.push("dependents.toml");
+            let dependents = load_version_reqs(dependents_file).unwrap();
+            assert_eq!(true, dependents.is_empty());
+            let mut paths_file = pkg_info_dir.clone();
+            paths_file.push("paths.toml");
+            let paths = Paths::load(paths_file).unwrap();
+            let bin = PathBuf::from("script.un");
+            assert_eq!(vec![bin.to_string_lossy().into_owned()], paths.bin);
+            let mut lib = PathBuf::from("pl.jan.nowak");
+            lib.push("abc");
+            assert_eq!(vec![lib.to_string_lossy().into_owned()], paths.lib);
+            let mut script_file = PathBuf::from("work");
+            script_file.push("bin");
+            script_file.push("script.un");
+            assert_eq!(String::from(&script_content[1..]), fs::read_to_string(script_file).unwrap());
+            let mut lib_file = PathBuf::from("work");
+            lib_file.push("lib");
+            lib_file.push("pl.jan.nowak");
+            lib_file.push("abc");
+            lib_file.push("lib.un");
+            assert_eq!(String::from(&lib_content[1..]), fs::read_to_string(lib_file).unwrap());
+            let versions = pkg_manager.pkg_versions_for_bucket("versions").unwrap();
+            assert_eq!(1, versions.len());
+            assert_eq!(true, versions.contains(&(PkgName::new(String::from("example.com/abc")), Version::parse("1.2.3").unwrap())));
+            let new_versions = pkg_manager.pkg_versions_for_bucket("new_versions").unwrap();
+            assert_eq!(true, new_versions.is_empty());
+            let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
+            assert_eq!(true, pkgs_to_remove.is_empty());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_pkg_manager_install_installs_package_from_tar_archive()
+{
+    fs::create_dir("home").unwrap();
+    let mut sources_file = PathBuf::from("home");
+    sources_file.push("sources.toml");
+    let sources_content = "
+\"example.com/abc\".versions.\"1.2.3\".file = \"abc.tar\"
+";
+    fs::write(sources_file, &sources_content[1..]).unwrap();
+    let manifest = "
+[package]
+name = \"example.com/abc\"
+
+[dependencies]
+";
+    let script_content = "
+#!/usr/bin/env unlab-gpu --
+println(1 + 2)
+";
+    let lib_content = "
+X = 1
+";
+    create_pkg("abc", &manifest[1..], Some(("bin/script.un", &script_content[1..])), Some(("lib/pl.jan.nowak/abc/lib.un", &lib_content[1..])));
+    create_tar_from_pkg("abc.tar", "abc");
+    let mut bin_dir = PathBuf::from("work");
+    bin_dir.push("bin");
+    let mut lib_dir = PathBuf::from("work");
+    lib_dir.push("lib");
+    let mut doc_dir = PathBuf::from("work");
+    doc_dir.push("doc");
+    let printer = EmptyPrinter::new();
+    let mut pkg_manager = match PkgManager::new(PathBuf::from("home"), PathBuf::from("work"), bin_dir.clone(), lib_dir.clone(), doc_dir.clone(), Vec::new(), Arc::new(printer)) {
+        Ok(tmp_pkg_manager) => tmp_pkg_manager, 
+        Err(_) => {
+            assert!(false);
+            return;
+        },
+    };
+    pkg_manager.load_constraints().unwrap();
+    pkg_manager.load_sources().unwrap();
+    match pkg_manager.install(&[PkgName::new(String::from("example.com/abc"))], false, false, false) {
+        Ok(()) => {
+            let mut new_part_info_dir = PathBuf::from("work");
+            new_part_info_dir.push("var");
+            new_part_info_dir.push("info.new.part");
+            match fs::metadata(new_part_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut new_info_dir = PathBuf::from("work");
+            new_info_dir.push("var");
+            new_info_dir.push("info.new");
+            match fs::metadata(new_info_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut tmp_dir = PathBuf::from("work");
+            tmp_dir.push("tmp");
+            match fs::metadata(tmp_dir.as_path()) {
+                Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
+                Ok(_) => assert!(false),
+            }
+            let mut pkg_info_dir = PathBuf::from("work");
+            pkg_info_dir.push("var");
+            pkg_info_dir.push("info");
+            pkg_info_dir.push("example.com");
+            pkg_info_dir.push("abc");
+            let mut manifest_file = pkg_info_dir.clone();
+            manifest_file.push("manifest.toml");
+            assert_eq!(String::from(&manifest[1..]), fs::read_to_string(manifest_file).unwrap());
+            let mut dependents_file = pkg_info_dir.clone();
+            dependents_file.push("dependents.toml");
+            let dependents = load_version_reqs(dependents_file).unwrap();
+            assert_eq!(true, dependents.is_empty());
+            let mut paths_file = pkg_info_dir.clone();
+            paths_file.push("paths.toml");
+            let paths = Paths::load(paths_file).unwrap();
+            let bin = PathBuf::from("script.un");
+            assert_eq!(vec![bin.to_string_lossy().into_owned()], paths.bin);
+            let mut lib = PathBuf::from("pl.jan.nowak");
+            lib.push("abc");
+            assert_eq!(vec![lib.to_string_lossy().into_owned()], paths.lib);
+            let mut script_file = PathBuf::from("work");
+            script_file.push("bin");
+            script_file.push("script.un");
+            assert_eq!(String::from(&script_content[1..]), fs::read_to_string(script_file).unwrap());
+            let mut lib_file = PathBuf::from("work");
+            lib_file.push("lib");
+            lib_file.push("pl.jan.nowak");
+            lib_file.push("abc");
+            lib_file.push("lib.un");
+            assert_eq!(String::from(&lib_content[1..]), fs::read_to_string(lib_file).unwrap());
+            let versions = pkg_manager.pkg_versions_for_bucket("versions").unwrap();
+            assert_eq!(1, versions.len());
+            assert_eq!(true, versions.contains(&(PkgName::new(String::from("example.com/abc")), Version::parse("1.2.3").unwrap())));
             let new_versions = pkg_manager.pkg_versions_for_bucket("new_versions").unwrap();
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
