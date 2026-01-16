@@ -2013,6 +2013,7 @@ impl PkgManager
         {
             let version_bucket = match tx.get_bucket(version_bucket_name) {
                 Ok(tmp_version_bucket) => tmp_version_bucket,
+                Err(jammdb::Error::BucketMissing) => return Ok(()),
                 Err(err) => return Err(Error::Jammdb(Box::new(err))),
             };
             let name_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
