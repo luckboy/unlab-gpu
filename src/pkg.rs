@@ -1991,11 +1991,16 @@ impl PkgManager
         for name in names {
             let mut dependents_file = self.pkg_new_info_dir(&name);
             dependents_file.push("dependents.toml");
-            let dependents = load_version_reqs(dependents_file)?;
-            if dependents.is_empty() {
-                bucket_put(&name_bucket, name.name(), "t")?;
-            } else {
-                return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
+            let dependents = load_opt_version_reqs(dependents_file)?;
+            match dependents {
+                Some(dependents) => {
+                    if dependents.is_empty() {
+                        bucket_put(&name_bucket, name.name(), "t")?;
+                    } else {
+                        return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
+                    }
+                },
+                None => return Err(Error::PkgName(name.clone(), String::from("not found package"))),
             }
         }
         tx_commit(tx)?;
