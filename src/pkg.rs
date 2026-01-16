@@ -1860,10 +1860,12 @@ impl PkgManager
     {
         let tx = db_tx(&self.pkg_db, true)?;
         match tx.delete_bucket(bucket_name) {
-            Ok(()) => Ok(()),
-            Err(jammdb::Error::BucketMissing) => Ok(()),
-            Err(err) => Err(Error::Jammdb(Box::new(err))),
+            Ok(()) => (),
+            Err(jammdb::Error::BucketMissing) => (),
+            Err(err) => return Err(Error::Jammdb(Box::new(err))),
         }
+        tx_commit(tx)?;
+        Ok(())
     }
     
     fn pkg_versions_for_bucket(&self, bucket_name: &str) -> Result<Vec<(PkgName, Version)>>
