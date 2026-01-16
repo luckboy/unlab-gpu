@@ -2726,20 +2726,6 @@ impl PkgManager
         self.install_pkgs(is_doc)?;
         Ok(())
     }
-
-    pub fn install_all(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
-    {
-        self.printer.print_pre_installing();
-        let mut visiteds: HashSet<PkgName> = HashSet::new();
-        let versions = self.pkg_versions_for_bucket("versions")?;
-        for (name, _) in &versions {
-            self.prepare_new_part_infos_for_pre_installing(name, &mut visiteds, is_update, is_force)?;
-        }
-        self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
-        self.printer.print_installing();
-        self.install_pkgs(is_doc)?;
-        Ok(())
-    }
     
     pub fn install_deps(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
