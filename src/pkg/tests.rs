@@ -6695,7 +6695,7 @@ X = 1
             let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
             assert_eq!(true, pkgs_to_change.is_empty());
         },
-        Err(_) => assert!(false)
+        Err(_) => assert!(false),
     }
 }
 
