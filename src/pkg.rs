@@ -2602,13 +2602,7 @@ impl PkgManager
     {
         let names = self.pkg_names_for_bucket("pkgs_to_remove")?;
         for name in &names {
-            if !self.pkgs.contains_key(name) {
-                self.pkgs.insert(name.clone(), Pkg::new_without_copying(self.pkg_info_dir(name))?);
-            }
-            let pkg = match self.pkgs.get(name) {
-                Some(tmp_pkg) => tmp_pkg.clone(),
-                None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
-            };
+            let pkg = Pkg::new_without_copying(self.pkg_info_dir(name))?;
             let manifest = pkg.manifest()?;
             match &manifest.dependencies {
                 Some(deps) => {
