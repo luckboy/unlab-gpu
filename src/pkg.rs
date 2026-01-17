@@ -2934,7 +2934,7 @@ impl PkgManager
         Ok(())
     }
 
-    pub fn cont(&self, is_doc: bool) -> Result<()>
+    pub fn cont(&self, is_doc: bool, are_deps: bool) -> Result<()>
     {
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
@@ -2944,7 +2944,7 @@ impl PkgManager
         if is_new_info_dir && !self.has_bucket("pkgs_to_remove")? {
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
-        } else if is_new_info_dir && !self.has_bucket("pkgs_to_remove")? {
+        } else if is_new_info_dir && (are_deps || !self.has_bucket("pkgs_to_remove")?) {
             self.printer.print_installing();
             self.printer.print_cleaning_after_install(false);
             match recursively_remove(self.new_info_dir(), true) {
@@ -2955,15 +2955,17 @@ impl PkgManager
         }
         if self.has_bucket("pkgs_to_remove")? {
             self.printer.print_removing();
-            if is_new_info_dir && self.has_bucket("pkgs_to_change")? {
-                self.change_pkgs()?;
-            } else if is_new_info_dir {
-                self.printer.print_cleaning_before_removal(false);
-                match recursively_remove(self.new_info_dir(), true) {
-                    Ok(()) => (),
-                    Err(err) => return Err(Error::Io(err)),
+            if !are_deps {
+                if is_new_info_dir && self.has_bucket("pkgs_to_change")? {
+                    self.change_pkgs()?;
+                } else if is_new_info_dir {
+                    self.printer.print_cleaning_before_removal(false);
+                    match recursively_remove(self.new_info_dir(), true) {
+                        Ok(()) => (),
+                        Err(err) => return Err(Error::Io(err)),
+                    }
+                    self.printer.print_cleaning_before_removal(true);
                 }
-                self.printer.print_cleaning_before_removal(true);
             }
             self.remove_pkgs()?;
         }
