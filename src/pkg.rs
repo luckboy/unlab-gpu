@@ -82,6 +82,8 @@ pub trait Print
 
     fn print_cleaning_after_install(&self, is_done: bool);
 
+    fn print_cleaning_before_removal(&self, is_done: bool);
+
     fn print_cleaning_after_error(&self, is_done: bool);
 
     fn print_cleaning(&self, is_done: bool);
@@ -142,6 +144,9 @@ impl Print for EmptyPrinter
     {}
 
     fn print_cleaning_after_install(&self, _is_done: bool)
+    {}
+
+    fn print_cleaning_before_removal(&self, _is_done: bool)
     {}
 
     fn print_cleaning_after_error(&self, _is_done: bool)
@@ -313,6 +318,18 @@ impl Print for StdPrinter
         }
     }
 
+    fn print_cleaning_before_removal(&self, is_done: bool)
+    {
+        if is_done {
+            println!(" done");
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Cleaning before removal ...");
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+    
     fn print_cleaning_after_error(&self, is_done: bool)
     {
         if is_done {
@@ -1437,6 +1454,17 @@ impl Pkg
     fn new_with_copying(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
     { Self::new_with_copying_and_flags(dir, info_dir, new_part_info_dir, false, true) }
 
+    fn new_without_copying(info_dir: PathBuf) -> Result<Self>
+    {
+        Ok(Pkg {
+                dir: None,
+                info_dir: Some(info_dir),
+                new_part_info_dir: None,
+                is_added_by_dependent: false,
+                has_new_version_from_bucket: true,
+        })
+    }    
+    
     fn old_manifest(&self) -> Result<Option<Manifest>>
     {
         match &self.new_part_info_dir {
@@ -1984,6 +2012,30 @@ impl PkgManager
         }
     }
 
+    fn has_pkg_names_for_bucket(&self, bucket_name: &str, name: &PkgName) -> Result<bool>
+    {
+        let tx = db_tx(&self.pkg_db, false)?;
+        match tx.get_bucket(bucket_name) {
+            Ok(name_bucket) => {
+                match name_bucket.get(name.name()) {
+                    Some(_) => Ok(true),
+                    None => Ok(false),
+                }
+            },
+            Err(jammdb::Error::BucketMissing) => Ok(false),
+            Err(err) => Err(Error::Jammdb(Box::new(err))),
+        }
+    }
+    
+    fn add_pkg_names_for_bucket(&self, bucket_name: &str, name: &PkgName) -> Result<()>
+    {
+        let tx = db_tx(&self.pkg_db, true)?;
+        let name_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
+        bucket_put(&name_bucket, name.name(), "t")?;
+        tx_commit(tx)?;
+        Ok(())
+    }
+
     fn add_pkg_names_for_bucket_and_removing(&self, bucket_name: &str, names: &[PkgName]) -> Result<()>
     {
         let tx = db_tx(&self.pkg_db, true)?;
@@ -2118,6 +2170,7 @@ impl PkgManager
         self.printer.print_cleaning_after_error(false);
         self.remove_bucket("new_versions")?;
         self.remove_bucket("pkgs_to_remove")?;
+        self.remove_bucket("pkgs_to_change")?;
         match self.res_remove_dirs_for_cleaning() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
@@ -2527,6 +2580,7 @@ impl PkgManager
         }
         match rename(self.new_part_info_dir(), self.new_info_dir()) {
            Ok(()) => Ok(()),
+           Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
            Err(err) => Err(Error::Io(err)),
         }
     }
@@ -2537,6 +2591,64 @@ impl PkgManager
         self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
+            Err(err) => {
+                self.clean_after_error()?;
+                Err(err)
+            },
+        }
+    }
+    
+    fn prepare_new_part_infos_for_pre_removing_without_reset(&mut self) -> Result<()>
+    {
+        let names = self.pkg_names_for_bucket("pkgs_to_remove")?;
+        for name in &names {
+            if !self.pkgs.contains_key(name) {
+                self.pkgs.insert(name.clone(), Pkg::new_without_copying(self.pkg_info_dir(name))?);
+            }
+            let pkg = match self.pkgs.get(name) {
+                Some(tmp_pkg) => tmp_pkg.clone(),
+                None => return Err(Error::PkgName(name.clone(), String::from("no package"))),
+            };
+            let manifest = pkg.manifest()?;
+            match &manifest.dependencies {
+                Some(deps) => {
+                    for dep_name in deps.keys() {
+                        if !self.has_pkg_names_for_bucket("pkgs_to_change", dep_name)? {
+                            if self.pkg_version_for_bucket("versions", dep_name)?.is_some() {
+                                self.add_pkg_names_for_bucket("pkgs_to_change", dep_name)?;
+                                self.pkgs.insert(dep_name.clone(), Pkg::new_with_copying_and_flags(None, self.pkg_info_dir(dep_name), self.pkg_new_part_info_dir(dep_name), true, false)?);
+                            } else {
+                                return Err(Error::PkgName(dep_name.clone(), String::from("no package2")));
+                            }
+                        }
+                        match self.pkgs.get(dep_name) {
+                            Some(dep_pkg) => {
+                                let mut depentents = dep_pkg.dependents()?;
+                                depentents.remove(name);
+                                dep_pkg.save_dependents(&depentents)?;
+                            },
+                            None => return Err(Error::PkgName(dep_name.clone(), String::from("no package3"))),
+                        }
+                    }
+                },
+                None => (),
+            }
+        }
+        Ok(())
+    }
+
+    fn prepare_new_infos_for_pre_removing(&mut self) -> Result<()>
+    {
+        let res = self.prepare_new_part_infos_for_pre_removing_without_reset();
+        self.pkgs.clear();
+        match res {
+            Ok(()) => {
+                match rename(self.new_part_info_dir(), self.new_info_dir()) {
+                    Ok(()) => Ok(()),
+                    Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
             Err(err) => {
                 self.clean_after_error()?;
                 Err(err)
@@ -2617,6 +2729,22 @@ impl PkgManager
                 }
             },
             Err(err) => Err(err),
+        }
+    }
+    
+    fn change_pkg(&self, name: &PkgName) -> Result<()>
+    {
+        let mut dependents_file = self.pkg_new_info_dir(name);
+        dependents_file.push("dependents.toml");
+        match fs::metadata(dependents_file) {
+            Ok(_) => {
+                match self.res_copy_dependents_file(name) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(Error::Io(err)),
         }
     }
     
@@ -2707,6 +2835,22 @@ impl PkgManager
         self.printer.print_cleaning_after_install(true);
         Ok(())
     }
+
+    fn change_pkgs(&self) -> Result<()>
+    {
+        let names = self.pkg_names_for_bucket("pkgs_to_change")?;
+        for name in &names {
+            self.change_pkg(name)?;
+        }
+        self.remove_bucket("pkgs_to_change")?;
+        self.printer.print_cleaning_before_removal(false);
+        match recursively_remove(self.new_info_dir(), true) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        self.printer.print_cleaning_before_removal(true);
+        Ok(())
+    }
     
     fn remove_pkgs(&self) -> Result<()>
     {
@@ -2750,11 +2894,13 @@ impl PkgManager
         Ok(())
     }
     
-    pub fn remove(&self, names: &[PkgName]) -> Result<()>
+    pub fn remove(&mut self, names: &[PkgName]) -> Result<()>
     {
         self.printer.print_pre_removing();
         self.add_pkg_names_for_bucket_and_removing("pkgs_to_remove", names)?;
+        self.prepare_new_infos_for_pre_removing()?;
         self.printer.print_removing();
+        self.change_pkgs()?;
         self.remove_pkgs()?;
         Ok(())
     }
@@ -2795,10 +2941,10 @@ impl PkgManager
             Err(err) if err.kind() == ErrorKind::NotFound => false,
             Err(err) => return Err(Error::Io(err)),
         };
-        if is_new_info_dir && self.has_bucket("new_versions")? {
+        if is_new_info_dir && !self.has_bucket("pkgs_to_remove")? {
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
-        } else if is_new_info_dir {
+        } else if is_new_info_dir && !self.has_bucket("pkgs_to_remove")? {
             self.printer.print_installing();
             self.printer.print_cleaning_after_install(false);
             match recursively_remove(self.new_info_dir(), true) {
@@ -2809,6 +2955,16 @@ impl PkgManager
         }
         if self.has_bucket("pkgs_to_remove")? {
             self.printer.print_removing();
+            if is_new_info_dir && self.has_bucket("pkgs_to_change")? {
+                self.change_pkgs()?;
+            } else if is_new_info_dir {
+                self.printer.print_cleaning_before_removal(false);
+                match recursively_remove(self.new_info_dir(), true) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
+                self.printer.print_cleaning_before_removal(true);
+            }
             self.remove_pkgs()?;
         }
         Ok(())
@@ -2825,6 +2981,7 @@ impl PkgManager
             self.printer.print_cleaning(false);
             self.remove_bucket("new_versions")?;
             self.remove_bucket("pkgs_to_remove")?;
+            self.remove_bucket("pkgs_to_change")?;
             match self.res_remove_dirs_for_cleaning() {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),

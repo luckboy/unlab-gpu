@@ -1207,6 +1207,8 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -1461,6 +1463,8 @@ W = 4
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -1733,11 +1737,10 @@ W = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
-        Err(err) => {
-            println!("{}", err);
-            assert!(false)
-        },
+        Err(_) => assert!(false),
     }
 }
 
@@ -2076,6 +2079,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -2403,6 +2408,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -2754,6 +2761,8 @@ V = 52
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -3046,6 +3055,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -3338,6 +3349,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -3645,6 +3658,8 @@ W = 42
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -3749,6 +3764,8 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -3854,6 +3871,8 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -3959,6 +3978,8 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -4064,6 +4085,8 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -4169,6 +4192,8 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -4314,6 +4339,8 @@ W = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -4644,6 +4671,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -4777,6 +4806,8 @@ W = 4
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -4903,6 +4934,8 @@ Z = 3
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -5026,6 +5059,8 @@ X = 2
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -5150,6 +5185,8 @@ X = 2
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -5267,6 +5304,8 @@ X = 2
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -5385,6 +5424,8 @@ X = 2
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -5585,6 +5626,8 @@ W = 4
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -5830,6 +5873,8 @@ W = 42
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -6033,6 +6078,8 @@ W = 4
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -6272,6 +6319,8 @@ W = 42
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -6528,6 +6577,8 @@ name = \"example1.com/abc\"
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -6641,8 +6692,10 @@ X = 1
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
-        Err(_) => assert!(false),
+        Err(_) => assert!(false)
     }
 }
 
@@ -6824,17 +6877,7 @@ V = 5
             let mut dependents_file = pkg_info_dir.clone();
             dependents_file.push("dependents.toml");
             let dependents = load_version_reqs(dependents_file).unwrap();
-            assert_eq!(1, dependents.len());
-            match dependents.get(&PkgName::new(String::from("example1.com/abc"))) {
-                Some(version_req) => {
-                    assert_eq!(1, version_req.single_reqs().len());
-                    match &version_req.single_reqs()[0] {
-                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("3.4.5").unwrap(), *version),
-                        _ => assert!(false),
-                    }
-                },
-                None => assert!(false),
-            }
+            assert_eq!(true, dependents.is_empty());
             let mut paths_file = pkg_info_dir.clone();
             paths_file.push("paths.toml");
             let paths = Paths::load(paths_file).unwrap();
@@ -6860,17 +6903,7 @@ V = 5
             let mut dependents_file = pkg_info_dir.clone();
             dependents_file.push("dependents.toml");
             let dependents = load_version_reqs(dependents_file).unwrap();
-            assert_eq!(2, dependents.len());
-            match dependents.get(&PkgName::new(String::from("example1.com/abc"))) {
-                Some(version_req) => {
-                    assert_eq!(1, version_req.single_reqs().len());
-                    match &version_req.single_reqs()[0] {
-                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("4.5.6").unwrap(), *version),
-                        _ => assert!(false),
-                    }
-                },
-                None => assert!(false),
-            }
+            assert_eq!(1, dependents.len());
             match dependents.get(&PkgName::new(String::from("example2.com/def"))) {
                 Some(version_req) => {
                     assert_eq!(1, version_req.single_reqs().len());
@@ -6940,6 +6973,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -7131,17 +7166,7 @@ V = 5
             let mut dependents_file = pkg_info_dir.clone();
             dependents_file.push("dependents.toml");
             let dependents = load_version_reqs(dependents_file).unwrap();
-            assert_eq!(1, dependents.len());
-            match dependents.get(&PkgName::new(String::from("example1.com/abc"))) {
-                Some(version_req) => {
-                    assert_eq!(1, version_req.single_reqs().len());
-                    match &version_req.single_reqs()[0] {
-                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("3.4.5").unwrap(), *version),
-                        _ => assert!(false),
-                    }
-                },
-                None => assert!(false),
-            }
+            assert_eq!(true, dependents.is_empty());
             let mut paths_file = pkg_info_dir.clone();
             paths_file.push("paths.toml");
             let paths = Paths::load(paths_file).unwrap();
@@ -7167,27 +7192,7 @@ V = 5
             let mut dependents_file = pkg_info_dir.clone();
             dependents_file.push("dependents.toml");
             let dependents = load_version_reqs(dependents_file).unwrap();
-            assert_eq!(2, dependents.len());
-            match dependents.get(&PkgName::new(String::from("example1.com/abc"))) {
-                Some(version_req) => {
-                    assert_eq!(1, version_req.single_reqs().len());
-                    match &version_req.single_reqs()[0] {
-                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("4.5.6").unwrap(), *version),
-                        _ => assert!(false),
-                    }
-                },
-                None => assert!(false),
-            }
-            match dependents.get(&PkgName::new(String::from("example2.com/def"))) {
-                Some(version_req) => {
-                    assert_eq!(1, version_req.single_reqs().len());
-                    match &version_req.single_reqs()[0] {
-                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("4.5.0").unwrap(), *version),
-                        _ => assert!(false),
-                    }
-                },
-                None => assert!(false),
-            }
+            assert_eq!(true, dependents.is_empty());
             let mut paths_file = pkg_info_dir.clone();
             paths_file.push("paths.toml");
             let paths = Paths::load(paths_file).unwrap();
@@ -7213,17 +7218,7 @@ V = 5
             let mut dependents_file = pkg_info_dir.clone();
             dependents_file.push("dependents.toml");
             let dependents = load_version_reqs(dependents_file).unwrap();
-            assert_eq!(1, dependents.len());
-            match dependents.get(&PkgName::new(String::from("example2.com/def"))) {
-                Some(version_req) => {
-                    assert_eq!(1, version_req.single_reqs().len());
-                    match &version_req.single_reqs()[0] {
-                        SingleVersionReq::Pair(VersionOp::Default, version) => assert_eq!(Version::parse("5.6.7").unwrap(), *version),
-                        _ => assert!(false),
-                    }
-                },
-                None => assert!(false),
-            }
+            assert_eq!(true, dependents.is_empty());
             let mut paths_file = pkg_info_dir.clone();
             paths_file.push("paths.toml");
             let paths = Paths::load(paths_file).unwrap();
@@ -7246,6 +7241,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         Err(_) => assert!(false),
     }
@@ -7541,6 +7538,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
@@ -7836,6 +7835,8 @@ V = 5
             assert_eq!(true, new_versions.is_empty());
             let pkgs_to_remove = pkg_manager.pkg_names_for_bucket("pkgs_to_remove").unwrap();
             assert_eq!(true, pkgs_to_remove.is_empty());
+            let pkgs_to_change = pkg_manager.pkg_names_for_bucket("pkgs_to_change").unwrap();
+            assert_eq!(true, pkgs_to_change.is_empty());
         },
         _ => assert!(false),
     }
