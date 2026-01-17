@@ -2007,7 +2007,7 @@ impl PkgManager
         Ok(())
     }    
 
-    fn add_pkg_names_for_buckets_and_autoremoving(&self, bucket_name: &str, version_bucket_name: &str) -> Result<()>
+    fn add_pkg_names_for_buckets_and_autoremoving(&self, bucket_name: &str, version_bucket_name: &str, visiteds: &HashSet<PkgName>) -> Result<()>
     {
         let tx = db_tx(&self.pkg_db, true)?;
         {
@@ -2022,10 +2022,7 @@ impl PkgManager
                     Ok(s) => PkgName::parse(s.as_str())?,
                     Err(_) => return Err(Error::Pkg(format!("invalid package name data"))),
                 };
-                let mut dependents_file = self.pkg_new_info_dir(&name);
-                dependents_file.push("dependents.toml");
-                let dependents = load_version_reqs(dependents_file)?;
-                if dependents.is_empty() {
+                if !visiteds.contains(&name) {
                     bucket_put(&name_bucket, data.kv().key().to_vec(), "t")?;
                 }
             }
@@ -2744,8 +2741,8 @@ impl PkgManager
         self.sources = manifest.sources.map(|ss| ss.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.pkgs.insert(start_name.clone(), current_pkg);
         self.prepare_new_part_infos_for_pre_installing(&start_name, &mut visiteds, is_update, is_force)?;
+        self.add_pkg_names_for_buckets_and_autoremoving("pkgs_to_remove", "versions", &visiteds)?;
         self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
-        self.add_pkg_names_for_buckets_and_autoremoving("pkgs_to_remove", "new_versions")?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         self.printer.print_removing();
@@ -2791,7 +2788,7 @@ impl PkgManager
         Ok(())
     }
 
-    pub fn cont(&self, is_doc: bool, are_deps: bool) -> Result<()>
+    pub fn cont(&self, is_doc: bool) -> Result<()>
     {
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
@@ -2799,9 +2796,6 @@ impl PkgManager
             Err(err) => return Err(Error::Io(err)),
         };
         if is_new_info_dir && self.has_bucket("new_versions")? {
-            if are_deps && !self.has_bucket("pkgs_to_remove")? {
-                self.add_pkg_names_for_buckets_and_autoremoving("pkgs_to_remove", "new_versions")?;
-            }
             self.printer.print_installing();
             self.install_pkgs(is_doc)?;
         } else if is_new_info_dir {
