@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,7 @@ fn f(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Valu
 { Ok(Value::None) }
 
 fn g(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Value>
-{ Ok(Value::None) }
+{ Err(Error::Interp(String::from("some error"))) }
 
 #[test]
 fn test_value_eq_with_types_returns_true()
