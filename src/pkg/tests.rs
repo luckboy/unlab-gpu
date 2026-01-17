@@ -7144,7 +7144,6 @@ V = 5
                 Err(err) => assert_eq!(ErrorKind::NotFound, err.kind()),
                 Ok(_) => assert!(false),
             }
-
             let mut lib_file = PathBuf::from("work");
             lib_file.push("lib");
             lib_file.push("pl.nowakowski");
