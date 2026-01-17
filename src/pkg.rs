@@ -2634,7 +2634,7 @@ impl PkgManager
         manifest_file.push("manifest.toml");
         recursively_remove(manifest_file, true)?;
         let mut dependents_file = self.pkg_info_dir(name);
-        dependents_file.push("depentents.toml");
+        dependents_file.push("dependents.toml");
         recursively_remove(dependents_file, true)?;
         let mut paths_file = self.pkg_info_dir(name);
         paths_file.push("paths.toml");
@@ -2714,7 +2714,7 @@ impl PkgManager
         for name in &names {
             self.remove_pkg(name)?;
         }
-        self.remove_pkg_versions_for_buckets("pkgs_to_removal", "versions")
+        self.remove_pkg_versions_for_buckets("pkgs_to_remove", "versions")
     }
     
     pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
