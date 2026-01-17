@@ -1543,7 +1543,10 @@ impl Pkg
             Some(new_part_info_dir) => {
                 let mut dependents_file = new_part_info_dir.clone();
                 dependents_file.push("dependents.toml");
-                load_version_reqs(dependents_file)
+                match load_opt_version_reqs(dependents_file)? {
+                    Some(dependents) => Ok(dependents),
+                    None => Err(Error::Pkg(String::from("no file of dependents"))),
+                }
             },
             None => Ok(HashMap::new()),
         }
