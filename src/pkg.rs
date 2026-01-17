@@ -1989,7 +1989,7 @@ impl PkgManager
         let tx = db_tx(&self.pkg_db, true)?;
         let name_bucket = tx_get_or_create_bucket(&tx, bucket_name)?;
         for name in names {
-            let mut dependents_file = self.pkg_new_info_dir(&name);
+            let mut dependents_file = self.pkg_info_dir(&name);
             dependents_file.push("dependents.toml");
             let dependents = load_opt_version_reqs(dependents_file)?;
             match dependents {
@@ -2000,7 +2000,7 @@ impl PkgManager
                         return Err(Error::PkgName(name.clone(), String::from("can't remove package")));
                     }
                 },
-                None => return Err(Error::PkgName(name.clone(), String::from("not found package"))),
+                None => return Err(Error::PkgName(name.clone(), String::from("package isn't installed"))),
             }
         }
         tx_commit(tx)?;
