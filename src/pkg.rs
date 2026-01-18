@@ -54,6 +54,8 @@ use crate::version::*;
 
 pub trait Print
 {
+    fn print_updating(&self);
+
     fn print_pre_installing(&self);
     
     fn print_installing(&self);
@@ -104,6 +106,9 @@ impl EmptyPrinter
 
 impl Print for EmptyPrinter
 {
+    fn print_updating(&self)
+    {}
+
     fn print_pre_installing(&self)
     {}
     
@@ -177,6 +182,9 @@ impl StdPrinter
 
 impl Print for StdPrinter
 {
+    fn print_updating(&self)
+    { println!("Updating:"); }
+
     fn print_pre_installing(&self)
     { println!("Pre-installing:"); }
     
@@ -2860,6 +2868,7 @@ impl PkgManager
     
     pub fn update(&self, names: &[PkgName]) -> Result<()>
     {
+        self.printer.print_updating();
         for name in names {
             let mut src = self.create_source(name)?;
             src.update()?;
