@@ -1027,10 +1027,6 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
         G: FnOnce(&[u8]) -> Result<BTreeSet<Version>>
 {
     let path_buf = pkg_index_dir(home_dir.as_ref(), name);
-    match create_dir_all(path_buf.as_path()) {
-        Ok(()) => (),
-        Err(err) => return Err(Error::Io(err)),
-    }
     let mut new_part_versions_path_buf = path_buf.clone();
     new_part_versions_path_buf.push("versions.toml.new.part");
     let mut new_versions_path_buf = path_buf.clone();
@@ -1076,13 +1072,17 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is
             Ok(()) => (),
             Err(err) => return Err(Error::Curl(err)),
         }
-        {
+        let versions = {
             let mut data_g = mutex_lock(&data)?;
             let res = g(data_g.as_slice());
             data_g.clear();
-            let versions = Versions::new(res?);
-            versions.save(new_part_versions_path_buf.as_path())?;
+            Versions::new(res?)
+        };
+        match create_dir_all(path_buf.as_path()) {
+            Ok(()) => (),
+            Err(err) => return Err(Error::Io(err)),
         }
+        versions.save(new_part_versions_path_buf.as_path())?;
         match res_remove_and_rename_for_updated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
