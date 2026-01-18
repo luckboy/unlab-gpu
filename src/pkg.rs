@@ -1439,7 +1439,7 @@ impl Pkg
         }
     }
     
-    fn new_with_copying_and_flags(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf, is_added_by_dependent: bool, has_new_version_from_bucket: bool) -> Result<Self>
+    fn new_with_copying_and_flags(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf, is_added_by_dependent: bool, is_new_version_from_bucket: bool) -> Result<Self>
     {
         Self::copy_info_files(&dir, &info_dir, &new_part_info_dir)?;
         Ok(Pkg {
@@ -1447,23 +1447,26 @@ impl Pkg
                 info_dir: Some(info_dir),
                 new_part_info_dir: Some(new_part_info_dir),
                 is_added_by_dependent,
-                has_new_version_from_bucket,
+                has_new_version_from_bucket: is_new_version_from_bucket,
         })
     }
 
     fn new_with_copying(dir: Option<PathBuf>, info_dir: PathBuf, new_part_info_dir: PathBuf) -> Result<Self>
     { Self::new_with_copying_and_flags(dir, info_dir, new_part_info_dir, false, true) }
 
-    fn new_without_copying(info_dir: PathBuf) -> Result<Self>
+    fn new_without_copying_with_flags(info_dir: PathBuf, is_added_by_dependent: bool, is_new_version_from_bucket: bool) -> Self
     {
-        Ok(Pkg {
-                dir: None,
-                info_dir: Some(info_dir),
-                new_part_info_dir: None,
-                is_added_by_dependent: false,
-                has_new_version_from_bucket: true,
-        })
-    }    
+        Pkg {
+            dir: None,
+            info_dir: Some(info_dir),
+            new_part_info_dir: None,
+            is_added_by_dependent,
+            has_new_version_from_bucket: is_new_version_from_bucket,
+        }
+    }
+
+    fn new_without_copying(info_dir: PathBuf) -> Self
+    { Self::new_without_copying_with_flags(info_dir, false, true) }
     
     fn old_manifest(&self) -> Result<Option<Manifest>>
     {
@@ -1543,10 +1546,7 @@ impl Pkg
             Some(new_part_info_dir) => {
                 let mut dependents_file = new_part_info_dir.clone();
                 dependents_file.push("dependents.toml");
-                match load_opt_version_reqs(dependents_file)? {
-                    Some(dependents) => Ok(dependents),
-                    None => Err(Error::Pkg(String::from("no file of dependents"))),
-                }
+                load_version_reqs_or_empty(dependents_file)
             },
             None => Ok(HashMap::new()),
         }
@@ -2605,7 +2605,7 @@ impl PkgManager
     {
         let names = self.pkg_names_for_bucket("pkgs_to_remove")?;
         for name in &names {
-            let pkg = Pkg::new_without_copying(self.pkg_info_dir(name))?;
+            let pkg = Pkg::new_without_copying(self.pkg_info_dir(name));
             let manifest = pkg.manifest()?;
             match &manifest.dependencies {
                 Some(deps) => {
