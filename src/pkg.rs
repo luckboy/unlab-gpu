@@ -2858,6 +2858,15 @@ impl PkgManager
         self.remove_pkg_versions_for_buckets("pkgs_to_remove", "versions")
     }
     
+    pub fn update(&self, names: &[PkgName]) -> Result<()>
+    {
+        for name in names {
+            let mut src = self.create_source(name)?;
+            src.update()?;
+        }
+        Ok(())
+    }
+    
     pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
         self.printer.print_pre_installing();
@@ -2988,6 +2997,29 @@ impl PkgManager
             self.printer.print_cleaning(true);
         }
         Ok(())
+    }
+    
+    pub fn update_all(&self) -> Result<()>
+    {
+        let mut names: Vec<PkgName> = Vec::new();
+        self.pkg_versions_in(|name, _| {
+                names.push(name.clone());
+                Ok(())
+        })?;
+        self.update(names.as_slice())
+    }
+
+    pub fn install_all(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
+    {
+        let mut names: Vec<PkgName> = Vec::new();
+        self.pkg_versions_in(|name, _| {
+                let dependents = self.pkg_dependents(name)?;
+                if dependents.map(|ds| ds.is_empty()).unwrap_or(true) {
+                    names.push(name.clone());
+                }
+                Ok(())
+        })?;
+        self.install(names.as_slice(), is_update, is_force, is_doc)
     }
 }
 
