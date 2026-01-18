@@ -2739,16 +2739,8 @@ impl PkgManager
     
     fn change_pkg(&self, name: &PkgName) -> Result<()>
     {
-        let mut dependents_file = self.pkg_new_info_dir(name);
-        dependents_file.push("dependents.toml");
-        match fs::metadata(dependents_file) {
-            Ok(_) => {
-                match self.res_copy_dependents_file(name) {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::Io(err)),
-                }
-            },
-            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+        match self.res_copy_dependents_file(name) {
+            Ok(()) => Ok(()),
             Err(err) => Err(Error::Io(err)),
         }
     }
