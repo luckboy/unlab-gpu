@@ -968,3 +968,16 @@ pub fn matrix_min_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
         Err(err) => Err(Error::Matrix(err)),
     }
 }
+
+pub fn str_to_url_part(s: &str, is_path: bool) -> String
+{
+    let mut url_part = String::new();
+    for b in s.as_bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' => url_part.push(*b as char),
+            b'/' if is_path => url_part.push(*b as char),
+            _ => url_part.push_str(format!("%{:02x}", b).as_str()),
+        }
+    }
+    url_part
+}

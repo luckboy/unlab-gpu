@@ -52,6 +52,8 @@ use crate::fs::*;
 use crate::utils::*;
 use crate::version::*;
 
+pub mod github;
+
 pub trait Print
 {
     fn print_updating(&self);
@@ -390,7 +392,7 @@ pub trait Source
 
 pub trait SourceCreate
 {
-    fn create(&self, name: PkgName, new_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Box<dyn Source + Send + Sync>>;
+    fn create(&self, name: PkgName, old_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Box<dyn Source + Send + Sync>>;
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -949,6 +951,21 @@ pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcI
     }
 }
 
+pub fn tag_name_to_version(tag_name: &str) -> Option<Version>
+{
+    if tag_name.starts_with("v") {
+        match Version::parse(&tag_name[1..]) {
+            Ok(version) => Some(version),
+            Err(_) => None,
+        }
+    } else {
+        None
+    }
+}
+
+pub fn version_to_tag_name(version: &Version) -> String
+{ format!("v{}", version) }
+
 pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(home_dir.as_ref());
@@ -1135,9 +1152,9 @@ fn res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, print
     easy.perform()
 }
 
-pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
+pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgName>, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
 {
-    let path_buf = pkg_cache_dir(home_dir.as_ref(), name, version);
+    let path_buf = pkg_cache_dir(home_dir.as_ref(), old_name.as_ref().unwrap_or(name), version);
     match create_dir_all(path_buf.as_path()) {
         Ok(()) => (),
         Err(err) => return Err(Error::Io(err)),
@@ -1353,31 +1370,26 @@ impl Source for CustomSrc
     
     fn dir(&mut self) -> Result<&Path>
     {
-        let dir = if self.dir.is_none() {
+        if self.dir.is_none() {
             match &self.current_version {
                 Some(current_version) => {
                     match self.version_src_infos.get(current_version) {
                         Some(version_src_info) => {
-                            match version_src_info {
+                            self.dir = match version_src_info {
                                 VersionSrcInfo::Dir(tmp_dir) => Some(PathBuf::from(tmp_dir.replace('/', path::MAIN_SEPARATOR_STR))),
                                 VersionSrcInfo::File(file) => Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || Ok(PathBuf::from(file.replace('/', path::MAIN_SEPARATOR_STR))))?),
                                 VersionSrcInfo::Url(url) => {
                                     Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || {
-                                            download_pkg_file(&self.name, current_version, url, &self.home_dir, &self.printer)
+                                            download_pkg_file(&self.name, &None, current_version, url, &self.home_dir, &self.printer)
                                     })?)
                                 },
-                            }
+                            };
                         },
                         None => return Err(Error::PkgName(self.name.clone(), String::from("not found version"))),
                     }
                 },
                 None => return Err(Error::PkgName(self.name.clone(), String::from("no current version"))),
             }
-        } else {
-            None
-        };
-        if dir.is_some() {
-            self.dir = dir;
         }
         Ok(self.dir.as_ref().unwrap().as_path())
     }
@@ -1863,7 +1875,7 @@ impl PkgManager
                 match src_info {
                     SrcInfo::Renamed(old_name) => {
                         for src_factory in &self.src_factories {
-                            match src_factory.create(old_name.clone(), Some(name.clone()), self.home_dir.clone(), self.work_dir.clone(), self.printer.clone()) {
+                            match src_factory.create(name.clone(), Some(old_name.clone()), self.home_dir.clone(), self.work_dir.clone(), self.printer.clone()) {
                                 Some(src) => return Ok(src),
                                 None => (),
                             }
