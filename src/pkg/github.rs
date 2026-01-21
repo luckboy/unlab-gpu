@@ -104,15 +104,15 @@ impl GitHubSrc
                     Ok(tmp_s) => tmp_s,
                     Err(_) => return Err(Error::PkgName(self.name.clone(), String::from("data contains invalid UTF-8 character"))),
                 };
-                let refs: Vec<GitRef> = match serde_json::from_str(s) {
+                let git_refs: Vec<GitRef> = match serde_json::from_str(s) {
                     Ok(tmp_refs) => tmp_refs,
                     Err(err) => return Err(Error::SerdeJson(Box::new(err))),
                 };
                 let mut versions: BTreeSet<Version> = BTreeSet::new();
-                for ref1 in refs {
+                for git_ref in git_refs {
                     let prefix_tag_ref = "refs/tags/";
-                    if ref1.ref1.starts_with(prefix_tag_ref) {
-                        let tag_name = &ref1.ref1[prefix_tag_ref.len()..];
+                    if git_ref.ref1.starts_with(prefix_tag_ref) {
+                        let tag_name = &git_ref.ref1[prefix_tag_ref.len()..];
                         match tag_name_to_version(tag_name) {
                             Some(version) => {
                                 versions.insert(version);
