@@ -154,9 +154,9 @@ impl Source for GitHubSrc
             match &self.current_version {
                 Some(current_version) => {
                     self.dir = Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || {
-                            let original_name = self.old_name.as_ref().unwrap_or(&self.name).name(); 
+                            let original_name = self.old_name.as_ref().unwrap_or(&self.name); 
                             let tag_name = version_to_tag_name(current_version);
-                            let url = format!("https://{}/archive/refs/tags/{}.tar.gz", str_to_url_part(original_name, true), str_to_url_part(tag_name.as_str(), false));
+                            let url = format!("https://{}/archive/refs/tags/{}.tar.gz", str_to_url_part(original_name.name(), true), str_to_url_part(tag_name.as_str(), false));
                             download_pkg_file(&self.name, &self.old_name, current_version, url.as_str(), &self.home_dir, &self.printer)
                     })?)
                 },

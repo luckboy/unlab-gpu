@@ -1310,8 +1310,8 @@ pub struct CustomSrc
     home_dir: PathBuf,
     work_dir: PathBuf,
     version_src_infos: Arc<BTreeMap<Version, VersionSrcInfo>>,
-    versions: Arc<BTreeSet<Version>>,
     printer: Arc<dyn Print + Send + Sync>,
+    versions: Arc<BTreeSet<Version>>,
     current_version: Option<Version>,
     dir: Option<PathBuf>,
 }
