@@ -1030,11 +1030,11 @@ fn res_remove_and_rename_for_unupdated_pkg_versions(new_part_path: &Path, new_pa
     }
 }
 
-pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<BTreeSet<Version>>
+pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, old_name: &Option<PkgName>, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<BTreeSet<Version>>
     where F: FnOnce() -> result::Result<curl::easy::Easy, curl::Error>,
         G: FnOnce(&[u8]) -> Result<BTreeSet<Version>>
 {
-    let path_buf = pkg_index_dir(home_dir.as_ref(), name);
+    let path_buf = pkg_index_dir(home_dir.as_ref(), old_name.as_ref().unwrap_or(name));
     let mut new_part_versions_path_buf = path_buf.clone();
     new_part_versions_path_buf.push("versions.toml.new.part");
     let mut new_versions_path_buf = path_buf.clone();
