@@ -1407,6 +1407,15 @@ pub struct Pkg
     has_new_version_from_bucket: bool,
 }
 
+pub fn default_src_factories() -> Vec<Arc<dyn SourceCreate + Send + Sync>>
+{
+    vec![
+        Arc::new(github::GitHubSrcFactory::new()),
+        Arc::new(gitlab::GitLabSrcFactory::new()),
+        Arc::new(bitbucket::BitbucketSrcFactory::new())
+    ]
+}
+
 impl Pkg
 {
     fn new() -> Self
