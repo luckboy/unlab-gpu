@@ -13,7 +13,7 @@ pub const SERVICE_DOMAIN: &'static str = "github.com";
 pub const SERVICE_API_DOMAIN: &'static str = "api.github.com";
 
 #[derive(Clone, Debug, Deserialize)]
-struct GitRef
+struct Ref
 {
     #[serde(rename = "ref")]
     ref1: String,
@@ -106,15 +106,15 @@ impl GitHubSrc
                     Ok(tmp_s) => tmp_s,
                     Err(_) => return Err(Error::PkgName(self.name.clone(), String::from("data contains invalid UTF-8 character"))),
                 };
-                let git_refs: Vec<GitRef> = match serde_json::from_str(s) {
+                let refs: Vec<Ref> = match serde_json::from_str(s) {
                     Ok(tmp_refs) => tmp_refs,
                     Err(err) => return Err(Error::SerdeJson(Box::new(err))),
                 };
                 let mut versions: BTreeSet<Version> = BTreeSet::new();
-                for git_ref in &git_refs {
-                    let prefix_tag_ref = "refs/tags/";
-                    if git_ref.ref1.starts_with(prefix_tag_ref) {
-                        let tag_name = &git_ref.ref1[prefix_tag_ref.len()..];
+                for ref1 in &refs {
+                    let tag_ref_prefix = "refs/tags/";
+                    if ref1.ref1.starts_with(tag_ref_prefix) {
+                        let tag_name = &ref1.ref1[tag_ref_prefix.len()..];
                         match tag_name_to_version(tag_name) {
                             Some(version) => {
                                 versions.insert(version);
