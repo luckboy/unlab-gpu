@@ -86,7 +86,8 @@ impl GitHubSrc
 
     fn update_versions(&self, is_update: bool) -> Result<BTreeSet<Version>>
     {
-        let repo_path = match self.old_name.as_ref().unwrap_or(&self.name).name().split_once('/') {
+        let original_name = self.old_name.as_ref().unwrap_or(&self.name);
+        let repo_path = match original_name.name().split_once('/') {
             Some((_, tmp_repo_path)) => tmp_repo_path,
             None => return Err(Error::PkgName(self.name.clone(), String::from("no package repository path"))),
         };
