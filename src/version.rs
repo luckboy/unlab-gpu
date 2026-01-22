@@ -66,6 +66,7 @@ impl fmt::Display for PreReleaseIdent
 #[derive(Clone, Debug)]
 pub struct Version
 {
+    version: String,
     numeric_idents: Vec<u32>,
     pre_release_idents: Option<Vec<PreReleaseIdent>>,
     build_idents: Option<Vec<String>>,
@@ -73,8 +74,8 @@ pub struct Version
 
 impl Version
 {
-    pub fn new(numeric_idents: Vec<u32>, pre_release_idents: Option<Vec<PreReleaseIdent>>, build_idents: Option<Vec<String>>) -> Self
-    { Version { numeric_idents, pre_release_idents, build_idents, } }
+    pub fn new(version: String, numeric_idents: Vec<u32>, pre_release_idents: Option<Vec<PreReleaseIdent>>, build_idents: Option<Vec<String>>) -> Self
+    { Version { version, numeric_idents, pre_release_idents, build_idents, } }
     
     pub fn parse(s: &str) -> Result<Self>
     {
@@ -122,8 +123,11 @@ impl Version
         } else {
             None
         };
-        Ok(Self::new(numeric_idents, pre_release_idents, build_idents))
+        Ok(Self::new(String::from(s), numeric_idents, pre_release_idents, build_idents))
     }
+    
+    pub fn version(&self) -> &str
+    { self.version.as_str() }
     
     pub fn numeric_idents(&self) -> &[u32]
     { self.numeric_idents.as_slice() }
@@ -213,45 +217,7 @@ impl PartialOrd for Version
 impl fmt::Display for Version
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    {
-        let mut is_first = true;
-        for numeric_ident in &self.numeric_idents {
-            if !is_first {
-                write!(f, ".")?;
-            }
-            write!(f, "{}", numeric_ident)?;
-            is_first = false;
-        }
-        match &self.pre_release_idents {
-            Some(pre_release_idents) => {
-                write!(f, "-")?;
-                is_first = true;
-                for pre_release_ident in pre_release_idents {
-                    if !is_first {
-                        write!(f, ".")?;
-                    }
-                    write!(f, "{}", pre_release_ident)?;
-                    is_first = false;
-                }
-            },
-            None => (),
-        }
-        match &self.build_idents {
-            Some(build_idents) => {
-                write!(f, "+")?;
-                is_first = true;
-                for build_ident in build_idents {
-                    if !is_first {
-                        write!(f, ".")?;
-                    }
-                    write!(f, "{}", build_ident)?;
-                    is_first = false;
-                }
-            },
-            None => (),
-        }
-        Ok(())
-    }
+    { write!(f, "{}", self.version) }
 }
 
 impl Serialize for Version
