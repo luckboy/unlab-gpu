@@ -23,6 +23,7 @@ struct Tags
     values: Vec<Tag>,
 }
 
+#[derive(Clone)]
 pub struct BitbucketSrc
 {
     name: PkgName,

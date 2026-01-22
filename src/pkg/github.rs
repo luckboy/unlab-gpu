@@ -19,6 +19,7 @@ struct GitRef
     ref1: String,
 }
 
+#[derive(Clone)]
 pub struct GitHubSrc
 {
     name: PkgName,

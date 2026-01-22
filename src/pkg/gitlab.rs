@@ -17,6 +17,7 @@ struct Tag
     name: String,
 }
 
+#[derive(Clone)]
 pub struct GitLabSrc
 {
     name: PkgName,
