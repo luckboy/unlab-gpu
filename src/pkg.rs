@@ -53,6 +53,7 @@ use crate::utils::*;
 use crate::version::*;
 
 pub mod github;
+pub mod gitlab;
 
 pub trait Print
 {
