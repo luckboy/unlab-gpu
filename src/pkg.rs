@@ -1652,6 +1652,48 @@ fn bucket_put<'a, 'b, 'tx, T: ToBytes<'tx>, S: ToBytes<'tx>>(bucket: &'a Bucket<
     }
 }
 
+fn max_pkg_version(versions: &BTreeSet<Version>, version_req: Option<&VersionReq>, constraint: Option<&VersionReq>, locked_version: Option<&Version>) -> Option<Version>
+{
+    let mut version_reqs: Vec<&VersionReq> = Vec::new();
+    match version_req {
+        Some(version_req) => version_reqs.push(version_req),
+        None => (),
+    }
+    match constraint {
+        Some(constraint) => version_reqs.push(constraint),
+        None => (),
+    }
+    let mut max_version: Option<Version> = None;
+    for version in versions {
+        if version_reqs.iter().all(|r| r.matches(version)) {
+            if locked_version.map(|lv| lv == version).unwrap_or(true) { 
+                max_version = Some(version.clone());
+            }
+        }
+    }
+    max_version
+}
+
+fn check_dir(path: &Path, err_msg: &str) -> Result<()>
+{
+    match fs::metadata(path) {
+        Ok(metadata) if metadata.is_dir() => Ok(()),
+        Ok(_) => Err(Error::Pkg(String::from(err_msg))),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+fn check_dir_for_pkg(path: &Path, name: &PkgName, err_msg: &str) -> Result<()>
+{
+    match fs::metadata(path) {
+        Ok(metadata) if metadata.is_dir() => Ok(()),
+        Ok(_) => Err(Error::PkgName(name.clone(), String::from(err_msg))),
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
 #[derive(Clone)]
 pub struct PkgManager
 {
@@ -2169,29 +2211,7 @@ impl PkgManager
         paths_file.push("paths.toml");
         Paths::load_opt(paths_file)
     }    
-    
-    fn max_pkg_version(versions: &BTreeSet<Version>, version_req: Option<&VersionReq>, constraint: Option<&VersionReq>, locked_version: Option<&Version>) -> Option<Version>
-    {
-        let mut version_reqs: Vec<&VersionReq> = Vec::new();
-        match version_req {
-            Some(version_req) => version_reqs.push(version_req),
-            None => (),
-        }
-        match constraint {
-            Some(constraint) => version_reqs.push(constraint),
-            None => (),
-        }
-        let mut max_version: Option<Version> = None;
-        for version in versions {
-            if version_reqs.iter().all(|r| r.matches(version)) {
-                if locked_version.map(|lv| lv == version).unwrap_or(true) { 
-                    max_version = Some(version.clone());
-                }
-            }
-        }
-        max_version
-    }
-    
+        
     fn res_remove_dirs_for_cleaning(&self) -> io::Result<()>
     {
         recursively_remove(self.work_tmp_dir(), true)?;
@@ -2253,7 +2273,7 @@ impl PkgManager
                                 };
                                 let mut tmp_new_version: Option<Version> = None; 
                                 for old_version_req in old_dependants.values() {
-                                    let max_version = Self::max_pkg_version(&versions, Some(old_version_req), data.constraints.get(name), data.locks.get(name));
+                                    let max_version = max_pkg_version(&versions, Some(old_version_req), data.constraints.get(name), data.locks.get(name));
                                     match &max_version {
                                         Some(max_version) => {
                                             match &tmp_new_version {
@@ -2270,7 +2290,7 @@ impl PkgManager
                                 }
                                 match tmp_new_version {
                                     Some(tmp_new_version) => Some(tmp_new_version),
-                                    None => Self::max_pkg_version(&versions, None, data.constraints.get(name), data.locks.get(name)),
+                                    None => max_pkg_version(&versions, None, data.constraints.get(name), data.locks.get(name)),
                                 }
                             },
                         };
@@ -2301,7 +2321,7 @@ impl PkgManager
                                 dep_src.update()?;
                             }
                             let versions = dep_src.versions()?;
-                            let max_version = Self::max_pkg_version(&versions, Some(dep_version_req), data.constraints.get(dep_name), data.locks.get(dep_name));
+                            let max_version = max_pkg_version(&versions, Some(dep_version_req), data.constraints.get(dep_name), data.locks.get(dep_name));
                             match &max_version {
                                 Some(max_version) => {
                                     let is_new_version_from_bucket = match data.pkgs.get_mut(dep_name) {
@@ -2418,7 +2438,7 @@ impl PkgManager
                     let versions = src.versions()?;
                     let dependents = pkg.dependents()?;
                     for version_req in dependents.values() {
-                        let max_version = Self::max_pkg_version(&versions, Some(version_req), self.constraints.get(name), self.locks.get(name));
+                        let max_version = max_pkg_version(&versions, Some(version_req), self.constraints.get(name), self.locks.get(name));
                         match &max_version {
                             Some(max_version) => {
                                 if new_version != max_version {
@@ -2446,33 +2466,13 @@ impl PkgManager
             Err(err) => Err(Error::Io(err)),
         }
     }
-    
-    fn check_dir(path: &Path, err_msg: &str) -> Result<()>
-    {
-        match fs::metadata(path) {
-            Ok(metadata) if metadata.is_dir() => Ok(()),
-            Ok(_) => Err(Error::Pkg(String::from(err_msg))),
-            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
-            Err(err) => Err(Error::Io(err)),
-        }
-    }
-
-    fn check_dir_for_pkg(path: &Path, name: &PkgName, err_msg: &str) -> Result<()>
-    {
-        match fs::metadata(path) {
-            Ok(metadata) if metadata.is_dir() => Ok(()),
-            Ok(_) => Err(Error::PkgName(name.clone(), String::from(err_msg))),
-            Err(err) if err.kind() == ErrorKind::NotFound => Ok(()),
-            Err(err) => Err(Error::Io(err)),
-        }
-    }
-    
+        
     fn search_path_conflicts(&self) -> Result<()>
     {
         self.printer.print_searching_path_conflicts(false);
-        Self::check_dir(self.bin_dir.as_path(), "bin isn't directory")?;
-        Self::check_dir(self.lib_dir.as_path(), "lib isn't directory")?;
-        Self::check_dir(self.doc_dir.as_path(), "doc isn't directory")?;
+        check_dir(self.bin_dir.as_path(), "bin isn't directory")?;
+        check_dir(self.lib_dir.as_path(), "lib isn't directory")?;
+        check_dir(self.doc_dir.as_path(), "doc isn't directory")?;
         let new_versions = self.pkg_versions_for_bucket("new_versions")?;
         let mut ignored_bin_paths: HashSet<PathBuf> = HashSet::new();
         let mut ignored_lib_paths: HashSet<PathBuf> = HashSet::new();
@@ -2499,7 +2499,7 @@ impl PkgManager
                 src.set_current_version(new_version.clone());
                 let mut pkg_bin_dir = PathBuf::from(src.dir()?);
                 pkg_bin_dir.push("bin");
-                Self::check_dir_for_pkg(pkg_bin_dir.as_path(), name, "bin in package isn't directory")?;
+                check_dir_for_pkg(pkg_bin_dir.as_path(), name, "bin in package isn't directory")?;
                 let bin_paths = match conflicts(pkg_bin_dir, self.bin_dir.as_path(), &ignored_bin_paths, Some(1)) {
                     Ok((conflict_paths, paths)) => {
                         if conflict_paths.is_empty() {
@@ -2512,7 +2512,7 @@ impl PkgManager
                 };
                 let mut pkg_lib_dir = PathBuf::from(src.dir()?);
                 pkg_lib_dir.push("lib");
-                Self::check_dir_for_pkg(pkg_lib_dir.as_path(), name, "lib in package isn't directory")?;
+                check_dir_for_pkg(pkg_lib_dir.as_path(), name, "lib in package isn't directory")?;
                 let lib_paths = match conflicts(pkg_lib_dir, self.lib_dir.as_path(), &ignored_lib_paths, Some(2)) {
                     Ok((conflict_paths, paths)) => {
                         if conflict_paths.is_empty() {
