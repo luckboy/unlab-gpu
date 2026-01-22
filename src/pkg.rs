@@ -1663,15 +1663,23 @@ fn max_pkg_version(versions: &BTreeSet<Version>, version_req: Option<&VersionReq
         Some(constraint) => version_reqs.push(constraint),
         None => (),
     }
-    let mut max_version: Option<Version> = None;
-    for version in versions {
-        if version_reqs.iter().all(|r| r.matches(version)) {
-            if locked_version.map(|lv| lv == version).unwrap_or(true) { 
-                max_version = Some(version.clone());
+    match locked_version {
+        Some(locked_version) => {
+            match versions.get(locked_version) {
+                Some(version) if version_reqs.iter().all(|r| r.matches(version)) => Some(version.clone()),
+                _ => None,
             }
-        }
+        },
+        None => {
+            let mut max_version: Option<Version> = None;
+            for version in versions {
+                if version_reqs.iter().all(|r| r.matches(version)) {
+                    max_version = Some(version.clone());
+                }
+            }
+            max_version
+        },
     }
-    max_version
 }
 
 fn check_dir(path: &Path, err_msg: &str) -> Result<()>
