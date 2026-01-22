@@ -130,7 +130,7 @@ impl Source for GitHubSrc
 {
     fn update(&mut self) -> Result<()>
     {
-        self.update_versions(true)?;
+        self.versions = Some(self.update_versions(true)?);
         Ok(())
     }
     
