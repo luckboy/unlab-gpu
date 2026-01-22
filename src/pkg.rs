@@ -52,6 +52,7 @@ use crate::fs::*;
 use crate::utils::*;
 use crate::version::*;
 
+pub mod bitbucket;
 pub mod github;
 pub mod gitlab;
 
