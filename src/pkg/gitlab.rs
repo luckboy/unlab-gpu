@@ -86,7 +86,7 @@ impl GitLabSrc
     {
         let original_name = self.old_name.as_ref().unwrap_or(&self.name);
         let (service_domain, repo_path) = match original_name.name().split_once('/') {
-            Some((tmp_domain, tmp_repo_path)) => (tmp_domain, tmp_repo_path),
+            Some((tmp_service_domain, tmp_repo_path)) => (tmp_service_domain, tmp_repo_path),
             None => return Err(Error::PkgName(self.name.clone(), String::from("no service domain and package repository path"))),
         };
         update_pkg_versions(&self.name, &self.old_name, self.home_dir.as_path(), is_update, &self.printer, || {
