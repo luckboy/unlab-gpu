@@ -110,7 +110,7 @@ impl GitHubSrc
                     Err(err) => return Err(Error::SerdeJson(Box::new(err))),
                 };
                 let mut versions: BTreeSet<Version> = BTreeSet::new();
-                for git_ref in git_refs {
+                for git_ref in &git_refs {
                     let prefix_tag_ref = "refs/tags/";
                     if git_ref.ref1.starts_with(prefix_tag_ref) {
                         let tag_name = &git_ref.ref1[prefix_tag_ref.len()..];
