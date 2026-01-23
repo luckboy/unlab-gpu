@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::str;
+use crate::serde_json;
 use super::*;
 
 pub const SERVICE_DOMAIN: &'static str = "bitbucket.org";
@@ -108,7 +109,7 @@ impl BitbucketSrc
                 };
                 let tags: Tags = match serde_json::from_str(s) {
                     Ok(tmp_refs) => tmp_refs,
-                    Err(err) => return Err(Error::SerdeJson(Box::new(err))),
+                    Err(err) => return Err(Error::SerdeJson(err)),
                 };
                 let mut versions: BTreeSet<Version> = BTreeSet::new();
                 for tag in &tags.values {

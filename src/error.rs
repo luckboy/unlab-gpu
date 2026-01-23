@@ -13,6 +13,7 @@ use std::result;
 use std::sync::Arc;
 use crate::ctrlc;
 use crate::curl;
+use crate::serde_json;
 use crate::toml;
 use crate::matrix;
 use crate::pkg::PkgName;
@@ -82,7 +83,7 @@ pub enum Error
     Jammdb(Box<dyn error::Error>),
     Zip(Box<dyn error::Error>),
     Curl(curl::Error),
-    SerdeJson(Box<dyn error::Error>),
+    SerdeJson(serde_json::Error),
     InvalidVersion,
     InvalidPkgName,
     NoOpenClBackend,

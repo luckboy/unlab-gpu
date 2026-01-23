@@ -8,6 +8,7 @@
 pub use ctrlc;
 pub use curl;
 pub use serde;
+pub use serde_json;
 pub use toml;
 pub use unmtx_gpu as matrix;
 #[cfg(feature = "plot")]

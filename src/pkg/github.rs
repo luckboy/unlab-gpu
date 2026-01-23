@@ -6,8 +6,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::str;
-use super::*;
 use crate::curl::easy::List;
+use crate::serde_json;
+use super::*;
 
 pub const SERVICE_DOMAIN: &'static str = "github.com";
 pub const SERVICE_API_DOMAIN: &'static str = "api.github.com";
@@ -108,7 +109,7 @@ impl GitHubSrc
                 };
                 let refs: Vec<Ref> = match serde_json::from_str(s) {
                     Ok(tmp_refs) => tmp_refs,
-                    Err(err) => return Err(Error::SerdeJson(Box::new(err))),
+                    Err(err) => return Err(Error::SerdeJson(err)),
                 };
                 let mut versions: BTreeSet<Version> = BTreeSet::new();
                 for ref1 in &refs {
