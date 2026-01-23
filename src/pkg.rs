@@ -1026,7 +1026,7 @@ pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -
     dir
 }
 
-fn res_remove_and_rename_for_updated_pkg_versions(new_part_path: &Path, new_path: &Path, path: &Path) -> io::Result<()>
+fn io_res_remove_and_rename_for_updated_pkg_versions(new_part_path: &Path, new_path: &Path, path: &Path) -> io::Result<()>
 {
     recursively_remove(new_path, true)?;
     rename(new_part_path, new_path)?;
@@ -1035,7 +1035,7 @@ fn res_remove_and_rename_for_updated_pkg_versions(new_part_path: &Path, new_path
     Ok(())
 }
 
-fn res_remove_and_rename_for_unupdated_pkg_versions(new_part_path: &Path, new_path: &Path, path: &Path) -> io::Result<()>
+fn io_res_remove_and_rename_for_unupdated_pkg_versions(new_part_path: &Path, new_path: &Path, path: &Path) -> io::Result<()>
 {
     recursively_remove(new_part_path, true)?;
     match fs::metadata(new_path) {
@@ -1110,13 +1110,13 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, old_name: &Opti
             Err(err) => return Err(Error::Io(err)),
         }
         versions.save(new_part_versions_path_buf.as_path())?;
-        match res_remove_and_rename_for_updated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
+        match io_res_remove_and_rename_for_updated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
         printer.print_updating_pkg_versions(name, true);
     } else {
-        match res_remove_and_rename_for_unupdated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
+        match io_res_remove_and_rename_for_unupdated_pkg_versions(new_part_versions_path_buf.as_path(), new_versions_path_buf.as_path(), versions_path_buf.as_path()) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -1124,7 +1124,7 @@ pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, old_name: &Opti
     Ok(Versions::load(versions_path_buf)?.versions)
 }
 
-fn res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, printer: &Arc<dyn Print + Send + Sync>) -> result::Result<(), curl::Error>
+fn curl_res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, printer: &Arc<dyn Print + Send + Sync>) -> result::Result<(), curl::Error>
 {
     let mut easy = curl::easy::Easy::new();
     easy.url(url)?;
@@ -1190,7 +1190,7 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgNa
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
-            match res_download_pkg_file(name, url, part_file_path_buf.as_path(), printer) {
+            match curl_res_download_pkg_file(name, url, part_file_path_buf.as_path(), printer) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Curl(err)),
             }
@@ -1429,7 +1429,7 @@ impl Pkg
         }
     }
 
-    fn res_copy_info_files(dir: &Option<PathBuf>, info_dir: &PathBuf, new_part_info_dir: &PathBuf) -> io::Result<()>
+    fn io_res_copy_info_files(dir: &Option<PathBuf>, info_dir: &PathBuf, new_part_info_dir: &PathBuf) -> io::Result<()>
     {
         create_dir_all(new_part_info_dir)?;
         match dir {
@@ -1464,7 +1464,7 @@ impl Pkg
 
     fn copy_info_files(dir: &Option<PathBuf>, info_dir: &PathBuf, new_part_info_dir: &PathBuf) -> Result<()>
     {
-        match Self::res_copy_info_files(dir, info_dir, new_part_info_dir) {
+        match Self::io_res_copy_info_files(dir, info_dir, new_part_info_dir) {
             Ok(()) => Ok(()),
             Err(err) => Err(Error::Io(err)),
         }
@@ -2220,7 +2220,7 @@ impl PkgManager
         Paths::load_opt(paths_file)
     }    
         
-    fn res_remove_dirs_for_cleaning(&self) -> io::Result<()>
+    fn io_res_remove_dirs_for_cleaning(&self) -> io::Result<()>
     {
         recursively_remove(self.work_tmp_dir(), true)?;
         recursively_remove(self.new_part_info_dir(), true)?;
@@ -2233,7 +2233,7 @@ impl PkgManager
         self.remove_bucket("new_versions")?;
         self.remove_bucket("pkgs_to_remove")?;
         self.remove_bucket("pkgs_to_change")?;
-        match self.res_remove_dirs_for_cleaning() {
+        match self.io_res_remove_dirs_for_cleaning() {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
@@ -2692,7 +2692,7 @@ impl PkgManager
         }
     }
     
-    fn res_install_pkg(&self, name: &PkgName, new_version: &Version, dir: &Path, paths: &Paths, is_doc: bool) -> io::Result<()>
+    fn io_res_install_pkg(&self, name: &PkgName, new_version: &Version, dir: &Path, paths: &Paths, is_doc: bool) -> io::Result<()>
     {
         let mut src_bin_dir = PathBuf::from(dir);
         src_bin_dir.push("bin");
@@ -2728,7 +2728,7 @@ impl PkgManager
         Ok(())
     }
 
-    fn res_copy_dependents_file(&self, name: &PkgName) -> io::Result<()>
+    fn io_res_copy_dependents_file(&self, name: &PkgName) -> io::Result<()>
     {
         create_dir_all(self.pkg_info_dir(name))?;
         let mut src_dependents_file = self.pkg_new_info_dir(name);
@@ -2751,7 +2751,7 @@ impl PkgManager
                 self.printer.print_installing_pkg(name, false);
                 let mut src = self.create_source(name)?;
                 src.set_current_version(new_version.clone());
-                match self.res_install_pkg(name, new_version, src.dir()?, &paths, is_doc) {
+                match self.io_res_install_pkg(name, new_version, src.dir()?, &paths, is_doc) {
                     Ok(()) => (),
                     Err(err) => return Err(Error::Io(err)),
                 }
@@ -2759,7 +2759,7 @@ impl PkgManager
                 Ok(())
             },
             Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => {
-                match self.res_copy_dependents_file(name) {
+                match self.io_res_copy_dependents_file(name) {
                     Ok(()) => Ok(()),
                     Err(err) => Err(Error::Io(err)),
                 }
@@ -2770,13 +2770,13 @@ impl PkgManager
     
     fn change_pkg(&self, name: &PkgName) -> Result<()>
     {
-        match self.res_copy_dependents_file(name) {
+        match self.io_res_copy_dependents_file(name) {
             Ok(()) => Ok(()),
             Err(err) => Err(Error::Io(err)),
         }
     }
     
-    fn res_remove_pkg(&self, name: &PkgName, paths: &Paths) -> io::Result<()>
+    fn io_res_remove_pkg(&self, name: &PkgName, paths: &Paths) -> io::Result<()>
     {
         let bin_dir = self.bin_dir.clone();
         let bin_paths: Vec<PathBuf> = paths.bin.iter().map(|s| PathBuf::from(s)).collect();
@@ -2816,7 +2816,7 @@ impl PkgManager
         match Paths::load(paths_file) {
             Ok(paths) => {
                 self.printer.print_removing_pkg(name, false);
-                match self.res_remove_pkg(name, &paths) {
+                match self.io_res_remove_pkg(name, &paths) {
                     Ok(()) => (),
                     Err(err) => return Err(Error::Io(err)),
                 }
@@ -3022,7 +3022,7 @@ impl PkgManager
             self.remove_bucket("new_versions")?;
             self.remove_bucket("pkgs_to_remove")?;
             self.remove_bucket("pkgs_to_change")?;
-            match self.res_remove_dirs_for_cleaning() {
+            match self.io_res_remove_dirs_for_cleaning() {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
