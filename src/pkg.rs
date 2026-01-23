@@ -285,7 +285,7 @@ impl Print for StdPrinter
     fn print_documenting_pkg(&self, name: &PkgName, is_done: bool)
     {
         if is_done {
-            println!("done");
+            println!(" done");
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Documenting {} ...", name);
