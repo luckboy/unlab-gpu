@@ -2952,9 +2952,9 @@ impl PkgManager
         };
         if is_new_part_info_dir {
             if are_deps {
-                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean-deps command to clean.")));
+                return Err(Error::Pkg(String::from("Preparation to last operation was interrupted. Please call command 'unlab-pkg clean-deps' to clean after preparation.")));
             } else {
-                return Err(Error::Pkg(String::from("Last operation was interrupted while preparation. Please execute clean command to clean.")));
+                return Err(Error::Pkg(String::from("Preparation to last operation was interrupted. Please call command 'unlab-pkg clean' to clean after preparation.")));
             }
         }
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
@@ -2964,9 +2964,9 @@ impl PkgManager
         };
         if (is_new_info_dir && self.has_bucket("new_versions")?) || is_new_info_dir || self.has_bucket("pkgs_to_remove")? {
             if are_deps {
-                return Err(Error::Pkg(String::from("Last operation is incompleted. Please execute continue-deps command to complete operation.")));
+                return Err(Error::Pkg(String::from("Last operation was interrupted. Please call command 'unlab-pkg continue-deps' to complete last operation.")));
             } else {
-                return Err(Error::Pkg(String::from("Last operation is incompleted. Please execute continue command to complete operation.")));
+                return Err(Error::Pkg(String::from("Last operation was interrupted. Please call command 'unlab-pkg continue' to complete last operation.")));
             }
         }
         Ok(())
