@@ -2379,7 +2379,7 @@ impl PkgManager
                                                     data.add_pkg_version_for_bucket("new_versions", old_dep_name, &version)?;
                                                     data.pkgs.insert(old_dep_name.clone(), Pkg::new_with_copying_and_flags(None, data.pkg_info_dir(old_dep_name), data.pkg_new_part_info_dir(old_dep_name), true, false)?);
                                                 },
-                                                None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no version"))),
+                                                None => return Err(Error::PkgName(old_dep_name.clone(), String::from("no package version"))),
                                             }
                                         }
                                         match data.pkgs.get(old_dep_name) {
@@ -2654,7 +2654,7 @@ impl PkgManager
                                 self.add_pkg_names_for_bucket("pkgs_to_change", dep_name)?;
                                 self.pkgs.insert(dep_name.clone(), Pkg::new_with_copying_and_flags(None, self.pkg_info_dir(dep_name), self.pkg_new_part_info_dir(dep_name), true, false)?);
                             } else {
-                                return Err(Error::PkgName(dep_name.clone(), String::from("no package2")));
+                                return Err(Error::PkgName(dep_name.clone(), String::from("no package version")));
                             }
                         }
                         match self.pkgs.get(dep_name) {
@@ -2663,7 +2663,7 @@ impl PkgManager
                                 depentents.remove(name);
                                 dep_pkg.save_dependents(&depentents)?;
                             },
-                            None => return Err(Error::PkgName(dep_name.clone(), String::from("no package3"))),
+                            None => return Err(Error::PkgName(dep_name.clone(), String::from("no package"))),
                         }
                     }
                 },
