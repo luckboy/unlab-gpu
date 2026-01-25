@@ -2974,6 +2974,14 @@ impl PkgManager
 
     pub fn cont(&self, is_doc: bool, are_deps: bool) -> Result<()>
     {
+        let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
+            Ok(_) => true,
+            Err(err) if err.kind() == ErrorKind::NotFound => false,
+            Err(err) => return Err(Error::Io(err)),
+        };
+        if is_new_part_info_dir {
+            return Ok(());
+        }
         let is_new_info_dir = match fs::metadata(self.new_info_dir()) {
             Ok(_) => true,
             Err(err) if err.kind() == ErrorKind::NotFound => false,
