@@ -2241,7 +2241,7 @@ impl PkgManager
         Ok(())
     }
 
-    fn prepare_new_part_infos_for_pre_installing_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_infos_for_pre_installing_without_reset(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
         if visiteds.contains(name) {
             return Ok(());
@@ -2422,9 +2422,9 @@ impl PkgManager
         }
     }
 
-    fn prepare_new_part_infos_for_pre_installing(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
+    fn prepare_new_infos_for_pre_installing(&mut self, name: &PkgName, visiteds: &mut HashSet<PkgName>, is_update: bool, is_force: bool) -> Result<()>
     {
-        let res = self.prepare_new_part_infos_for_pre_installing_without_reset(name, visiteds, is_update, is_force);
+        let res = self.prepare_new_infos_for_pre_installing_without_reset(name, visiteds, is_update, is_force);
         match res {
             Ok(()) => Ok(()),
             Err(err) => {
@@ -2613,7 +2613,7 @@ impl PkgManager
         Ok(())
     }
     
-    fn check_new_part_infos_and_generate_docs_for_pre_installing_without_reset(&self, is_doc: bool) -> Result<()>
+    fn check_new_infos_and_generate_docs_for_pre_installing_without_reset(&self, is_doc: bool) -> Result<()>
     {
         self.check_dependent_version_reqs()?;
         self.search_path_conflicts()?;
@@ -2627,9 +2627,9 @@ impl PkgManager
         }
     }
 
-    fn check_new_part_infos_and_generate_docs_for_pre_installing(&mut self, is_doc: bool) -> Result<()>
+    fn check_new_infos_and_generate_docs_for_pre_installing(&mut self, is_doc: bool) -> Result<()>
     {
-        let res = self.check_new_part_infos_and_generate_docs_for_pre_installing_without_reset(is_doc);
+        let res = self.check_new_infos_and_generate_docs_for_pre_installing_without_reset(is_doc);
         self.pkgs.clear();
         match res {
             Ok(()) => Ok(()),
@@ -2640,7 +2640,7 @@ impl PkgManager
         }
     }
     
-    fn prepare_new_part_infos_for_pre_removing_without_reset(&mut self) -> Result<()>
+    fn prepare_new_infos_for_pre_removing_without_reset(&mut self) -> Result<()>
     {
         let names = self.pkg_names_for_bucket("pkgs_to_remove")?;
         for name in &names {
@@ -2675,7 +2675,7 @@ impl PkgManager
 
     fn prepare_new_infos_for_pre_removing(&mut self) -> Result<()>
     {
-        let res = self.prepare_new_part_infos_for_pre_removing_without_reset();
+        let res = self.prepare_new_infos_for_pre_removing_without_reset();
         self.pkgs.clear();
         match res {
             Ok(()) => {
@@ -2904,9 +2904,9 @@ impl PkgManager
         self.printer.print_pre_installing();
         let mut visiteds: HashSet<PkgName> = HashSet::new();
         for name in names {
-            self.prepare_new_part_infos_for_pre_installing(name, &mut visiteds, is_update, is_force)?;
+            self.prepare_new_infos_for_pre_installing(name, &mut visiteds, is_update, is_force)?;
         }
-        self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
+        self.check_new_infos_and_generate_docs_for_pre_installing(is_doc)?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         Ok(())
@@ -2922,9 +2922,9 @@ impl PkgManager
         self.constraints = manifest.constraints.map(|cs| cs.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.sources = manifest.sources.map(|ss| ss.clone()).unwrap_or(Arc::new(HashMap::new()));
         self.pkgs.insert(start_name.clone(), current_pkg);
-        self.prepare_new_part_infos_for_pre_installing(&start_name, &mut visiteds, is_update, is_force)?;
+        self.prepare_new_infos_for_pre_installing(&start_name, &mut visiteds, is_update, is_force)?;
         self.add_pkg_names_for_buckets_and_autoremoving("pkgs_to_remove", "versions", &visiteds)?;
-        self.check_new_part_infos_and_generate_docs_for_pre_installing(is_doc)?;
+        self.check_new_infos_and_generate_docs_for_pre_installing(is_doc)?;
         self.printer.print_installing();
         self.install_pkgs(is_doc)?;
         self.printer.print_removing();
