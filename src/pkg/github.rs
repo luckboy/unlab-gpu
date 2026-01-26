@@ -95,7 +95,7 @@ impl GitHubSrc
         };
         update_pkg_versions(&self.name, &self.old_name, self.home_dir.as_path(), is_update, &self.printer, || {
                 let mut easy = curl::easy::Easy::new();
-                easy.url(format!("https://{}/repos/{}/git/matching-refs/tags", SERVICE_API_DOMAIN, str_to_url_part(repo_path, true)).as_str())?;
+                easy.url(format!("https://{}/repos/{}/git/matching-refs/tags", SERVICE_API_DOMAIN, str_to_url_name(repo_path, true)).as_str())?;
                 let mut http_headers = List::new();
                 http_headers.append("Accept: application/vnd.github+json")?;
                 http_headers.append("X-GitHub-Api-Version: 2022-11-28")?;
@@ -159,7 +159,7 @@ impl Source for GitHubSrc
                     self.dir = Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || {
                             let original_name = self.old_name.as_ref().unwrap_or(&self.name); 
                             let tag_name = version_to_tag_name(current_version);
-                            let url = format!("https://{}/archive/refs/tags/{}.tar.gz", str_to_url_part(original_name.name(), true), str_to_url_part(tag_name.as_str(), false));
+                            let url = format!("https://{}/archive/refs/tags/{}.tar.gz", str_to_url_name(original_name.name(), true), str_to_url_name(tag_name.as_str(), false));
                             download_pkg_file(&self.name, &self.old_name, current_version, url.as_str(), &self.home_dir, &self.printer)
                     })?)
                 },

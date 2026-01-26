@@ -99,7 +99,7 @@ impl BitbucketSrc
         };
         update_pkg_versions(&self.name, &self.old_name, self.home_dir.as_path(), is_update, &self.printer, || {
                 let mut easy = curl::easy::Easy::new();
-                easy.url(format!("https://{}/2.0/repositories/{}/refs/tags", SERVICE_API_DOMAIN, str_to_url_part(repo_path, true)).as_str())?;
+                easy.url(format!("https://{}/2.0/repositories/{}/refs/tags", SERVICE_API_DOMAIN, str_to_url_name(repo_path, true)).as_str())?;
                 easy.follow_location(true)?;
                 Ok(easy)
         }, |data| {
@@ -155,7 +155,7 @@ impl Source for BitbucketSrc
                     self.dir = Some(extract_pkg_file(&self.name, current_version, &self.work_dir, &self.printer, || {
                             let original_name = self.old_name.as_ref().unwrap_or(&self.name);
                             let tag_name = version_to_tag_name(current_version);
-                            let url = format!("https://{}/get/{}.zip", str_to_url_part(original_name.name(), true), str_to_url_part(tag_name.as_str(), false));
+                            let url = format!("https://{}/get/{}.zip", str_to_url_name(original_name.name(), true), str_to_url_name(tag_name.as_str(), false));
                             download_pkg_file(&self.name, &self.old_name, current_version, url.as_str(), &self.home_dir, &self.printer)
                     })?)
                 },

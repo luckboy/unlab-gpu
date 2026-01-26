@@ -93,7 +93,7 @@ impl GitLabSrc
         };
         update_pkg_versions(&self.name, &self.old_name, self.home_dir.as_path(), is_update, &self.printer, || {
                 let mut easy = curl::easy::Easy::new();
-                easy.url(format!("https://{}/api/v4/projects/{}/repository/tags", str_to_url_part(service_domain, false), str_to_url_part(repo_path, false)).as_str())?;
+                easy.url(format!("https://{}/api/v4/projects/{}/repository/tags", str_to_url_name(service_domain, false), str_to_url_name(repo_path, false)).as_str())?;
                 easy.follow_location(true)?;
                 Ok(easy)
         }, |data| {
@@ -158,7 +158,7 @@ impl Source for GitLabSrc
                                 None => return Err(Error::PkgName(self.name.clone(), String::from("no package repository path"))),
                             };
                             let tag_name = version_to_tag_name(current_version);
-                            let url = format!("https://{}/-/archive/{}/{}-{}.tar.gz?ref_type=tags", str_to_url_part(original_name.name(), true), str_to_url_part(tag_name.as_str(), false), str_to_url_part(repo_name, false), str_to_url_part(tag_name.as_str(), false));
+                            let url = format!("https://{}/-/archive/{}/{}-{}.tar.gz?ref_type=tags", str_to_url_name(original_name.name(), true), str_to_url_name(tag_name.as_str(), false), str_to_url_name(repo_name, false), str_to_url_name(tag_name.as_str(), false));
                             download_pkg_file(&self.name, &self.old_name, current_version, url.as_str(), &self.home_dir, &self.printer)
                     })?)
                 },
