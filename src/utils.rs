@@ -981,3 +981,6 @@ pub fn str_to_url_part(s: &str, is_path: bool) -> String
     }
     url_part
 }
+
+pub fn eprint_error(err: &Error)
+{ eprintln!("{}", err); }

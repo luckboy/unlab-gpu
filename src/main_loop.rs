@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,12 +29,8 @@ use crate::mod_node::*;
 use crate::parser::*;
 #[cfg(feature = "plot")]
 use crate::plot::*;
-#[cfg(feature = "plot")]
 use crate::utils::*;
 use crate::value::*;
-
-pub fn eprint_error(err: &Error)
-{ eprintln!("{}", err); }
 
 pub fn eprint_error_with_stack_trace(err: &Error, stack_trace: &[(Option<Value>, Pos)])
 {
