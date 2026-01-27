@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,24 +27,35 @@ pub struct Home
 
 impl Home
 {
-    fn path_from<K: AsRef<OsStr>, D: AsRef<Path>>(path: &Option<String>, path_var_name: K, home_dir: &PathBuf, dir: D) -> OsString
+    fn path_from<K: AsRef<OsStr>, L: AsRef<OsStr>, D: AsRef<Path>>(path: &Option<String>, path_var_name: K, work_path_var_name: L, home_dir: &PathBuf, dir: D, is_work_dir: bool) -> OsString
     {
         match path {
             Some(path) => OsString::from(path.as_str()),
             None => {
-                match var_os(path_var_name) {
-                    Some(tmp_lib_path) => tmp_lib_path,
-                    None => {
-                        let mut tmp_lib_path = home_dir.clone();
-                        tmp_lib_path.push(dir);
-                        tmp_lib_path.into_os_string()
-                    },
+                if !is_work_dir {
+                    match var_os(path_var_name) {
+                        Some(tmp_lib_path) => tmp_lib_path,
+                        None => {
+                            let mut tmp_lib_path = home_dir.clone();
+                            tmp_lib_path.push(dir);
+                            tmp_lib_path.into_os_string()
+                        },
+                    }
+                } else {
+                    match var_os(work_path_var_name) {
+                        Some(tmp_lib_path) => tmp_lib_path,
+                        None => {
+                            let mut tmp_lib_path = PathBuf::from("work");
+                            tmp_lib_path.push(dir);
+                            tmp_lib_path.into_os_string()
+                        },
+                    }
                 }
             },
         }
     }
     
-    pub fn new(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>) -> Option<Self>
+    pub fn new(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_work_dir: bool) -> Option<Self>
     {
         let home_dir = match home_dir {
             Some(home_dir) => PathBuf::from(home_dir.as_str()),
@@ -71,9 +82,9 @@ impl Home
         backend_config_file.push("backend.toml");
         let mut history_file = home_dir.clone();
         history_file.push("history.txt");
-        let bin_path = Self::path_from(bin_path, "UNLAB_GPU_BIN_PATH", &home_dir, "bin");
-        let lib_path = Self::path_from(lib_path, "UNLAB_GPU_LIB_PATH", &home_dir, "lib");
-        let doc_path = Self::path_from(doc_path, "UNLAB_GPU_DOC_PATH", &home_dir, "doc");
+        let bin_path = Self::path_from(bin_path, "UNLAB_GPU_BIN_PATH", "UNLAB_GPU_WORK_BIN_PATH", &home_dir, "bin", is_work_dir);
+        let lib_path = Self::path_from(lib_path, "UNLAB_GPU_LIB_PATH", "UNLAB_GPU_WORK_LIB_PATH", &home_dir, "lib", is_work_dir);
+        let doc_path = Self::path_from(doc_path, "UNLAB_GPU_DOC_PATH", "UNLAB_GPU_WORK_DOC_PATH", &home_dir, "doc", is_work_dir);
         Some(Home {
                 home_dir,
                 backend_config_file,

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -59,7 +59,7 @@ struct Args
 fn main()
 {
     let args = Args::parse();
-    let mut home = match Home::new(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path) {
+    let mut home = match Home::new(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, false) {
         Some(tmp_home) => tmp_home,
         None => {
             eprintln!("no unlab-gpu home directory");
