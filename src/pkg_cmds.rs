@@ -627,19 +627,19 @@ pub fn init<F>(name: &Option<String>, account: &Option<String>, domain: &Option<
         None => return Some(1),
     };
     let ss: Vec<&str> = pkg_name.name().split('/').collect();
-    let pkg_name_suffix = match ss.last() {
-        Some(tmp_pkg_name_suffix) => String::from(*tmp_pkg_name_suffix),
+    let last_pkg_name_comp = match ss.last() {
+        Some(tmp_last_pkg_name_comp) => String::from(*tmp_last_pkg_name_comp),
         None => {
-            eprintln!("invalid package name");
+            eprintln!("no last package name component");
             return Some(1);
         },
     };
-    let bin_name = pkg_name_suffix.clone();
+    let bin_name = last_pkg_name_comp.clone();
     let lib_name = match &new_domain {
         Some(new_domain) => {
             let mut tmp_lib_name = new_domain.clone();
             tmp_lib_name.push('/');
-            tmp_lib_name.push_str(pkg_name_suffix.as_str());
+            tmp_lib_name.push_str(last_pkg_name_comp.as_str());
             tmp_lib_name
         },
         None => {
