@@ -31,6 +31,7 @@ pub mod main_loop;
 pub mod mod_node;
 pub mod parser;
 pub mod pkg;
+pub mod pkg_cmds;
 #[cfg(feature = "plot")]
 pub mod plot;
 pub mod tree;

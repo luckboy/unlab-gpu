@@ -579,8 +579,8 @@ impl Manifest
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Paths
 {
-    bin: Vec<String>,
-    lib: Vec<String>,
+    pub bin: Vec<String>,
+    pub lib: Vec<String>,
 }
 
 impl Paths
@@ -644,7 +644,7 @@ impl Paths
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Versions
 {
-    versions: BTreeSet<Version>,
+    pub versions: BTreeSet<Version>,
 }
 
 impl Versions
@@ -708,8 +708,8 @@ impl Versions
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PkgConfig
 {
-    account: Option<String>,
-    domain: Option<String>,
+    pub account: Option<String>,
+    pub domain: Option<String>,
 }
 
 impl PkgConfig
@@ -1826,23 +1826,10 @@ impl PkgManager
 
     pub fn save_manifest(manifest: &Manifest) -> Result<()>
     { manifest.save("Unlab.toml") }
-
-    pub fn pkg_config(&self) -> Result<Option<PkgConfig>>
-    { PkgConfig::load_opt(self.pkg_config_file()) }
     
-    pub fn save_pkg_config(&self, config: &PkgConfig) -> Result<()>
-    { config.save(self.pkg_config_file()) }
-
     pub fn reset(&mut self)
     { self.pkgs.clear(); }
     
-    pub fn pkg_config_file(&self) -> PathBuf
-    {
-        let mut file = self.home_dir.clone();
-        file.push("pkg.toml");
-        file
-    }
-
     pub fn constraints_file(&self) -> PathBuf
     {
         let mut file = self.home_dir.clone();

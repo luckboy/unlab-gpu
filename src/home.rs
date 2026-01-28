@@ -20,6 +20,7 @@ pub struct Home
     home_dir: PathBuf,
     backend_config_file: PathBuf,
     history_file: PathBuf,
+    pkg_config_file: PathBuf,
     bin_path: OsString,
     lib_path: OsString,
     doc_path: OsString,
@@ -82,6 +83,8 @@ impl Home
         backend_config_file.push("backend.toml");
         let mut history_file = home_dir.clone();
         history_file.push("history.txt");
+        let mut pkg_config_file = home_dir.clone();
+        pkg_config_file.push("pkg.toml");
         let bin_path = Self::path_from(bin_path, "UNLAB_GPU_BIN_PATH", "UNLAB_GPU_WORK_BIN_PATH", &home_dir, "bin", is_work_dir);
         let lib_path = Self::path_from(lib_path, "UNLAB_GPU_LIB_PATH", "UNLAB_GPU_WORK_LIB_PATH", &home_dir, "lib", is_work_dir);
         let doc_path = Self::path_from(doc_path, "UNLAB_GPU_DOC_PATH", "UNLAB_GPU_WORK_DOC_PATH", &home_dir, "doc", is_work_dir);
@@ -89,6 +92,7 @@ impl Home
                 home_dir,
                 backend_config_file,
                 history_file,
+                pkg_config_file,
                 bin_path,
                 lib_path,
                 doc_path,
@@ -103,6 +107,9 @@ impl Home
 
     pub fn history_file(&self) -> &Path
     { self.history_file.as_path() }
+
+    pub fn pkg_config_file(&self) -> &Path
+    { self.pkg_config_file.as_path() }
 
     pub fn bin_path(&self) -> &OsStr
     { self.bin_path.as_os_str() }

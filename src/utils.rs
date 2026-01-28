@@ -982,5 +982,31 @@ pub fn str_to_url_name(s: &str, is_path: bool) -> String
     url_name
 }
 
+pub fn str_to_ident(s: &str) -> String
+{
+    let mut ident = String::new();
+    let mut is_first = true;
+    for c in s.chars() {
+        if is_first {
+            if c.is_alphabetic() || c == '_' {
+                ident.push(c);
+            } else if c.is_numeric() {
+                ident.push('_');
+                ident.push(c);
+            } else {
+                ident.push('_');
+            }
+        } else {
+            if c.is_alphanumeric() || c == '_' {
+                ident.push(c);
+            } else {
+                ident.push('_');
+            }
+        }
+        is_first = false;
+    }
+    ident
+}
+
 pub fn eprint_error(err: &Error)
 { eprintln!("{}", err); }
