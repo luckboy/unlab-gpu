@@ -400,7 +400,7 @@ pub fn remove<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<
     }
 }
 
-fn res_cont(pkg_manager: &PkgManager, is_doc: bool, are_deps: bool) -> Result<()>
+fn res_continue(pkg_manager: &PkgManager, is_doc: bool, are_deps: bool) -> Result<()>
 {
     pkg_manager.cont(is_doc, are_deps)?;
     if are_deps {
@@ -409,14 +409,14 @@ fn res_cont(pkg_manager: &PkgManager, is_doc: bool, are_deps: bool) -> Result<()
     Ok(())
 }
 
-fn cont_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn continue_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
-    match res_cont(&pkg_manager, is_doc, are_deps) {
+    match res_continue(&pkg_manager, is_doc, are_deps) {
         Ok(()) => None,
         Err(err) => {
             eprint_error(&err);
@@ -427,11 +427,11 @@ fn cont_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Opt
 
 pub fn cont<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ cont_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, false, f) }
 
-pub fn cont_deps<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn continue_deps<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ cont_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, true, f) }
 
 fn clean_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
