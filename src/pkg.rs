@@ -1157,10 +1157,6 @@ fn curl_res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, 
 pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgName>, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
 {
     let path_buf = pkg_cache_dir(home_dir.as_ref(), old_name.as_ref().unwrap_or(name), version);
-    match create_dir_all(path_buf.as_path()) {
-        Ok(()) => (),
-        Err(err) => return Err(Error::Io(err)),
-    }
     let first_url_part = match url.split_once('?') {
         Some((tmp_first_url_part, _)) => tmp_first_url_part,
         None => url,
@@ -1186,6 +1182,10 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgNa
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
             printer.print_downloading_pkg_file(name, false);
+            match create_dir_all(path_buf.as_path()) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
             match recursively_remove(part_file_path_buf.as_path(), true) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
