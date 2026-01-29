@@ -202,7 +202,7 @@ fn res_show(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are
         Some(tmp_paths) => tmp_paths,
         None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package paths"))),
     };
-    println!("Package: {} v{}", pkg_name, version);
+    println!("{} v{}", pkg_name, version);
     if is_manifest || (!is_manifest && !are_dependents && !are_paths) {
         println!("Manifest:");
         match toml::to_string_pretty(&manifest) {
