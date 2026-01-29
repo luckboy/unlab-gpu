@@ -549,6 +549,7 @@ fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> io
         let mut path_buf = PathBuf::from("lib");
         path_buf.push(lib_name.replace('/', path::MAIN_SEPARATOR_STR));
         create_dir_all(path_buf.as_path())?;
+        path_buf.push("lib.un");
         let file = File::create(path_buf)?;
         let mut w = BufWriter::new(file);
         writeln!(&mut w, "module {}", str_to_ident(lib_name))?;
