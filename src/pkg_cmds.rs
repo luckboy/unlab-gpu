@@ -142,13 +142,13 @@ pub fn list_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_pa
     where F: FnOnce(&mut Home) -> bool
 { list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, true, f) }
 
-fn res_search(pkg_manager: &PkgManager, query :&str, are_deps: bool) -> Result<()>
+fn res_search(pkg_manager: &PkgManager, patterns :&[String], are_deps: bool) -> Result<()>
 {
     pkg_manager.check_last_op(are_deps)?;
     pkg_manager.pkg_versions_in(|name, version| {
             match pkg_manager.pkg_manifest(name)? {
                 Some(manifest) => {
-                    if name.name().contains(query) || manifest.package.description.map(|d| d.contains(query)).unwrap_or(false) {
+                    if patterns.iter().all(|p| name.name().contains(p.as_str()) || manifest.package.description.as_ref().map(|d| d.contains(p.as_str())).unwrap_or(false)) {
                         println!("{} v{}", name, version);
                     }
                 },
@@ -159,14 +159,14 @@ fn res_search(pkg_manager: &PkgManager, query :&str, are_deps: bool) -> Result<(
     Ok(())
 }
 
-fn search_with_dep_flag<F>(query :&str, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn search_with_dep_flag<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
-    match res_search(&pkg_manager, query, are_deps) {
+    match res_search(&pkg_manager, patterns, are_deps) {
         Ok(()) => None,
         Err(err) => {
             eprint_error(&err);
@@ -175,13 +175,13 @@ fn search_with_dep_flag<F>(query :&str, home_dir: &Option<String>, bin_path: &Op
     }
 }
 
-pub fn search<F>(query :&str, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn search<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ search_with_dep_flag(query, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, false, f) }
 
-pub fn search_deps<F>(query :&str, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn search_deps<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ search_with_dep_flag(query, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, true, f) }
 
 fn res_show(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are_dependents: bool, are_paths: bool, is_dep: bool) -> Result<()>
 {
