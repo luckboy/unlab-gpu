@@ -186,40 +186,42 @@ pub fn search_deps<F>(query :&str, home_dir: &Option<String>, bin_path: &Option<
 fn res_show(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are_dependents: bool, are_paths: bool, is_dep: bool) -> Result<()>
 {
     pkg_manager.check_last_op(is_dep)?;
+    let version = match pkg_manager.pkg_version(pkg_name)? {
+        Some(tmp_version) => tmp_version,
+        None => return Err(Error::PkgName(pkg_name.clone(), String::from("not found package"))),
+    };
+    let manifest = match pkg_manager.pkg_manifest(pkg_name)? {
+        Some(tmp_manifest) => tmp_manifest,
+        None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package manifest"))),
+    };
+    let dependents = match pkg_manager.pkg_dependents(pkg_name)? {
+        Some(tmp_dependents) => tmp_dependents,
+        None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package dependents"))),
+    };
+    let paths = match pkg_manager.pkg_paths(pkg_name)? {
+        Some(tmp_paths) => tmp_paths,
+        None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package paths"))),
+    };
+    println!("Package: {} v{}", pkg_name, version);
     if is_manifest || (!is_manifest && !are_dependents && !are_paths) {
-        match pkg_manager.pkg_manifest(pkg_name)? {
-            Some(manifest) => {
-                println!("Manifest:");
-                match toml::to_string_pretty(&manifest) {
-                    Ok(s) => println!("{}", s),
-                    Err(err) => return Err(Error::TomlSer(err)),
-                }
-            },
-            None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package manifest"))),
+        println!("Manifest:");
+        match toml::to_string_pretty(&manifest) {
+            Ok(s) => println!("{}", s),
+            Err(err) => return Err(Error::TomlSer(err)),
         }
     }
     if are_dependents {
-        match pkg_manager.pkg_dependents(pkg_name)? {
-            Some(dependents) => {
-                println!("Dependents:");
-                match toml::to_string_pretty(&dependents) {
-                    Ok(s) => println!("{}", s),
-                    Err(err) => return Err(Error::TomlSer(err)),
-                }
-            },
-            None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package dependents"))),
+        println!("Dependents:");
+        match toml::to_string_pretty(&dependents) {
+            Ok(s) => println!("{}", s),
+            Err(err) => return Err(Error::TomlSer(err)),
         }
     }
     if are_paths {
-        match pkg_manager.pkg_paths(pkg_name)? {
-            Some(paths) => {
-                println!("Paths:");
-                match toml::to_string_pretty(&paths) {
-                    Ok(s) => println!("{}", s),
-                    Err(err) => return Err(Error::TomlSer(err)),
-                }
-            },
-            None => return Err(Error::PkgName(pkg_name.clone(), String::from("no package paths"))),
+        println!("Paths:");
+        match toml::to_string_pretty(&paths) {
+            Ok(s) => println!("{}", s),
+            Err(err) => return Err(Error::TomlSer(err)),
         }
     }
     Ok(())
