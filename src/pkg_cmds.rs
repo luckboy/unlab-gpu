@@ -183,9 +183,9 @@ pub fn search_deps<F>(query :&str, home_dir: &Option<String>, bin_path: &Option<
     where F: FnOnce(&mut Home) -> bool
 { search_with_dep_flag(query, home_dir, bin_path, lib_path, doc_path, true, f) }
 
-fn res_info(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are_dependents: bool, are_paths: bool, are_deps: bool) -> Result<()>
+fn res_show(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are_dependents: bool, are_paths: bool, is_dep: bool) -> Result<()>
 {
-    pkg_manager.check_last_op(are_deps)?;
+    pkg_manager.check_last_op(is_dep)?;
     if is_manifest || (!is_manifest && !are_dependents && !are_paths) {
         match pkg_manager.pkg_manifest(pkg_name)? {
             Some(manifest) => {
@@ -225,18 +225,18 @@ fn res_info(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are
     Ok(())
 }
 
-fn info_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn show_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_dep: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_name = match parse_pkg_name(name) {
         Some(tmp_pkg_name) => tmp_pkg_name,
         None => return Some(1),
     };
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, is_dep, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
-    match res_info(&pkg_manager, &pkg_name, is_manifest, are_dependents, are_paths, are_deps) {
+    match res_show(&pkg_manager, &pkg_name, is_manifest, are_dependents, are_paths, is_dep) {
         Ok(()) => None,
         Err(err) => {
             eprint_error(&err);
@@ -245,13 +245,13 @@ fn info_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, ar
     }
 }
 
-pub fn info<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn show<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ info_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, false, f) }
 
-pub fn info_deps<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn show_dep<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ info_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, true, f) }
 
 fn res_update(pkg_manager: &PkgManager, pkg_names: &[PkgName], are_deps: bool) -> Result<()>
 {
