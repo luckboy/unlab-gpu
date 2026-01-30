@@ -716,7 +716,7 @@ pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domai
     }
 }
 
-fn run_with_opt_name<F>(name: Option<String>, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+fn run_with_opt_name<F>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let mut home = match create_home(home_dir, bin_path, lib_path, doc_path, true, f) {
@@ -748,7 +748,7 @@ fn run_with_opt_name<F>(name: Option<String>, args: Vec<String>, is_ctrl_c_intr_
         Some(name) => {
             let mut tmp_script_file = String::from("bin");
             tmp_script_file.push(path::MAIN_SEPARATOR);
-            tmp_script_file.push_str(name.as_str());
+            tmp_script_file.push_str(name);
             Some(tmp_script_file)
         },
         None => None,
@@ -769,7 +769,7 @@ fn run_with_opt_name<F>(name: Option<String>, args: Vec<String>, is_ctrl_c_intr_
     exit_code
 }
 
-pub fn run<F>(name: String, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn run<F>(name: &str, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { run_with_opt_name(Some(name), args, is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f) }
 
