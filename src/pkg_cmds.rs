@@ -22,7 +22,6 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use crate::toml;
 use crate::backend::*;
-use crate::builtins::add_std_builtin_funs;
 use crate::error::*;
 use crate::home::*;
 use crate::main_loop::*;
@@ -48,7 +47,7 @@ fn create_home<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path
     }
 }
 
-fn create_pkg_manager<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_work_dir: bool, f: F) -> Option<PkgManager>
+fn create_pkg_manager<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, is_work_dir: bool, f: F) -> Option<PkgManager>
     where F: FnOnce(&mut Home) -> bool
 {
     let home = create_home(home_dir, bin_path, lib_path, doc_path, is_work_dir, f)?;
@@ -88,7 +87,7 @@ fn create_pkg_manager<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
             },
         }
     }
-    match PkgManager::new(home_dir, work_dir, bin_dir, lib_dir, doc_dir, default_src_factories(), Arc::new(StdPrinter::new())) {
+    match PkgManager::new(home_dir, work_dir, bin_dir, lib_dir, doc_dir, src_factories, Arc::new(StdPrinter::new())) {
         Ok(pkg_manager) => Some(pkg_manager),
         Err(err) => {
             eprint_error(&err);
@@ -127,10 +126,10 @@ fn res_list(pkg_manager: &PkgManager, are_deps: bool) -> Result<()>
     Ok(())
 }
 
-fn list_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn list_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -143,13 +142,13 @@ fn list_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
     }
 }
 
-pub fn list<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn list<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, false, f) }
+{ list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
-pub fn list_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn list_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, true, f) }
+{ list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
 
 fn res_search(pkg_manager: &PkgManager, patterns :&[String], are_deps: bool) -> Result<()>
 {
@@ -168,10 +167,10 @@ fn res_search(pkg_manager: &PkgManager, patterns :&[String], are_deps: bool) -> 
     Ok(())
 }
 
-fn search_with_dep_flag<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn search_with_dep_flag<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -184,13 +183,13 @@ fn search_with_dep_flag<F>(patterns :&[String], home_dir: &Option<String>, bin_p
     }
 }
 
-pub fn search<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn search<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
-pub fn search_deps<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn search_deps<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
 
 fn res_show(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are_dependents: bool, are_paths: bool, is_dep: bool) -> Result<()>
 {
@@ -236,14 +235,14 @@ fn res_show(pkg_manager: &PkgManager, pkg_name: &PkgName, is_manifest: bool, are
     Ok(())
 }
 
-fn show_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_dep: bool, f: F) -> Option<i32>
+fn show_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, is_dep: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_name = match parse_pkg_name(name) {
         Some(tmp_pkg_name) => tmp_pkg_name,
         None => return Some(1),
     };
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, is_dep, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, is_dep, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -256,13 +255,13 @@ fn show_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, ar
     }
 }
 
-pub fn show<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn show<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
-pub fn show_dep<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn show_dep<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
 
 fn res_update(pkg_manager: &PkgManager, pkg_names: &[PkgName], are_deps: bool) -> Result<()>
 {
@@ -275,14 +274,14 @@ fn res_update(pkg_manager: &PkgManager, pkg_names: &[PkgName], are_deps: bool) -
     Ok(())
 }
 
-fn update_with_dep_flag<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn update_with_dep_flag<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_names = match parse_pkg_names(names) {
         Some(tmp_pkg_names) => tmp_pkg_names,
         None => return Some(1),
     };
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -295,13 +294,13 @@ fn update_with_dep_flag<F>(names: &[String], home_dir: &Option<String>, bin_path
     }
 }
 
-pub fn update<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn update<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ update_with_dep_flag(names, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ update_with_dep_flag(names, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
-pub fn update_deps<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn update_deps<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ update_with_dep_flag(names, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ update_with_dep_flag(names, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
 
 fn res_install(pkg_manager: &mut PkgManager, pkg_names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
 {
@@ -312,14 +311,14 @@ fn res_install(pkg_manager: &mut PkgManager, pkg_names: &[PkgName], is_update: b
     Ok(())
 }
 
-pub fn install<F>(names: &[String], is_update: bool, is_force: bool, is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn install<F>(names: &[String], is_update: bool, is_force: bool, is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_names = match parse_pkg_names(names) {
         Some(tmp_pkg_names) => tmp_pkg_names,
         None => return Some(1),
     };
-    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, false, f) {
+    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -341,10 +340,10 @@ fn res_install_all(pkg_manager: &mut PkgManager, is_update: bool, is_force: bool
     Ok(())
 }
 
-pub fn install_all<F>(is_update: bool, is_force: bool, is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn install_all<F>(is_update: bool, is_force: bool, is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, false, f) {
+    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -368,10 +367,10 @@ fn res_install_deps(pkg_manager: &mut PkgManager, is_update: bool, is_force: boo
     Ok(())
 }
 
-pub fn install_deps<F>(is_update: bool, is_force: bool, is_doc: bool, is_locked: bool, is_unlocked: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn install_deps<F>(is_update: bool, is_force: bool, is_doc: bool, is_locked: bool, is_unlocked: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, true, f) {
+    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -391,14 +390,14 @@ fn res_remove(pkg_manager: &mut PkgManager, pkg_names: &[PkgName]) -> Result<()>
     Ok(())
 }
 
-pub fn remove<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn remove<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let pkg_names = match parse_pkg_names(names) {
         Some(tmp_pkg_names) => tmp_pkg_names,
         None => return Some(1),
     };
-    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, false, f) {
+    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -420,10 +419,10 @@ fn res_continue(pkg_manager: &PkgManager, is_doc: bool, are_deps: bool) -> Resul
     Ok(())
 }
 
-fn continue_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn continue_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -436,18 +435,18 @@ fn continue_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: 
     }
 }
 
-pub fn cont<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn cont<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, false, f) }
+{ continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
-pub fn continue_deps<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn continue_deps<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, true, f) }
+{ continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
 
-fn clean_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, are_deps: bool, f: F) -> Option<i32>
+fn clean_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, are_deps, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -460,13 +459,13 @@ fn clean_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, 
     }
 }
 
-pub fn clean<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn clean<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ clean_with_dep_flag(home_dir, bin_path, lib_path, doc_path, false, f) }
+{ clean_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
-pub fn clean_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn clean_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
-{ clean_with_dep_flag(home_dir, bin_path, lib_path, doc_path, true, f) }
+{ clean_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
 
 fn res_lock(pkg_manager: &PkgManager) -> Result<()>
 {
@@ -475,10 +474,10 @@ fn res_lock(pkg_manager: &PkgManager) -> Result<()>
     Ok(())
 }
 
-pub fn lock<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn lock<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, true, f) {
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -733,8 +732,9 @@ pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domai
     }
 }
 
-fn run_with_opt_name<F>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
-    where F: FnOnce(&mut Home) -> bool
+fn run_with_opt_name<F, G>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool,
+        G: FnOnce(&mut ModNode<Value, ()>)
 {
     let mut home = match create_home(home_dir, bin_path, lib_path, doc_path, true, f) {
         Some(tmp_home) => tmp_home,
@@ -779,7 +779,7 @@ fn run_with_opt_name<F>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr_ch
     };
     let exit_code = {
         let mut root_mod: ModNode<Value, ()> = ModNode::new(());
-        add_std_builtin_funs(&mut root_mod);
+        g(&mut root_mod);
         let root_mod_arc = Arc::new(RwLock::new(root_mod));
         main_loop(script_file, args, PathBuf::from(home.history_file()), root_mod_arc, OsString::from(home.lib_path()), OsString::from(home.doc_path()), is_ctrl_c_intr_checker, are_plotter_windows)
     };
@@ -793,10 +793,12 @@ fn run_with_opt_name<F>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr_ch
     exit_code
 }
 
-pub fn run<F>(name: &str, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
-    where F: FnOnce(&mut Home) -> bool
-{ run_with_opt_name(Some(name), args, is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f) }
+pub fn run<F, G>(name: &str, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool,
+        G: FnOnce(&mut ModNode<Value, ()>)
+{ run_with_opt_name(Some(name), args, is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f, g) }
 
-pub fn console<F>(is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
-    where F: FnOnce(&mut Home) -> bool
-{ run_with_opt_name(None, Vec::new(), is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f) }
+pub fn console<F, G>(is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool,
+        G: FnOnce(&mut ModNode<Value, ()>)
+{ run_with_opt_name(None, Vec::new(), is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f, g) }

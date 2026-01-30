@@ -9,6 +9,8 @@ use std::process::exit;
 use clap::Parser;
 use clap::Subcommand;
 use unlab_gpu::Home;
+use unlab_gpu::add_std_builtin_funs;
+use unlab_gpu::pkg::default_src_factories;
 use unlab_gpu::pkg_cmds::list;
 use unlab_gpu::pkg_cmds::list_deps;
 use unlab_gpu::pkg_cmds::search;
@@ -313,57 +315,58 @@ fn main()
         }
         true
     };
+    let src_factories = default_src_factories();
     let exit_code = match &args.subcommand {
         Subcmd::List => {
-            list(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            list(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::ListDeps => {
-            list_deps(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            list_deps(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Search(args2) => {
-            search(args2.patterns.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            search(args2.patterns.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::SearchDeps(args2) => {
-            search_deps(args2.patterns.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            search_deps(args2.patterns.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Show(args2) => {
-            show(args2.package.as_str(), args2.manifest, args2.dependents, args2.paths, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            show(args2.package.as_str(), args2.manifest, args2.dependents, args2.paths, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::ShowDep(args2) => {
-            show_dep(args2.package.as_str(), args2.manifest, args2.dependents, args2.paths, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            show_dep(args2.package.as_str(), args2.manifest, args2.dependents, args2.paths, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Update(args2) => {
-            update(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            update(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::UpdateDeps(args2) => {
-            update_deps(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            update_deps(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Install(args2) => {
-            install(args2.packages.as_slice(), args2.update, args2.force, !args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            install(args2.packages.as_slice(), args2.update, args2.force, !args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::InstallAll(args2) => {
-            install_all(args2.update, args2.force, !args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            install_all(args2.update, args2.force, !args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::InstallDeps(args2) => {
-            install_deps(args2.update, args2.force, !args2.no_doc, args2.lock, args2.unlock, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            install_deps(args2.update, args2.force, !args2.no_doc, args2.lock, args2.unlock, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Remove(args2) => {
-            remove(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            remove(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Continue(args2) => {
-            cont(!args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            cont(!args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::ContinueDeps(args2) => {
-            continue_deps(!args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            continue_deps(!args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Clean => {
-            clean(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            clean(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::CleanDeps => {
-            clean_deps(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            clean_deps(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Lock => {
-            lock(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            lock(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Config(args2) => {
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
@@ -375,10 +378,10 @@ fn main()
             new(args2.dir.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Run(args2) => {
-            run(args2.bin_name.as_str(), args2.args.clone(), !args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            run(args2.bin_name.as_str(), args2.args.clone(), !args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
         },
         Subcmd::Console(args2) => {
-            console(!args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            console(!args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
         },
     };
     match exit_code {
