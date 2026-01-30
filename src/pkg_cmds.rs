@@ -746,6 +746,13 @@ fn run_with_opt_name<F>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr_ch
             return Some(1);
         },
     }
+    match PkgManager::manifest() {
+        Ok(_) => (),
+        Err(err) => {
+            eprint_error(&err);
+            return None;
+        },
+    }
     match initialize_backend(home.backend_config_file()) {
         Ok(()) => (),
         Err(err) => {
