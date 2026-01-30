@@ -40,6 +40,7 @@ use jammdb::Tx;
 use liblzma::read::XzDecoder;
 use zip::read::ZipArchive;
 use crate::curl;
+use crate::curl::easy::List;
 use crate::serde::de;
 use crate::serde::de::Visitor;
 use crate::serde::Deserialize;
@@ -55,6 +56,8 @@ use crate::version::*;
 pub mod bitbucket;
 pub mod github;
 pub mod gitlab;
+
+pub const USER_AGENT_HTTP_HEADER: &'static str = concat!("User-Agent: Unlab-pkg/", env!("CARGO_PKG_VERSION"));
 
 pub trait Print
 {
@@ -971,6 +974,7 @@ pub fn version_to_tag_name(version: &Version) -> String
 pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(home_dir.as_ref());
+    dir.push("var");
     dir.push("index");
     dir
 }
@@ -978,6 +982,7 @@ pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(home_dir.as_ref());
+    dir.push("var");
     dir.push("cache");
     dir
 }
@@ -1128,6 +1133,9 @@ fn curl_res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, 
 {
     let mut easy = curl::easy::Easy::new();
     easy.url(url)?;
+    let mut http_headers = List::new();
+    http_headers.append(USER_AGENT_HTTP_HEADER)?;
+    easy.http_headers(http_headers)?;
     easy.follow_location(true)?;
     easy.fail_on_error(true)?;
     easy.progress(true)?;
@@ -2581,9 +2589,16 @@ impl PkgManager
         if self.pkg_is_to_install_for_pre_install(name)? {
             self.printer.print_documenting_pkg(name, false);
             let doc_dir = self.pkg_tmp_doc_dir(name, &new_version);
-            match create_dir_all(doc_dir.as_path()) {
-                Ok(()) => (),
-                Err(err) => return Err(Error::Io(err)),
+            let mut paths_file = self.pkg_new_part_info_dir(name);
+            paths_file.push("paths.toml");
+            let paths = Paths::load(paths_file)?;
+            for path in &paths.lib {
+                let mut lib_doc_dir = doc_dir.clone();
+                lib_doc_dir.push(path);
+                match create_dir_all(lib_doc_dir.as_path()) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
             }
             // Line for documentation generation.
             self.printer.print_documenting_pkg(name, true);

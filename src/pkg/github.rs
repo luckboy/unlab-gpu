@@ -6,7 +6,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::str;
-use crate::curl::easy::List;
 use crate::serde_json;
 use super::*;
 
@@ -97,6 +96,7 @@ impl GitHubSrc
                 let mut easy = curl::easy::Easy::new();
                 easy.url(format!("https://{}/repos/{}/git/matching-refs/tags", SERVICE_API_DOMAIN, str_to_url_name(repo_path, true)).as_str())?;
                 let mut http_headers = List::new();
+                http_headers.append(USER_AGENT_HTTP_HEADER)?;
                 http_headers.append("Accept: application/vnd.github+json")?;
                 http_headers.append("X-GitHub-Api-Version: 2022-11-28")?;
                 easy.http_headers(http_headers)?;

@@ -94,6 +94,9 @@ impl GitLabSrc
         update_pkg_versions(&self.name, &self.old_name, self.home_dir.as_path(), is_update, &self.printer, || {
                 let mut easy = curl::easy::Easy::new();
                 easy.url(format!("https://{}/api/v4/projects/{}/repository/tags", str_to_url_name(service_domain, false), str_to_url_name(repo_path, false)).as_str())?;
+                let mut http_headers = List::new();
+                http_headers.append(USER_AGENT_HTTP_HEADER)?;
+                easy.http_headers(http_headers)?;
                 easy.follow_location(true)?;
                 Ok(easy)
         }, |data| {

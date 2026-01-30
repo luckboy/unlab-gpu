@@ -65,7 +65,7 @@ fn create_pkg_manager<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
             return None;
         },
     };
-    let lib_dir = match split_paths(home.bin_path()).next() {
+    let lib_dir = match split_paths(home.lib_path()).next() {
         Some(tmp_lib_dir) => PathBuf::from(tmp_lib_dir),
         None => {
             eprintln!("no library directory");
@@ -371,7 +371,7 @@ fn res_install_deps(pkg_manager: &mut PkgManager, is_update: bool, is_force: boo
 pub fn install_deps<F>(is_update: bool, is_force: bool, is_doc: bool, is_locked: bool, is_unlocked: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
-    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, false, f) {
+    let mut pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, true, f) {
         Some(tmp_pkg_manager) => tmp_pkg_manager,
         None => return Some(1),
     };
@@ -542,7 +542,7 @@ fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> io
     {
         let file = File::create(".gitignore")?;
         let mut w = BufWriter::new(file);
-        write!(&mut w, "/work")?;
+        writeln!(&mut w, "/work")?;
     }
     if is_bin {
         let mut path_buf = PathBuf::from("bin");
@@ -627,10 +627,18 @@ pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<St
                     return Some(1);
                 },
             };
-            let dir_name = match dir.to_str() {
-                Some(tmp_dir_name) => tmp_dir_name,
+            let dir_name = match dir.file_name() {
+                Some(file_name) => {
+                    match file_name.to_str() {
+                        Some(tmp_dir_name) => tmp_dir_name,
+                        None => {
+                            eprintln!("directory name contains invalid UTF-8 character");
+                            return Some(1);
+                        },
+                    }
+                },
                 None => {
-                    eprintln!("directory name contains invalid UTF-8 character");
+                    eprintln!("no directory name");
                     return Some(1);
                 },
             };

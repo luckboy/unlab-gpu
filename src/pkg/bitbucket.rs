@@ -100,6 +100,9 @@ impl BitbucketSrc
         update_pkg_versions(&self.name, &self.old_name, self.home_dir.as_path(), is_update, &self.printer, || {
                 let mut easy = curl::easy::Easy::new();
                 easy.url(format!("https://{}/2.0/repositories/{}/refs/tags", SERVICE_API_DOMAIN, str_to_url_name(repo_path, true)).as_str())?;
+                let mut http_headers = List::new();
+                http_headers.append(USER_AGENT_HTTP_HEADER)?;
+                easy.http_headers(http_headers)?;
                 easy.follow_location(true)?;
                 Ok(easy)
         }, |data| {

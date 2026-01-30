@@ -254,7 +254,7 @@ enum Subcmd
     /// Run binary for current package
     Run(RunArgs),
     /// Run interpreter for current package
-    Console(RunArgs),
+    Console(ConsoleArgs),
 }
 
 #[derive(Parser, Debug)]
