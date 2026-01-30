@@ -156,6 +156,8 @@ struct InitArgs
     /// Use template library 
     #[arg(short, long)]
     lib: bool,
+    /// Path
+    path: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -367,7 +369,7 @@ fn main()
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Init(args2) => {
-            init(&args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            init(&args2.path, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::New(args2) => {
             new(args2.path.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)

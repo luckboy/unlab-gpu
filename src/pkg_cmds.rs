@@ -571,9 +571,21 @@ fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is
     }
 }
 
-pub fn init<F>(name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
+    match path {
+        Some(path) => {
+            match set_current_dir(path) {
+                Ok(()) => (),
+                Err(err) => {
+                    eprint_error(&Error::Io(err));
+                    return Some(1);
+                },
+            }
+        },
+        None => (),
+    }
     let home = match create_home(home_dir, bin_path, lib_path, doc_path, false, f) {
         Some(tmp_home) => tmp_home,
         None => return Some(1),
@@ -689,7 +701,7 @@ pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domai
             return Some(1);
         },
     };
-    match init(name, account, domain, is_bin, is_lib, home_dir, bin_path, lib_path, doc_path, f) {
+    match init(&None, name, account, domain, is_bin, is_lib, home_dir, bin_path, lib_path, doc_path, f) {
         None => None,
         Some(exit_code) => {
             match change_and_remove_dir(path, saved_current_dir) {
