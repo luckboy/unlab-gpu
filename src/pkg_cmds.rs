@@ -79,6 +79,15 @@ fn create_pkg_manager<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
             return None;
         },
     };
+    if is_work_dir {
+        match PkgManager::manifest() {
+            Ok(_) => (),
+            Err(err) => {
+                eprint_error(&err);
+                return None;
+            },
+        }
+    }
     match PkgManager::new(home_dir, work_dir, bin_dir, lib_dir, doc_dir, default_src_factories(), Arc::new(StdPrinter::new())) {
         Ok(pkg_manager) => Some(pkg_manager),
         Err(err) => {
