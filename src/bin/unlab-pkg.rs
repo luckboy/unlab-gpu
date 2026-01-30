@@ -68,7 +68,7 @@ struct InstallArgs
     /// Update version lists of packages
     #[arg(short, long)]
     update: bool,
-    /// Force overwriting installed packages
+    /// Force reinstall installed packages
     #[arg(short, long)]
     force: bool,
     /// Don't install documentations of packages
@@ -84,7 +84,7 @@ struct InstallAllArgs
     /// Update version lists of packages
     #[arg(short, long)]
     update: bool,
-    /// Force overwriting installed packages
+    /// Force reinstall installed packages
     #[arg(short, long)]
     force: bool,
     /// Don't install documentations of packages
@@ -98,7 +98,7 @@ struct InstallDepsArgs
     /// Update version lists of packages
     #[arg(short, long)]
     update: bool,
-    /// Force overwriting installed packages
+    /// Force reinstall installed packages
     #[arg(short, long)]
     force: bool,
     /// Don't install documentations of packages
@@ -130,10 +130,10 @@ struct ContinueArgs
 #[derive(Parser, Debug)]
 struct ConfigArgs
 {
-    /// Set account
+    /// Set account for package name
     #[arg(short, long)]
     account: Option<String>,
-    /// Set domain
+    /// Set domain for library name
     #[arg(short, long)]
     domain: Option<String>,
 }
@@ -141,13 +141,13 @@ struct ConfigArgs
 #[derive(Parser, Debug)]
 struct InitArgs
 {
-    /// Use package name
+    /// Package name
     #[arg(short, long)]
     name: Option<String>,
-    /// Use account for package name if account isn't in configuration
+    /// Account for package name 
     #[arg(short, long)]
     account: Option<String>,
-    /// Use domain for library name if domain isn't in configuration
+    /// Domain for library name 
     #[arg(short, long)]
     domain: Option<String>,
     /// Use template binery 
@@ -156,20 +156,20 @@ struct InitArgs
     /// Use template library 
     #[arg(short, long)]
     lib: bool,
-    /// Path
-    path: Option<String>,
+    /// Directory
+    dir: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 struct NewArgs
 {
-    /// Use package name
+    /// Package name
     #[arg(short, long)]
     name: Option<String>,
-    /// Use account for package name if account isn't in configuration
+    /// Account for package name 
     #[arg(short, long)]
     account: Option<String>,
-    /// Use domain for library name if domain isn't in configuration
+    /// Domain for library name 
     #[arg(short, long)]
     domain: Option<String>,
     /// Use template binery 
@@ -178,8 +178,8 @@ struct NewArgs
     /// Use template library 
     #[arg(short, long)]
     lib: bool,
-    /// Path
-    path: String,
+    /// Directory
+    dir: String,
 }
 
 #[derive(Parser, Debug)]
@@ -247,7 +247,7 @@ enum Subcmd
     Lock,
     /// Show or set configuration
     Config(ConfigArgs),
-    /// Create new package in current directory
+    /// Create new package in existent directory
     Init(InitArgs),
     /// Create new package
     New(NewArgs),
@@ -369,10 +369,10 @@ fn main()
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Init(args2) => {
-            init(&args2.path, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            init(&args2.dir, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::New(args2) => {
-            new(args2.path.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            new(args2.dir.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Run(args2) => {
             run(args2.bin_name.clone(), args2.args.clone(), !args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
