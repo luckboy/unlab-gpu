@@ -154,7 +154,7 @@ struct InitArgs
     /// Domain for library name 
     #[arg(short, long)]
     domain: Option<String>,
-    /// Use template binery 
+    /// Use template binary 
     #[arg(short, long)]
     bin: bool,
     /// Use template library 
@@ -176,7 +176,7 @@ struct NewArgs
     /// Domain for library name 
     #[arg(short, long)]
     domain: Option<String>,
-    /// Use template binery 
+    /// Use template binary 
     #[arg(short, long)]
     bin: bool,
     /// Use template library 
