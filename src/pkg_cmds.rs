@@ -541,6 +541,34 @@ pub fn clean_cache<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_
     }
 }
 
+fn res_clean_work() -> Result<()>
+{
+    PkgManager::manifest()?;
+    match io_res_clean_dir("work", "Cleaning work ...") {
+        Ok(()) => Ok(()),
+        Err(err) => {
+            println!("");
+            Err(Error::Io(err))
+        },
+    }
+}
+
+pub fn clean_work<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    match create_home(home_dir, bin_path, lib_path, doc_path, true, f) {
+        Some(_) => (),
+        None => return Some(1),
+    };
+    match res_clean_work() {
+        Ok(()) => None,
+        Err(err) => {
+            eprint_error(&err);
+            Some(1)
+        },
+    }
+}
+
 fn res_config(home: &Home, account: &Option<String>, domain: &Option<String>) -> Result<()>
 {
     let config = PkgConfig::load_opt(home.pkg_config_file())?;

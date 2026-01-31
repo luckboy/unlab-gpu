@@ -30,6 +30,7 @@ use unlab_gpu::pkg_cmds::clean_deps;
 use unlab_gpu::pkg_cmds::lock;
 use unlab_gpu::pkg_cmds::clean_index;
 use unlab_gpu::pkg_cmds::clean_cache;
+use unlab_gpu::pkg_cmds::clean_work;
 use unlab_gpu::pkg_cmds::config;
 use unlab_gpu::pkg_cmds::init;
 use unlab_gpu::pkg_cmds::new;
@@ -253,6 +254,8 @@ enum Subcmd
     CleanIndex,
     /// Clean cache with archives of packages
     CleanCache,
+    /// Clean work directory
+    CleanWork,
     /// Show or set configuration
     Config(ConfigArgs),
     /// Create new package in existent directory
@@ -379,6 +382,9 @@ fn main()
         },
         Subcmd::CleanCache => {
             clean_cache(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+        },
+        Subcmd::CleanWork => {
+            clean_work(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Config(args2) => {
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
