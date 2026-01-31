@@ -144,6 +144,7 @@ fn list_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
     match res_list(&pkg_manager, are_deps) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -185,6 +186,7 @@ fn search_with_dep_flag<F>(patterns :&[String], home_dir: &Option<String>, bin_p
     match res_search(&pkg_manager, patterns, are_deps) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -257,6 +259,7 @@ fn show_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, ar
     match res_show(&pkg_manager, &pkg_name, is_manifest, are_dependents, are_paths, is_dep) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -296,6 +299,7 @@ fn update_with_dep_flag<F>(names: &[String], home_dir: &Option<String>, bin_path
     match res_update(&pkg_manager, pkg_names.as_slice(), are_deps) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -333,6 +337,7 @@ pub fn install<F>(names: &[String], is_update: bool, is_force: bool, is_doc: boo
     match res_install(&mut pkg_manager, pkg_names.as_slice(), is_update, is_force, is_doc) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -358,6 +363,7 @@ pub fn install_all<F>(is_update: bool, is_force: bool, is_doc: bool, home_dir: &
     match res_install_all(&mut pkg_manager, is_update, is_force, is_doc) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -385,6 +391,7 @@ pub fn install_deps<F>(is_update: bool, is_force: bool, is_doc: bool, is_locked:
     match res_install_deps(&mut pkg_manager, is_update, is_force, is_doc, is_locked, is_unlocked) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -412,6 +419,7 @@ pub fn remove<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<
     match res_remove(&mut pkg_manager, pkg_names.as_slice()) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -437,6 +445,7 @@ fn continue_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: 
     match res_continue(&pkg_manager, is_doc, are_deps) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -461,6 +470,7 @@ fn clean_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, 
     match pkg_manager.clean() {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
@@ -492,6 +502,7 @@ pub fn lock<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &
     match res_lock(&pkg_manager) {
         Ok(()) => None,
         Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
             eprint_error(&err);
             Some(1)
         },
