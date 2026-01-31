@@ -9,12 +9,18 @@ use std::env::current_dir;
 use std::env::set_current_dir;
 use std::env::split_paths;
 use std::ffi::OsString;
+#[cfg(target_family = "unix")]
+use std::fs;
 use std::fs::File;
 use std::fs::create_dir_all;
 use std::fs::remove_dir;
+#[cfg(target_family = "unix")]
+use std::fs::set_permissions;
 use std::io;
 use std::io::BufWriter;
 use std::io::Write;
+#[cfg(target_family = "unix")]
+use std::os::unix::fs::PermissionsExt;
 use std::path;
 use std::path::Path;
 use std::path::PathBuf;
@@ -547,11 +553,17 @@ fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> io
         let mut path_buf = PathBuf::from("bin");
         create_dir_all(path_buf.as_path())?;
         path_buf.push(bin_name);
-        let file = File::create(path_buf)?;
+        let file = File::create(path_buf.as_path())?;
         let mut w = BufWriter::new(file);
         writeln!(&mut w, "#!/usr/bin/env unlab-gpu --")?;
         writeln!(&mut w, "")?;
         writeln!(&mut w, "println(\"Hello world!!!\")")?;
+        #[cfg(target_family = "unix")]
+        let mut perms = fs::metadata(path_buf.as_path())?.permissions();
+        #[cfg(target_family = "unix")]
+        perms.set_mode(perms.mode() | 0o111);
+        #[cfg(target_family = "unix")]
+        set_permissions(path_buf.as_path(), perms)?;
     }
     if is_lib || (!is_bin && !is_lib) {
         let mut path_buf = PathBuf::from("lib");
