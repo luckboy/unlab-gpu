@@ -710,9 +710,9 @@ pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<St
         },
         None => (),
     }
-    let new_account = account.clone().or(config_account);
-    let new_domain = domain.clone().or(config_domain);
-    let new_name = match name {
+    let account = account.clone().or(config_account);
+    let domain = domain.clone().or(config_domain);
+    let name = match name {
         Some(tmp_new_name) => tmp_new_name.clone(),
         None => {
             let dir = match current_dir() {
@@ -737,19 +737,19 @@ pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<St
                     return Some(1);
                 },
             };
-            let mut tmp_new_name = match &new_account {
-                Some(new_account) => new_account.clone(),
+            let mut tmp_name = match &account {
+                Some(account) => account.clone(),
                 None => {
                     eprintln!("no account");
                     return Some(1);
                 }
             };
-            tmp_new_name.push('/');
-            tmp_new_name.push_str(dir_name);
-            tmp_new_name
+            tmp_name.push('/');
+            tmp_name.push_str(dir_name);
+            tmp_name
         },
     };
-    let pkg_name = match parse_pkg_name(new_name.as_str()) {
+    let pkg_name = match parse_pkg_name(name.as_str()) {
         Some(tmp_pkg_name) => tmp_pkg_name,
         None => return Some(1),
     };
@@ -762,9 +762,9 @@ pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<St
         },
     };
     let bin_name = last_pkg_name_comp.clone();
-    let lib_name = match &new_domain {
-        Some(new_domain) => {
-            let mut tmp_lib_name = new_domain.clone();
+    let lib_name = match &domain {
+        Some(domain) => {
+            let mut tmp_lib_name = domain.clone();
             tmp_lib_name.push('/');
             tmp_lib_name.push_str(last_pkg_name_comp.as_str());
             tmp_lib_name
