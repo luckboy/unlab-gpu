@@ -570,7 +570,7 @@ pub fn clean_work<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_p
     match create_home(home_dir, bin_path, lib_path, doc_path, true, f) {
         Some(_) => (),
         None => return Some(1),
-    };
+    }
     match res_clean_work() {
         Ok(()) => None,
         Err(err) => {
@@ -645,7 +645,7 @@ fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> io
         #[cfg(target_family = "unix")]
         let mut perms = fs::metadata(path_buf.as_path())?.permissions();
         #[cfg(target_family = "unix")]
-        perms.set_mode(perms.mode() | 0o111);
+        perms.set_mode(perms.mode() | ((perms.mode() >> 2) & 0o111));
         #[cfg(target_family = "unix")]
         set_permissions(path_buf.as_path(), perms)?;
     }
