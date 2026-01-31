@@ -1457,7 +1457,7 @@ impl Pkg
         match fs::metadata(dst_dependents_file.as_path()) {
             Ok(_) => (),
             Err(err) if err.kind() == ErrorKind::NotFound => {
-                match fs::metadata(info_dir) {
+                match fs::metadata(src_dependents_file.as_path()) {
                     Ok(_) => {
                         copy(src_dependents_file, dst_dependents_file)?;
                     },
