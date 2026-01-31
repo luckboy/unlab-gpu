@@ -8,8 +8,6 @@
 use std::process::exit;
 use clap::Parser;
 use clap::Subcommand;
-use unlab_gpu::Home;
-use unlab_gpu::add_std_builtin_funs;
 use unlab_gpu::pkg::default_src_factories;
 use unlab_gpu::pkg_cmds::list;
 use unlab_gpu::pkg_cmds::list_deps;
@@ -36,6 +34,8 @@ use unlab_gpu::pkg_cmds::init;
 use unlab_gpu::pkg_cmds::new;
 use unlab_gpu::pkg_cmds::run;
 use unlab_gpu::pkg_cmds::console;
+use unlab_gpu::Home;
+use unlab_gpu::add_std_builtin_funs;
 
 #[derive(Parser, Debug)]
 struct SearchArgs
