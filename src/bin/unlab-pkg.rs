@@ -28,6 +28,8 @@ use unlab_gpu::pkg_cmds::continue_deps;
 use unlab_gpu::pkg_cmds::clean;
 use unlab_gpu::pkg_cmds::clean_deps;
 use unlab_gpu::pkg_cmds::lock;
+use unlab_gpu::pkg_cmds::clean_index;
+use unlab_gpu::pkg_cmds::clean_cache;
 use unlab_gpu::pkg_cmds::config;
 use unlab_gpu::pkg_cmds::init;
 use unlab_gpu::pkg_cmds::new;
@@ -247,6 +249,10 @@ enum Subcmd
     CleanDeps,
     /// Lock versions of dependencies of current package
     Lock,
+    /// Clean index with version lists of packages
+    CleanIndex,
+    /// Clean cache with archives of packages
+    CleanCache,
     /// Show or set configuration
     Config(ConfigArgs),
     /// Create new package in existent directory
@@ -367,6 +373,12 @@ fn main()
         },
         Subcmd::Lock => {
             lock(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
+        },
+        Subcmd::CleanIndex => {
+            clean_index(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+        },
+        Subcmd::CleanCache => {
+            clean_cache(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Config(args2) => {
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)

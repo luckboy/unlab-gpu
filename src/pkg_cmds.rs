@@ -17,6 +17,7 @@ use std::fs::remove_dir;
 #[cfg(target_family = "unix")]
 use std::fs::set_permissions;
 use std::io;
+use std::io::stdout;
 use std::io::BufWriter;
 use std::io::Write;
 #[cfg(target_family = "unix")]
@@ -29,6 +30,7 @@ use std::sync::RwLock;
 use crate::toml;
 use crate::backend::*;
 use crate::error::*;
+use crate::fs::*;
 use crate::home::*;
 use crate::main_loop::*;
 use crate::mod_node::*;
@@ -491,6 +493,49 @@ pub fn lock<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &
         Ok(()) => None,
         Err(err) => {
             eprint_error(&err);
+            Some(1)
+        },
+    }
+}
+
+fn io_res_clean_dir<P: AsRef<Path>>(dir: P, msg: &str) -> io::Result<()>
+{
+    print!("{}", msg);
+    let _res = stdout().flush();
+    recursively_remove(dir, true)?;
+    println!(" done");
+    Ok(())
+}
+
+pub fn clean_index<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    let home = match create_home(home_dir, bin_path, lib_path, doc_path, false, f) {
+        Some(tmp_home) => tmp_home,
+        None => return Some(1),
+    };
+    match io_res_clean_dir(index_dir(home.home_dir()), "Cleaning index ...") {
+        Ok(()) => None,
+        Err(err) => {
+            println!("");
+            eprint_error(&Error::Io(err));
+            Some(1)
+        },
+    }
+}
+
+pub fn clean_cache<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    let home = match create_home(home_dir, bin_path, lib_path, doc_path, false, f) {
+        Some(tmp_home) => tmp_home,
+        None => return Some(1),
+    };
+    match io_res_clean_dir(cache_dir(home.home_dir()), "Cleaning cache ...") {
+        Ok(()) => None,
+        Err(err) => {
+            println!("");
+            eprint_error(&Error::Io(err));
             Some(1)
         },
     }
