@@ -3666,7 +3666,7 @@ W = 42
 }
 
 #[sealed_test]
-fn test_pkg_manager_install_installs_package_after_removing()
+fn test_pkg_manager_install_installs_package_after_removal()
 {
     fs::create_dir("home").unwrap();
     let mut sources_file = PathBuf::from("home");
