@@ -971,19 +971,10 @@ pub fn tag_name_to_version(tag_name: &str) -> Option<Version>
 pub fn version_to_tag_name(version: &Version) -> String
 { format!("v{}", version) }
 
-pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
+pub fn var_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(home_dir.as_ref());
     dir.push("var");
-    dir.push("index");
-    dir
-}
-
-pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
-{
-    let mut dir = PathBuf::from(home_dir.as_ref());
-    dir.push("var");
-    dir.push("cache");
     dir
 }
 
@@ -991,6 +982,20 @@ pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(work_dir.as_ref());
     dir.push("tmp");
+    dir
+}
+
+pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
+{
+    let mut dir = var_dir(home_dir);
+    dir.push("index");
+    dir
+}
+
+pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
+{
+    let mut dir = var_dir(home_dir);
+    dir.push("cache");
     dir
 }
 
@@ -1852,13 +1857,6 @@ impl PkgManager
         file
     }
     
-    pub fn home_var_dir(&self) -> PathBuf
-    {
-        let mut dir = self.home_dir.clone();
-        dir.push("var");
-        dir
-    }
-
     pub fn work_var_dir(&self) -> PathBuf
     {
         let mut dir = self.work_dir.clone();
