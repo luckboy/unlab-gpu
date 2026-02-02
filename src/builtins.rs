@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2453,7 +2453,7 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
     let script_name = get_first_arg_string(arg_values, "unsupported type for function run")?;
     let mut path_buf = PathBuf::from(env.script_dir());
-    path_buf.push(script_name.as_str());
+    path_buf.push(script_name.replace('/', path::MAIN_SEPARATOR_STR).as_str());
     let tree = parse(path_buf)?;
     let mut new_env = env.clone_without_stack();
     interp.interpret(&mut new_env, &tree)?;
@@ -2910,6 +2910,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("uselib"), uselib);
     add_builtin_fun(root_mod, String::from("reuselib"), reuselib);
     add_builtin_fun(root_mod, String::from("run"), run);
+    add_alias(root_mod, String::from("runwithdoc"), &String::from("run"));
     add_builtin_fun(root_mod, String::from("clock"), clock);
     add_builtin_fun(root_mod, String::from("usemod"), usemod);
     add_builtin_fun(root_mod, String::from("usemods"), usemods);

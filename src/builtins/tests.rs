@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5002,6 +5002,17 @@ Y = 2
     match root_mod_g.var(&String::from("Y")) {
         Some(value) => assert_eq!(Value::Int(2), *value),
         None => assert!(false),
+    }
+}
+
+#[test]
+fn test_runwithdoc_is_alias_to_run()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match (root_mod.var(&String::from("runwithdoc")), root_mod.var(&String::from("run"))) {
+        (Some(alias_value), Some(fun_value)) => assert_eq!(fun_value, alias_value),
+        (_, _) => assert!(false),
     }
 }
 
