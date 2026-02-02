@@ -1679,20 +1679,19 @@ fn max_pkg_version(versions: &BTreeSet<Version>, version_req: Option<&VersionReq
     match locked_version {
         Some(locked_version) => {
             match versions.get(locked_version) {
-                Some(version) if version_reqs.iter().all(|r| r.matches(version)) => Some(version.clone()),
-                _ => None,
+                Some(version) if version_reqs.iter().all(|r| r.matches(version)) => return Some(version.clone()),
+                _ => (),
             }
         },
-        None => {
-            let mut max_version: Option<Version> = None;
-            for version in versions {
-                if version_reqs.iter().all(|r| r.matches(version)) {
-                    max_version = Some(version.clone());
-                }
-            }
-            max_version
-        },
+        None => (),
     }
+    let mut max_version: Option<Version> = None;
+    for version in versions {
+        if version_reqs.iter().all(|r| r.matches(version)) {
+            max_version = Some(version.clone());
+        }
+    }
+    max_version
 }
 
 fn check_dir(path: &Path, err_msg: &str) -> Result<()>
