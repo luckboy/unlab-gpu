@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,8 +33,8 @@ struct DocEnv
 
 impl DocEnv
 {
-    fn new(root_mod: Arc<RwLock<ModNode<String, Option<String>>>>) -> Self
-    { DocEnv { root_mod: root_mod.clone(), current_mod: root_mod, } }
+    fn new(root_mod: Arc<RwLock<ModNode<String, Option<String>>>>, current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
+    { DocEnv { root_mod: root_mod.clone(), current_mod: current_mod.unwrap_or(root_mod), } }
 }
 
 pub struct Parser<'a>
@@ -46,14 +46,17 @@ pub struct Parser<'a>
 
 impl<'a> Parser<'a>
 {
-    pub fn new_with_doc_root_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
+    pub fn new_with_doc_root_mod_and_doc_current_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
     {
         let doc_env = match doc_root_mod {
-            Some(doc_root_mod) => Some(DocEnv::new(doc_root_mod.clone())),
+            Some(doc_root_mod) => Some(DocEnv::new(doc_root_mod, doc_current_mod)),
             None => None,
         };
         Parser { path, tokens: PushbackIter::new(tokens), doc_env, }
     }
+
+    pub fn new_with_doc_root_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
+    { Self::new_with_doc_root_mod_and_doc_current_mod(path, tokens, doc_root_mod, None) }
 
     pub fn new(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>) -> Self
     { Self::new_with_doc_root_mod(path, tokens, None) }
@@ -859,7 +862,7 @@ impl<'a> Parser<'a>
     }
 }
 
-pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
+pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 {
     match File::open(path.as_ref()) {
         Ok(file) => {
@@ -867,12 +870,15 @@ pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc
             let mut lexer = Lexer::new_with_doc_flag(Arc::new(path.as_ref().to_string_lossy().into_owned()), &mut r, doc_root_mod.is_some());
             let parser_path = lexer.path().clone();
             let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
-            let mut parser = Parser::new_with_doc_root_mod(parser_path, tokens, doc_root_mod);
+            let mut parser = Parser::new_with_doc_root_mod_and_doc_current_mod(parser_path, tokens, doc_root_mod, doc_current_mod);
             parser.parse()
         },
         Err(err) => Err(Error::ParserIo(Arc::new(path.as_ref().to_string_lossy().into_owned()), err)),
     }
 }
+
+pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
+{ parse_with_doc_root_mod_and_doc_current_mod(path, doc_root_mod, None) }
 
 pub fn parse<P: AsRef<Path>>(path: P) -> Result<Tree>
 { parse_with_doc_root_mod(path, None) }

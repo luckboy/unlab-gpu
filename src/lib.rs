@@ -51,6 +51,7 @@ pub use main_loop::main_loop;
 pub use mod_node::ModNode;
 pub use parser::parse;
 pub use parser::parse_with_doc_root_mod;
+pub use parser::parse_with_doc_root_mod_and_doc_current_mod;
 pub use tree::Tree;
 pub use value::Value;
 
