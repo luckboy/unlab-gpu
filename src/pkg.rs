@@ -2233,12 +2233,12 @@ impl PkgManager
         Ok(())
     }
 
-    fn new_version_for_pre_installing(&mut self, name: &PkgName) -> Result<Option<Version>>
+    fn new_pkg_version_for_pre_installing(&mut self, name: &PkgName) -> Result<Option<Version>>
     {
         let is_new_version_from_bucket = match self.pkgs.get_mut(name) {
-            Some(tmp_pkg) => {
-                let tmp_is_new_version_from_bucket = tmp_pkg.has_new_version_from_bucket;
-                tmp_pkg.has_new_version_from_bucket = true;
+            Some(pkg) => {
+                let tmp_is_new_version_from_bucket = pkg.has_new_version_from_bucket;
+                pkg.has_new_version_from_bucket = true;
                 tmp_is_new_version_from_bucket
             },
             None => true,
@@ -2261,7 +2261,7 @@ impl PkgManager
                     _ => {
                         let mut src = data.create_source(name)?;
                         let old_version = data.pkg_version_for_bucket("versions", name)?;
-                        let new_version_from_bucket = data.new_version_for_pre_installing(name)?;
+                        let new_version_from_bucket = data.new_pkg_version_for_pre_installing(name)?;
                         let new_version = match &new_version_from_bucket {
                             Some(tmp_new_version) => Some(tmp_new_version.clone()),
                             None => {
@@ -2329,7 +2329,7 @@ impl PkgManager
                             let max_version = max_pkg_version(&versions, Some(dep_version_req), data.constraints.get(dep_name), data.locks.get(dep_name));
                             match &max_version {
                                 Some(max_version) => {
-                                    let dep_new_version_from_bucket = data.new_version_for_pre_installing(dep_name)?;
+                                    let dep_new_version_from_bucket = data.new_pkg_version_for_pre_installing(dep_name)?;
                                     match &dep_new_version_from_bucket {
                                         Some(dep_new_version_from_bucket) => {
                                             if dep_new_version_from_bucket != max_version {
