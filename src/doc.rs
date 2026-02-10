@@ -91,7 +91,7 @@ impl DocTree
     {
         let sig_root_mod_g = rw_lock_read(&*self.sig_root_mod)?;
         let doc_root_mod_g = rw_lock_read(&*self.doc_root_mod)?;
-        Ok(DocTreeReadGuard { sig_root_mod_g, doc_root_mod_g, })
+        Ok(DocTreeReadGuard::new(sig_root_mod_g, doc_root_mod_g))
     }
 }
 
@@ -104,6 +104,9 @@ pub struct DocTreeReadGuard<'a>
 
 impl<'a> DocTreeReadGuard<'a>
 {
+    fn new(sig_root_mod_g: RwLockReadGuard<'a, ModNode<Sig, ()>>, doc_root_mod_g: RwLockReadGuard<'a, ModNode<String, Option<String>>>) -> Self
+    { DocTreeReadGuard { sig_root_mod_g, doc_root_mod_g, } }
+
     pub fn desc(&self) -> Option<&String>
     { 
         match self.doc_root_mod_g.value() {
