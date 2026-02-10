@@ -10,6 +10,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 use crate::error::*;
 use crate::mod_node::*;
 use crate::parser::*;
@@ -52,7 +53,7 @@ impl<T: Iterator> DocIterator for DocIter<T>
     { None }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum BuiltinFunArg
 {
     Arg(String),
@@ -60,7 +61,7 @@ pub enum BuiltinFunArg
     DotDotDot,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Sig
 {
     Var,
@@ -79,6 +80,43 @@ impl DocTree
 {
     pub fn new(sig_root_mod: Arc<RwLock<ModNode<Sig, ()>>>, doc_root_mod: Arc<RwLock<ModNode<String, Option<String>>>>) -> Self
     { DocTree { sig_root_mod, doc_root_mod, } }
+    
+    pub fn sig_root_mod(&self) -> &Arc<RwLock<ModNode<Sig, ()>>>
+    { &self.sig_root_mod }
+
+    pub fn doc_root_mod(&self) -> &Arc<RwLock<ModNode<String, Option<String>>>>
+    { &self.doc_root_mod }
+    
+    pub fn read(&self) -> Result<DocTreeReadGuard<'_>>
+    {
+        let sig_root_mod_g = rw_lock_read(&*self.sig_root_mod)?;
+        let doc_root_mod_g = rw_lock_read(&*self.doc_root_mod)?;
+        Ok(DocTreeReadGuard { sig_root_mod_g, doc_root_mod_g, })
+    }
+}
+
+#[derive(Debug)]
+pub struct DocTreeReadGuard<'a>
+{
+    sig_root_mod_g: RwLockReadGuard<'a, ModNode<Sig, ()>>,
+    doc_root_mod_g: RwLockReadGuard<'a, ModNode<String, Option<String>>>,
+}
+
+impl<'a> DocTreeReadGuard<'a>
+{
+    pub fn desc(&self) -> Option<&String>
+    { 
+        match self.doc_root_mod_g.value() {
+            Some(desc) => Some(desc),
+            None => None,
+        }
+    }
+    
+    pub fn subtrees(&self) -> Vec<(&String, DocTree)>
+    { self.sig_root_mod_g.mods().iter().map(|(id, sm)| self.doc_root_mod_g.mod1(id).map(|dm| (id, DocTree::new(sm.clone(), dm.clone())))).flatten().collect() }
+    
+    pub fn var_desc_pairs(&self) -> Vec<(&String, (&Sig, Option<&String>))>
+    { self.sig_root_mod_g.vars().iter().map(|(id, s)| (id, (s, self.doc_root_mod_g.var(id)))).collect() }
 }
 
 #[derive(Clone, Debug)]
