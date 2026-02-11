@@ -170,43 +170,43 @@ impl DocTreeGen
     pub fn run_with_doc_ident(&self) -> &str
     { self.run_with_doc_ident.as_str() }
     
-    pub fn generate_doc_tree(&mut self, tree: &Tree) -> Result<DocTree>
+    pub fn generate(&mut self, tree: &Tree) -> Result<DocTree>
     {
-        self.generate_doc_tree_for_tree(tree)?;
+        self.generate_for_tree(tree)?;
         Ok(DocTree::new(self.env.sig_root_mod.clone(), self.env.doc_root_mod.clone()))
     }
 
-    fn generate_doc_tree_for_tree(&mut self, tree: &Tree) -> Result<()>
+    fn generate_for_tree(&mut self, tree: &Tree) -> Result<()>
     {
         match tree {
-            Tree(nodes) => self.generate_doc_tree_for_nodes(nodes.as_slice()),
+            Tree(nodes) => self.generate_for_nodes(nodes.as_slice()),
         }
     }
     
-    fn generate_doc_tree_for_node(&mut self, node: &Node, script_names: &mut Vec<String>) -> Result<()>
+    fn generate_for_node(&mut self, node: &Node, script_names: &mut Vec<String>) -> Result<()>
     {
         match node {
-            Node::Def(def) => self.generate_doc_tree_for_def(&**def),
-            Node::Stat(stat) => self.generate_doc_tree_for_stat(&**stat, script_names),
+            Node::Def(def) => self.generate_for_def(&**def),
+            Node::Stat(stat) => self.generate_for_stat(&**stat, script_names),
         }
     }
 
-    fn generate_doc_tree_for_nodes(&mut self, nodes: &[Node]) -> Result<()>
+    fn generate_for_nodes(&mut self, nodes: &[Node]) -> Result<()>
     {
         let mut script_names: Vec<String> = Vec::new();
         for node in nodes {
-            self.generate_doc_tree_for_node(node, &mut script_names)?;
+            self.generate_for_node(node, &mut script_names)?;
         }
         for script_name in &script_names {
             let mut path_buf = PathBuf::from(self.script_dir.clone());
             path_buf.push(script_name.replace('/', path::MAIN_SEPARATOR_STR).as_str());
             let tree = parse_with_doc_root_mod_and_doc_current_mod(path_buf, Some(self.env.doc_root_mod.clone()), Some(self.env.doc_current_mod.clone()))?;
-            self.generate_doc_tree_for_tree(&tree)?;
+            self.generate_for_tree(&tree)?;
         }
         Ok(())
     }
 
-    fn generate_doc_tree_for_def(&mut self, def: &Def) -> Result<()>
+    fn generate_for_def(&mut self, def: &Def) -> Result<()>
     {
         match def {
             Def::Mod(ident, mod1, _) => {
@@ -222,7 +222,7 @@ impl DocTreeGen
                                 None => return Err(Error::NoDocMod),
                             }
                         };
-                        self.generate_doc_tree_for_nodes(nodes.as_slice())?;
+                        self.generate_for_nodes(nodes.as_slice())?;
                         let doc_parent = {
                             let doc_current_mod_g = rw_lock_read(&*self.env.doc_current_mod)?;
                             doc_current_mod_g.parent()
@@ -255,7 +255,7 @@ impl DocTreeGen
         Ok(())
     }
 
-    fn generate_doc_tree_for_stat(&mut self, stat: &Stat, script_names: &mut Vec<String>) -> Result<()>
+    fn generate_for_stat(&mut self, stat: &Stat, script_names: &mut Vec<String>) -> Result<()>
     {
         match stat {
             Stat::Expr(expr, _) => {
