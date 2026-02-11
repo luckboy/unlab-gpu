@@ -289,6 +289,7 @@ end
                             let a_b_subtree_g = a_b_subtree.read().unwrap();
                             assert_eq!(Some(&String::from("Some text2.\n")), a_b_subtree_g.desc());
                             let a_b_subtrees = a_b_subtree_g.subtrees();
+                            assert_eq!(1, a_b_subtrees.len());
                             match a_b_subtrees.iter().find(|p| p.0 == &String::from("c")).map(|p| p.1.clone()) {
                                 Some(a_b_c_subtree) => {
                                     let a_b_c_subtree_g = a_b_c_subtree.read().unwrap();
