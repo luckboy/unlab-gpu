@@ -71,10 +71,6 @@ impl<'a> Parser<'a>
     
     pub fn parse(&mut self) -> Result<Tree>
     {
-        match &mut self.doc_env {
-            Some(doc_env) => doc_env.current_mod = doc_env.root_mod.clone(),
-            None => (),
-        }
         let nodes = self.parse_zero_or_more_with_newlines(&[None], ParserEofFlag::Repetition, Self::parse_node)?;
         match self.tokens.next().transpose()? {
             Some((_, pos)) => Err(Error::Parser(pos, String::from("unexpected token"))),

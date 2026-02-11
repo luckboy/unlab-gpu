@@ -216,9 +216,9 @@ impl DocTreeGen
                         ModNode::add_mod(&self.env.sig_current_mod, ident.clone(), new_sig_mod.clone())?;
                         self.env.sig_current_mod = new_sig_mod;
                         self.env.doc_current_mod = {
-                            let sig_current_mod_g = rw_lock_read(&*self.env.doc_current_mod)?;
-                            match sig_current_mod_g.mod1(ident) {
-                                Some(doc_mod1) => doc_mod1.clone(),
+                            let doc_current_mod_g = rw_lock_read(&*self.env.doc_current_mod)?;
+                            match doc_current_mod_g.mod1(ident) {
+                                Some(doc_mod) => doc_mod.clone(),
                                 None => return Err(Error::NoDocMod),
                             }
                         };
@@ -324,3 +324,6 @@ impl DocTreeGen
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;
