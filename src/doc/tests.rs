@@ -368,6 +368,57 @@ end
 }
 
 #[sealed_test]
+fn test_doc_tree_gen_generate_includes_file_for_runwithdoc_absolute_name_and_defined_runwithdoc_function()
+{
+    let mut path_buf = PathBuf::from("scripts");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("script.un");
+    let script_content = "
+X = 1
+";
+    fs::write(path_buf.as_path(), &script_content[1..]).unwrap();
+    let s = "
+module a
+    function runwithdoc(X)
+        X + 1
+    end
+    root::runwithdoc(\"script.un\")
+end
+";
+    let mut cursor = Cursor::new(s.as_bytes());
+    let mut lexer = Lexer::new_with_doc_flag(Arc::new(String::from("test.un")), &mut cursor, true);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new_with_doc_root_mod(path, tokens, Some(Arc::new(RwLock::new(ModNode::new(None)))));
+    let tree = parser.parse().unwrap();
+    let mut doc_tree_gen = DocTreeGen::new_with_script_dir(parser.doc_root_mod().unwrap().clone(), PathBuf::from("scripts"));
+    match doc_tree_gen.generate(&tree) {
+        Ok(doc_tree) => {
+            let doc_tree_g = doc_tree.read().unwrap();
+            assert_eq!(None, doc_tree_g.desc());
+            let subtrees = doc_tree_g.subtrees();
+            assert_eq!(1, subtrees.len());
+            match subtrees.iter().find(|p| p.0 == &String::from("a")).map(|p| p.1.clone()) {
+                Some(a_subtree) => {
+                    let a_subtree_g = a_subtree.read().unwrap();
+                    assert_eq!(None, a_subtree_g.desc());
+                    let a_subtrees = a_subtree_g.subtrees();
+                    assert_eq!(true, a_subtrees.is_empty());
+                    let a_var_desc_pairs = a_subtree_g.var_desc_pairs();
+                    assert_eq!(2, a_var_desc_pairs.len());
+                    assert_eq!(true, a_var_desc_pairs.contains(&(&String::from("runwithdoc"), (&Sig::Fun(vec![String::from("X")]), None))));
+                    assert_eq!(true, a_var_desc_pairs.contains(&(&String::from("X"), (&Sig::Var, None))));
+                },
+                None => assert!(false),
+            }
+            let var_desc_pairs = doc_tree_g.var_desc_pairs();
+            assert_eq!(true, var_desc_pairs.is_empty());
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
 fn test_doc_tree_gen_generate_does_not_include_file_for_defined_runwithdoc_function()
 {
     let mut path_buf = PathBuf::from("scripts");
