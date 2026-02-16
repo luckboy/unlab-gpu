@@ -345,7 +345,7 @@ pub fn generate_doc_tree<P: AsRef<Path>>(script_dir: P) -> Result<DocTree>
 }
 
 fn str_to_hmtl(s: &str) -> String
-{ s.replace('&', "&amp").replace('<', "&lt").replace(">", "&gt") }
+{ s.replace('&', "&amp;").replace('<', "&lt;").replace(">", "&gt;") }
 
 fn idents_to_string(idents: &[String]) -> String
 {
