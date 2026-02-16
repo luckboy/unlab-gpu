@@ -474,11 +474,7 @@ impl DocGen
         writeln!(&mut w, "</head>")?;
         writeln!(&mut w, "<body>")?;
         writeln!(&mut w, "<header>")?;
-        if !idents.is_empty() {
-            writeln!(&mut w, "<h1><a href=\"{}\">{}</a></h1>", Self::str_to_href("index.html", depth), str_to_hmtl(self.lib_name.as_str()))?;
-        } else {
-            writeln!(&mut w, "<h1>{}</h1>", str_to_hmtl(self.lib_name.as_str()))?;
-        }
+        writeln!(&mut w, "<h1><a href=\"{}\">{}</a></h1>", Self::str_to_href("index.html", depth), str_to_hmtl(self.lib_name.as_str()))?;
         writeln!(&mut w, "</header>")?;
         match idents.first() {
             Some(first_ident) => {
