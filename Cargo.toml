@@ -25,6 +25,9 @@ liblzma = "0.4.1"
 serde_json = "1.0"
 tar = "0.4"
 zip = ">=4.0,<=4.2"
+# doc
+latex2mathml = "0.2.3"
+markdown = "1.0"
 # plot
 image = { version = "0.24", optional = true, default-features = false, features = ["png"] }
 plotters = { version = ">=0.3.3,<=0.3.6", optional = true, default-features = false, features = ["bitmap_backend", "bitmap_encoder", "svg_backend", "ttf", "all_series", "all_elements"] }
