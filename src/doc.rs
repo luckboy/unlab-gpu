@@ -484,7 +484,7 @@ impl DocGen
             Some(first_ident) => {
                 writeln!(&mut w, "<nav>")?;
                 let mut mod_path = String::from(first_ident);
-                write!(&mut w, "<h2><a href=\"{}\">{}</a>", Self::str_to_href(format!("{}.html", mod_path).as_str(), depth), first_ident)?;
+                write!(&mut w, "<h2><a href=\"{}\" class=\"keyword\">{}</a>", Self::str_to_href(format!("{}.html", mod_path).as_str(), depth), first_ident)?;
                 for ident in &idents[1..] {
                     mod_path.push('/');
                     mod_path.push_str(ident.as_str());
