@@ -18,8 +18,8 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::RwLockReadGuard;
 use markdown::CompileOptions;
-use markdown::ParseOptions;
 use markdown::Options;
+use markdown::ParseOptions;
 use crate::error::*;
 use crate::mod_node::*;
 use crate::parser::*;
@@ -487,7 +487,7 @@ impl DocGen
             None => (),
         }
         writeln!(&mut w, "<main>")?;
-        writeln!(&mut w, "{}", content)?;
+        write!(&mut w, "{}", content)?;
         writeln!(&mut w, "</main>")?;
         writeln!(&mut w, "</body>")?;
         writeln!(&mut w, "</html>")?;
@@ -552,7 +552,9 @@ impl DocGen
         let mut path_buf = self.lib_doc_dir.clone();
         path_buf.push("root");
         let mut index_content = String::new();
+        index_content.push_str("<ul>\n");
         self.generate_mod_doc(doc_tree, &[String::from("root")], path_buf.as_path(), "root", &mut index_content, 0)?;
+        index_content.push_str("</ul>\n");
         let mut index_path_buf = self.lib_doc_dir.clone();
         index_path_buf.push("index.html");
         match self.io_res_generate_html_file(index_path_buf, &[], index_content.as_str(), 0) {
