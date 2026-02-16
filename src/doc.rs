@@ -334,6 +334,16 @@ impl DocTreeGen
     }
 }
 
+pub fn generate_doc_tree<P: AsRef<Path>>(script_dir: P) -> Result<DocTree>
+{
+    let mut lib_file = PathBuf::from(script_dir.as_ref());
+    lib_file.push("lib.un");
+    let doc_root_mod: Arc<RwLock<ModNode<String, Option<String>>>> = Arc::new(RwLock::new(ModNode::new(None)));
+    let tree = parse_with_doc_root_mod(lib_file, Some(doc_root_mod.clone()))?;
+    let mut doc_tree_gen = DocTreeGen::new_with_script_dir(doc_root_mod, PathBuf::from(script_dir.as_ref()));
+    doc_tree_gen.generate(&tree)
+}
+
 fn str_to_hmtl(s: &str) -> String
 { s.replace('&', "&amp").replace('<', "&lt").replace(">", "&gt") }
 
@@ -360,11 +370,11 @@ pub struct DocGen
 
 impl DocGen
 {
-    pub fn new<P: AsRef<Path>>(doc_dir: PathBuf, lib_dir: P) -> Self
+    pub fn new<P: AsRef<Path>>(doc_dir: PathBuf, lib_path: P) -> Self
     {
-        let lib_name = lib_dir.as_ref().to_string_lossy().into_owned().replace(path::MAIN_SEPARATOR, "/");
+        let lib_name = lib_path.as_ref().to_string_lossy().into_owned().replace(path::MAIN_SEPARATOR, "/");
         let mut lib_doc_dir = doc_dir;
-        lib_doc_dir.push(lib_dir);
+        lib_doc_dir.push(lib_path);
         DocGen { lib_name, lib_doc_dir, }
     }
     
@@ -563,6 +573,15 @@ impl DocGen
         }
         Ok(())
     }
+}
+
+pub fn generate_doc<P: AsRef<Path>, Q: AsRef<Path>, R: AsRef<Path>>(lib_dir: P, doc_dir: Q, lib_path: R) -> Result<()>
+{
+    let mut script_dir = PathBuf::from(lib_dir.as_ref());
+    script_dir.push(lib_path.as_ref());
+    let doc_tree = generate_doc_tree(script_dir)?;
+    let doc_gen = DocGen::new(PathBuf::from(doc_dir.as_ref()), lib_path.as_ref());
+    doc_gen.generate(&doc_tree)
 }
 
 #[cfg(test)]
