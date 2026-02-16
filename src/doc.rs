@@ -527,7 +527,7 @@ impl DocGen
             }
         }
         let mut mod_content = String::new();
-        mod_content.push_str("<section>\n");
+        mod_content.push_str("<section id=\"mod\" class=\"mod-section\">\n");
         match doc_tree_g.desc() {
             Some(desc) => mod_content.push_str(format!("{}\n", Self::markdown_to_html(desc.as_str())?).as_str()),
             None => (),
@@ -536,7 +536,7 @@ impl DocGen
         let mut var_desc_pairs = doc_tree_g.var_desc_pairs();
         var_desc_pairs.sort_by(|p1, p2| p1.0.cmp(p2.0));
         for (ident, (sig, desc))  in var_desc_pairs {
-            mod_content.push_str(format!("<section id=\"var.{}\">\n", ident).as_str());
+            mod_content.push_str(format!("<section id=\"var.{}\" class=\"var-section\">\n", ident).as_str());
             mod_content.push_str(Self::ident_and_sig_to_html(ident, sig).as_str());
             match desc {
                 Some(desc) => mod_content.push_str(format!("{}\n", Self::markdown_to_html(desc.as_str())?).as_str()),
