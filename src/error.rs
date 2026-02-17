@@ -44,6 +44,7 @@ pub enum PkgPathConflict
 {
     Bin,
     Lib,
+    Doc,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -125,6 +126,7 @@ impl fmt::Display for Error
                 let conflict_name = match conflict {
                     PkgPathConflict::Bin => "bin",
                     PkgPathConflict::Lib => "lib",
+                    PkgPathConflict::Doc => "doc",
                 };
                 match name2 {
                     Some(name2) => write!(f, "occurred conflicts between {} and {} for directory {}:", name, name2, conflict_name)?,

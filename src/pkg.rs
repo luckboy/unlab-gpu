@@ -48,6 +48,7 @@ use crate::serde::Deserializer;
 use crate::serde::Serialize;
 use crate::serde::Serializer;
 use crate::dfs::*;
+use crate::doc::*;
 use crate::error::*;
 use crate::fs::*;
 use crate::utils::*;
@@ -71,6 +72,8 @@ pub trait Print
 
     fn print_removing(&self);
 
+    fn print_documenting(&self);
+
     fn print_updating_pkg_versions(&self, name: &PkgName, is_done: bool);
     
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool);
@@ -89,6 +92,8 @@ pub trait Print
 
     fn print_removing_pkg(&self, name: &PkgName, is_done: bool);
 
+    fn print_removing_pkg_doc(&self, name: &PkgName, is_done: bool);
+    
     fn print_cleaning_after_install(&self, is_done: bool);
 
     fn print_cleaning_before_removal(&self, is_done: bool);
@@ -128,6 +133,9 @@ impl Print for EmptyPrinter
     fn print_removing(&self)
     {}
 
+    fn print_documenting(&self)
+    {}
+
     fn print_updating_pkg_versions(&self, _name: &PkgName, _is_done: bool)
     {}
 
@@ -153,6 +161,9 @@ impl Print for EmptyPrinter
     {}
 
     fn print_removing_pkg(&self, _name: &PkgName, _is_done: bool)
+    {}
+
+    fn print_removing_pkg_doc(&self, _name: &PkgName, _is_done: bool)
     {}
 
     fn print_cleaning_after_install(&self, _is_done: bool)
@@ -203,6 +214,9 @@ impl Print for StdPrinter
 
     fn print_removing(&self)
     { println!("Removing:"); }
+
+    fn print_documenting(&self)
+    { println!("Documenting:"); }
 
     fn print_updating_pkg_versions(&self, name: &PkgName, is_done: bool)
     {
@@ -316,6 +330,18 @@ impl Print for StdPrinter
             self.has_nl_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Removing {} ...", name);
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_removing_pkg_doc(&self, name: &PkgName, is_done: bool)
+    {
+        if is_done {
+            println!(" done");
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Removing {} documentation ...", name);
             let _res = stdout().flush();
             self.has_nl_for_error.store(true, Ordering::SeqCst);
         }
@@ -598,6 +624,70 @@ impl Paths
             Ok(_) => {
                 match toml::from_str(s.as_str()) {
                     Ok(paths) => Ok(paths),
+                    Err(err) => Err(Error::TomlDe(err)),
+                }
+            },
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn write(&self, w: &mut dyn Write) -> Result<()>
+    {
+        match toml::to_string(self) {
+            Ok(s) => {
+                match write!(w, "{}", s) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::Io(err)),
+                }
+            },
+            Err(err) => Err(Error::TomlSer(err)),
+        }
+    }
+    
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
+    {
+        match File::open(path) {
+            Ok(mut file) => Self::read(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
+    {
+        match File::open(path) {
+            Ok(mut file) => Ok(Some(Self::read(&mut file)?)),
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None), 
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
+    {
+        match File::create(path) {
+            Ok(mut file) => self.write(&mut file),
+            Err(err) => Err(Error::Io(err)),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DocPaths
+{
+    pub doc: Vec<String>,
+}
+
+impl DocPaths
+{
+    pub fn new(doc: Vec<String>) -> Self
+    { DocPaths { doc, } }
+    
+    pub fn read(r: &mut dyn Read) -> Result<Self>
+    {
+        let mut s = String::new();
+        match r.read_to_string(&mut s) {
+            Ok(_) => {
+                match toml::from_str(s.as_str()) {
+                    Ok(doc_paths) => Ok(doc_paths),
                     Err(err) => Err(Error::TomlDe(err)),
                 }
             },
@@ -2578,10 +2668,14 @@ impl PkgManager
     {
         if self.pkg_is_to_install_for_pre_install(name)? {
             self.printer.print_documenting_pkg(name, false);
+            let mut src = self.create_source(name)?;
+            src.set_current_version(new_version.clone());
             let doc_dir = self.pkg_tmp_doc_dir(name, &new_version);
             let mut paths_file = self.pkg_new_part_info_dir(name);
             paths_file.push("paths.toml");
             let paths = Paths::load(paths_file)?;
+            let mut pkg_lib_dir = PathBuf::from(src.dir()?);
+            pkg_lib_dir.push("lib");
             for path in &paths.lib {
                 let mut lib_doc_dir = doc_dir.clone();
                 lib_doc_dir.push(path);
@@ -2589,8 +2683,8 @@ impl PkgManager
                     Ok(()) => (),
                     Err(err) => return Err(Error::Io(err)),
                 }
+                generate_doc(pkg_lib_dir.as_path(), doc_dir.as_path(), path)?;
             }
-            // Line for documentation generation.
             self.printer.print_documenting_pkg(name, true);
         }
         Ok(())
@@ -3052,6 +3146,82 @@ impl PkgManager
                 Ok(())
         })?;
         self.install(names.as_slice(), is_update, is_force, is_doc)
+    }
+    
+    fn io_res_remove_pkg_doc(&self, doc_paths: &DocPaths) -> io::Result<()>
+    {
+        let doc_dir = self.lib_dir.clone();
+        let doc_paths: Vec<PathBuf> = doc_paths.doc.iter().map(|s| PathBuf::from(s)).collect();
+        recursively_remove_paths_in_dir(doc_dir, doc_paths.as_slice(), true)?;
+        let mut doc_paths_file = self.work_dir.clone();
+        doc_paths_file.push("doc-paths.toml");
+        recursively_remove(doc_paths_file, true)?;
+        Ok(())
+    }
+
+    pub fn generate_doc(&self) -> Result<()>
+    {
+        self.printer.print_documenting();
+        let name = Self::manifest()?.package.name;
+        let mut doc_paths_file = self.work_dir.clone();
+        doc_paths_file.push("doc-paths.toml");
+        match DocPaths::load(doc_paths_file) {
+            Ok(doc_paths) => {
+                self.printer.print_removing_pkg_doc(&name, false);
+                match self.io_res_remove_pkg_doc(&doc_paths) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
+                self.printer.print_removing_pkg_doc(&name, true);
+            },
+            Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => return Ok(()),
+            Err(err) => return Err(err),
+        }
+        {
+            self.printer.print_searching_path_conflicts(false);
+            let pkg_lib_dir = PathBuf::from("lib");
+            check_dir_for_pkg(pkg_lib_dir.as_path(), &name, "lib in package isn't directory")?;
+            let lib_paths = match conflicts(pkg_lib_dir, self.doc_dir.as_path(), &HashSet::new(), Some(2)) {
+                Ok((conflict_paths, paths)) => {
+                    if conflict_paths.is_empty() {
+                        paths
+                    } else {
+                        return Err(Error::PkgPathConflicts(name.clone(), None, conflict_paths, PkgPathConflict::Lib));
+                    }
+                },
+                Err(err) => return Err(Error::Io(err)),
+            };
+            let mut doc: Vec<String> = Vec::new();
+            for lib_path in &lib_paths {
+                match lib_path.to_str() {
+                    Some(s) => doc.push(String::from(s)),
+                    None => return Err(Error::PkgName(name.clone(), String::from("lib path contains invalid UTF-8 character"))),
+                }
+            }
+            let doc_paths = DocPaths::new(doc);
+            let mut doc_paths_file = self.work_dir.clone();
+            doc_paths_file.push("doc-paths.toml");
+            doc_paths.save(doc_paths_file)?;
+            self.printer.print_searching_path_conflicts(true);
+        }
+        {
+            self.printer.print_documenting_pkg(&name, false);
+            let mut doc_paths_file = self.work_dir.clone();
+            doc_paths_file.push("doc-paths.toml");
+            let doc_paths = DocPaths::load(doc_paths_file)?;
+            let pkg_lib_dir = PathBuf::from("lib");
+            for path in &doc_paths.doc {
+                let mut lib_doc_dir = self.doc_dir.clone();
+                lib_doc_dir.push(path);
+                match create_dir_all(lib_doc_dir.as_path()) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
+                generate_doc(pkg_lib_dir.as_path(), self.doc_dir.as_path(), path)?;
+            }
+            self.printer.print_documenting_pkg(&name, true);
+        }
+        Ok(())
     }
 }
 
