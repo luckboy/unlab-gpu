@@ -1,0 +1,115 @@
+/*
+ * Copyright (c) 2026 Łukasz Szpakowski
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+body {
+    font-family: serif;
+    font-size: 12pt;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    z-index: 0;
+}
+
+header {
+    background: linear-gradient(to bottom, blue, green, red);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+}
+
+header h1 {
+    font-family: sans-serif;
+    font-size: 25pt;
+    margin-top: 15pt;
+    margin-left: 10pt;
+    margin-right: 10pt;
+    margin-bottom: 15pt;
+    padding: 0;
+}
+
+header h1 a {
+    color: white;
+    text-shadow: 2pt 2pt 2pt black;
+}
+
+nav {
+    background: linear-gradient(to bottom, lightgray, white, lightgray);
+    position: fixed;
+    top: 55pt;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+}
+
+nav h2 {
+    font-family: sans-serif;
+    font-size: 15pt;
+    margin-top: 5pt;
+    margin-left: 10pt;
+    margin-right: 10pt;
+    margin-bottom: 5pt;
+}
+
+main {
+    position: relative;
+    top: 80pt;
+    left: 0;
+    width: 100%;
+    margin-top: 5pt;
+    margin-left: 10pt;
+    margin-right: 10pt;
+    margin-bottom: 5pt;
+}
+
+ul.mod-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sig {
+    font-family: sans-serif;
+    font-size: 15pt;
+}
+
+.var {
+    color: darkmagenta;
+}
+
+.arg {
+    color: darkblue;
+}
+
+
+a {
+    color: darkblue;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+code {
+    display: block;
+    font-family: monospace;
+    background: lightgray;
+    width: calc(100% - 30pt);
+    padding: 5pt;
+}
+
+p code {
+    display: inline;
+    margin: 0;
+    padding: 1pt;
+}

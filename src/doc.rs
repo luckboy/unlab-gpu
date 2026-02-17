@@ -397,7 +397,7 @@ impl DocGen
     fn ident_and_sig_to_html(ident: &str, sig: &Sig) -> String
     {
         let mut html = String::new();
-        html.push_str("<h3>");
+        html.push_str("<h3 class=\"sig\">");
         html.push_str(format!("<a href=\"#var.{}\" class=\"var\">{}</a>", ident, ident).as_str());
         match sig {
             Sig::Var => (),
@@ -551,7 +551,7 @@ impl DocGen
     {
         let mut styles_path_buf = self.lib_doc_dir.clone();
         styles_path_buf.push("styles.css");
-        match write(styles_path_buf, "") {
+        match write(styles_path_buf, include_str!("styles.css")) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }
