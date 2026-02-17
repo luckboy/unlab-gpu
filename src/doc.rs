@@ -502,7 +502,7 @@ impl DocGen
 
     fn generate_mod_doc(&self, doc_tree: &DocTree, idents: &[String], path: &Path, mod_path: &str, index_content: &mut String, depth: usize) -> Result<()>
     {
-        index_content.push_str(format!("<li><a href=\"{}\">{}</a></li>\n", Self::str_to_href(format!("{}.html", mod_path).as_str(), depth), idents_to_string(idents)).as_str());
+        index_content.push_str(format!("<li><a href=\"{}\">{}</a></li>\n", Self::str_to_href(format!("{}.html", mod_path).as_str(), 0), idents_to_string(idents)).as_str());
         let doc_tree_g = doc_tree.read()?;
         let mut subtrees = doc_tree_g.subtrees();
         if !subtrees.is_empty() {
@@ -540,7 +540,7 @@ impl DocGen
             }
             mod_content.push_str("</section>\n");
         }
-        match self.io_res_generate_html_file(path.with_extension(".html"), idents, mod_content.as_str(), depth) {
+        match self.io_res_generate_html_file(path.with_extension("html"), idents, mod_content.as_str(), depth) {
             Ok(()) => (),
             Err(err) => return Err(Error::Io(err)),
         }

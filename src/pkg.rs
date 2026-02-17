@@ -3150,9 +3150,8 @@ impl PkgManager
     
     fn io_res_remove_pkg_doc(&self, doc_paths: &DocPaths) -> io::Result<()>
     {
-        let doc_dir = self.lib_dir.clone();
         let doc_paths: Vec<PathBuf> = doc_paths.doc.iter().map(|s| PathBuf::from(s)).collect();
-        recursively_remove_paths_in_dir(doc_dir, doc_paths.as_slice(), true)?;
+        recursively_remove_paths_in_dir(self.doc_dir.as_path(), doc_paths.as_slice(), true)?;
         let mut doc_paths_file = self.work_dir.clone();
         doc_paths_file.push("doc-paths.toml");
         recursively_remove(doc_paths_file, true)?;
@@ -3174,7 +3173,7 @@ impl PkgManager
                 }
                 self.printer.print_removing_pkg_doc(&name, true);
             },
-            Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => return Ok(()),
+            Err(Error::Io(io_err)) if io_err.kind() == ErrorKind::NotFound => (),
             Err(err) => return Err(err),
         }
         {
