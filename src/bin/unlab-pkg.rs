@@ -34,6 +34,7 @@ use unlab_gpu::pkg_cmds::init;
 use unlab_gpu::pkg_cmds::new;
 use unlab_gpu::pkg_cmds::run;
 use unlab_gpu::pkg_cmds::console;
+use unlab_gpu::pkg_cmds::doc;
 use unlab_gpu::Home;
 use unlab_gpu::add_std_builtin_funs;
 
@@ -266,6 +267,8 @@ enum Subcmd
     Run(RunArgs),
     /// Run interpreter for current package
     Console(ConsoleArgs),
+    /// Generate documentation for current package
+    Doc,
 }
 
 #[derive(Parser, Debug)]
@@ -400,6 +403,9 @@ fn main()
         },
         Subcmd::Console(args2) => {
             console(!args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
+        },
+        Subcmd::Doc => {
+            doc(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
     };
     match exit_code {

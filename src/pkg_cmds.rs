@@ -898,3 +898,27 @@ pub fn console<F, G>(is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, ho
     where F: FnOnce(&mut Home) -> bool,
         G: FnOnce(&mut ModNode<Value, ()>)
 { run_with_opt_name(None, Vec::new(), is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f, g) }
+
+fn res_doc(pkg_manager: &PkgManager) -> Result<()>
+{
+    pkg_manager.check_last_op(false)?;
+    pkg_manager.generate_doc()?;
+    Ok(())
+}
+
+pub fn doc<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) {
+        Some(tmp_pkg_manager) => tmp_pkg_manager,
+        None => return Some(1),
+    };
+    match res_doc(&pkg_manager) {
+        Ok(()) => None,
+        Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
+            eprint_error(&err);
+            Some(1)
+        },
+    }
+}
