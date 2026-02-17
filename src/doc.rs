@@ -485,16 +485,18 @@ impl DocGen
                     mod_path.push('/');
                     mod_path.push_str(ident.as_str());
                     write!(&mut w, "::")?;
-                    write!(&mut w, "<a href=\"{}\">{}</a>", Self::str_to_href(format!("{}.html", mod_path).as_str(), depth), ident)?;
+                    write!(&mut w, "<a href=\"{}\" class=\"mod\">{}</a>", Self::str_to_href(format!("{}.html", mod_path).as_str(), depth), ident)?;
                 }
                 writeln!(&mut w, "</h2>")?;
                 writeln!(&mut w, "</nav>")?;
             },
-            None => (),
+            None => writeln!(&mut w, "<nav></nav>")?,
         }
+        writeln!(&mut w, "<div id=\"left\"></div>")?;
         writeln!(&mut w, "<main>")?;
         write!(&mut w, "{}", content)?;
         writeln!(&mut w, "</main>")?;
+        writeln!(&mut w, "<div id=\"right\"></div>")?;
         writeln!(&mut w, "</body>")?;
         writeln!(&mut w, "</html>")?;
         Ok(())

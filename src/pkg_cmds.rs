@@ -901,7 +901,7 @@ pub fn console<F, G>(is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, ho
 
 fn res_doc(pkg_manager: &PkgManager) -> Result<()>
 {
-    pkg_manager.check_last_op(false)?;
+    pkg_manager.check_last_op(true)?;
     pkg_manager.generate_doc()?;
     Ok(())
 }
