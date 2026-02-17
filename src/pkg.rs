@@ -3162,7 +3162,7 @@ impl PkgManager
     {
         self.printer.print_documenting();
         let name = Self::manifest()?.package.name;
-        let mut doc_paths_file = self.work_dir.clone();
+        let mut doc_paths_file = self.work_var_dir();
         doc_paths_file.push("doc-paths.toml");
         match DocPaths::load(doc_paths_file) {
             Ok(doc_paths) => {
@@ -3185,7 +3185,7 @@ impl PkgManager
                     if conflict_paths.is_empty() {
                         paths
                     } else {
-                        return Err(Error::PkgPathConflicts(name.clone(), None, conflict_paths, PkgPathConflict::Lib));
+                        return Err(Error::PkgPathConflicts(name.clone(), None, conflict_paths, PkgPathConflict::Doc));
                     }
                 },
                 Err(err) => return Err(Error::Io(err)),
@@ -3198,14 +3198,14 @@ impl PkgManager
                 }
             }
             let doc_paths = DocPaths::new(doc);
-            let mut doc_paths_file = self.work_dir.clone();
+            let mut doc_paths_file = self.work_var_dir();
             doc_paths_file.push("doc-paths.toml");
             doc_paths.save(doc_paths_file)?;
             self.printer.print_searching_path_conflicts(true);
         }
         {
             self.printer.print_documenting_pkg(&name, false);
-            let mut doc_paths_file = self.work_dir.clone();
+            let mut doc_paths_file = self.work_var_dir();
             doc_paths_file.push("doc-paths.toml");
             let doc_paths = DocPaths::load(doc_paths_file)?;
             let pkg_lib_dir = PathBuf::from("lib");

@@ -502,7 +502,7 @@ impl DocGen
 
     fn generate_mod_doc(&self, doc_tree: &DocTree, idents: &[String], path: &Path, mod_path: &str, index_content: &mut String, depth: usize) -> Result<()>
     {
-        index_content.push_str(format!("<li><a href=\"{}\">{}</a></li>\n", Self::str_to_href(format!("{}.html", mod_path).as_str(), 0), idents_to_string(idents)).as_str());
+        index_content.push_str(format!("<li class=\"mod-list-item\"><a href=\"{}\">{}</a></li>\n", Self::str_to_href(format!("{}.html", mod_path).as_str(), 0), idents_to_string(idents)).as_str());
         let doc_tree_g = doc_tree.read()?;
         let mut subtrees = doc_tree_g.subtrees();
         if !subtrees.is_empty() {
@@ -525,7 +525,7 @@ impl DocGen
         let mut mod_content = String::new();
         mod_content.push_str("<section id=\"mod\" class=\"mod-section\">\n");
         match doc_tree_g.desc() {
-            Some(desc) => mod_content.push_str(format!("{}\n", Self::markdown_to_html(desc.as_str())?).as_str()),
+            Some(desc) => mod_content.push_str(format!("<div class=\"mod-desc desc\">\n{}</div>\n", Self::markdown_to_html(desc.as_str())?).as_str()),
             None => (),
         }
         mod_content.push_str("</section>\n");
@@ -533,9 +533,9 @@ impl DocGen
         var_desc_pairs.sort_by(|p1, p2| p1.0.cmp(p2.0));
         for (ident, (sig, desc))  in var_desc_pairs {
             mod_content.push_str(format!("<section id=\"var.{}\" class=\"var-section\">\n", ident).as_str());
-            mod_content.push_str(Self::ident_and_sig_to_html(ident, sig).as_str());
+            mod_content.push_str(format!("{}\n", Self::ident_and_sig_to_html(ident, sig)).as_str());
             match desc {
-                Some(desc) => mod_content.push_str(format!("{}\n", Self::markdown_to_html(desc.as_str())?).as_str()),
+                Some(desc) => mod_content.push_str(format!("<div class=\"var-desc desc\">\n{}</div>\n", Self::markdown_to_html(desc.as_str())?).as_str()),
                 None => (),
             }
             mod_content.push_str("</section>\n");
@@ -558,7 +558,7 @@ impl DocGen
         let mut path_buf = self.lib_doc_dir.clone();
         path_buf.push("root");
         let mut index_content = String::new();
-        index_content.push_str("<ul>\n");
+        index_content.push_str("<ul class=\"mod-list\">\n");
         self.generate_mod_doc(doc_tree, &[String::from("root")], path_buf.as_path(), "root", &mut index_content, 0)?;
         index_content.push_str("</ul>\n");
         let mut index_path_buf = self.lib_doc_dir.clone();
