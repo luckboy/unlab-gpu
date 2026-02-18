@@ -9,6 +9,8 @@ body {
     background: white;
     font-family: serif;
     font-size: 12pt;
+    font-weight: normal;
+    font-style: normal;
     text-decoration: none;
     margin: 0;
     padding: 0;
@@ -56,7 +58,7 @@ nav {
 
 nav h2 {
     font-family: sans-serif;
-    font-size: 15pt;
+    font-size: 13pt;
     margin-top: 10pt;
     margin-left: 10pt;
     margin-right: 10pt;
@@ -73,7 +75,6 @@ main {
     padding-left: 10pt;
     padding-right: 10pt;
     padding-bottom: 5pt;
-    overflow: auto;
 }
 
 #left {
@@ -84,19 +85,55 @@ main {
     display: none;
 }
 
-ul.mod-list {
+.mod-list {
     list-style-type: none;
+    margin-top: 5pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 5pt;
+    padding: 0;
+}
+
+.mod-list-item {
+    font-family: sans-serif;
+    font-size: 13pt;
+    font-weight: bold;
+}
+
+.mod-list-item a {
+    color: black;
+}
+
+.mod-desc {
     margin: 0;
+    padding: 0;
+}
+
+.mod-section, .var-section {
+    scroll-margin-top: 90pt;
+}
+
+.var-desc {
+    margin-top: 0;
+    margin-left: 20pt;
+    margin-right: 0;
+    margin-bottom: 0;
     padding: 0;
 }
 
 .sig {
     font-family: sans-serif;
-    font-size: 15pt;
+    font-size: 13pt;
+    font-weight: bold;
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
+    padding: 0;
 }
 
 .keyword {
-    color: darkblue;
+    color: darkgreen;
 }
 
 .mod, .var {
@@ -104,12 +141,75 @@ ul.mod-list {
 }
 
 .arg {
-    color: darkgreen;
+    color: darkblue;
+}
+
+section {
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: sans-serif;
+    font-size: 13pt;
+    font-weight: bold;
+    font-style: normal;
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
+    padding: 0;
+}
+
+hr {
+    background: gray;
+    height: 1px;
+    border-width: 0;
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
+    padding: 0;
+}
+
+p {
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
+    padding: 0;
+}
+
+em {
+    font-style: italic;
+    margin: 0;
+    padding: 0;
+}
+
+strong {
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+
+ol, ul {
+    margin-top: 5pt;
+    margin-left: 30pt;
+    margin-right: 0;
+    margin-bottom: 5pt;
+    padding: 0;
+}
+
+li {
+    margin: 0;
+    padding: 0;
 }
 
 a {
     color: darkblue;
     text-decoration: none;
+    margin: 0;
+    padding: 0;
 }
 
 a:hover {
@@ -124,19 +224,62 @@ pre {
 
 code {
     font-family: monospace;
-    background: lightgray;
+    background: #f0f0f0;
 }
 
 pre code {
+    -moz-border-radius: 5pt;
+    -webkit-border-radius: 5pt;
+    border-radius: 5pt;
     display: block;
     width: 100%;
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
     padding: 10pt;
 }
 
 p code {
+    -moz-border-radius: 2pt;
+    -webkit-border-radius: 2pt;
+    border-radius: 2pt;
     display: inline;
-    margin: 0;
-    padding: 1pt;
+    padding: 2pt;
+}
+
+table, th, td {
+    border-color: gray;
+    border-width: 1px;
+    border-style: solid;
+    border-collapse: collapse;
+}
+
+table {
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
+    padding: 0;
+}
+
+th {
+    font-family: sans-serif;
+    font-size: 13pt;
+    font-weight: bold;
+    padding: 10pt;
+}
+
+td {
+    padding: 10pt;
+}
+
+img {
+    margin-top: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10pt;
+    padding: 0;
 }
 
 @media (orientation: landscape) {

@@ -384,6 +384,24 @@ impl DocGen
     pub fn lib_doc_dir(&self) -> &Path
     { self.lib_doc_dir.as_path() }
     
+    fn idents_to_html(idents: &[String]) -> String
+    {
+        let mut s = String::new();
+        let mut is_first = true;
+        for ident in idents {
+            if !is_first {
+                s.push_str("::");
+            }
+            if is_first {
+                s.push_str(format!("<span class=\"keyword\">{}</span>", ident).as_str());
+            } else {
+                s.push_str(format!("<span class=\"mod\">{}</span>", ident).as_str());
+            }
+            is_first = false;
+        }
+        s
+    }
+
     fn str_to_href(s: &str, depth: usize) -> String
     {
         let mut url = String::new();
@@ -398,6 +416,10 @@ impl DocGen
     {
         let mut html = String::new();
         html.push_str("<h3 class=\"sig\">");
+        match sig {
+            Sig::Var => (),
+            Sig::Fun(_) | Sig::BuiltinFun(_) => html.push_str("<span class=\"keyword\">function</span> "),
+        }
         html.push_str(format!("<a href=\"#var.{}\" class=\"var\">{}</a>", ident, ident).as_str());
         match sig {
             Sig::Var => (),
@@ -504,7 +526,7 @@ impl DocGen
 
     fn generate_mod_doc(&self, doc_tree: &DocTree, idents: &[String], path: &Path, mod_path: &str, index_content: &mut String, depth: usize) -> Result<()>
     {
-        index_content.push_str(format!("<li class=\"mod-list-item\"><a href=\"{}\">{}</a></li>\n", Self::str_to_href(format!("{}.html", mod_path).as_str(), 0), idents_to_string(idents)).as_str());
+        index_content.push_str(format!("<li class=\"mod-list-item\"><a href=\"{}\">{}</a></li>\n", Self::str_to_href(format!("{}.html", mod_path).as_str(), 0), Self::idents_to_html(idents)).as_str());
         let doc_tree_g = doc_tree.read()?;
         let mut subtrees = doc_tree_g.subtrees();
         if !subtrees.is_empty() {
@@ -534,6 +556,7 @@ impl DocGen
         let mut var_desc_pairs = doc_tree_g.var_desc_pairs();
         var_desc_pairs.sort_by(|p1, p2| p1.0.cmp(p2.0));
         for (ident, (sig, desc))  in var_desc_pairs {
+            mod_content.push_str("<hr />\n");
             mod_content.push_str(format!("<section id=\"var.{}\" class=\"var-section\">\n", ident).as_str());
             mod_content.push_str(format!("{}\n", Self::ident_and_sig_to_html(ident, sig)).as_str());
             match desc {
