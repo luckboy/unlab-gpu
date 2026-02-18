@@ -68,7 +68,10 @@ main {
     left: 0;
     width: calc(100% - 1.6rem);
     margin: 0;
-    padding: 0.8rem;
+    padding-top: 0.4rem;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+    padding-bottom: 0.4rem;
 }
 
 #left {
