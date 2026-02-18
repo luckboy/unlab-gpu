@@ -104,13 +104,13 @@ main {
     color: black;
 }
 
+.mod-section, .var-section {
+    scroll-margin-top: 100pt;
+}
+
 .mod-desc {
     margin: 0;
     padding: 0;
-}
-
-.mod-section, .var-section {
-    scroll-margin-top: 100pt;
 }
 
 .var-desc {
