@@ -486,6 +486,7 @@ impl DocGen
         writeln!(&mut w, "<html>")?;
         writeln!(&mut w, "<head>")?;
         writeln!(&mut w, "<meta charset=\"utf-8\" />")?;
+        writeln!(&mut w, "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")?;
         writeln!(&mut w, "<link rel=\"stylesheet\" href=\"{}\" />", Self::str_to_href("styles.css", depth))?;
         write!(&mut w, "<title>")?;
         if !idents.is_empty() {
