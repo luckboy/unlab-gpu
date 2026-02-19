@@ -72,6 +72,7 @@ main {
     padding-left: 0.8rem;
     padding-right: 0.8rem;
     padding-bottom: 0.4rem;
+    overflow-wrap: break-word;
 }
 
 #left {
