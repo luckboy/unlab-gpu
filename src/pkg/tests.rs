@@ -550,6 +550,56 @@ lib = [\"abc/def\", \"def/ghi\", \"ghi/jkl\"]
 }
 
 #[test]
+fn test_doc_paths_read_reads_documentation_paths()
+{
+    let s = "
+doc = [
+    \"abc/def\",
+    \"def/ghi\",
+    \"ghi/jkl\"
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    match DocPaths::read(&mut cursor) {
+        Ok(doc_paths) => assert_eq!(vec![String::from("abc/def"), String::from("def/ghi"), String::from("ghi/jkl")], doc_paths.doc),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_doc_paths_write_writes_documentation_paths()
+{
+    let s = "
+doc = [
+    \"abc/def\",
+    \"def/ghi\",
+    \"ghi/jkl\"
+]
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let doc_paths = DocPaths::read(&mut cursor).unwrap();
+    let mut cursor2 = Cursor::new(Vec::<u8>::new());
+    match doc_paths.write(&mut cursor2) {
+        Ok(()) => {
+            cursor2.set_position(0);
+            let mut t = String::new();
+            match cursor2.read_to_string(&mut t) {
+                Ok(_) => {
+                    let expected_t = "
+doc = [\"abc/def\", \"def/ghi\", \"ghi/jkl\"]
+";
+                    assert_eq!(String::from(&expected_t[1..]), t);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
 fn test_versions_read_reads_versions()
 {
     let s = "
