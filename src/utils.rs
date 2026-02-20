@@ -976,7 +976,7 @@ pub fn str_to_url_name(s: &str, is_path: bool) -> String
         match b {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' => url_name.push(*b as char),
             b'/' if is_path => url_name.push(*b as char),
-            _ => url_name.push_str(format!("%{:02x}", b).as_str()),
+            _ => url_name.push_str(format!("%{:02X}", b).as_str()),
         }
     }
     url_name

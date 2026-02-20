@@ -408,7 +408,7 @@ impl DocGen
         for _ in 0..depth {
             url.push_str("../");
         }
-        url.push_str(s);
+        url.push_str(str_to_url_name(s, true).as_str());
         url
     }
 
