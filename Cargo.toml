@@ -40,6 +40,8 @@ time = ">=0.3.37,<=0.3.41"
 
 [dev-dependencies]
 sealed_test = "1.1.0"
+# Holded versions.
+tempfile = ">=3.0.0,<=3.24.0"
 
 [features]
 default = ["opencl", "plot"]
