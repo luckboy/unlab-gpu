@@ -28,6 +28,7 @@ use std::process::Command;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
+use opener::open_browser;
 use rand::random;
 use rand::random_range;
 use crate::matrix::Matrix;
@@ -2762,6 +2763,86 @@ pub fn backend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     Ok(Value::Object(Arc::new(Object::String(String::from(matrix_backend_name()?)))))
 }
 
+pub fn docpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let shared_env_g = rw_lock_read(env.shared_env())?;
+    Ok(Value::Object(Arc::new(Object::String(shared_env_g.doc_path().to_string_lossy().into_owned()))))
+}
+
+pub fn doc(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let lib_name = match arg_values.get(0) {
+        Some(arg_value) => {
+            match arg_value.to_opt_string() {
+                Some(tmp_lib_name) => tmp_lib_name,
+                None => return Err(Error::Interp(String::from("unsupported types for function doc"))),
+            }
+        },
+        None => String::from("root"),
+    };
+    let idents = match arg_values.get(1) {
+        Some(arg_value) => {
+            match arg_value.to_opt_string() {
+                Some(name) => {
+                    let name_without_first_colons = if name.starts_with("::") {
+                        &name[2..]
+                    } else {
+                        name.as_str()
+                    };
+                    let tmp_idents: Vec<String> = name_without_first_colons.split("::").map(String::from).collect();
+                    match tmp_idents.first() {
+                        Some(tmp_ident) if tmp_ident == &String::from("root") => Some((&tmp_idents[1..]).to_vec()),
+                        Some(_) => Some(tmp_idents),
+                        None => Some(Vec::new()),
+                    }
+                },
+                None => return Err(Error::Interp(String::from("unsupported types for function doc"))),
+            }
+        },
+        None => None,
+    };
+    let doc_path = {
+        let shared_env_g = rw_lock_read(env.shared_env())?;
+        OsString::from(shared_env_g.doc_path())
+    };
+    let mut res: Result<Value> = Ok(Value::None);
+    for dir in std::env::split_paths(doc_path.as_os_str()) {
+        let mut path = dir.clone();
+        path.push(lib_name.replace('/', path::MAIN_SEPARATOR_STR));
+        match &idents {
+            Some(idents) => {
+                path.push("root");
+                for ident in idents {
+                    path.push(ident);
+                }
+                path.set_extension("html");
+            },
+            None => path.push("index.html"),
+        }
+        match fs::metadata(path.as_path()) {
+            Ok(_) => {
+                let canon_path = match path.canonicalize() {
+                    Ok(tmp_canon_path) => tmp_canon_path,
+                    Err(err) => return Err(Error::Io(err)),
+                };
+                match open_browser(canon_path) {
+                    Ok(()) => return Ok(Value::None),
+                    Err(err) => return Err(Error::Opener(Box::new(err))),
+                }
+            },
+            Err(err) if err.kind() == ErrorKind::NotFound => res = Err(Error::Io(err)),
+            Err(err) => return Err(Error::Io(err)),
+        }
+    }
+    res
+}
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -2923,6 +3004,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
     add_builtin_fun(root_mod, String::from("checkintr"), checkintr);
     add_builtin_fun(root_mod, String::from("backend"), backend);
+    add_builtin_fun(root_mod, String::from("docpath"), docpath);
+    add_builtin_fun(root_mod, String::from("doc"), doc);
+    add_alias(root_mod, String::from("help"), &String::from("doc"));
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
     #[cfg(feature = "plot")]

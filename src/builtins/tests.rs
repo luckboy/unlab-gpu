@@ -5806,3 +5806,40 @@ fn test_backend_is_applied_with_success()
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_docpath_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let doc_path = std::env::join_paths(&["doc", "doc2", "doc3"]).unwrap();
+    let shared_env = SharedEnv::new(OsString::from("."), doc_path.clone(), Vec::new());
+    let mut env = Env::new_with_script_dir_and_domain_and_shared_env(Arc::new(RwLock::new(root_mod)), PathBuf::from("."), None, Arc::new(RwLock::new(shared_env)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("docpath")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(doc_path.to_string_lossy().into_owned()))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_doc_is_existent()
+{ shared_test_fun_is_existent("doc", doc); }
+
+#[test]
+fn test_help_is_alias_to_doc()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    match (root_mod.var(&String::from("help")), root_mod.var(&String::from("doc"))) {
+        (Some(alias_value), Some(fun_value)) => assert_eq!(fun_value, alias_value),
+        (_, _) => assert!(false),
+    }
+}
