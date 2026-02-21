@@ -157,7 +157,7 @@ impl fmt::Display for Error
             Error::SerdeJson(err) => write!(f, "serde_json error: {}", err),
             Error::Latex2mathml(err) =>  write!(f, "latex2mathml error: {}", err),
             Error::Markdown(msg) =>  write!(f, "markdown error: {}", msg),
-            Error::Opener(err) => write!(f, "opener: {}", err),
+            Error::Opener(err) => write!(f, "opener error: {}", err),
             Error::InvalidVersion => write!(f, "invalid version"),
             Error::InvalidPkgName => write!(f, "invalid package name"),
             Error::NoOpenClBackend => write!(f, "no OpenCL backend"),
