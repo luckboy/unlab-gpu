@@ -949,25 +949,25 @@ fn test_value_eq_without_types_returns_false_for_different_types()
 }
 
 #[test]
-fn test_value_diff_with_types_returns_true()
+fn test_value_nearly_eq_with_types_returns_true()
 {
-    match Value::None.diff_with_types(&Value::None, 0.1) {
+    match Value::None.nearly_eq_with_types(&Value::None, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Bool(true).diff_with_types(&Value::Bool(true), 0.1) {
+    match Value::Bool(true).nearly_eq_with_types(&Value::Bool(true), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_with_types(&Value::Int(1234), 0.1) {
+    match Value::Int(1234).nearly_eq_with_types(&Value::Int(1234), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(12.34).diff_with_types(&Value::Float(12.43), 0.1) {
+    match Value::Float(12.34).nearly_eq_with_types(&Value::Float(12.43), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(12.43).diff_with_types(&Value::Float(12.34), 0.1) {
+    match Value::Float(12.43).nearly_eq_with_types(&Value::Float(12.34), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -980,32 +980,32 @@ fn test_value_diff_with_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let fun = Arc::new(Fun(Vec::new(), Vec::new()));
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1029,19 +1029,19 @@ fn test_value_diff_with_types_returns_true()
     ];
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, bt.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, at.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1068,7 +1068,7 @@ fn test_value_diff_with_types_returns_true()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1076,7 +1076,7 @@ fn test_value_diff_with_types_returns_true()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::Transpose, bt.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1084,26 +1084,26 @@ fn test_value_diff_with_types_returns_true()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let array = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Ref(array.clone());
     let value2 = Value::Ref(array);
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.09), Value::Bool(false)]))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1117,86 +1117,86 @@ fn test_value_diff_with_types_returns_true()
     fields2.insert(String::from("c"), Value::Bool(false));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Weak(Arc::downgrade(&object));
     let value2 = Value::Weak(Arc::downgrade(&object));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
 }
 
 #[test]
-fn test_value_diff_with_types_returns_false()
+fn test_value_nearly_eq_with_types_returns_false()
 {
-    match Value::Bool(true).diff_with_types(&Value::Bool(false), 0.1) {
+    match Value::Bool(true).nearly_eq_with_types(&Value::Bool(false), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_with_types(&Value::Int(4567), 0.1) {
+    match Value::Int(1234).nearly_eq_with_types(&Value::Int(4567), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(12.34).diff_with_types(&Value::Float(45.67), 0.1) {
+    match Value::Float(12.34).nearly_eq_with_types(&Value::Float(45.67), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(3, 4, 1)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(3, 4, 1)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(2, 5, 1)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(2, 4, 2)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(3.0, 4.5, 1.5)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 5.5, 1.5)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 2.5)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let a = matrix![[1.0, 2.0], [3.0, 4.0]];
     let value = Value::Object(Arc::new(Object::Matrix(a.clone())));
     let value2 = Value::Object(Arc::new(Object::Matrix(a)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1204,31 +1204,31 @@ fn test_value_diff_with_types_returns_false()
     let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("c")], String::from("f"), fun.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("g"), fun.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun2)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("g"), f)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1257,31 +1257,31 @@ fn test_value_diff_with_types_returns_false()
     ];
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(2, 3, TransposeFlag::NoTranspose, at.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, c.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, bt.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, at.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1313,7 +1313,7 @@ fn test_value_diff_with_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, c.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 1)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1321,7 +1321,7 @@ fn test_value_diff_with_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1329,7 +1329,7 @@ fn test_value_diff_with_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::Transpose, bt.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1337,25 +1337,25 @@ fn test_value_diff_with_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Int(3)]))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(3.0), Value::Bool(false)]))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1370,7 +1370,7 @@ fn test_value_diff_with_types_returns_false()
     fields2.insert(String::from("d"), Value::Int(2));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1384,7 +1384,7 @@ fn test_value_diff_with_types_returns_false()
     fields2.insert(String::from("c"), Value::Bool(false));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1392,22 +1392,22 @@ fn test_value_diff_with_types_returns_false()
     let value = Value::Weak(Arc::downgrade(&object));
     let object2 = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value2 = Value::Weak(Arc::downgrade(&object2));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
 }
 
 #[test]
-fn test_value_diff_with_types_returns_false_for_different_types()
+fn test_value_nearly_eq_with_types_returns_false_for_different_types()
 {
-    match Value::Int(1234).diff_with_types(&Value::Float(12.34), 0.1) {
+    match Value::Int(1234).nearly_eq_with_types(&Value::Float(12.34), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1417,86 +1417,86 @@ fn test_value_diff_with_types_returns_false_for_different_types()
     fields.insert(String::from("b"), Value::Float(2.0));
     fields.insert(String::from("c"), Value::Bool(false));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
 }
 
 #[test]
-fn test_value_diff_without_types_returns_true()
+fn test_value_nearly_eq_without_types_returns_true()
 {
-    match Value::None.diff_without_types(&Value::None, 0.1) {
+    match Value::None.nearly_eq_without_types(&Value::None, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Bool(true).diff_without_types(&Value::Bool(true), 0.1) {
+    match Value::Bool(true).nearly_eq_without_types(&Value::Bool(true), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_without_types(&Value::Int(1234), 0.1) {
+    match Value::Int(1234).nearly_eq_without_types(&Value::Int(1234), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1234.09).diff_without_types(&Value::Int(1234), 0.1) {
+    match Value::Float(1234.09).nearly_eq_without_types(&Value::Int(1234), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1233.91).diff_without_types(&Value::Int(1234), 0.1) {
+    match Value::Float(1233.91).nearly_eq_without_types(&Value::Int(1234), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_without_types(&Value::Float(1234.09), 0.1) {
+    match Value::Int(1234).nearly_eq_without_types(&Value::Float(1234.09), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_without_types(&Value::Float(1233.91), 0.1) {
+    match Value::Int(1234).nearly_eq_without_types(&Value::Float(1233.91), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(12.34).diff_without_types(&Value::Float(12.43), 0.1) {
+    match Value::Float(12.34).nearly_eq_without_types(&Value::Float(12.43), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(12.43).diff_without_types(&Value::Float(12.34), 0.1) {
+    match Value::Float(12.43).nearly_eq_without_types(&Value::Float(12.34), 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let string = Arc::new(Object::String(String::from("abc")));
     let value = Value::Object(string.clone());
     let value2 = Value::Object(string);
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("abc"))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let fun = Arc::new(Fun(Vec::new(), Vec::new()));
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1520,19 +1520,19 @@ fn test_value_diff_without_types_returns_true()
     ];
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, bt.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, at.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1559,7 +1559,7 @@ fn test_value_diff_without_types_returns_true()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1567,7 +1567,7 @@ fn test_value_diff_without_types_returns_true()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::Transpose, bt.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1575,26 +1575,26 @@ fn test_value_diff_without_types_returns_true()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let array = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Ref(array.clone());
     let value2 = Value::Ref(array);
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.09), Value::Bool(false)]))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
@@ -1608,94 +1608,94 @@ fn test_value_diff_without_types_returns_true()
     fields2.insert(String::from("c"), Value::Bool(false));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
     let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Weak(Arc::downgrade(&object));
     let value2 = Value::Weak(Arc::downgrade(&object));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
 }
 
 #[test]
-fn test_value_diff_without_types_returns_false()
+fn test_value_nearly_eq_without_types_returns_false()
 {
-    match Value::Bool(true).diff_without_types(&Value::Bool(false), 0.1) {
+    match Value::Bool(true).nearly_eq_without_types(&Value::Bool(false), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_without_types(&Value::Int(4567), 0.1) {
+    match Value::Int(1234).nearly_eq_without_types(&Value::Int(4567), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(1234.0).diff_without_types(&Value::Int(4567), 0.1) {
+    match Value::Float(1234.0).nearly_eq_without_types(&Value::Int(4567), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Int(1234).diff_without_types(&Value::Float(4567.0), 0.1) {
+    match Value::Int(1234).nearly_eq_without_types(&Value::Float(4567.0), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
-    match Value::Float(12.34).diff_without_types(&Value::Float(45.67), 0.1) {
+    match Value::Float(12.34).nearly_eq_without_types(&Value::Float(45.67), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::String(String::from("abc"))));
     let value2 = Value::Object(Arc::new(Object::String(String::from("def"))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(3, 4, 1)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(3, 4, 1)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(2, 5, 1)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::IntRange(2, 4, 2)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(3.0, 4.5, 1.5)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 5.5, 1.5)));
-    match value.diff_with_types(&value2, 0.1) {
+    match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 2.5)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let a = matrix![[1.0, 2.0], [3.0, 4.0]];
     let value = Value::Object(Arc::new(Object::Matrix(a.clone())));
     let value2 = Value::Object(Arc::new(Object::Matrix(a)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1703,31 +1703,31 @@ fn test_value_diff_without_types_returns_false()
     let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("c")], String::from("f"), fun.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("g"), fun.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun.clone())));
     let value2 = Value::Object(Arc::new(Object::Fun(vec![String::from("a"), String::from("b")], String::from("f"), fun2)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("g"), f)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1756,31 +1756,31 @@ fn test_value_diff_without_types_returns_false()
     ];
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(2, 3, TransposeFlag::NoTranspose, at.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, c.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, bt.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::Transpose, at.clone())));
     let value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b.clone())));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1812,7 +1812,7 @@ fn test_value_diff_without_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, c.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 1)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1820,7 +1820,7 @@ fn test_value_diff_without_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1828,7 +1828,7 @@ fn test_value_diff_without_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::Transpose, bt.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1836,25 +1836,25 @@ fn test_value_diff_without_types_returns_false()
     let value = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1)));
     let matrix_array2 = Arc::new(Object::MatrixArray(4, 2, TransposeFlag::NoTranspose, b.clone()));
     let value2 = Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array2, 0)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("def"), String::from("abc"))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Int(3)]))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(3.0), Value::Bool(false)]))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1869,7 +1869,7 @@ fn test_value_diff_without_types_returns_false()
     fields2.insert(String::from("d"), Value::Int(2));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1883,7 +1883,7 @@ fn test_value_diff_without_types_returns_false()
     fields2.insert(String::from("c"), Value::Bool(false));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields2))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1891,22 +1891,22 @@ fn test_value_diff_without_types_returns_false()
     let value = Value::Weak(Arc::downgrade(&object));
     let object2 = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value2 = Value::Weak(Arc::downgrade(&object2));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
 }
 
 #[test]
-fn test_value_diff_without_types_returns_false_for_different_types()
+fn test_value_nearly_eq_without_types_returns_false_for_different_types()
 {
-    match Value::Int(1234).diff_with_types(&Value::Bool(false), 0.1) {
+    match Value::Int(1234).nearly_eq_with_types(&Value::Bool(false), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
     let value = Value::Object(Arc::new(Object::IntRange(2, 4, 1)));
     let value2 = Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5)));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1916,7 +1916,7 @@ fn test_value_diff_without_types_returns_false_for_different_types()
     fields.insert(String::from("b"), Value::Float(2.0));
     fields.insert(String::from("c"), Value::Bool(false));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
-    match value.diff_without_types(&value2, 0.1) {
+    match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }

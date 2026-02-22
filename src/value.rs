@@ -39,7 +39,7 @@ pub type WindowId = winit::window::WindowId;
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct WindowId(());
 
-fn diff(a: f32, b: f32, eps: f32) -> bool
+fn nearly_eq(a: f32, b: f32, eps: f32) -> bool
 {
     if a == b {
         true
@@ -229,15 +229,15 @@ impl Value
         }
     }
     
-    pub fn diff_with_types(&self, value: &Value, eps: f32) -> Result<bool>
+    pub fn nearly_eq_with_types(&self, value: &Value, eps: f32) -> Result<bool>
     {
         match (self, value) {
-            (Value::Float(a), Value::Float(b)) => Ok(diff(*a, *b, eps)),
+            (Value::Float(a), Value::Float(b)) => Ok(nearly_eq(*a, *b, eps)),
             (Value::Object(object), Value::Object(object2)) => {
                 if Arc::ptr_eq(object, object2) {
                     return Ok(true);
                 }
-                object.priv_diff(&**object2, eps)
+                object.priv_nearly_eq(&**object2, eps)
             },
             (Value::Ref(object), Value::Ref(object2)) => {
                 if Arc::ptr_eq(object, object2) {
@@ -245,7 +245,7 @@ impl Value
                 }
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
-                object_g.priv_diff(&*object2_g, eps, Self::diff_with_types)
+                object_g.priv_nearly_eq(&*object2_g, eps, Self::nearly_eq_with_types)
             },
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
@@ -258,16 +258,16 @@ impl Value
         }
     }
 
-    pub fn diff_without_types(&self, value: &Value, eps: f32) -> Result<bool>
+    pub fn nearly_eq_without_types(&self, value: &Value, eps: f32) -> Result<bool>
     {
         match (self, value) {
-            (Value::Int(a), Value::Int(b)) => Ok(diff(*a as f32, *b as f32, eps)),
-            (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(diff(self.to_f32(), value.to_f32(), eps)),
+            (Value::Int(a), Value::Int(b)) => Ok(nearly_eq(*a as f32, *b as f32, eps)),
+            (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(nearly_eq(self.to_f32(), value.to_f32(), eps)),
             (Value::Object(object), Value::Object(object2)) => {
                 if Arc::ptr_eq(object, object2) {
                     return Ok(true);
                 }
-                object.priv_diff(&**object2, eps)
+                object.priv_nearly_eq(&**object2, eps)
             },
             (Value::Ref(object), Value::Ref(object2)) => {
                 if Arc::ptr_eq(object, object2) {
@@ -275,7 +275,7 @@ impl Value
                 }
                 let object_g = rw_lock_read(&**object)?;
                 let object2_g = rw_lock_read(&**object2)?;
-                object_g.priv_diff(&*object2_g, eps, Self::diff_without_types)
+                object_g.priv_nearly_eq(&*object2_g, eps, Self::nearly_eq_without_types)
             },
             (Value::Weak(object), Value::Weak(object2)) => {
                 match (object.upgrade(), object2.upgrade()) {
@@ -1431,7 +1431,7 @@ impl Object
         }
     }
 
-    fn priv_diff(&self, object: &Object, eps: f32) -> Result<bool>
+    fn priv_nearly_eq(&self, object: &Object, eps: f32) -> Result<bool>
     {
         match (self, object) {
             (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
@@ -1450,7 +1450,7 @@ impl Object
                         };
                         match (xs.get(ak), ys.get(bk)) {
                             (Some(x), Some(y)) => {
-                                if !diff(*x, *y, eps) {
+                                if !nearly_eq(*x, *y, eps) {
                                     return Ok(false);
                                 }
                             },
@@ -1477,7 +1477,7 @@ impl Object
                             };
                             match (xs.get(ak), ys.get(bk)) {
                                 (Some(x), Some(y)) => {
-                                    if !diff(*x, *y, eps) {
+                                    if !nearly_eq(*x, *y, eps) {
                                         return Ok(false);
                                     }
                                 },
@@ -1547,7 +1547,7 @@ impl MutObject
         }
     }
 
-    fn priv_diff<F>(&self, object: &MutObject, eps: f32, mut f: F) -> Result<bool>
+    fn priv_nearly_eq<F>(&self, object: &MutObject, eps: f32, mut f: F) -> Result<bool>
         where F: FnMut(&Value, &Value, f32) -> Result<bool>
     {
         match (self, object) {
