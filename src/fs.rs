@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -172,6 +172,44 @@ pub fn conflicts<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, ignored_paths: 
     conflict_paths.append(&mut conflict_paths2);
     conflict_paths.append(&mut conflict_paths3);
     Ok((conflict_paths, paths.unwrap_or(Vec::new())))
+}
+
+fn get_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, paths: &mut Vec<PathBuf>, depth: Option<usize>) -> Result<()>
+{
+    let mut path_buf = PathBuf::from(path);
+    if suffix_path_buf != &PathBuf::from("") {
+        path_buf.push(suffix_path_buf.as_path());
+    }
+    let metadata = match symlink_metadata(path_buf.as_path()) {
+        Ok(tmp_metadata) => tmp_metadata,
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(()),
+        Err(err) => return Err(err),
+    };
+    if metadata.is_dir() && depth.map(|d| d > 0).unwrap_or(true) {
+        match read_dir(path_buf.as_path()) {
+            Ok(entries) => {
+                for entry in entries {
+                    let tmp_entry = entry?;
+                    suffix_path_buf.push(tmp_entry.file_name());
+                    get_paths_in_dir(path, suffix_path_buf, paths, depth.map(|d| d - 1))?;
+                    suffix_path_buf.pop();
+                }
+            },
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(err),
+        }
+    } else {
+        paths.push(suffix_path_buf.clone());
+    }
+    Ok(())
+}
+
+pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec<PathBuf>>
+{
+    let mut paths: Vec<PathBuf> = Vec::new();
+    let mut suffix_path_buf = PathBuf::from("");
+    get_paths_in_dir(path.as_ref(), &mut suffix_path_buf, &mut paths, depth)?;
+    Ok(paths)
 }
 
 pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, paths: &[PathBuf]) -> Result<()>
