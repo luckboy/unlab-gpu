@@ -17,6 +17,7 @@ use crate::serde_json;
 use crate::toml;
 use crate::matrix;
 use crate::pkg::PkgName;
+use crate::value::Value;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Pos
@@ -95,6 +96,7 @@ pub enum Error
     NoCudaBackend,
     Stop(Stop),
     Intr,
+    Assert(Option<String>, Option<(Value, Value)>),
 }
 
 impl error::Error for Error
@@ -169,6 +171,20 @@ impl fmt::Display for Error
             Error::Stop(Stop::ErrorPropagation) => write!(f, "stopped by error propagation"),
             Error::Stop(Stop::Exit(code)) => write!(f, "stopped by exit with code {}", code),
             Error::Intr => write!(f, "interrupted"),
+            Error::Assert(msg, pair) => {
+                match msg {
+                    Some(msg) => write!(f, "assertion failed: {}", msg)?,
+                    None => write!(f, "assertion failed")?,
+                }
+                match pair {
+                    Some((left, right)) => {
+                        write!(f, "\nleft:   {}", left)?;
+                        write!(f, "\nright:  {}", right)?;
+                    },
+                    None => (),
+                }
+                Ok(())
+            },
         }
     }
 }

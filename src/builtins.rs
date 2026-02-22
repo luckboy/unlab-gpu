@@ -2843,6 +2843,91 @@ pub fn doc(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     res
 }
 
+fn assert_op<F>(arg_values: &[Value], default_msg: Option<&str>, pair: Option<(Value, Value)>, f: F) -> Result<Value>
+    where F: FnOnce() -> Result<bool>
+{
+    if !f()? {
+        let msg = if !arg_values.is_empty() {
+            let mut s = String::new();
+            for arg_value in arg_values {
+                s.push_str(format!("{}", arg_value).as_str());
+            }
+            Some(s)
+        } else {
+            match default_msg {
+                Some(s) => Some(String::from(s)),
+                None => None,
+            }
+        };
+        return Err(Error::Assert(msg, pair));
+    }
+    Ok(Value::None)
+}
+
+pub fn assert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Bool(b)) => assert_op(&arg_values[1..], None, None, || Ok(*b)),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for fuction assert"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }                                    
+}
+
+pub fn asserteq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value), Some(value2)) => assert_op(&arg_values[2..], Some("left isn't equal to right"), Some((value.clone(), value2.clone())), || value.eq_without_types(&value2)),
+        _ => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn assertne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value), Some(value2)) => assert_op(&arg_values[2..], Some("left is equal to right"), Some((value.clone(), value2.clone())), || Ok(!value.eq_without_types(&value2)?)),
+        _ => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn assertnearlyeq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(value2), Some(eps_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let eps = eps_value.to_f32();
+            assert_op(&arg_values[3..], Some("left isn't nearly equal to right"), Some((value.clone(), value2.clone())), || value.nearly_eq_without_types(&value2, eps))
+        },
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for fuction assertnearlyeq"))),
+        _ => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn assertnearlyne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(value), Some(value2), Some(eps_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let eps = eps_value.to_f32();
+            assert_op(&arg_values[3..], Some("left is nearly equal to right"), Some((value.clone(), value2.clone())), || Ok(!value.nearly_eq_without_types(&value2, eps)?))
+        },
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for fuction assertnearlyne"))),
+        _ => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
@@ -3007,6 +3092,11 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("docpath"), docpath);
     add_builtin_fun(root_mod, String::from("doc"), doc);
     add_alias(root_mod, String::from("help"), &String::from("doc"));
+    add_builtin_fun(root_mod, String::from("assert"), assert);
+    add_builtin_fun(root_mod, String::from("asserteq"), asserteq);
+    add_builtin_fun(root_mod, String::from("assertne"), assertne);
+    add_builtin_fun(root_mod, String::from("assertnearlyeq"), assertnearlyeq);
+    add_builtin_fun(root_mod, String::from("assertnearlyne"), assertnearlyne);
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
     #[cfg(feature = "plot")]
