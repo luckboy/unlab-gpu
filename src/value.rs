@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,6 +38,15 @@ pub type WindowId = winit::window::WindowId;
 #[cfg(not(feature = "plot"))]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct WindowId(());
+
+fn diff(a: f32, b: f32, eps: f32) -> bool
+{
+    if a == b {
+        true
+    } else {
+        (a - b).abs() <= eps
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum Value
@@ -219,6 +228,65 @@ impl Value
             (_, _) => Ok(false),
         }
     }
+    
+    pub fn diff_with_types(&self, value: &Value, eps: f32) -> Result<bool>
+    {
+        match (self, value) {
+            (Value::Float(a), Value::Float(b)) => Ok(diff(*a, *b, eps)),
+            (Value::Object(object), Value::Object(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
+                object.priv_diff(&**object2, eps)
+            },
+            (Value::Ref(object), Value::Ref(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
+                let object_g = rw_lock_read(&**object)?;
+                let object2_g = rw_lock_read(&**object2)?;
+                object_g.priv_diff(&*object2_g, eps, Self::diff_with_types)
+            },
+            (Value::Weak(object), Value::Weak(object2)) => {
+                match (object.upgrade(), object2.upgrade()) {
+                    (Some(object), Some(object2)) => Ok(Arc::ptr_eq(&object, &object2)),
+                    (None, None) => Ok(true),
+                    (_, _) => Ok(false),
+                }
+            },
+            (_, _) => self.eq_with_types(value),
+        }
+    }
+
+    pub fn diff_without_types(&self, value: &Value, eps: f32) -> Result<bool>
+    {
+        match (self, value) {
+            (Value::Int(a), Value::Int(b)) => Ok(diff(*a as f32, *b as f32, eps)),
+            (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(diff(self.to_f32(), value.to_f32(), eps)),
+            (Value::Object(object), Value::Object(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
+                object.priv_diff(&**object2, eps)
+            },
+            (Value::Ref(object), Value::Ref(object2)) => {
+                if Arc::ptr_eq(object, object2) {
+                    return Ok(true);
+                }
+                let object_g = rw_lock_read(&**object)?;
+                let object2_g = rw_lock_read(&**object2)?;
+                object_g.priv_diff(&*object2_g, eps, Self::diff_without_types)
+            },
+            (Value::Weak(object), Value::Weak(object2)) => {
+                match (object.upgrade(), object2.upgrade()) {
+                    (Some(object), Some(object2)) => Ok(Arc::ptr_eq(&object, &object2)),
+                    (None, None) => Ok(true),
+                    (_, _) => Ok(false),
+                }
+            },
+            (_, _) => self.eq_without_types(value),
+        }
+    }    
     
     fn dot1_for_elem_with_fun_ref<F>(&self, err_msg: &str, f: &mut F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
@@ -883,7 +951,7 @@ impl Value
             _ => Ok(None),
         }
     }
-    
+
     pub fn to_matrix_array(&self) -> Result<Value>
     {
         match self {
@@ -1362,6 +1430,68 @@ impl Object
             (_, _) => Ok(false),
         }
     }
+
+    fn priv_diff(&self, object: &Object, eps: f32) -> Result<bool>
+    {
+        match (self, object) {
+            (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
+                if a_row_count != b_row_count || a_col_count != b_col_count {
+                    return Ok(false);
+                }
+                for i in 0..(*a_row_count) {
+                    for j in 0..(*a_col_count) {
+                        let ak = match a_transpose_flag {
+                            TransposeFlag::NoTranspose => i * (*a_col_count) + j,
+                            TransposeFlag::Transpose => j * (*a_row_count) + i,
+                        };
+                        let bk = match b_transpose_flag {
+                            TransposeFlag::NoTranspose => i * (*b_col_count) + j,
+                            TransposeFlag::Transpose => j * (*b_row_count) + i,
+                        };
+                        match (xs.get(ak), ys.get(bk)) {
+                            (Some(x), Some(y)) => {
+                                if !diff(*x, *y, eps) {
+                                    return Ok(false);
+                                }
+                            },
+                            (_, _) => return Err(Error::Interp(String::from("no element"))),
+                        }
+                    }
+                }
+                Ok(true)
+            },
+            (Object::MatrixRowSlice(matrix_array, ai), Object::MatrixRowSlice(matrix_array2, bi)) => {
+                match (&**matrix_array, &**matrix_array2) {
+                    (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
+                        if a_col_count != b_col_count {
+                            return Ok(false);
+                        }
+                        for j in 0..(*a_col_count) {
+                            let ak = match a_transpose_flag {
+                                TransposeFlag::NoTranspose => (*ai) * (*a_col_count) + j,
+                                TransposeFlag::Transpose => j * (*a_row_count) + (*ai),
+                            };
+                            let bk = match b_transpose_flag {
+                                TransposeFlag::NoTranspose => (*bi) * (*b_col_count) + j,
+                                TransposeFlag::Transpose => j * (*b_row_count) + (*bi),
+                            };
+                            match (xs.get(ak), ys.get(bk)) {
+                                (Some(x), Some(y)) => {
+                                    if !diff(*x, *y, eps) {
+                                        return Ok(false);
+                                    }
+                                },
+                                (_, _) => return Err(Error::Interp(String::from("no element"))),
+                            }
+                        }
+                        Ok(true)
+                    },
+                    (_, _) => return Err(Error::Interp(String::from("invalid matrix array type")))
+                }
+            },
+            (_, _) => self.priv_eq(object),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -1405,6 +1535,43 @@ impl MutObject
                     match (fields.get(*ident), fields2.get(*ident)) {
                         (Some(field), Some(field2)) => {
                             if !f(field, field2)? {
+                                return Ok(false);
+                            }
+                        },
+                        (_, _) => return Err(Error::Interp(String::from("no field"))),
+                    }
+                }
+                Ok(true)
+            },
+            (_, _) => Ok(false),
+        }
+    }
+
+    fn priv_diff<F>(&self, object: &MutObject, eps: f32, mut f: F) -> Result<bool>
+        where F: FnMut(&Value, &Value, f32) -> Result<bool>
+    {
+        match (self, object) {
+            (MutObject::Array(elems), MutObject::Array(elems2)) => {
+                if elems.len() != elems2.len() {
+                    return Ok(false);
+                }
+                for (elem, elem2) in elems.iter().zip(elems2.iter()) {
+                    if !f(elem, elem2, eps)? {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            },
+            (MutObject::Struct(fields), MutObject::Struct(fields2)) => {
+                let idents: BTreeSet<&String> = fields.keys().collect();
+                let idents2: BTreeSet<&String> = fields2.keys().collect();
+                if idents != idents2 {
+                    return Ok(false);
+                }
+                for ident in &idents {
+                    match (fields.get(*ident), fields2.get(*ident)) {
+                        (Some(field), Some(field2)) => {
+                            if !f(field, field2, eps)? {
                                 return Ok(false);
                             }
                         },
