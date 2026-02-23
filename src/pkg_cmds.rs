@@ -426,6 +426,31 @@ pub fn remove<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<
     }
 }
 
+fn check_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
+        Some(tmp_pkg_manager) => tmp_pkg_manager,
+        None => return Some(1),
+    };
+    match pkg_manager.check_last_op(are_deps) {
+        Ok(()) => None,
+        Err(err) => {
+            pkg_manager.printer().print_nl_for_error();
+            eprint_error(&err);
+            Some(1)
+        },
+    }
+}
+
+pub fn check<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{ check_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
+
+pub fn check_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{ check_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
+
 fn res_continue(pkg_manager: &PkgManager, is_doc: bool, are_deps: bool) -> Result<()>
 {
     pkg_manager.cont(is_doc, are_deps)?;

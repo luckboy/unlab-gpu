@@ -21,6 +21,8 @@ use unlab_gpu::pkg_cmds::install;
 use unlab_gpu::pkg_cmds::install_all;
 use unlab_gpu::pkg_cmds::install_deps;
 use unlab_gpu::pkg_cmds::remove;
+use unlab_gpu::pkg_cmds::check;
+use unlab_gpu::pkg_cmds::check_deps;
 use unlab_gpu::pkg_cmds::cont;
 use unlab_gpu::pkg_cmds::continue_deps;
 use unlab_gpu::pkg_cmds::clean;
@@ -241,6 +243,10 @@ enum Subcmd
     InstallDeps(InstallDepsArgs),
     /// Remove packages
     Remove(RemoveArgs),
+    /// Check whether last operation was interrupted for packages
+    Check,
+    /// Check whether last operation was interrupted for current package
+    CheckDeps,
     /// Continue interrupted last operation for packages
     Continue(ContinueArgs),
     /// Continue interrupted last operation for current package
@@ -364,6 +370,12 @@ fn main()
         },
         Subcmd::Remove(args2) => {
             remove(args2.packages.as_slice(), &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
+        },
+        Subcmd::Check => {
+            check(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
+        },
+        Subcmd::CheckDeps => {
+            check_deps(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Continue(args2) => {
             cont(!args2.no_doc, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
