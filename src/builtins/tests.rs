@@ -5843,3 +5843,409 @@ fn test_help_is_alias_to_doc()
         (_, _) => assert!(false),
     }
 }
+
+#[test]
+fn test_assert_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assert")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assert_is_applied_with_failure()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assert")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false)]) {
+                Err(Error::Assert(None, None)) => assert!(true),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Err(Error::Assert(Some(msg), None)) => assert_eq!(String::from("abc1"), msg),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_asserteq_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("asserteq")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.5)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_asserteq_is_applied_with_failure()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("asserteq")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left isn't equal to right"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(3.5), right);
+                },
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                3.0, 4.0,
+                5.0, 6.0,
+                7.0, 8.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2.clone()]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left isn't equal to right"), msg);
+                    assert_eq!(arg_value, left);
+                    assert_eq!(arg_value2, right);
+                },
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("abc1"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(3.5), right);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assertne_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assertne")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                3.0, 4.0,
+                5.0, 6.0,
+                7.0, 8.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2.clone()]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assertne_is_applied_with_failure()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assertne")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.5)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left is equal to right"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(2.5), right);
+                },
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2.clone()]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left is equal to right"), msg);
+                    assert_eq!(arg_value, left);
+                    assert_eq!(arg_value2, right);
+                },
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("abc1"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(2.5), right);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assertnearlyeq_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assertnearlyeq")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.59), Value::Float(0.1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                1.01, 1.91,
+                3.01, 3.91,
+                5.01, 5.91
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2, Value::Float(0.1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.59), Value::Float(0.1), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assertnearlyeq_is_applied_with_failure()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assertnearlyeq")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5), Value::Float(0.1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left isn't nearly equal to right"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(3.5), right);
+                },
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                3.0, 4.0,
+                5.0, 6.0,
+                7.0, 8.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2.clone(), Value::Float(0.1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left isn't nearly equal to right"), msg);
+                    assert_eq!(arg_value, left);
+                    assert_eq!(arg_value2, right);
+                },
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5), Value::Float(0.1), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("abc1"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(3.5), right);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assertnearlyne_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assertnearlyne")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5), Value::Float(0.1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                3.0, 4.0,
+                5.0, 6.0,
+                7.0, 8.0
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2.clone(), Value::Float(0.1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(3.5), Value::Float(0.1), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Ok(Value::None) => assert!(true),
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_assertnearlyne_is_applied_with_failure()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("assertnearlyne")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.59), Value::Float(0.1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left is nearly equal to right"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(2.59), right);
+                },
+                _ => assert!(false),
+            }
+            let a = vec![
+                1.0, 2.0,
+                3.0, 4.0,
+                5.0, 6.0
+            ];
+            let b = vec![
+                1.01, 1.91,
+                3.01, 3.91,
+                5.01, 5.91
+            ];
+            let arg_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+            let arg_value2 = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, b)));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), arg_value2.clone(), Value::Float(0.1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("left is nearly equal to right"), msg);
+                    assert_eq!(arg_value, left);
+                    assert_eq!(arg_value2, right);
+                },
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(2.5), Value::Float(2.59), Value::Float(0.1), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(1)]) {
+                Err(Error::Assert(Some(msg), Some((left, right)))) => {
+                    assert_eq!(String::from("abc1"), msg);
+                    assert_eq!(Value::Float(2.5), left);
+                    assert_eq!(Value::Float(2.59), right);
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
