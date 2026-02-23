@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -669,6 +669,171 @@ fn test_conflicts_returns_conflict_paths_and_paths_for_ignored_paths()
             assert_eq!(true, paths.contains(&path_buf));
             path_buf.pop();
             assert_eq!(true, paths.contains(&PathBuf::from("test5.txt")));
+            assert_eq!(true, paths.contains(&PathBuf::from("e")));
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_paths_in_dir_returns_paths()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("a");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("b");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test.txt");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    path_buf.push("test2.txt");
+    fs::write(path_buf.as_path(), "second some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("test3.txt");
+    fs::write(path_buf.as_path(), "third some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("c");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test4.txt");
+    fs::write(path_buf.as_path(), "fourth some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("test5.txt");
+    fs::write(path_buf.as_path(), "fifth some text").unwrap();
+    path_buf.pop();
+    path_buf.push("d");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.pop();
+    path_buf.push("e");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    match paths_in_dir("test", None) {
+        Ok(paths) => {
+            assert_eq!(6, paths.len());
+            let mut path_buf = PathBuf::from("a");
+            path_buf.push("b");
+            path_buf.push("test.txt");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            path_buf.push("test2.txt");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            path_buf.pop();
+            path_buf.push("test3.txt");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            let mut path_buf = PathBuf::from("c");
+            path_buf.push("test4.txt");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            assert_eq!(true, paths.contains(&PathBuf::from("test5.txt")));
+            assert_eq!(true, paths.contains(&PathBuf::from("e")));
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_paths_in_dir_returns_paths_for_depth_2()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("a");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("b");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test.txt");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    path_buf.push("test2.txt");
+    fs::write(path_buf.as_path(), "second some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("test3.txt");
+    fs::write(path_buf.as_path(), "third some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("c");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test4.txt");
+    fs::write(path_buf.as_path(), "fourth some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("test5.txt");
+    fs::write(path_buf.as_path(), "fifth some text").unwrap();
+    path_buf.pop();
+    path_buf.push("d");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.pop();
+    path_buf.push("e");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    match paths_in_dir("test", Some(2)) {
+        Ok(paths) => {
+            assert_eq!(5, paths.len());
+            let mut path_buf = PathBuf::from("a");
+            path_buf.push("b");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            path_buf.push("test3.txt");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            let mut path_buf = PathBuf::from("c");
+            path_buf.push("test4.txt");
+            assert_eq!(true, paths.contains(&path_buf));
+            path_buf.pop();
+            assert_eq!(true, paths.contains(&PathBuf::from("test5.txt")));
+            assert_eq!(true, paths.contains(&PathBuf::from("e")));
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_paths_in_dir_returns_paths_for_depth_1()
+{
+    let mut path_buf = PathBuf::from("test");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("a");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("b");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test.txt");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    path_buf.push("test2.txt");
+    fs::write(path_buf.as_path(), "second some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("test3.txt");
+    fs::write(path_buf.as_path(), "third some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("c");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.push("test4.txt");
+    fs::write(path_buf.as_path(), "fourth some text").unwrap();
+    path_buf.pop();
+    path_buf.pop();
+    path_buf.push("test5.txt");
+    fs::write(path_buf.as_path(), "fifth some text").unwrap();
+    path_buf.pop();
+    path_buf.push("d");
+    fs::create_dir(path_buf.as_path()).unwrap();
+    path_buf.pop();
+    path_buf.push("e");
+    fs::write(path_buf.as_path(), "some text").unwrap();
+    path_buf.pop();
+    match paths_in_dir("test", Some(1)) {
+        Ok(paths) => {
+            assert_eq!(5, paths.len());
+            assert_eq!(true, paths.contains(&PathBuf::from("a")));
+            assert_eq!(true, paths.contains(&PathBuf::from("c")));
+            assert_eq!(true, paths.contains(&PathBuf::from("test5.txt")));
+            assert_eq!(true, paths.contains(&PathBuf::from("d")));
             assert_eq!(true, paths.contains(&PathBuf::from("e")));
         },
         Err(_) => assert!(false),
