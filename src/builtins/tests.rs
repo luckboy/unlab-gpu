@@ -6249,3 +6249,58 @@ fn test_assertnearlyne_is_applied_with_failure()
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_tests_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let fun_value = {
+        let root_mod_g = root_mod.read().unwrap();
+        match root_mod_g.var(&String::from("tests")) {
+            Some(fun_value) => fun_value.clone(),
+            None => {
+                assert!(false);
+                return;
+            },
+        }
+    };
+    env.add_and_push_mod(String::from("a")).unwrap();
+    match fun_value.apply(&mut interp, &mut env, &[]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let shared_env_g = env.shared_env().read().unwrap();
+            assert_eq!(true, shared_env_g.has_test_suite(&vec![String::from("a")]));
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("b")).unwrap();
+    env.add_and_push_mod(String::from("c")).unwrap();
+    match fun_value.apply(&mut interp, &mut env, &[]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let shared_env_g = env.shared_env().read().unwrap();
+            assert_eq!(true, shared_env_g.has_test_suite(&vec![String::from("a")]));
+            assert_eq!(true, shared_env_g.has_test_suite(&vec![String::from("b"), String::from("c")]));
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+    env.add_and_push_mod(String::from("d")).unwrap();
+    match fun_value.apply(&mut interp, &mut env, &[]) {
+        Ok(value) => {
+            assert_eq!(Value::None, value);
+            let shared_env_g = env.shared_env().read().unwrap();
+            assert_eq!(true, shared_env_g.has_test_suite(&vec![String::from("a")]));
+            assert_eq!(true, shared_env_g.has_test_suite(&vec![String::from("b"), String::from("c")]));
+            assert_eq!(true, shared_env_g.has_test_suite(&vec![String::from("b"), String::from("d")]));
+        },
+        Err(_) => assert!(false),
+    }
+    env.pop_mod().unwrap();
+    env.pop_mod().unwrap();
+}
