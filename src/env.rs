@@ -56,6 +56,7 @@ pub struct SharedEnv
     doc_path: OsString,
     args: Vec<String>,
     used_libs: HashSet<String>,
+    test_suites: HashSet<Vec<String>>,
     intr_checker: Arc<dyn IntrCheck + Send + Sync>,
     event_loop_proxy: Option<EventLoopProxy>,
     instant: Instant,
@@ -70,6 +71,7 @@ impl SharedEnv
             doc_path,
             args,
             used_libs: HashSet::new(),
+            test_suites: HashSet::new(),
             intr_checker,
             event_loop_proxy,
             instant: Instant::now(),
@@ -102,6 +104,18 @@ impl SharedEnv
 
     pub fn remove_used_lib(&mut self, lib: &String)
     { self.used_libs.remove(lib); }
+
+    pub fn test_suites(&self) -> &HashSet<Vec<String>>
+    { &self.test_suites }
+
+    pub fn has_test_suite(&self, idents: &Vec<String>) -> bool
+    { self.test_suites.contains(idents) }
+
+    pub fn add_test_suite(&mut self, idents: Vec<String>)
+    { self.test_suites.insert(idents); }
+
+    pub fn remove_test_suite(&mut self, idents: &Vec<String>)
+    { self.test_suites.remove(idents); }    
     
     pub fn intr_checker(&self) -> &Arc<dyn IntrCheck + Send + Sync>
     { &self.intr_checker }
