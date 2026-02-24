@@ -2047,7 +2047,7 @@ pub fn println(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
 
 pub fn eprint(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    match env.stdout() {
+    match env.stderr() {
         Output::Std => {
             for arg_value in arg_values {
                 eprint!("{}", arg_value);
@@ -2066,7 +2066,7 @@ pub fn eprint(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
 
 pub fn eprintln(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    match env.stdout() {
+    match env.stderr() {
         Output::Std => {
             for arg_value in arg_values {
                 eprint!("{}", arg_value);
@@ -2106,7 +2106,7 @@ pub fn eflush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     if arg_values.len() != 0 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    match env.stdout() {
+    match env.stderr() {
         Output::Std => {
             match stderr().flush() {
                 Ok(()) => Ok(Value::Bool(true)),
