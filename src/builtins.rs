@@ -1979,15 +1979,20 @@ pub fn withzeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
-pub fn readline(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn readline(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let mut line = String::new();
-    match stdin().read_line(&mut line) {
-        Ok(_) => Ok(Value::Object(Arc::new(Object::String(line)))),
-        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    match env.stdin() {
+        Input::Std => {
+            let mut line = String::new();
+            match stdin().read_line(&mut line) {
+                Ok(_) => Ok(Value::Object(Arc::new(Object::String(line)))),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Input::Null => Ok(Value::Object(Arc::new(Object::String(String::new())))),
     }
 }
 
@@ -2000,59 +2005,115 @@ pub fn format(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::Object(Arc::new(Object::String(s))))
 }
 
-pub fn print(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn print(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    for arg_value in arg_values {
-        print!("{}", arg_value);
+    match env.stdout() {
+        Output::Std => {
+            for arg_value in arg_values {
+                print!("{}", arg_value);
+            }
+        },
+        Output::Null => (),
+        Output::Cursor(cursor) => {
+            let mut cursor_g = rw_lock_write(cursor)?;
+            for arg_value in arg_values {
+                write!(&mut *cursor_g, "{}", arg_value).unwrap();
+            }
+        },
     }
     Ok(Value::None)
 }
 
-pub fn println(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn println(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    for arg_value in arg_values {
-        print!("{}", arg_value);
+    match env.stdout() {
+        Output::Std => {
+            for arg_value in arg_values {
+                print!("{}", arg_value);
+            }
+            println!("");
+        },
+        Output::Null => (),
+        Output::Cursor(cursor) => {
+            let mut cursor_g = rw_lock_write(cursor)?;
+            for arg_value in arg_values {
+                write!(&mut *cursor_g, "{}", arg_value).unwrap();
+            }
+            writeln!(&mut *cursor_g, "").unwrap();
+        },
     }
-    println!("");
     Ok(Value::None)
 }
 
-pub fn eprint(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn eprint(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    for arg_value in arg_values {
-        eprint!("{}", arg_value);
+    match env.stdout() {
+        Output::Std => {
+            for arg_value in arg_values {
+                eprint!("{}", arg_value);
+            }
+        },
+        Output::Null => (),
+        Output::Cursor(cursor) => {
+            let mut cursor_g = rw_lock_write(cursor)?;
+            for arg_value in arg_values {
+                write!(&mut *cursor_g, "{}", arg_value).unwrap();
+            }
+        },
     }
     Ok(Value::None)
 }
 
-pub fn eprintln(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn eprintln(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    for arg_value in arg_values {
-        eprint!("{}", arg_value);
+    match env.stdout() {
+        Output::Std => {
+            for arg_value in arg_values {
+                eprint!("{}", arg_value);
+            }
+            eprintln!("");
+        },
+        Output::Null => (),
+        Output::Cursor(cursor) => {
+            let mut cursor_g = rw_lock_write(cursor)?;
+            for arg_value in arg_values {
+                write!(&mut *cursor_g, "{}", arg_value).unwrap();
+            }
+            writeln!(&mut *cursor_g, "").unwrap();
+        },
     }
-    eprintln!("");
     Ok(Value::None)
 }
 
-pub fn flush(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn flush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    match stdout().flush() {
-        Ok(()) => Ok(Value::Bool(true)),
-        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    match env.stdout() {
+        Output::Std => {
+            match stdout().flush() {
+                Ok(()) => Ok(Value::Bool(true)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        _ => Ok(Value::Bool(true)),
     }
 }
 
-pub fn eflush(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn eflush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    match stderr().flush() {
-        Ok(()) => Ok(Value::Bool(true)),
-        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    match env.stdout() {
+        Output::Std => {
+            match stderr().flush() {
+                Ok(()) => Ok(Value::Bool(true)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        _ => Ok(Value::Bool(true)),
     }
 }
 
@@ -2405,6 +2466,9 @@ fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
         match parse(path) {
             Ok(tree) => {
                 let mut new_env = Env::new_with_script_dir_and_domain_and_shared_env(env.root_mod().clone(), script_dir.clone(), Some(domain), env.shared_env().clone());
+                new_env.set_stdin(*env.stdin());
+                new_env.set_stdout(env.stdout().clone());
+                new_env.set_stderr(env.stderr().clone());
                 interp.interpret(&mut new_env, &tree)?;
                 {
                     let mut shared_env_g = rw_lock_write(env.shared_env())?;

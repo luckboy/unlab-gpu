@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::ffi::OsString;
+use std::io::Cursor;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -25,6 +26,21 @@ use crate::plot::*;
 use crate::tree::*;
 use crate::utils::*;
 use crate::value::*;
+
+#[derive(Copy, Clone, Debug)]
+pub enum Input
+{
+    Std,
+    Null,
+}
+
+#[derive(Clone, Debug)]
+pub enum Output
+{
+    Std,
+    Null,
+    Cursor(Arc<RwLock<Cursor<Vec<u8>>>>),
+}
 
 #[cfg(feature = "plot")]
 pub type EventLoopProxy = winit::event_loop::EventLoopProxy<PlotterAppEvent>;
@@ -111,6 +127,9 @@ pub struct Env
     stack: Vec<(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)>,
     script_dir: PathBuf,
     domain: Option<String>,
+    stdin: Input,
+    stdout: Output,
+    stderr: Output, 
     shared_env: Arc<RwLock<SharedEnv>>,
 }
 
@@ -125,6 +144,9 @@ impl Env
             stack: Vec::new(),
             script_dir,
             domain,
+            stdin: Input::Std,
+            stdout: Output::Std,
+            stderr: Output::Std,
             shared_env,
         }
     }
@@ -141,6 +163,9 @@ impl Env
             stack: Vec::new(),
             script_dir: self.script_dir.clone(),
             domain: self.domain.clone(),
+            stdin: self.stdin,
+            stdout: self.stdout.clone(),
+            stderr: self.stderr.clone(),
             shared_env: self.shared_env.clone(),
         }
     }
@@ -167,6 +192,24 @@ impl Env
             None => None,
         }
     }
+    
+    pub fn stdin(&self) -> &Input
+    { &self.stdin }
+    
+    pub fn set_stdin(&mut self, input: Input)
+    { self.stdin = input; }
+
+    pub fn stdout(&self) -> &Output
+    { &self.stdout }
+    
+    pub fn set_stdout(&mut self, output: Output)
+    { self.stdout = output; }
+
+    pub fn stderr(&self) -> &Output
+    { &self.stderr }
+    
+    pub fn set_stderr(&mut self, output: Output)
+    { self.stderr = output; }
     
     pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
     { &self.shared_env }
