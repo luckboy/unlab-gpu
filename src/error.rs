@@ -70,6 +70,7 @@ pub enum Error
     PkgName(PkgName, String),
     PkgDepCycle(Vec<PkgName>),
     PkgPathConflicts(PkgName, Option<PkgName>, Vec<PathBuf>, PkgPathConflict),
+    Tester(String),
     Matrix(matrix::Error),
     Mutex,
     RwLockRead,
@@ -140,6 +141,7 @@ impl fmt::Display for Error
                 }
                 Ok(())
             },
+            Error::Tester(msg) => write!(f, "{}", msg),
             Error::Matrix(err) => write!(f, "matrix error: {}", err),
             Error::Mutex => write!(f, "can't lock mutex"),
             Error::RwLockRead => write!(f, "can't read r/w lock"),

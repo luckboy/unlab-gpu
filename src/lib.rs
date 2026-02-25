@@ -34,6 +34,7 @@ pub mod pkg;
 pub mod pkg_cmds;
 #[cfg(feature = "plot")]
 pub mod plot;
+pub mod tester;
 pub mod tree;
 pub mod utils;
 pub mod value;
