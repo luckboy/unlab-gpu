@@ -96,22 +96,22 @@ pub struct Tester
     shared_env: Arc<RwLock<SharedEnv>>,
     stack_trace: Vec<(Option<Value>, Pos)>,
     test_results: Vec<((Vec<String>, String), TestResult)>,
-    has_stdout_cursor: bool,
-    has_stderr_cursor: bool,
+    has_stdout_cursors: bool,
+    has_stderr_cursors: bool,
     printer: Arc<dyn Print + Send + Sync>,
 }
 
 impl Tester
 {
-    pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, printer: Arc<dyn Print + Send + Sync>, is_stdout_cursor: bool, is_stderr_cursor: bool) -> Self
+    pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, printer: Arc<dyn Print + Send + Sync>, are_stdout_cursors: bool, are_stderr_cursors: bool) -> Self
     {
         Tester {
             root_mod,
             shared_env: Arc::new(RwLock::new(SharedEnv::new(lib_path, doc_path, Vec::new()))),
             stack_trace: Vec::new(),
             test_results: Vec::new(),
-            has_stdout_cursor: is_stdout_cursor,
-            has_stderr_cursor: is_stderr_cursor,
+            has_stdout_cursors: are_stdout_cursors,
+            has_stderr_cursors: are_stderr_cursors,
             printer,
         }
     }
@@ -181,10 +181,11 @@ impl Tester
                         Err(err) => return Err(Error::Io(err)),
                     };
                     let mut env = Env::new_with_script_dir_and_domain_and_shared_env(self.root_mod.clone(), PathBuf::from("."), None, self.shared_env.clone());
-                    if self.has_stdout_cursor {
+                    env.set_stdin(Input::Null);
+                    if self.has_stdout_cursors {
                         env.set_stdout(Output::Cursor(Arc::new(RwLock::new(Cursor::new(Vec::new())))));
                     }
-                    if self.has_stderr_cursor {
+                    if self.has_stderr_cursors {
                         env.set_stderr(Output::Cursor(Arc::new(RwLock::new(Cursor::new(Vec::new())))));
                     }
                     let mut interp = Interp::new();
