@@ -62,6 +62,28 @@ impl TestResult
             None => None,
         }
     }
+    
+    pub fn has_stdout_data(&self) -> Result<bool>
+    {
+        match &self.stdout {
+            Some(stdout) => {
+                let stdout_g = rw_lock_read(stdout)?;
+                Ok(!stdout_g.get_ref().is_empty())
+            },
+            None => Ok(false),
+        }
+    }
+
+    pub fn has_stderr_data(&self) -> Result<bool>
+    {
+        match &self.stderr {
+            Some(stderr) => {
+                let stderr_g = rw_lock_read(stderr)?;
+                Ok(!stderr_g.get_ref().is_empty())
+            },
+            None => Ok(false),
+        }
+    }
 }
 
 pub trait Print
@@ -69,8 +91,16 @@ pub trait Print
     fn print_loading(&self, is_done: bool);
 
     fn print_running_test(&self, idents: &Vec<String>, ident: &String, is_done: bool, is_ok: bool);
+
+    fn print_empty_line(&self);
     
-    fn print_test_result(&self, idents: &Vec<String>, ident: &String, test_result: &TestResult);
+    fn print_successes(&self);
+
+    fn print_failures(&self);
+    
+    fn print_test_result(&self, idents: &Vec<String>, ident: &String, test_result: &TestResult) -> Result<()>;
+    
+    fn print_test_counts(&self, passed_test_count: usize, failed_test_count: usize);
     
     fn print_nl_for_error(&self);
 }
@@ -96,9 +126,9 @@ pub struct Tester
     shared_env: Arc<RwLock<SharedEnv>>,
     stack_trace: Vec<(Option<Value>, Pos)>,
     test_results: Vec<((Vec<String>, String), TestResult)>,
+    printer: Arc<dyn Print + Send + Sync>,
     has_stdout_cursors: bool,
     has_stderr_cursors: bool,
-    printer: Arc<dyn Print + Send + Sync>,
 }
 
 impl Tester
@@ -110,11 +140,32 @@ impl Tester
             shared_env: Arc::new(RwLock::new(SharedEnv::new(lib_path, doc_path, Vec::new()))),
             stack_trace: Vec::new(),
             test_results: Vec::new(),
+            printer,
             has_stdout_cursors: are_stdout_cursors,
             has_stderr_cursors: are_stderr_cursors,
-            printer,
         }
     }
+
+    pub fn root_mod(&self) -> &Arc<RwLock<ModNode<Value, ()>>>
+    { &self.root_mod }
+    
+    pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
+    { &self.shared_env }
+    
+    pub fn stack_trace(&self) -> &[(Option<Value>, Pos)]
+    { self.stack_trace.as_slice() }
+
+    pub fn test_results(&self) -> &[((Vec<String>, String), TestResult)]
+    { self.test_results.as_slice() }
+    
+    pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
+    { &self.printer }
+    
+    pub fn has_stdout_cursors(&self) -> bool
+    { self.has_stdout_cursors }
+
+    pub fn has_stderr_cursors(&self) -> bool
+    { self.has_stderr_cursors }
     
     pub fn load(&mut self) -> Result<()>
     {
@@ -256,5 +307,60 @@ impl Tester
             self.run_tests_in_test_suite(test_suite)?;
         }
         Ok(())
+    }
+    
+    pub fn print_empty_line(&self)
+    { self.printer.print_empty_line() }
+
+    pub fn print_successes(&self) -> Result<()>
+    {
+        let mut count = 0usize;
+        for (_, test_result) in &self.test_results {
+            if test_result.is_ok() && (test_result.has_stdout_data()? || test_result.has_stderr_data()?) {
+                count += 1;
+            }
+        }
+        if count > 0 {
+            self.printer.print_successes();
+            for ((idents, ident), test_result) in &self.test_results {
+                if test_result.is_ok() && (test_result.has_stdout_data()? || test_result.has_stderr_data()?) {
+                    self.printer.print_test_result(idents, ident, test_result)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn print_failures(&self) -> Result<()>
+    {
+        let mut count = 0usize;
+        for (_, test_result) in &self.test_results {
+            if !test_result.is_ok() {
+                count += 1;
+            }
+        }
+        if count > 0 {
+            self.printer.print_failures();
+            for ((idents, ident), test_result) in &self.test_results {
+                if !test_result.is_ok() {
+                    self.printer.print_test_result(idents, ident, test_result)?;
+                }
+            }
+        }
+        Ok(())
+    }
+    
+    pub fn print_test_counts(&self)
+    {
+        let mut passed_test_count = 0usize;
+        let mut failed_test_count = 0usize;
+        for (_, test_result) in &self.test_results {
+            if test_result.is_ok() {
+                passed_test_count += 1;
+            } else {
+                failed_test_count += 1;
+            }
+        }
+        self.printer.print_test_counts(passed_test_count, failed_test_count);
     }
 }
