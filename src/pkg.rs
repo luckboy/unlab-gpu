@@ -76,9 +76,9 @@ pub trait Print
 
     fn print_updating_pkg_versions(&self, name: &PkgName, is_done: bool);
     
-    fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool);
+    fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool) -> Result<()>;
 
-    fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64);
+    fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64) -> Result<()>;
     
     fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool);
     
@@ -139,11 +139,11 @@ impl Print for EmptyPrinter
     fn print_updating_pkg_versions(&self, _name: &PkgName, _is_done: bool)
     {}
 
-    fn print_downloading_pkg_file(&self, _name: &PkgName, _is_done: bool)
-    {}
+    fn print_downloading_pkg_file(&self, _name: &PkgName, _is_done: bool) -> Result<()>
+    { Ok(()) }
 
-    fn print_downloading_pkg_file_with_progress(&self, _name: &PkgName, _byte_count: f64, _total_byte_count: f64)
-    {}
+    fn print_downloading_pkg_file_with_progress(&self, _name: &PkgName, _byte_count: f64, _total_byte_count: f64) -> Result<()>
+    { Ok(()) }
     
     fn print_extracting_pkg_file(&self, _name: &PkgName, _is_done: bool)
     {}
@@ -230,25 +230,26 @@ impl Print for StdPrinter
         }
     }
     
-    fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool)
+    fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool) -> Result<()>
     {
         if is_done {
             let byte_count = {
-                let byte_count_g = self.byte_count.lock().unwrap();
+                let byte_count_g = mutex_lock(&self.byte_count)?;
                 *byte_count_g
             };
             println!("  progress: {}KiB (100%)", (byte_count / 1024.0).ceil());
         } else {
             {
-                let mut byte_count_g = self.byte_count.lock().unwrap();
+                let mut byte_count_g = mutex_lock(&self.byte_count)?;
                 *byte_count_g = 0.0;
             }
             println!("Downloading {} ...", name);
         }
         self.has_nl_for_error.store(false, Ordering::SeqCst);
+        Ok(())
     }
 
-    fn print_downloading_pkg_file_with_progress(&self, _name: &PkgName, byte_count: f64, total_byte_count: f64)
+    fn print_downloading_pkg_file_with_progress(&self, _name: &PkgName, byte_count: f64, total_byte_count: f64) -> Result<()>
     {
         if total_byte_count != 0.0 {
             print!("  progress: {}KiB ({}%)\r", (byte_count / 1024.0).ceil(), ((byte_count * 100.0) / total_byte_count).floor());
@@ -256,11 +257,12 @@ impl Print for StdPrinter
             print!("  progress: {}KiB (?%)\r", (byte_count / 1024.0).ceil());
         }
         let _res = stdout().flush();
+        self.has_nl_for_error.store(true, Ordering::SeqCst);
         {
-            let mut byte_count_g = self.byte_count.lock().unwrap();
+            let mut byte_count_g = mutex_lock(&self.byte_count)?;
             *byte_count_g = byte_count;
         }
-        self.has_nl_for_error.store(true, Ordering::SeqCst);
+        Ok(())
     }
     
     fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool)
@@ -1237,7 +1239,10 @@ fn curl_res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, 
     let name2 = name.clone();
     let printer2 = printer.clone();
     easy.progress_function(move |total_byte_count, byte_count, _, _| {
-            printer2.print_downloading_pkg_file_with_progress(&name2, byte_count, total_byte_count);
+            match printer2.print_downloading_pkg_file_with_progress(&name2, byte_count, total_byte_count) {
+                Ok(()) => (),
+                Err(err) => printer2.eprint_error(&err),
+            }
             true
     })?;
     let part_file_path_buf = PathBuf::from(part_file_path);
@@ -1284,7 +1289,7 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgNa
     match fs::metadata(file_path_buf.as_path()) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::NotFound => {
-            printer.print_downloading_pkg_file(name, false);
+            printer.print_downloading_pkg_file(name, false)?;
             match create_dir_all(path_buf.as_path()) {
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
@@ -1301,7 +1306,7 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgNa
                 Ok(()) => (),
                 Err(err) => return Err(Error::Io(err)),
             }
-            printer.print_downloading_pkg_file(name, true);
+            printer.print_downloading_pkg_file(name, true)?;
         },
         Err(err) => return Err(Error::Io(err)),
     }
