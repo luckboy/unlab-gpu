@@ -355,7 +355,7 @@ fn idents_to_string(idents: &[String]) -> String
         if !is_first {
             s.push_str("::");
         }
-        s.push_str(ident);
+        s.push_str(ident.as_str());
         is_first = false;
     }
     s
