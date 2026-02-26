@@ -220,25 +220,25 @@ impl Print for StdPrinter
     
     fn print_test_result(&self, idents: &Vec<String>, ident: &String, test_result: &TestResult) -> Result<()>
     {
-        if test_result.has_stdout_data()? {
-            match &test_result.stdout {
-                Some(stdout) => {
+        match &test_result.stdout {
+            Some(stdout) => {
+                let stdout_g = rw_lock_read(stdout)?;
+                if !stdout_g.get_ref().is_empty() {
                     println!("---- {} stdout ----", idents_and_ident_to_string(idents, ident));
-                    let stdout_g = rw_lock_read(stdout)?;
-                    let _res = io::stdout().write_all(stdout_g.get_ref());
-                },
-                None => (),
-            }
+                    let _res = io::stdout().write_all(stdout_g.get_ref().as_slice());
+                }
+            },
+            None => (),
         }
-        if test_result.has_stderr_data()? {
-            match &test_result.stderr {
-                Some(stderr) => {
+        match &test_result.stderr {
+            Some(stderr) => {
+                let stderr_g = rw_lock_read(stderr)?;
+                if !stderr_g.get_ref().is_empty() {
                     println!("---- {} stderr ----", idents_and_ident_to_string(idents, ident));
-                    let stderr_g = rw_lock_read(stderr)?;
-                    let _res = io::stdout().write_all(stderr_g.get_ref());
-                },
-                None => (),
-            }
+                    let _res = io::stdout().write_all(stderr_g.get_ref().as_slice());
+                }
+            },
+            None => (),
         }
         match &test_result.error_pair {
             Some((err, stack_trace)) => {
