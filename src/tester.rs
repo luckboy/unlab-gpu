@@ -11,8 +11,12 @@ use std::ffi::OsString;
 use std::fs::create_dir_all;
 use std::io;
 use std::io::Cursor;
+use std::io::Write;
+use std::io::stdout;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::RwLock;
 use crate::env::*;
@@ -103,6 +107,171 @@ pub trait Print
     fn print_test_counts(&self, passed_test_count: usize, failed_test_count: usize);
     
     fn print_nl_for_error(&self);
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct EmptyPrinter;
+
+impl EmptyPrinter
+{
+    pub fn new() -> Self
+    { EmptyPrinter }
+}
+
+impl Print for EmptyPrinter
+{
+    fn print_loading(&self, _is_done: bool)
+    {}
+
+    fn print_running_test(&self, _idents: &Vec<String>, _ident: &String, _is_done: bool, _is_ok: bool)
+    {}
+
+    fn print_empty_line(&self)
+    {}
+    
+    fn print_successes(&self)
+    {}
+
+    fn print_failures(&self)
+    {}
+    
+    fn print_test_result(&self, _idents: &Vec<String>, _ident: &String, _test_result: &TestResult) -> Result<()>
+    { Ok(()) }
+    
+    fn print_test_counts(&self, _passed_test_count: usize, _failed_test_count: usize)
+    {}
+    
+    fn print_nl_for_error(&self)
+    {}
+}
+
+fn idents_and_ident_to_string(idents: &[String], ident: &String) -> String
+{
+    let mut s = String::new();
+    let mut is_first = true;
+    for ident2 in idents {
+        if !is_first {
+            s.push_str("::");
+        }
+        s.push_str(ident2.as_str());
+        is_first = false;
+    }
+    s.push_str("::");
+    s.push_str(ident.as_str());
+    s
+}
+
+#[derive(Debug)]
+pub struct StdPrinter
+{
+    has_nl_for_error: AtomicBool,
+}
+
+impl StdPrinter
+{
+    pub fn new() -> Self
+    { StdPrinter { has_nl_for_error: AtomicBool::new(false), } }
+}
+
+impl Print for StdPrinter
+{
+    fn print_loading(&self, is_done: bool)
+    {
+        if is_done {
+            println!(" done");
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Loading tests ...");
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_running_test(&self, idents: &Vec<String>, ident: &String, is_done: bool, is_ok: bool)
+    {
+        if is_done {
+            if is_ok {
+                println!(" ok");
+            } else {
+                println!(" FAILED");
+            }
+            self.has_nl_for_error.store(false, Ordering::SeqCst);
+        } else {
+            print!("Test {} ...", idents_and_ident_to_string(idents, ident));
+            let _res = stdout().flush();
+            self.has_nl_for_error.store(true, Ordering::SeqCst);
+        }
+    }
+
+    fn print_empty_line(&self)
+    { println!(""); }
+    
+    fn print_successes(&self)
+    {
+        println!("Successes:");
+        println!("");
+    }
+
+    fn print_failures(&self)
+    {
+        println!("Failures:");
+        println!("");
+    }
+    
+    fn print_test_result(&self, idents: &Vec<String>, ident: &String, test_result: &TestResult) -> Result<()>
+    {
+        if test_result.has_stdout_data()? {
+            match &test_result.stdout {
+                Some(stdout) => {
+                    println!("---- {} stdout ----", idents_and_ident_to_string(idents, ident));
+                    let stdout_g = rw_lock_read(stdout)?;
+                    let _res = io::stdout().write_all(stdout_g.get_ref());
+                },
+                None => (),
+            }
+        }
+        if test_result.has_stderr_data()? {
+            match &test_result.stderr {
+                Some(stderr) => {
+                    println!("---- {} stderr ----", idents_and_ident_to_string(idents, ident));
+                    let stderr_g = rw_lock_read(stderr)?;
+                    let _res = io::stdout().write_all(stderr_g.get_ref());
+                },
+                None => (),
+            }
+        }
+        match &test_result.error_pair {
+            Some((err, stack_trace)) => {
+                println!("Test {} failed", idents_and_ident_to_string(idents, ident));
+                println!("{}", err);
+                for (fun_value, pos) in stack_trace {
+                    match fun_value {
+                        Some(fun_value) => println!("    at {} ({}: {}.{})", fun_value, pos.path, pos.line, pos.column),
+                        None => println!("    at {}: {}.{}", pos.path, pos.line, pos.column),
+                    }
+                }
+            },
+            None => (),
+        }
+        println!("");
+        Ok(())
+    }
+    
+    fn print_test_counts(&self, passed_test_count: usize, failed_test_count: usize)
+    {
+        if failed_test_count == 0 {
+            println!("Test result: ok. {} passed; {} failed", passed_test_count, failed_test_count);
+        } else {
+            println!("Test result: FAILED. {} passed; {} failed", passed_test_count, failed_test_count);
+        }
+    }
+    
+    fn print_nl_for_error(&self)
+    {
+        if self.has_nl_for_error.swap(false, Ordering::SeqCst) {
+            println!("");
+        }
+    }
 }
 
 fn create_and_change_dir<P: AsRef<Path>>(path: P) -> io::Result<PathBuf>
