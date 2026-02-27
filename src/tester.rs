@@ -533,3 +533,6 @@ impl Tester
         self.printer.print_test_counts(passed_test_count, failed_test_count);
     }
 }
+
+#[cfg(test)]
+mod tests;
