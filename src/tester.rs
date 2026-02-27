@@ -425,7 +425,7 @@ impl Tester
                         _ => None,
                     };
                     self.test_results.push(((idents.clone(), ident.clone()), TestResult::new(error_pair, stdout, stderr)));
-                    match change_and_recusively_remove_dir(saved_current_dir, work_test_dir) {
+                    match change_and_recusively_remove_dir(work_test_dir, saved_current_dir) {
                         Ok(tmp_saved_current_dir) => tmp_saved_current_dir,
                         Err(err) => return Err(Error::Io(err)),
                     }
