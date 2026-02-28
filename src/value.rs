@@ -1421,6 +1421,16 @@ impl<'de> Visitor<'de> for ValueVisitor
         where E: de::Error
     { Ok(Value::Int(v)) }
 
+    fn visit_u64<E>(self, v: u64) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { 
+        if v <= (i64::MAX as u64) {
+            Ok(Value::Int(v as i64))
+        } else {
+            Err(E::custom(String::from("too large integer number")))
+        }
+    }
+    
     fn visit_f32<E>(self, v: f32) -> result::Result<Self::Value, E>
         where E: de::Error
     { Ok(Value::Float(v)) }

@@ -6,6 +6,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use crate::matrix::matrix;
+use crate::serde_json;
+use crate::toml;
 use crate::tree::Fun;
 use crate::test_helpers::*;
 use super::*;
@@ -4618,6 +4620,114 @@ fn test_value_fmt_formats_values_for_indent()
     fields.insert(String::from("b"), struct_value);
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
     assert_eq!(String::from(s2), format!("{}", value));
+}
+
+#[test]
+fn test_value_serialize_serializes_value()
+{
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Bool(true));
+    fields.insert(String::from("b"), Value::Bool(false));
+    fields.insert(String::from("c"), Value::Int(1));
+    fields.insert(String::from("d"), Value::Int(-1));
+    fields.insert(String::from("e"), Value::Float(2.5));
+    fields.insert(String::from("f"), Value::Object(Arc::new(Object::String(String::from("abc")))));
+    fields.insert(String::from("g"), Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)])))));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match toml::to_string(&value) {
+        Ok(s) => {
+            let expected_s = "
+a = true
+b = false
+c = 1
+d = -1
+e = 2.5
+f = \"abc\"
+g = [1, 2.5, false]
+";
+            let expected_s2 = &expected_s[1..];
+            assert_eq!(String::from(expected_s2), s);
+        },
+        Err(_) => assert!(false),
+    }
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::None);
+    fields.insert(String::from("b"), Value::Bool(true));
+    fields.insert(String::from("c"), Value::Bool(false));
+    fields.insert(String::from("d"), Value::Int(1));
+    fields.insert(String::from("e"), Value::Int(-1));
+    fields.insert(String::from("f"), Value::Float(2.5));
+    fields.insert(String::from("g"), Value::Object(Arc::new(Object::String(String::from("abc")))));
+    fields.insert(String::from("h"), Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)])))));
+    let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+    match serde_json::to_string(&value) {
+        Ok(s) => {
+            let expected_s = "{\"a\":null,\"b\":true,\"c\":false,\"d\":1,\"e\":-1,\"f\":2.5,\"g\":\"abc\",\"h\":[1,2.5,false]}";
+            assert_eq!(String::from(expected_s), s);
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_deserialize_deserializes_value()
+{
+    let s = "
+a = true
+b = false
+c = 1
+d = -1
+e = 2.5
+f = \"abc\"
+g = [1, 2.5, false]
+";
+    let s2 = &s[1..];
+    match toml::from_str(s2) {
+        Ok(value) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::Bool(true));
+            expected_fields.insert(String::from("b"), Value::Bool(false));
+            expected_fields.insert(String::from("c"), Value::Int(1));
+            expected_fields.insert(String::from("d"), Value::Int(-1));
+            expected_fields.insert(String::from("e"), Value::Float(2.5));
+            expected_fields.insert(String::from("f"), Value::Object(Arc::new(Object::String(String::from("abc")))));
+            expected_fields.insert(String::from("g"), Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)])))));
+            let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+            assert_eq!(expected_value, value);
+        },
+        Err(_) => assert!(false),
+    }
+    let s = "
+{
+    \"a\": null,
+    \"b\": true,
+    \"c\": false,
+    \"d\": 1,
+    \"e\": -1,
+    \"f\": 2.5,
+    \"g\": \"abc\",
+    \"h\": [1, 2.5, false]
+}";
+    let s2 = &s[1..];
+    match serde_json::from_str(s2) {
+        Ok(value) => {
+            let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+            expected_fields.insert(String::from("a"), Value::None);
+            expected_fields.insert(String::from("b"), Value::Bool(true));
+            expected_fields.insert(String::from("c"), Value::Bool(false));
+            expected_fields.insert(String::from("d"), Value::Int(1));
+            expected_fields.insert(String::from("e"), Value::Int(-1));
+            expected_fields.insert(String::from("f"), Value::Float(2.5));
+            expected_fields.insert(String::from("g"), Value::Object(Arc::new(Object::String(String::from("abc")))));
+            expected_fields.insert(String::from("h"), Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)])))));
+            let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+            assert_eq!(expected_value, value);
+        },
+        Err(err) => {
+            println!("{}", err);
+            assert!(false)
+        },
+    }
 }
 
 #[test]
