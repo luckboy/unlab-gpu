@@ -235,7 +235,7 @@ struct TestArgs
     show_output: bool,
     /// Don't handle output for tests
     #[arg(short, long)]
-    no_test_output: bool,
+    no_handled_output: bool,
     /// Test name or test suite name
     name: Option<String>,
 }
@@ -448,7 +448,7 @@ fn main()
             doc(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
         Subcmd::Test(args2) => {
-            test(&args2.name, args2.test_suite, args2.show_output, !args2.no_test_output, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
+            test(&args2.name, args2.test_suite, args2.show_output, !args2.no_handled_output, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
         },
         Subcmd::CleanTest => {
             clean_test(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
