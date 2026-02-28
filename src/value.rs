@@ -19,10 +19,22 @@ use std::ops::Mul;
 use std::ops::MulAssign;
 use std::ops::Div;
 use std::ops::DivAssign;
+use std::result;
 use std::str::Chars;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::Weak;
+use crate::serde::de;
+use crate::serde::de::MapAccess;
+use crate::serde::de::SeqAccess;
+use crate::serde::de::Visitor;
+use crate::serde::ser;
+use crate::serde::ser::SerializeSeq;
+use crate::serde::ser::SerializeMap;
+use crate::serde::Deserialize;
+use crate::serde::Deserializer;
+use crate::serde::Serialize;
+use crate::serde::Serializer;
 use crate::matrix::Matrix;
 #[cfg(feature = "plot")]
 use crate::winit;
@@ -1343,6 +1355,118 @@ impl fmt::Display for Value
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     { self.fmt_with_indent(f, 0, false) }
+}
+
+impl Serialize for Value
+{
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        match self {
+            Value::None => serializer.serialize_unit(),
+            Value::Bool(a) => serializer.serialize_bool(*a),
+            Value::Int(a) => serializer.serialize_i64(*a),
+            Value::Float(a) => serializer.serialize_f32(*a),
+            Value::Object(object) => {
+                match &**object {
+                    Object::String(s) => serializer.serialize_str(s.as_str()),
+                    _ => Err(ser::Error::custom("unsupported type for serialization")),
+                }
+            },
+            Value::Ref(object) => {
+                let object_g = match rw_lock_read(&**object) {
+                    Ok(tmp_object_g) => tmp_object_g,
+                    Err(err) => return Err(ser::Error::custom(format!("{}", err))),
+                };
+                match &*object_g {
+                    MutObject::Array(elems) => {
+                        let mut seq = serializer.serialize_seq(Some(elems.len()))?;
+                        for elem in elems {
+                            seq.serialize_element(elem)?;
+                        }
+                        seq.end()
+                    },
+                    MutObject::Struct(fields) => {
+                        let mut map = serializer.serialize_map(Some(fields.len()))?;
+                        for (ident, field) in fields {
+                            map.serialize_entry(ident, field)?;
+                        }
+                        map.end()
+                    },
+                }
+            },
+            _ => Err(ser::Error::custom("unsupported type for serialization")),
+        }
+    }
+}
+
+struct ValueVisitor;
+
+impl<'de> Visitor<'de> for ValueVisitor
+{
+    type Value = Value;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
+    { write!(formatter, "a value") }
+
+    fn visit_unit<E>(self) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { Ok(Value::None) }
+
+    fn visit_bool<E>(self, v: bool) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { Ok(Value::Bool(v)) }
+
+    fn visit_i64<E>(self, v: i64) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { Ok(Value::Int(v)) }
+
+    fn visit_f32<E>(self, v: f32) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { Ok(Value::Float(v)) }
+
+    fn visit_f64<E>(self, v: f64) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { Ok(Value::Float(v as f32)) }
+    
+    fn visit_str<E>(self, v: &str) -> result::Result<Self::Value, E>
+        where E: de::Error
+    { Ok(Value::Object(Arc::new(Object::String(String::from(v))))) }
+    
+    fn visit_seq<A>(self, mut seq: A) -> result::Result<Self::Value, A::Error>
+        where A: SeqAccess<'de>
+    {
+        let mut elems: Vec<Value> = Vec::new();
+        loop {
+            match seq.next_element()? {
+                Some(elem) => elems.push(elem),
+                None => break,
+            }
+        }
+        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+    }
+    
+    fn visit_map<A>(self, mut map: A) -> result::Result<Self::Value, A::Error>
+        where A: MapAccess<'de>
+    {
+        let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+        loop {
+            match map.next_key()? {
+                Some(ident) => {
+                    fields.insert(ident, map.next_value()?);
+                },
+                None => break,
+            }
+        }
+        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields)))))
+    }
+}
+
+impl<'de> Deserialize<'de> for Value
+{
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>
+    { deserializer.deserialize_any(ValueVisitor) }
 }
 
 #[derive(Clone, Debug)]
