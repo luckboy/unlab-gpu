@@ -1010,3 +1010,14 @@ pub fn str_to_ident(s: &str) -> String
 
 pub fn eprint_error(err: &Error)
 { eprintln!("{}", err); }
+
+pub fn eprint_error_with_stack_trace(err: &Error, stack_trace: &[(Option<Value>, Pos)])
+{
+    eprintln!("{}", err);
+    for (fun_value, pos) in stack_trace {
+        match fun_value {
+            Some(fun_value) => eprintln!("    at {} ({}: {}.{})", fun_value, pos.path, pos.line, pos.column),
+            None => eprintln!("    at {}: {}.{}", pos.path, pos.line, pos.column),
+        }
+    }
+}

@@ -34,7 +34,10 @@ use crate::fs::*;
 use crate::home::*;
 use crate::main_loop::*;
 use crate::mod_node::*;
+use crate::pkg;
 use crate::pkg::*;
+use crate::tester;
+use crate::tester::*;
 use crate::utils::*;
 use crate::value::*;
 
@@ -95,7 +98,7 @@ fn create_pkg_manager<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
             },
         }
     }
-    match PkgManager::new(home_dir, work_dir, bin_dir, lib_dir, doc_dir, src_factories, Arc::new(StdPrinter::new())) {
+    match PkgManager::new(home_dir, work_dir, bin_dir, lib_dir, doc_dir, src_factories, Arc::new(pkg::StdPrinter::new())) {
         Ok(pkg_manager) => Some(pkg_manager),
         Err(err) => {
             eprint_error(&err);
@@ -122,6 +125,33 @@ fn parse_pkg_names(ss: &[String]) -> Option<Vec<PkgName>>
         pkg_names.push(parse_pkg_name(s.as_str())?);
     }
     Some(pkg_names)
+}
+
+fn parse_idents(s: &str) -> Vec<String>
+{
+    let s_without_first_colons = if s.starts_with("::") {
+        &s[2..]
+    } else {
+        s
+    };
+    let idents: Vec<String> = s_without_first_colons.split("::").map(String::from).collect();
+    match idents.first() {
+        Some(ident) if ident == &String::from("root") => (&idents[1..]).to_vec(),
+        Some(_) => idents,
+        None => Vec::new(),
+    }
+}
+
+fn parse_idents_and_ident(s: &str) -> Option<(Vec<String>, String)>
+{
+    let idents = parse_idents(s);
+    match idents.last() {
+        Some(ident) => Some(((&idents[0..(idents.len() - 1)]).to_vec(), ident.clone())),
+        None => {
+            eprintln!("invalid test name");
+            None
+        },
+    }
 }
 
 fn res_list(pkg_manager: &PkgManager, are_deps: bool) -> Result<()>
@@ -651,7 +681,7 @@ pub fn config<F>(account: &Option<String>, domain: &Option<String>, home_dir: &O
     }
 }
 
-fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> io::Result<()>
+fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool, are_tests: bool) -> io::Result<()>
 {
     {
         let file = File::create(".gitignore")?;
@@ -687,20 +717,42 @@ fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> io
         writeln!(&mut w, "    end")?;
         writeln!(&mut w, "end")?;
     }
+    if are_tests {
+        let mut path_buf = PathBuf::from("tests");
+        path_buf.push(lib_name.replace('/', path::MAIN_SEPARATOR_STR));
+        create_dir_all(path_buf.as_path())?;
+        path_buf.push("tests.un");
+        let file = File::create(path_buf)?;
+        let mut w = BufWriter::new(file);
+        let lib_name_without_domain = match lib_name.split_once('/') {
+            Some((_, tmp_lib_name_without_domain)) => tmp_lib_name_without_domain,
+            None => lib_name,
+        };
+        writeln!(&mut w, "uselib(\"{}\")", lib_name_without_domain)?;
+        writeln!(&mut w, "")?;
+        writeln!(&mut w, "module {}_tests", str_to_ident(lib_name))?;
+        writeln!(&mut w, "    tests()")?;
+        writeln!(&mut w, "    usevars(\"{}\")", str_to_ident(lib_name))?;
+        writeln!(&mut w, "")?;
+        writeln!(&mut w, "    function test_add_adds()")?;
+        writeln!(&mut w, "        asserteq(4, add(2, 2))")?;
+        writeln!(&mut w, "    end")?;
+        writeln!(&mut w, "end")?;
+    }
     Ok(())
 }
 
-fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool) -> Result<()>
+fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool, are_tests: bool) -> Result<()>
 {
     let manifest = Manifest::new(pkg_name.clone());
     PkgManager::save_manifest(&manifest)?;
-    match io_res_init(bin_name, lib_name, is_bin, is_lib) {
+    match io_res_init(bin_name, lib_name, is_bin, is_lib, are_tests) {
         Ok(()) => Ok(()),
         Err(err) => Err(Error::Io(err)),
     }
 }
 
-pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     match path {
@@ -799,7 +851,7 @@ pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<St
             return Some(1);
         },
     };
-    match res_init(&pkg_name, bin_name.as_str(), lib_name.as_str(), is_bin, is_lib) {
+    match res_init(&pkg_name, bin_name.as_str(), lib_name.as_str(), is_bin, is_lib, are_tests) {
         Ok(()) => None,
         Err(err) => {
             eprint_error(&err);
@@ -828,7 +880,7 @@ fn change_and_remove_dir<P: AsRef<Path>, Q: AsRef<Path>>(path: P, saved_current_
     Ok(())
 }
 
-pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let saved_current_dir = match create_and_change_dir(path) {
@@ -838,7 +890,7 @@ pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domai
             return Some(1);
         },
     };
-    match init(&None, name, account, domain, is_bin, is_lib, home_dir, bin_path, lib_path, doc_path, f) {
+    match init(&None, name, account, domain, is_bin, is_lib, are_tests, home_dir, bin_path, lib_path, doc_path, f) {
         None => None,
         Some(exit_code) => {
             match change_and_remove_dir(path, saved_current_dir) {
@@ -946,4 +998,101 @@ pub fn doc<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &O
             Some(1)
         },
     }
+}
+
+#[derive(Clone, Debug)]
+enum TestName
+{
+    Test(Vec<String>, String),
+    TestSuite(Vec<String>),
+}
+
+fn res_test(tester: &mut Tester, test_name: &Option<TestName>, are_success_outputs: bool) -> Result<()>
+{
+    tester.load()?;
+    match test_name {
+        Some(TestName::Test(idents, ident)) => tester.run_test(idents, ident)?,
+        Some(TestName::TestSuite(idents)) => tester.run_tests_in_test_suite(idents)?,
+        None => tester.run_all_tests()?,
+    }
+    tester.print_empty_line();
+    if are_success_outputs {
+        tester.print_successes()?;
+    }
+    tester.print_failures()?;
+    tester.print_test_counts();
+    Ok(())
+}
+
+pub fn test<F, G>(name: &Option<String>, is_test_suite: bool, are_success_outputs: bool, are_output_cursors: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool,
+        G: FnOnce(&mut ModNode<Value, ()>)
+{
+    let test_name = match name {
+        Some(name) => {
+            if is_test_suite {
+                Some(TestName::TestSuite(parse_idents(name.as_str())))
+            } else {
+                match parse_idents_and_ident(name.as_str()) {
+                    Some((idents, ident)) => Some(TestName::Test(idents, ident)),
+                    None => return Some(1),
+                }
+            }
+        },
+        None => None,
+    };
+    let mut home = match create_home(home_dir, bin_path, lib_path, doc_path, true, f) {
+        Some(tmp_home) => tmp_home,
+        None => return Some(1),
+    };
+    match home.add_dirs_to_bin_path(&[String::from("bin")]) {
+        Ok(()) => (),
+        Err(err) => {
+            eprintln!("{}", err);
+            return Some(1);
+        },
+    }
+    match home.add_dirs_to_lib_path(&[String::from("lib")]) {
+        Ok(()) => (),
+        Err(err) => {
+            eprintln!("{}", err);
+            return Some(1);
+        },
+    }
+    match PkgManager::manifest() {
+        Ok(_) => (),
+        Err(err) => {
+            eprint_error(&err);
+            return None;
+        },
+    }
+    match initialize_backend(home.backend_config_file()) {
+        Ok(()) => (),
+        Err(err) => {
+            eprint_error(&err);
+            return Some(1);
+        },
+    }
+    let exit_code = {
+        let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+        g(&mut root_mod);
+        let root_mod_arc = Arc::new(RwLock::new(root_mod));
+        let mut tester = Tester::new(root_mod_arc, OsString::from(home.lib_path()), OsString::from(home.doc_path()), Arc::new(tester::StdPrinter::new()), are_output_cursors, are_output_cursors);
+        match res_test(&mut tester, &test_name, are_success_outputs) {
+            Ok(()) => None,
+            Err(err) => {
+                tester.printer().print_nl_for_error();
+                eprint_error_with_stack_trace(&err, tester.stack_trace());
+                Some(1)
+            },
+        }
+    };
+    match finalize_backend() {
+        Ok(()) => (),
+        Err(err) => {
+            eprint_error(&err);
+            return Some(1);
+        },
+    }
+    exit_code
 }

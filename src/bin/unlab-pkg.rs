@@ -37,6 +37,7 @@ use unlab_gpu::pkg_cmds::new;
 use unlab_gpu::pkg_cmds::run;
 use unlab_gpu::pkg_cmds::console;
 use unlab_gpu::pkg_cmds::doc;
+use unlab_gpu::pkg_cmds::test;
 use unlab_gpu::Home;
 use unlab_gpu::add_std_builtin_funs;
 
@@ -155,15 +156,18 @@ struct InitArgs
     /// Account for package name 
     #[arg(short, long)]
     account: Option<String>,
-    /// Domain for library name 
+    /// Domain for library name
     #[arg(short, long)]
     domain: Option<String>,
-    /// Use template binary 
+    /// Use binary template
     #[arg(short, long)]
     bin: bool,
-    /// Use template library 
+    /// Use library template
     #[arg(short, long)]
     lib: bool,
+    /// Use template tests
+    #[arg(short, long)]
+    tests: bool,
     /// Directory
     dir: Option<String>,
 }
@@ -177,15 +181,18 @@ struct NewArgs
     /// Account for package name 
     #[arg(short, long)]
     account: Option<String>,
-    /// Domain for library name 
+    /// Domain for library name
     #[arg(short, long)]
     domain: Option<String>,
-    /// Use template binary 
+    /// Use binary template
     #[arg(short, long)]
     bin: bool,
-    /// Use template library 
+    /// Use library template
     #[arg(short, long)]
     lib: bool,
+    /// Use template of tests
+    #[arg(short, long)]
+    tests: bool,
     /// Directory
     dir: String,
 }
@@ -214,6 +221,22 @@ struct ConsoleArgs
     /// Don't show plotter windows
     #[arg(short = 'p', long)]
     no_plotter_windows: bool,
+}
+
+#[derive(Parser, Debug)]
+struct TestArgs
+{
+    /// Run tests in test suite
+    #[arg(short = 's', long)]
+    test_suite: bool,
+    /// Show output
+    #[arg(short = 'o', long)]
+    show_output: bool,
+    /// Don't handle output for tests
+    #[arg(short, long)]
+    no_test_output: bool,
+    /// Test name or test suite name
+    name: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -275,6 +298,8 @@ enum Subcmd
     Console(ConsoleArgs),
     /// Generate documentation for current package
     Doc,
+    /// Execute tests for current package
+    Test(TestArgs),
 }
 
 #[derive(Parser, Debug)]
@@ -405,10 +430,10 @@ fn main()
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Init(args2) => {
-            init(&args2.dir, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            init(&args2.dir, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, args2.tests, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::New(args2) => {
-            new(args2.dir.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            new(args2.dir.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, args2.tests, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Run(args2) => {
             run(args2.bin_name.as_str(), args2.args.clone(), !args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
@@ -418,6 +443,9 @@ fn main()
         },
         Subcmd::Doc => {
             doc(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
+        },
+        Subcmd::Test(args2) => {
+            test(&args2.name, args2.test_suite, args2.show_output, !args2.no_test_output, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
         },
     };
     match exit_code {

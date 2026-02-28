@@ -32,17 +32,6 @@ use crate::plot::*;
 use crate::utils::*;
 use crate::value::*;
 
-pub fn eprint_error_with_stack_trace(err: &Error, stack_trace: &[(Option<Value>, Pos)])
-{
-    eprintln!("{}", err);
-    for (fun_value, pos) in stack_trace {
-        match fun_value {
-            Some(fun_value) => eprintln!("    at {} ({}: {}.{})", fun_value, pos.path, pos.line, pos.column),
-            None => eprintln!("    at {}: {}.{}", pos.path, pos.line, pos.column),
-        }
-    }
-}
-
 #[cfg(feature = "plot")]
 fn run_plotter_app<F>(are_plotter_windows: bool, f: F) -> Option<i32>
     where F: FnOnce(Option<EventLoopProxy>) -> Option<i32> + Send + 'static
