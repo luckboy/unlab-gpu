@@ -32,6 +32,8 @@ use opener::open_browser;
 use rand::random;
 use rand::random_range;
 use crate::matrix::Matrix;
+use crate::serde_json;
+use crate::toml;
 use crate::env::*;
 use crate::error::*;
 use crate::getopts::*;
@@ -2380,6 +2382,114 @@ pub fn savestr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+pub fn loadtoml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function loadtoml")?;
+    match File::open(file_name.as_str()) {
+        Ok(mut file) => {
+            let mut s = String::new();
+            match file.read_to_string(&mut s) {
+                Ok(_) => {
+                    match toml::from_str(s.as_str()) {
+                        Ok(value) => Ok(value),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("toml"), format!("{}", err))))),
+                    }
+                },
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn savetoml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let (file_name, value) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(file_name_value), Some(value)) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => (tmp_file_name, value),
+                None => return Err(Error::Interp(String::from("unsupported type for function savetoml"))),
+            }
+        },
+        (_, _) => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match toml::to_string(&value) {
+        Ok(s) => {
+            match File::create(file_name.as_str()) {
+                Ok(file) => {
+                    let mut w = BufWriter::new(file);
+                    match write!(&mut w, "{}", s) {
+                        Ok(()) => Ok(Value::Bool(true)),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                    }
+                },
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("toml"), format!("{}", err))))),
+    }
+}
+
+pub fn loadjson(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function loadjson")?;
+    match File::open(file_name.as_str()) {
+        Ok(mut file) => {
+            let mut s = String::new();
+            match file.read_to_string(&mut s) {
+                Ok(_) => {
+                    match serde_json::from_str(s.as_str()) {
+                        Ok(value) => Ok(value),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("json"), format!("{}", err))))),
+                    }
+                },
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn savejson(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let (file_name, value) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(file_name_value), Some(value)) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => (tmp_file_name, value),
+                None => return Err(Error::Interp(String::from("unsupported type for function savejson"))),
+            }
+        },
+        (_, _) => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match serde_json::to_string(&value) {
+        Ok(s) => {
+            match File::create(file_name.as_str()) {
+                Ok(file) => {
+                    let mut w = BufWriter::new(file);
+                    match write!(&mut w, "{}", s) {
+                        Ok(()) => Ok(Value::Bool(true)),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                    }
+                },
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("json"), format!("{}", err))))),
+    }
+}
+
 pub fn args(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -3142,6 +3252,10 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("save"), save);
     add_builtin_fun(root_mod, String::from("loadstr"), loadstr);
     add_builtin_fun(root_mod, String::from("savestr"), savestr);
+    add_builtin_fun(root_mod, String::from("loadtoml"), loadtoml);
+    add_builtin_fun(root_mod, String::from("savetoml"), savetoml);
+    add_builtin_fun(root_mod, String::from("loadjson"), loadjson);
+    add_builtin_fun(root_mod, String::from("savejson"), savejson);
     add_builtin_fun(root_mod, String::from("args"), args);
     add_builtin_fun(root_mod, String::from("env"), env);
     add_builtin_fun(root_mod, String::from("scriptdir"), scriptdir);
