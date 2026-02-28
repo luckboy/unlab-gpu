@@ -1096,3 +1096,33 @@ pub fn test<F, G>(name: &Option<String>, is_test_suite: bool, are_success_output
     }
     exit_code
 }
+
+fn res_clean_test() -> Result<()>
+{
+    PkgManager::manifest()?;
+    let mut work_test_dir = PathBuf::from("work");
+    work_test_dir.push("test");
+    match io_res_clean_dir(work_test_dir, "Cleaning test ...") {
+        Ok(()) => Ok(()),
+        Err(err) => {
+            println!("");
+            Err(Error::Io(err))
+        },
+    }
+}
+
+pub fn clean_test<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    match create_home(home_dir, bin_path, lib_path, doc_path, true, f) {
+        Some(_) => (),
+        None => return Some(1),
+    }
+    match res_clean_test() {
+        Ok(()) => None,
+        Err(err) => {
+            eprint_error(&err);
+            Some(1)
+        },
+    }
+}
