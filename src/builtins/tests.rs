@@ -4583,6 +4583,197 @@ fn test_savestr_is_applied_with_success()
     }
 }
 
+#[sealed_test]
+fn test_loadtoml_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("loadtoml")) {
+        Some(fun_value) => {
+            let s = "
+a = 1
+b = 2.0
+c = false
+";
+            let s2 = &s[1..];
+            fs::write("test.toml", s2).unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.toml"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2.toml"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_savetoml_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("savetoml")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.toml"))));
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::read_to_string("test.toml") {
+                        Ok(s) => {
+                            let expected_s = "
+a = 1
+b = 2.0
+c = false
+";
+                            let expected_s2 = &expected_s[1..];
+                            assert_eq!(String::from(expected_s2), s);
+                        },
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let mut path_buf = PathBuf::from("test");
+            path_buf.push("test.toml");
+            let arg_value = Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned())));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_loadjson_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("loadjson")) {
+        Some(fun_value) => {
+            let s = "
+{
+    \"a\": 1,
+    \"b\": 2.0,
+    \"c\": false
+}
+";
+            let s2 = &s[1..];
+            fs::write("test.json", s2).unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.json"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2.json"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[sealed_test]
+fn test_savejson_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("savejson")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.json"))));
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2.clone()]) {
+                Ok(value) => {
+                    assert_eq!(Value::Bool(true), value);
+                    match fs::read_to_string("test.json") {
+                        Ok(s) => {
+                            let expected_s = "{\"a\":1,\"b\":2.0,\"c\":false}";
+                            assert_eq!(String::from(expected_s), s);
+                        },
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+            let mut path_buf = PathBuf::from("test");
+            path_buf.push("test.json");
+            let arg_value = Value::Object(Arc::new(Object::String(path_buf.to_string_lossy().into_owned())));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
 #[test]
 fn test_args_is_applied_with_success()
 {
