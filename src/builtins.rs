@@ -2993,7 +2993,7 @@ pub fn doc(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
                 None => return Err(Error::Interp(String::from("unsupported types for function doc"))),
             }
         },
-        None => String::from("root"),
+        None => String::from("std/root"),
     };
     let idents = match arg_values.get(1) {
         Some(arg_value) => {
