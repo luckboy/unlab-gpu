@@ -5999,6 +5999,14 @@ fn test_backend_is_applied_with_success()
 }
 
 #[test]
+fn test_version_is_existent()
+{ shared_test_fun_is_existent("version", version); }
+
+#[test]
+fn test_reqver_is_existent()
+{ shared_test_fun_is_existent("reqver", reqver); }
+
+#[test]
 fn test_docpath_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
