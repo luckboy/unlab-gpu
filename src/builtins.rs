@@ -2960,7 +2960,7 @@ pub fn reqver(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
                     if version_req.matches(&version) {
                         Ok(Value::None)
                     } else {
-                        Err(Error::Interp(format!("unlab-gpu version isn't matched to version requirement {}, while current unlab-gpu version is {}", s, env!("CARGO_PKG_VERSION"))))
+                        Err(Error::Interp(format!("unlab-gpu version isn't matched to version requirement {}, while current unlab-gpu version is {}", version_req, env!("CARGO_PKG_VERSION"))))
                     }
                 },
                 _ => Err(Error::Interp(String::from("unsupported type for function reqver"))),
