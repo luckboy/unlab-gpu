@@ -506,6 +506,8 @@ pub struct PkgInfo
     pub description: Option<String>,
     pub authors: Option<Vec<String>>,
     pub license: Option<String>,
+    #[serde(rename = "unlab-gpu-version")]
+    pub unlab_gpu_version: Option<VersionReq>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -547,6 +549,7 @@ impl Manifest
                 description: None,
                 authors: None,
                 license: None,
+                unlab_gpu_version: None,
             },
             dependencies: Some(HashMap::new()),
             constraints: None,
@@ -2413,6 +2416,15 @@ impl PkgManager
                     },
                 };
                 let manifest = pkg.manifest()?;
+                match manifest.package.unlab_gpu_version {
+                    Some(version_req) => {
+                        let version = Version::parse(env!("CARGO_PKG_VERSION"))?;
+                        if !version_req.matches(&version) {
+                            return Err(Error::PkgName(name.clone(), format!("unlab-gpu version isn't matched to version requirement {}, while current unlab-gpu version is {}", version_req, env!("CARGO_PKG_VERSION"))))
+                        }
+                    },
+                    None => (),
+                }
                 match &manifest.dependencies {
                     Some(deps) => {
                         for (dep_name, dep_version_req) in deps {
