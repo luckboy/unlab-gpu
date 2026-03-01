@@ -2420,7 +2420,7 @@ impl PkgManager
                     Some(version_req) => {
                         let version = Version::parse(env!("CARGO_PKG_VERSION"))?;
                         if !version_req.matches(&version) {
-                            return Err(Error::PkgName(name.clone(), format!("unlab-gpu version isn't matched to version requirement {}, while current unlab-gpu version is {}", version_req, env!("CARGO_PKG_VERSION"))))
+                            return Err(Error::PkgName(name.clone(), format!("unlab-gpu version {} isn't matched to version requirement {}", version, version_req)));
                         }
                     },
                     None => (),
