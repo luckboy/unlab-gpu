@@ -45,6 +45,7 @@ use crate::parser::*;
 use crate::plot::*;
 use crate::utils::*;
 use crate::value::*;
+use crate::version::*;
 
 fn fun1<F>(arg_values: &[Value], f: F) -> Result<Value>
     where F: FnOnce(&Value) -> Result<Value>
@@ -2937,6 +2938,40 @@ pub fn backend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     Ok(Value::Object(Arc::new(Object::String(String::from(matrix_backend_name()?)))))
 }
 
+pub fn version(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    Ok(Value::Object(Arc::new(Object::String(String::from(env!("CARGO_PKG_VERSION"))))))
+}
+
+pub fn reqver(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    let version = Version::parse(env!("CARGO_PKG_VERSION"))?;
+                    let version_req = VersionReq::parse(s.as_str())?;
+                    if version_req.matches(&version) {
+                        Ok(Value::None)
+                    } else {
+                        Err(Error::Interp(format!("unlab-gpu version isn't matched to version requirement {}, while current unlab-gpu version is {}", s, env!("CARGO_PKG_VERSION"))))
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function reqver"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function reqver"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+
 pub fn docpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -3277,6 +3312,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("removelocalvar"), removelocalvar);
     add_builtin_fun(root_mod, String::from("checkintr"), checkintr);
     add_builtin_fun(root_mod, String::from("backend"), backend);
+    add_builtin_fun(root_mod, String::from("version"), version);
+    add_builtin_fun(root_mod, String::from("reqver"), reqver);
     add_builtin_fun(root_mod, String::from("docpath"), docpath);
     add_builtin_fun(root_mod, String::from("doc"), doc);
     add_alias(root_mod, String::from("help"), &String::from("doc"));
