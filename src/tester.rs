@@ -43,6 +43,9 @@ impl TestResult
     pub fn is_ok(&self) -> bool
     { self.error_pair.is_none() }
     
+    pub fn is_failed(&self) -> bool
+    { self.error_pair.is_some() }
+
     pub fn error_pair(&self) -> Option<&(Error, Vec<(Option<Value>, Pos)>)>
     {
         match &self.error_pair {
