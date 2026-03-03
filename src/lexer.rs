@@ -1,10 +1,11 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A lexer module.
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::sync::Arc;
@@ -75,6 +76,11 @@ pub enum Token
     Ident(String),
 }
 
+/// A lexer structure.
+///
+/// The lexer transfroms a script in the Unlab scripting language to tokens which can be
+/// transformed by a parser to a tree. The lexer structure is an iterator of tokens that is passed
+/// to the parser. Also, the lexer can store documentation comments which are taken by the parser.
 pub struct Lexer<'a>
 {
     path: Arc<String>,
@@ -89,6 +95,11 @@ pub struct Lexer<'a>
 
 impl<'a> Lexer<'a>
 {
+    /// Creates a lexer with the line number and the documentation flag.
+    ///
+    /// This method takes the path that refers to the script and the reader. The lexer reads a
+    /// script from the reader. The documentation flag determines whether the lexer can store the
+    /// documentation comments.
     pub fn new_with_line_and_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, line: u64, is_doc: bool) -> Self
     {
         let mut keywords: HashMap<String, Token> = HashMap::new();
@@ -133,15 +144,25 @@ impl<'a> Lexer<'a>
         }
     }
 
+    /// Creates a lexer with the line number without the documentatio flag.
+    ///
+    /// See [`new_with_line_and_doc_flag`](Self::new_with_line_and_doc_flag).
     pub fn new_with_line(path: Arc<String>, reader: &'a mut dyn BufRead, line: u64) -> Self
     { Self::new_with_line_and_doc_flag(path, reader, line, false) }
     
+    /// Creates a lexer with the documentatio flag.
+    ///
+    /// See [`new_with_line_and_doc_flag`](Self::new_with_line_and_doc_flag).
     pub fn new_with_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, is_doc: bool) -> Self
     { Self::new_with_line_and_doc_flag(path, reader, 1, is_doc) }
     
+    /// Creates a lexer.
+    ///
+    /// See [`new_with_line`](Self::new_with_line).
     pub fn new(path: Arc<String>, reader: &'a mut dyn BufRead) -> Self
     { Self::new_with_doc_flag(path, reader, false) }
-    
+
+    /// Returns the script path.
     pub fn path(&self) -> &Arc<String>
     { &self.path }
     

@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A parser module.
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -37,6 +38,12 @@ impl DocEnv
     { DocEnv { root_mod: root_mod.clone(), current_mod: current_mod.unwrap_or(root_mod), } }
 }
 
+/// A parser structure.
+///
+/// The parser transfroms tokens to a script tree that can be interpreted by an interpreter. This
+/// transformation is called a parsing. The tokens are passed as an iterator that can be a lexer.
+/// Also, the parser can take the documentation comments from the lexer and then stores this
+/// comments as the documentation of modules or variables.
 pub struct Parser<'a>
 {
     path: Arc<String>,
@@ -46,6 +53,13 @@ pub struct Parser<'a>
 
 impl<'a> Parser<'a>
 {
+    /// Creates a parser with the root module of documentation and the current module of
+    /// documentation.
+    ///
+    /// This method takes the path that refers to the script and the tokens as the iterator. If
+    /// the root module of documentation is passed, the parser stores the documentation. If the 
+    /// current module of documentation is passed, the parser stores the documentation in this
+    /// module instead of the root module of documentation.
     pub fn new_with_doc_root_mod_and_doc_current_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
     {
         let doc_env = match doc_root_mod {
@@ -55,12 +69,21 @@ impl<'a> Parser<'a>
         Parser { path, tokens: PushbackIter::new(tokens), doc_env, }
     }
 
+    /// Creates a parser with the root module of documentation without the current module of
+    /// documentation.
+    ///
+    /// See [`new_with_doc_root_mod_and_doc_current_mod`](Self::new_with_doc_root_mod_and_doc_current_mod).
     pub fn new_with_doc_root_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
     { Self::new_with_doc_root_mod_and_doc_current_mod(path, tokens, doc_root_mod, None) }
 
+    /// Creates a parser.
+    ///
+    /// See [`new_with_doc_root_mod_and_doc_current_mod`](Self::new_with_doc_root_mod_and_doc_current_mod).
     pub fn new(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>) -> Self
     { Self::new_with_doc_root_mod(path, tokens, None) }
     
+    /// Returns the root module of documentation if the documentation comments are stored by
+    /// the parser, otherwise `None`.
     pub fn doc_root_mod(&self) -> Option<&Arc<RwLock<ModNode<String, Option<String>>>>>
     { 
         match &self.doc_env {
@@ -69,6 +92,7 @@ impl<'a> Parser<'a>
         }
     }
     
+    /// Parses the tokens to a script tree.
     pub fn parse(&mut self) -> Result<Tree>
     {
         let nodes = self.parse_zero_or_more_with_newlines(&[None], ParserEofFlag::Repetition, Self::parse_node)?;
@@ -858,6 +882,9 @@ impl<'a> Parser<'a>
     }
 }
 
+
+/// Parses the script is refered by the path with the root module of documentation and the current
+/// module of documentation.
 pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 {
     match File::open(path.as_ref()) {
@@ -873,9 +900,11 @@ pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_
     }
 }
 
+/// Parses the script is refered by the path with the root module of documentation.
 pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 { parse_with_doc_root_mod_and_doc_current_mod(path, doc_root_mod, None) }
 
+/// Parses the script is refered by the path.
 pub fn parse<P: AsRef<Path>>(path: P) -> Result<Tree>
 { parse_with_doc_root_mod(path, None) }
 
