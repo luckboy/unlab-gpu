@@ -157,7 +157,8 @@ impl SharedEnv
     pub fn intr_checker(&self) -> &Arc<dyn IntrCheck + Send + Sync>
     { &self.intr_checker }
     
-    /// Returns the event loop proxy.
+    /// Returns the event loop proxy if the shared environment has the event loop proxy, otherwise
+    /// `None`.
     pub fn event_loop_proxy(&self) -> Option<&EventLoopProxy>
     {
         match &self.event_loop_proxy {

@@ -82,8 +82,8 @@ impl<'a> Parser<'a>
     pub fn new(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>) -> Self
     { Self::new_with_doc_root_mod(path, tokens, None) }
     
-    /// Returns the root module of documentation if the documentation comments are stored by
-    /// the parser, otherwise `None`.
+    /// Returns the root module of documentation if the parser has the root module of
+    /// documentation, otherwise `None`.
     pub fn doc_root_mod(&self) -> Option<&Arc<RwLock<ModNode<String, Option<String>>>>>
     { 
         match &self.doc_env {
