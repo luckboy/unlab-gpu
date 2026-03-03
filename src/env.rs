@@ -174,11 +174,11 @@ impl SharedEnv
 
 /// An environment structure.
 ///
-/// The environment contains a root module, a current module, a stack, a script directory, a
-/// domain, standard input/output enumerations, and a shared environment. The environment provides
-/// methods which operate on the root module, the current module, the stack, and variables. The
-/// stack element has a function module and local variables. The standard input/output
-/// enumerations determine which streams are used for standard input/output in built-in functions.
+/// The environment contains modules, variables, and a stack which are available by methods of the
+/// environment for an interpreter and built-in functions. Each stack element has a function
+/// module and local variables. Also, the environment has a script directory, a domain, standard
+/// input/output enumerations, and a shared environment. The standard input/output enumerations
+/// determine which streams are used to standard input/output in built-in functions.
 #[derive(Clone)]
 pub struct Env
 {
