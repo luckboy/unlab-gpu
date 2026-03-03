@@ -1,10 +1,11 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! An interpreter module.
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -15,6 +16,13 @@ use crate::tree::*;
 use crate::utils::*;
 use crate::value::*;
 
+/// An interpreter structure.
+///
+/// The interpreter interprets a script tree that can be produced by a parser while parsing
+/// tokens. If an interpreter error occurres while interpreting a script tree, the interpreter
+/// stores a stack trace that can contain functions and contains file positions. These functions
+/// are functons in which occurred the interpreter error. Also, the interpreter contains a return
+/// value that can be an error for an error propagation.
 #[derive(Clone, Debug)]
 pub struct Interp
 {
@@ -24,18 +32,23 @@ pub struct Interp
 
 impl Interp
 {
+    /// Creates an interpreter.
     pub fn new() -> Self
     { Interp { stack_trace: Vec::new(), ret_value: Value::None, } }
     
+    /// Returns the stack trace.
     pub fn stack_trace(&self) -> &[(Option<Value>, Pos)]
     { self.stack_trace.as_slice() }
 
+    /// Clears the stack trace.
     pub fn clear_stack_trace(&mut self)
     { self.stack_trace.clear(); }
     
+    /// Return the return value.
     pub fn ret_value(&self) -> &Value
     { &self.ret_value }
     
+    /// Interprets the script tree.
     pub fn interpret(&mut self, env: &mut Env, tree: &Tree) -> Result<()>
     { 
         match tree {
@@ -58,6 +71,7 @@ impl Interp
         }
     }
 
+    /// Applies the function with the arguments.
     pub fn apply_fun(&mut self, env: &mut Env, fun_value: &Value, arg_values: &[Value]) -> Result<Value>
     {
         match fun_value {

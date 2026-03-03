@@ -40,10 +40,10 @@ impl DocEnv
 
 /// A parser structure.
 ///
-/// The parser transfroms tokens to a script tree that can be interpreted by an interpreter. This
-/// transformation is called a parsing. The tokens are passed as an iterator that can be a lexer.
-/// Also, the parser can take the documentation comments from the lexer and then stores this
-/// comments as the documentation of modules or variables.
+/// The parser parses tokens to a script tree that can be interpreted by an interpreter. The
+/// tokens are passed as an iterator that can be a lexer. Also, the parser can take the
+/// documentation comments from the lexer and then stores this comments as the documentation of
+/// modules and variables.
 pub struct Parser<'a>
 {
     path: Arc<String>,
@@ -56,8 +56,8 @@ impl<'a> Parser<'a>
     /// Creates a parser with the root module of documentation and the current module of
     /// documentation.
     ///
-    /// This method takes the path that refers to the script and the tokens as the iterator. If
-    /// the root module of documentation is passed, the parser stores the documentation. If the 
+    /// Also, this method takes the path that refers to the script and the tokens as the iterator.
+    /// The parser stores the documentation if the root module of documentation is passed. If the 
     /// current module of documentation is passed, the parser stores the documentation in this
     /// module instead of the root module of documentation.
     pub fn new_with_doc_root_mod_and_doc_current_mod(path: Arc<String>, tokens: &'a mut dyn DocIterator<Item = Result<(Token, Pos)>>, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Self
@@ -885,6 +885,8 @@ impl<'a> Parser<'a>
 
 /// Parses the script is refered by the path with the root module of documentation and the current
 /// module of documentation.
+///
+/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`].
 pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 {
     match File::open(path.as_ref()) {
@@ -901,10 +903,14 @@ pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_
 }
 
 /// Parses the script is refered by the path with the root module of documentation.
+///
+/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`].
 pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 { parse_with_doc_root_mod_and_doc_current_mod(path, doc_root_mod, None) }
 
 /// Parses the script is refered by the path.
+///
+/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`].
 pub fn parse<P: AsRef<Path>>(path: P) -> Result<Tree>
 { parse_with_doc_root_mod(path, None) }
 

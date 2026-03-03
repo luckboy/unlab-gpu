@@ -78,9 +78,9 @@ pub enum Token
 
 /// A lexer structure.
 ///
-/// The lexer transfroms a script in the Unlab scripting language to tokens which can be
-/// transformed by a parser to a tree. The lexer structure is an iterator of tokens that is passed
-/// to the parser. Also, the lexer can store documentation comments which are taken by the parser.
+/// The lexer transfroms a script in the Unlab scripting language to tokens which can be parsed by
+/// a parser to a tree. The lexer structure is an iterator of tokens that is passed to the parser.
+/// Also, the lexer can store documentation comments which are taken by the parser.
 pub struct Lexer<'a>
 {
     path: Arc<String>,
@@ -97,9 +97,9 @@ impl<'a> Lexer<'a>
 {
     /// Creates a lexer with the line number and the documentation flag.
     ///
-    /// This method takes the path that refers to the script and the reader. The lexer reads a
-    /// script from the reader. The documentation flag determines whether the lexer can store the
-    /// documentation comments.
+    /// Also, this method takes the path that refers to the script and the reader. The lexer reads
+    /// a script from the reader. The documentation flag determines whether the lexer can store
+    /// the documentation comments.
     pub fn new_with_line_and_doc_flag(path: Arc<String>, reader: &'a mut dyn BufRead, line: u64, is_doc: bool) -> Self
     {
         let mut keywords: HashMap<String, Token> = HashMap::new();
@@ -158,7 +158,7 @@ impl<'a> Lexer<'a>
     
     /// Creates a lexer.
     ///
-    /// See [`new_with_line`](Self::new_with_line).
+    /// See [`new_with_line_and_doc_flag`](Self::new_with_line_and_doc_flag).
     pub fn new(path: Arc<String>, reader: &'a mut dyn BufRead) -> Self
     { Self::new_with_doc_flag(path, reader, false) }
 

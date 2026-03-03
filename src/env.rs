@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! An environment module.
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashSet;
@@ -27,18 +28,25 @@ use crate::tree::*;
 use crate::utils::*;
 use crate::value::*;
 
+/// An input enumeration.
 #[derive(Copy, Clone, Debug)]
 pub enum Input
 {
+    /// A standard input.
     Std,
+    /// A null input.
     Null,
 }
 
+/// An output enumeration.
 #[derive(Clone, Debug)]
 pub enum Output
 {
+    /// A standard output.
     Std,
+    /// A null output.
     Null,
+    /// A cursor.
     Cursor(Arc<RwLock<Cursor<Vec<u8>>>>),
 }
 
@@ -49,6 +57,13 @@ pub type EventLoopProxy = winit::event_loop::EventLoopProxy<PlotterAppEvent>;
 #[derive(Clone, Debug)]
 pub struct EventLoopProxy(());
 
+/// A structure of shared environment.
+///
+/// The shared environment is part of an environment that has global properities which can be
+/// shared between different environments. These global properties are paths to libraries and
+/// documentations, arguments, used libraries, test suites, an event loop proxy, and othe
+/// properties. The event loop proxy is used to communication to with the main thread from the
+/// windows.
 #[derive(Clone)]
 pub struct SharedEnv
 {
@@ -64,6 +79,10 @@ pub struct SharedEnv
 
 impl SharedEnv
 {
+    /// Creates a shared environment with the interrruption checker and the event loop proxy.
+    ///
+    /// Also, this method takes the paths of the libraries and the documentations and the
+    /// arguments.
     pub fn new_with_intr_checker_and_event_loop_proxy(lib_path: OsString, doc_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>, event_loop_proxy: Option<EventLoopProxy>) -> Self
     {
         SharedEnv {
@@ -78,48 +97,67 @@ impl SharedEnv
         }
     }
 
+    /// Creates a shared environment with the interrruption checker.
+    ///
+    /// See [`new_with_intr_checker_and_event_loop_proxy`](Self::new_with_intr_checker_and_event_loop_proxy).
     pub fn new_with_intr_checker(lib_path: OsString, doc_path: OsString, args: Vec<String>, intr_checker: Arc<dyn IntrCheck + Send + Sync>) -> Self
     { Self::new_with_intr_checker_and_event_loop_proxy(lib_path, doc_path, args, intr_checker, None) }
 
+    /// Creates a shared environment.
+    ///
+    /// See [`new_with_intr_checker_and_event_loop_proxy`](Self::new_with_intr_checker_and_event_loop_proxy).
     pub fn new(lib_path: OsString, doc_path: OsString, args: Vec<String>) -> Self
     { Self::new_with_intr_checker(lib_path, doc_path, args, Arc::new(EmptyIntrChecker::new())) }
-    
+
+    /// Returns the path of libraries.
     pub fn lib_path(&self) -> &OsStr
     { self.lib_path.as_os_str() }
 
+    /// Returns the path of documentations.
     pub fn doc_path(&self) -> &OsStr
     { self.doc_path.as_os_str() }
-    
+
+    /// Returns the arguments.
     pub fn args(&self) -> &[String]
     { self.args.as_slice() }
 
+    /// Returns the used libraries.
     pub fn used_libs(&self) -> &HashSet<String>
     { &self.used_libs }
 
+    /// Returns `true` if the shared environment has the used libraries, otherwise `false`.
     pub fn has_used_lib(&self, lib: &String) -> bool
     { self.used_libs.contains(lib) }
 
+    /// Adds used library to the shared environment.
     pub fn add_used_lib(&mut self, lib: String)
     { self.used_libs.insert(lib); }
 
+    /// Removes used library from the shared environment.
     pub fn remove_used_lib(&mut self, lib: &String)
     { self.used_libs.remove(lib); }
 
+    /// Returns the test suites.
     pub fn test_suites(&self) -> &HashSet<Vec<String>>
     { &self.test_suites }
 
+    /// Returns `true` if the shared environment has the test suite, otherwise `false`.
     pub fn has_test_suite(&self, idents: &Vec<String>) -> bool
     { self.test_suites.contains(idents) }
 
+    /// Adds test suite to the shared environment.
     pub fn add_test_suite(&mut self, idents: Vec<String>)
     { self.test_suites.insert(idents); }
 
+    /// Removes test suite from the shared environment.
     pub fn remove_test_suite(&mut self, idents: &Vec<String>)
     { self.test_suites.remove(idents); }    
-    
+
+    /// Returns the interruption checker.
     pub fn intr_checker(&self) -> &Arc<dyn IntrCheck + Send + Sync>
     { &self.intr_checker }
     
+    /// Returns the event loop proxy.
     pub fn event_loop_proxy(&self) -> Option<&EventLoopProxy>
     {
         match &self.event_loop_proxy {
@@ -128,10 +166,18 @@ impl SharedEnv
         }
     }
     
+    /// Returns the measurement of system clock.
     pub fn instant(&self) -> &Instant
     { &self.instant }
 }
 
+/// An environment structure.
+///
+/// The environment contains a root module, a current module, a stack, a script directory, a
+/// domain, standard input/output enumerations, and a shared environment. The environment provides
+/// methods which operate on the root module, the current module, the stack, and variables. The
+/// stack element has a function module and local variables. The standard input/output
+/// enumerations determine which streams are used for standard input/output in built-in functions.
 #[derive(Clone)]
 pub struct Env
 {
@@ -149,6 +195,9 @@ pub struct Env
 
 impl Env
 {
+    /// Creates an environment with the script directory, the domain, and the shared environment.
+    ///
+    /// Also, this method takes the root module that has the variables and other modules. 
     pub fn new_with_script_dir_and_domain_and_shared_env(root_mod: Arc<RwLock<ModNode<Value, ()>>>, script_dir: PathBuf, domain: Option<String>, shared_env: Arc<RwLock<SharedEnv>>) -> Self
     {
         Env {
@@ -165,9 +214,13 @@ impl Env
         }
     }
 
+    /// Creates an environment.
+    ///
+    /// See [`new_with_script_dir_and_domain_and_shared_env`](Self::new_with_script_dir_and_domain_and_shared_env).
     pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>) -> Self
     { Self::new_with_script_dir_and_domain_and_shared_env(root_mod, PathBuf::from("."), None, Arc::new(RwLock::new(SharedEnv::new(OsString::from("."), OsString::from("."), Vec::new())))) }
 
+    /// Clones the environment without the stack.
     pub fn clone_without_stack(&self) -> Self
     {
         Env {
@@ -183,22 +236,28 @@ impl Env
             shared_env: self.shared_env.clone(),
         }
     }
-    
+
+    /// Returns the root module.
     pub fn root_mod(&self) -> &Arc<RwLock<ModNode<Value, ()>>>
     { &self.root_mod }
 
+    /// Returns the current module.
     pub fn current_mod(&self) -> &Arc<RwLock<ModNode<Value, ()>>>
     { &self.current_mod }
 
+    /// Returns the identifiers of current module. 
     pub fn mod_idents(&self) -> &[String]
     { self.mod_idents.as_slice() }
     
+    /// Returns the stack.
     pub fn stack(&self) -> &[(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)]
     { self.stack.as_slice() }
 
+    /// Returns the script directory.
     pub fn script_dir(&self) -> &Path
     { self.script_dir.as_path() }
 
+    /// Returns the domain.
     pub fn domain(&self) -> Option<&str>
     { 
         match &self.domain {
@@ -207,27 +266,40 @@ impl Env
         }
     }
     
+    /// Returns the standard input enumeration.
     pub fn stdin(&self) -> &Input
     { &self.stdin }
     
+    /// Sets the standart input enumeration.
     pub fn set_stdin(&mut self, input: Input)
     { self.stdin = input; }
 
+    /// Returns the standard output enumeration.
     pub fn stdout(&self) -> &Output
     { &self.stdout }
     
+    /// Sets the standard output enumeration.
     pub fn set_stdout(&mut self, output: Output)
     { self.stdout = output; }
 
+    /// Returns the standard error enumeration.
     pub fn stderr(&self) -> &Output
     { &self.stderr }
     
+    /// Sets the standard error enumeration.
     pub fn set_stderr(&mut self, output: Output)
     { self.stderr = output; }
     
+    /// Retunrs the shared environment.
     pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
     { &self.shared_env }
     
+    /// Adds an empty module to the current module and then the empty module is set as the current
+    /// module.
+    ///
+    /// This method adds the empty, sets the empty module as current, and returns `true` if a
+    /// module with the identifier doesn't exist in the current module; otherwise this method
+    /// returns `false`.
     pub fn add_and_push_mod(&mut self, ident: String) -> Result<bool>
     {
         {
@@ -243,6 +315,10 @@ impl Env
         Ok(true)
     }
     
+    /// Sets the parent module of the current module is set as the current module.
+    ///
+    /// This method sets the parent module as current and returns `true` if the current module has
+    /// the parent module, otherwise this method returns `false`.
     pub fn pop_mod(&mut self) -> Result<bool>
     {
         let parent = {
@@ -258,7 +334,11 @@ impl Env
             None => Ok(false),
         }
     }
-    
+
+    /// Adds the function.
+    ///
+    /// This method adds the function and returns `true` if a function or a variable with the
+    /// identifier doesn't exist in the current module, otherwise this method returns`false`.
     pub fn add_fun(&self, ident: String, fun: Arc<Fun>) -> Result<bool>
     {
         let mut current_mod_g = rw_lock_write(&self.current_mod)?;
@@ -268,7 +348,11 @@ impl Env
         current_mod_g.add_var(ident.clone(), Value::Object(Arc::new(Object::Fun(self.mod_idents.clone(), ident, fun))));
         Ok(true)
     }
-    
+
+    /// Pushes the function module and a local variables to the stack for applies the function.
+    ///
+    /// This method pushes the function module and the local variables and returns `true` if all
+    /// identifiers of arguments are different; otherwise this method returns `false`. 
     pub fn push_fun_mod_and_local_vars(&mut self, fun_mod_idents: &[String], args: &[Arg], arg_values: &[Value]) -> Result<bool>
     {
         let fun_mod = match ModNode::mod_from(&self.root_mod, fun_mod_idents, false)? {
@@ -289,10 +373,12 @@ impl Env
         self.stack.push((fun_mod, local_vars));
         Ok(true)
     }
-    
+
+    /// Removes the last functoin module and the last local varables from stack.
     pub fn pop_fun_mod_and_local_vars(&mut self)
     { self.stack.pop(); }
     
+    /// Resets the environment.
     pub fn reset(&mut self) -> Result<()>
     {
         match self.mod_idents.first() { 
@@ -383,7 +469,8 @@ impl Env
             },
         }
     }
-    
+
+    /// Returns the variable value for the variable name if the variable exists, otherwise `None`.
     pub fn var(&self, name: &Name) -> Result<Option<Value>>
     {
         let mut is_var = false;
@@ -409,6 +496,8 @@ impl Env
         }
     }
 
+    /// Sets the variable value for the variable name and returns `true` if the variable can be
+    /// set, otherwise this method returns `false`.
     pub fn set_var(&mut self, name: &Name, value: Value) -> Result<bool>
     {
         let mut is_var = false;
@@ -432,6 +521,8 @@ impl Env
         }
     }
     
+    /// Removes the local variable for the identifier and returs `true` if the stack isn't empty,
+    /// this method returns `false`.
     pub fn remove_local_var(&mut self, ident: &String) -> bool
     {
         match self.stack.last_mut() {
