@@ -86,7 +86,7 @@ pub enum Stop
 #[derive(Debug)]
 pub enum Error
 {
-    /// A parser input/output error.
+    /// A parser I/O error.
     ParserIo(Arc<String>, io::Error),
     /// A parser EOF error.
     ParserEof(Arc<String>, ParserEofFlag),
@@ -108,9 +108,9 @@ pub enum Error
     Matrix(matrix::Error),
     /// A mutex can't be locked.
     Mutex,
-    /// A reader/writer lock can't be read.
+    /// A reader-writer lock can't be read.
     RwLockRead,
-    /// A reader/writer lock can't be written.
+    /// A reader-writer lock can't be written.
     RwLockWrite,
     /// An object can't be received.
     Recv,
@@ -120,7 +120,7 @@ pub enum Error
     NoFunMod,
     /// No a documentation module.
     NoDocMod,
-    /// An input/output error.
+    /// An I/O error.
     Io(io::Error),
     /// A ctrlc error.
     Ctrlc(ctrlc::Error),
