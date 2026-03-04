@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! An error module.
 use std::error;
 use std::fmt;
 use std::io;
@@ -19,84 +20,143 @@ use crate::matrix;
 use crate::pkg::PkgName;
 use crate::value::Value;
 
+/// A structure of file position.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Pos
 {
+    /// A path to the file.
     pub path: Arc<String>,
+    /// A line in the file
     pub line: u64,
+    /// A column in the file.
     pub column: usize,
 }
 
 impl Pos
 {
+    /// Creates a file position.
     pub fn new(path: Arc<String>, line: u64, column: usize) -> Self
     { Pos { path, line, column, } }
 }
 
+/// An enumeration of parser EOF flag.
+///
+/// The parser EOF flag determines whether an interpreter should read next line if parsing of
+/// lines ended an EOF error.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ParserEofFlag
 {
+    /// No a repetition, e.i. next line isn't read.
     NoRepetition,
+    /// A repetition, e.i. next line is read.
     Repetition,
 }
 
+/// An enumeration of package path conflicts.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum PkgPathConflict
 {
+    /// A bin directory.
     Bin,
+    /// A lib directory.
     Lib,
+    /// A doc directory.
     Doc,
 }
 
+/// An enumeration of stop type.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Stop
 {
+    /// A stop by a break statement.
     Break,
+    /// A stop by a continue statement.
     Continue,
+    /// A stop by a return statement.
     Return,
+    /// A stop by a quit statement.
     Quit,
+    /// A stop by an error propagation.
     ErrorPropagation,
+    /// A stop by an exit built-in function. 
     Exit(i32),
 }
 
+/// An error enumeration.
 #[derive(Debug)]
 pub enum Error
 {
+    /// A parser input/output error.
     ParserIo(Arc<String>, io::Error),
+    /// A parser EOF error.
     ParserEof(Arc<String>, ParserEofFlag),
+    /// A parser error.
     Parser(Pos, String),
+    /// An interpreter error.
     Interp(String),
+    /// A package error.
     Pkg(String),
+    /// A package error with package name.
     PkgName(PkgName, String),
+    /// An error of package depenency cycle.
     PkgDepCycle(Vec<PkgName>),
+    /// An error of package path conflicts.
     PkgPathConflicts(PkgName, Option<PkgName>, Vec<PathBuf>, PkgPathConflict),
+    ///  A tester error.
     Tester(String),
+    /// A matrix error.
     Matrix(matrix::Error),
+    /// A mutex can't be locked.
     Mutex,
+    /// A reader/writer lock can't be read.
     RwLockRead,
+    /// A reader/writer lock can't be written.
     RwLockWrite,
+    /// An object can't be received.
     Recv,
+    /// A module node is already added.
     AlreadyAddedModNode,
+    /// No a function module.
     NoFunMod,
+    /// No a documentation module.
     NoDocMod,
+    /// An input/output error.
     Io(io::Error),
+    /// A ctrlc error.
     Ctrlc(ctrlc::Error),
+    /// A toml error for deserialization.
     TomlDe(toml::de::Error),
+    /// A toml error for Serialization.
     TomlSer(toml::ser::Error),
+    /// A winit error.
     Winit(Box<dyn error::Error>),
+    /// A jammdb error.
     Jammdb(Box<dyn error::Error>),
+    /// A zip error.
     Zip(Box<dyn error::Error>),
+    /// A curl error.
     Curl(curl::Error),
+    /// A serde_json error.
     SerdeJson(serde_json::Error),
+    /// A latex2mathml error.
     Latex2mathml(Box<dyn error::Error>),
+    /// A markdown error.
     Markdown(String),
+    /// An opener error.
     Opener(Box<dyn error::Error>),
+    /// A version is invalid.
     InvalidVersion,
+    /// A package name is invalid.
     InvalidPkgName,
+    /// No an OpenCL backend.
     NoOpenClBackend,
+    /// No a CUDA backend.
     NoCudaBackend,
+    /// A stop error that is used by an interpreter.
     Stop(Stop),
+    /// An interruption is occurred.
     Intr,
+    /// An assertion error.
     Assert(Option<String>, Option<(Value, Value)>),
 }
 
@@ -191,4 +251,5 @@ impl fmt::Display for Error
     }
 }
 
+/// A result type.
 pub type Result<T> = result::Result<T, Error>;

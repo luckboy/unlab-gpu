@@ -13,7 +13,7 @@ use std::sync::Weak;
 use crate::error::*;
 use crate::utils::*;
 
-/// An enumeration of reference of module node.
+/// An enumeration of reference to module node.
 ///
 /// The reference of module node can be a strong reference to module or a weak reference to
 /// module. If the reference of module node refers to ascestor, the reference of module node
@@ -38,10 +38,10 @@ impl<T, U> ModNodeRef<T, U>
     }
 }
 
-/// A structure of used variable.
+/// A structure of object of used variable.
 ///
-/// The used variables available in a module, but are defined in other module because this
-/// structure contains the module of used variable and the identifier of used variable.
+/// The used variables available in a module, but are defined in other module. This object refers
+/// the used variable by the referecne to module node and the variable identifier.
 #[derive(Clone, Debug)]
 pub struct UsedVar<T, U>
 {
@@ -104,7 +104,8 @@ impl<T, U> ModNode<T, U>
     pub fn has_used_mod(&self, ident: &String) -> bool
     { self.used_mods.contains_key(ident) }
     
-    /// Returns the used module from the module node.
+    /// Returns the reference to the used module if the module node has the used module,
+    /// otherwise `None`.
     pub fn used_mod(&self, ident: &String) -> Option<&ModNodeRef<T, U>>
     { self.used_mods.get(ident) }
 
@@ -150,7 +151,8 @@ impl<T, U> ModNode<T, U>
     pub fn has_used_var(&self, ident: &String) -> bool
     { self.used_vars.contains_key(ident) }
     
-    /// Returns the used variable from the module node.
+    /// Returns the object of used variable if the module node has the used variable, otherwise
+    /// `None`.
     pub fn used_var(&self, ident: &String) -> Option<&UsedVar<T, U>>
     { self.used_vars.get(ident) }
 
@@ -175,7 +177,7 @@ impl<T, U> ModNode<T, U>
     pub fn has_mod(&self, ident: &String) -> bool
     { self.mods.contains_key(ident) }
     
-    /// Returns the module from the module node.
+    /// Returns the module if the module node has the module, otherwise `None`.
     pub fn mod1(&self, ident: &String) -> Option<&Arc<RwLock<ModNode<T, U>>>>
     { self.mods.get(ident) }
 
@@ -219,7 +221,7 @@ impl<T, U> ModNode<T, U>
     pub fn has_var(&self, ident: &String) -> bool
     { self.vars.contains_key(ident) }
 
-    /// Returns the variable from the module node.
+    /// Returns the variable if the module node has the variable, otherwise `None`.
     pub fn var(&self, ident: &String) -> Option<&T>
     { self.vars.get(ident) }
 
@@ -231,7 +233,7 @@ impl<T, U> ModNode<T, U>
     pub fn remove_var(&mut self, ident: &String)
     { self.vars.remove(ident); }
     
-    /// Returns the parent of module node.
+    /// Returns the parent if the module node if the module node has the parent, otherwise `None`.
     pub fn parent(&self) -> Option<Arc<RwLock<ModNode<T, U>>>>
     {
         match &self.parent{
@@ -246,8 +248,8 @@ impl<T, U> ModNode<T, U>
     
     /// Returns the module for the identifiers of modules if the module exists, otherwise `None`.
     ///
-    /// The identifiers of modules refers to descendant modules from the root module. If flag of
-    /// used modules is set, the first identifier of module can refers to the used module.
+    /// If flag of used modules is set, the first identifier of module can refers to the used
+    /// module.
     pub fn mod_from(root: &Arc<RwLock<ModNode<T, U>>>, idents: &[String], are_used_mods: bool) -> Result<Option<Arc<RwLock<ModNode<T, U>>>>>
     {
         let mut node = root.clone();

@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A value module.
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -60,20 +61,31 @@ fn nearly_eq(a: f32, b: f32, eps: f32) -> bool
     }
 }
 
+/// A value enumeration.
+///
+/// The value enumeration represents a value of the Unlab scripting language.
 #[derive(Clone, Debug)]
 pub enum Value
 {
+    /// A none value.
     None,
+    /// A boolean value.
     Bool(bool),
+    /// A integer number.
     Int(i64),
+    /// Floating-point number.
     Float(f32),
+    /// An immutablke object.
     Object(Arc<Object>),
+    /// A strong reference to a mutable object.
     Ref(Arc<RwLock<MutObject>>),
+    /// A weak reference to a mutable object.
     Weak(Weak<RwLock<MutObject>>),
 }
 
 impl Value
 {
+    /// Converts any value to a boolean value.
     pub fn to_bool(&self) -> bool
     {
         match self {
@@ -91,6 +103,7 @@ impl Value
         }
     }
 
+    /// Converts any value to an integer number.
     pub fn to_i64(&self) -> i64
     {
         match self {
@@ -108,6 +121,7 @@ impl Value
         }
     }
 
+    /// Converts any value to a floating-point number.
     pub fn to_f32(&self) -> f32
     {
         match self {
@@ -125,6 +139,8 @@ impl Value
         }
     }
 
+    /// Converts the value to a boolean value if the value is a boolean type, otherwise this
+    /// method returns `None`.
     pub fn to_opt_bool(&self) -> Option<bool>
     {
         match self {
@@ -133,6 +149,8 @@ impl Value
         }
     }
 
+    /// Converts the value to an integer number if the value is a integer type or floating-point
+    /// type, otherwise this method returns `None`.
     pub fn to_opt_i64(&self) -> Option<i64>
     {
         match self {
@@ -142,6 +160,8 @@ impl Value
         }
     }
 
+    /// Converts the value to a floating-point number if the value is a integer type or
+    /// floating-point type, otherwise this method returns `None`.
     pub fn to_opt_f32(&self) -> Option<f32>
     {
         match self {
@@ -151,6 +171,8 @@ impl Value
         }
     }
 
+    /// Converts the value to a string if the value is a string type, otherwise this method
+    /// returns `None`.
     pub fn to_opt_string(&self) -> Option<String>
     {
         match self {
@@ -163,7 +185,8 @@ impl Value
             _ => None,
         }
     }
-    
+
+    /// Returns `true` if the value is a function or a built-in function, otherwise `false`.
     pub fn is_fun(&self) -> bool
     {
         match self {
@@ -177,6 +200,11 @@ impl Value
         }
     }
     
+    /// Returns `true` if two values are equal with types, otherwise `false`.
+    ///
+    /// This method also compares types of two values for integer numbers and floating-point
+    /// numbers. If two values are weak references, this method compares their pointers instead
+    /// values.
     pub fn eq_with_types(&self, value: &Value) -> Result<bool>
     {
         match (self, value) {
@@ -209,6 +237,11 @@ impl Value
         }
     }
 
+    /// Returns `true` if two values are equal without types, otherwise `false`.
+    ///
+    /// This method doesn't compare types of two values for integer numbers and floating-point
+    /// numbers. If two values are weak references, this method compares their pointers instead
+    /// values.
     pub fn eq_without_types(&self, value: &Value) -> Result<bool>
     {
         match (self, value) {
@@ -241,6 +274,11 @@ impl Value
         }
     }
     
+    /// Returns `true` if two values are nearly equal with types, otherwise `false`.
+    ///
+    /// If absolute difference between two numbers is less than or equal to the epsilon, two
+    /// numbers are nearly equal for floating-point numbers, matrix arrays, and matrix row slices.
+    /// Other values are compered as for [`eq_with_types`](Self::eq_with_types). 
     pub fn nearly_eq_with_types(&self, value: &Value, eps: f32) -> Result<bool>
     {
         match (self, value) {
@@ -270,6 +308,11 @@ impl Value
         }
     }
 
+    /// Returns `true` if two values are nearly equal without types, otherwise `false`.
+    ///
+    /// If absolute difference between two numbers is less than or equal to the epsilon, two
+    /// numbers are nearly equal for numbers, matrix arrays, and matrix row slices. Other values
+    /// are compered as for [`eq_without_types`](Self::eq_without_types). 
     pub fn nearly_eq_without_types(&self, value: &Value, eps: f32) -> Result<bool>
     {
         match (self, value) {
@@ -343,6 +386,11 @@ impl Value
         }
     }
     
+    /// Applies the function with one argument for a dot operation.
+    ///
+    /// The function with one argument is applied for floating-point numbers. This method
+    /// recursively invokes itself for elements of arrays and fields of structures. Other values
+    /// are ignored.
     pub fn dot1<F>(&self, err_msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
     { self.dot1_with_fun_ref(err_msg, &mut f) }
@@ -416,13 +464,24 @@ impl Value
         }
     }
 
+    /// Applies the function with two arguments for a dot operation.
+    ///
+    /// The function with two arguments is applied for floating-point numbers. This method
+    /// recursively invokes itself for elements of arrays and fields of structures. Other values
+    /// are compares. If other values aren't equal, this method returns an error. 
     pub fn dot2<F>(&self, value: &Value, err_msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value, &Value) -> Result<Value>
     { self.dot2_with_fun_ref(value, err_msg, &mut f) }
 
+    /// Applies the function with the arguments.
     pub fn apply(&self, interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
     { interp.apply_fun(env, self, arg_values) }
     
+    /// Returns the element or the field if the value has the element or the field, otherwise
+    /// `None` or an error.
+    ///
+    /// If the value isn't a string, a matrix array, a matrix row slice, or a mutable object,
+    /// this method returns an error.
     pub fn elem(&self, idx_value: &Value) -> Result<Value>
     {
         match self {
@@ -526,6 +585,9 @@ impl Value
         }
     }
 
+    /// Sets the element or the field for the value.
+    ///
+    /// If the value isn't a mutable object, this method returns an error.
     pub fn set_elem(&self, idx_value: &Value, value: Value) -> Result<()>
     {
         match self {
@@ -570,6 +632,9 @@ impl Value
         }
     }
 
+    /// Returns the field if the value has the field, otherwise `None` or an error.
+    ///
+    /// If the value isn't a structure, this method returns an error.
     pub fn field(&self, ident: &String) -> Result<Value>
     {
         match self {
@@ -589,6 +654,9 @@ impl Value
         }
     }
 
+    /// Sets the field for the value.
+    ///
+    /// If the value isn't a structure, this method returns an error.
     pub fn set_field(&self, ident: String, value: Value) -> Result<()>
     {
         match self {
@@ -606,6 +674,7 @@ impl Value
         }
     }
 
+    /// Performs an operation on one value for the unary operator.
     pub fn unary_op(&self, op: UnaryOp) -> Result<Value>
     {
         match op {
@@ -655,6 +724,7 @@ impl Value
         }
     }
 
+    /// Performs an operation on two values for the binary operator.
     pub fn bin_op(&self, op: BinOp, value: &Value) -> Result<Value>
     {
         match op {
@@ -940,6 +1010,7 @@ impl Value
         }
     }
     
+    /// Returns an interator if the value is iterable, otherwise `None`.
     pub fn iter(&self) -> Result<Option<Iter<'_>>>
     {
         match self {
@@ -964,6 +1035,9 @@ impl Value
         }
     }
 
+    /// Converts the value to a matrix array.
+    ///
+    /// If the value isn't a matrix or a matrix array, this method returns an error.
     pub fn to_matrix_array(&self) -> Result<Value>
     {
         match self {
@@ -1479,18 +1553,29 @@ impl<'de> Deserialize<'de> for Value
     { deserializer.deserialize_any(ValueVisitor) }
 }
 
+/// An enumeration of immutable object.
 #[derive(Clone, Debug)]
 pub enum Object
 {
+    /// A string.
     String(String),
+    /// An integer number range.
     IntRange(i64, i64, i64),
+    /// A floating-point number range.
     FloatRange(f32, f32, f32),
+    /// A matrix.
     Matrix(Matrix),
+    /// A function.
     Fun(Vec<String>, String, Arc<Fun>),
+    /// A built-in function.
     BuiltinFun(String, fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>),
+    /// A matrix array.
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
+    /// A matrix row slice.
     MatrixRowSlice(Arc<Object>, usize),
+    /// An error.
     Error(String, String),
+    /// A window identifier.
     WindowId(WindowId),
 }
 
@@ -1628,17 +1713,23 @@ impl Object
     }
 }
 
+/// An enumeration of transpose flag.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum TransposeFlag
 {
+    /// No transpose.
     NoTranspose,
+    /// Transpose.
     Transpose,
 }
 
+/// An enumeration of mutable object.
 #[derive(Clone, Debug)]
 pub enum MutObject
 {
+    /// An array.
     Array(Vec<Value>),
+    /// A structure.
     Struct(BTreeMap<String, Value>),
 }
 
@@ -1719,6 +1810,7 @@ impl MutObject
     }
 }
 
+/// A structure of iterator of values.
 #[derive(Clone, Debug)]
 pub struct Iter<'a>
 {
