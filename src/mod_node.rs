@@ -17,7 +17,7 @@ use crate::utils::*;
 ///
 /// The reference of module node can be a strong reference to module or a weak reference to
 /// module. If the reference of module node refers to ascestor, the reference of module node
-/// should be the weak reference beacuse it is reference cycle.
+/// should be the weak reference because it is reference cycle.
 #[derive(Clone, Debug)]
 pub enum ModNodeRef<T, U>
 {
