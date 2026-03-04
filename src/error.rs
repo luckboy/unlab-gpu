@@ -41,14 +41,14 @@ impl Pos
 
 /// An enumeration of parser EOF flag.
 ///
-/// The parser EOF flag determines whether an interpreter should read next line if parsing of
-/// lines ended an EOF error.
+/// The parser EOF flag determines whether a interactive main loop should read next line if
+/// unexpected EOF occurs while parsing.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ParserEofFlag
 {
-    /// No a repetition, e.i. next line isn't read.
+    /// No a repetition, e.i. next line shouldn't be read.
     NoRepetition,
-    /// A repetition, e.i. next line is read.
+    /// A repetition, e.i. next line should be read.
     Repetition,
 }
 

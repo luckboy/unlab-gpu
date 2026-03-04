@@ -1714,12 +1714,14 @@ impl Object
 }
 
 /// An enumeration of transpose flag.
+///
+/// The transpose flag determines whether a matrix array is transposed.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum TransposeFlag
 {
-    /// No transpose.
+    /// No transpose, e.i. a matrix array isn't transposed.
     NoTranspose,
-    /// Transpose.
+    /// Transpose, e.i. a matrix array is transposed.
     Transpose,
 }
 
