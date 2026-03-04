@@ -522,8 +522,8 @@ impl Env
         }
     }
     
-    /// Removes the local variable for the identifier and returs `true` if the stack isn't empty,
-    /// this method returns `false`.
+    /// Removes the local variable with the identifier and returns `true` if the stack isn't
+    /// empty, otherwise this method returns `false`.
     pub fn remove_local_var(&mut self, ident: &String) -> bool
     {
         match self.stack.last_mut() {
