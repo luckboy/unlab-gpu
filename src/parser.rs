@@ -40,7 +40,7 @@ impl DocEnv
 
 /// A parser structure.
 ///
-/// The parser parses tokens to a script tree that can be interpreted by an interpreter. The
+/// The parser parses tokens to a syntax tree that can be interpreted by an interpreter. The
 /// tokens are passed as an iterator that can be a lexer. Also, the parser can take the
 /// documentation comments from the lexer and then stores this comments as the documentation of
 /// modules and variables.

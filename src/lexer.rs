@@ -79,8 +79,8 @@ pub enum Token
 /// A lexer structure.
 ///
 /// The lexer transfroms a script in the Unlab scripting language to tokens which can be parsed by
-/// a parser to a tree. The lexer structure is an iterator of tokens that is passed to the parser.
-/// Also, the lexer can store documentation comments which are taken by the parser.
+/// a parser to a syntax tree. The lexer structure is an iterator of tokens that is passed to the
+/// parser. Also, the lexer can store documentation comments which are taken by the parser.
 pub struct Lexer<'a>
 {
     path: Arc<String>,

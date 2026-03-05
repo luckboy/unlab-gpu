@@ -18,7 +18,7 @@ use crate::value::*;
 
 /// An interpreter structure.
 ///
-/// The interpreter interprets a script tree that can be produced by a parser while parsing
+/// The interpreter interprets a syntax tree that can be produced by a parser while parsing
 /// tokens. If an interpreter error occurs while interpreting a script tree, the interpreter
 /// stores a stack trace that can contain functions and contains file positions. These functions
 /// are functons in which occurred the interpreter error. Also, the interpreter contains a return
