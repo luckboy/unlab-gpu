@@ -75,7 +75,7 @@ pub enum Token
     ColonColon,
     /// A `,` token.
     Comma,
-    /// A token of newline or `;`.
+    /// A newline token or a `;` token.
     Newline,
     /// An `and` keyword.
     And,
