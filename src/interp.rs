@@ -72,6 +72,9 @@ impl Interp
     }
 
     /// Applies the function to the arguments.
+    ///
+    /// This method applies the function to the argument if the value is a function or a built-in
+    /// function, otherwise returns an error.
     pub fn apply_fun(&mut self, env: &mut Env, fun_value: &Value, arg_values: &[Value]) -> Result<Value>
     {
         match fun_value {

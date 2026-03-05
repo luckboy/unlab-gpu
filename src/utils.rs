@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of utilities.
 use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -17,6 +18,9 @@ use crate::matrix::Matrix;
 use crate::error::*;
 use crate::value::*;
 
+/// A structure of pushback iterator.
+///
+/// The pushback iterator allows to push back an item to itself.
 #[derive(Clone)]
 pub struct PushbackIter<T: Iterator>
 {
@@ -26,15 +30,19 @@ pub struct PushbackIter<T: Iterator>
 
 impl<T: Iterator> PushbackIter<T>
 {
+    /// Creates a pushback iterator.
     pub fn new(iter: T) -> Self
     { PushbackIter { iter, pushed_items: Vec::new(), } }
 
+    /// Returns an immutable iterator.
     pub fn iter(&self) -> &T
     { &self.iter }
     
+    /// Returns a mutable iterator.
     pub fn iter_mut(&mut self) -> &mut T
     { &mut self.iter }
 
+    /// Pushes back the item to the pushback iterator.
     pub fn undo(&mut self, item: T::Item)
     { self.pushed_items.push(item); }
 }
@@ -52,6 +60,7 @@ impl<T: Iterator> Iterator for PushbackIter<T>
     }
 }
 
+/// Returns the string slice without CR character and NL character.
 pub fn str_without_crnl(s: &str) -> &str
 {
     if s.ends_with('\n') {
@@ -66,6 +75,7 @@ pub fn str_without_crnl(s: &str) -> &str
     }
 }
 
+/// Locks the mutex.
 pub fn mutex_lock<T>(mutex: &Mutex<T>) -> Result<MutexGuard<'_, T>>
 {
     match mutex.lock() {
@@ -74,6 +84,7 @@ pub fn mutex_lock<T>(mutex: &Mutex<T>) -> Result<MutexGuard<'_, T>>
     }
 }
 
+/// Locks reader-writer lock with shared read access.
 pub fn rw_lock_read<T>(rw_lock: &RwLock<T>) -> Result<RwLockReadGuard<'_, T>>
 {
     match rw_lock.read() {
@@ -82,6 +93,7 @@ pub fn rw_lock_read<T>(rw_lock: &RwLock<T>) -> Result<RwLockReadGuard<'_, T>>
     }
 }
 
+/// Locks reader-writer lock with exclusive write access.
 pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
 {
     match rw_lock.write() {
@@ -90,6 +102,7 @@ pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
     }
 }
 
+/// Receives an object from the receiver.
 pub fn receiver_recv<T>(receiver: &Receiver<T>) -> Result<T>
 {
     match receiver.recv() {
@@ -104,6 +117,7 @@ fn matrix_res_backend_name() -> matrix::Result<&'static str>
     Ok(frontend.backend().name())
 }
 
+/// Returns the backend name.
 pub fn matrix_backend_name() -> Result<&'static str>
 {
     match matrix_res_backend_name() {
@@ -118,6 +132,7 @@ fn matrix_res_create_and_set_zeros(row_count: usize, col_count: usize) -> matrix
     Ok(frontend.create_matrix_and_set_zeros(row_count, col_count)?)
 }
 
+/// Creates a matrix and sets the matrix elements on zeros.
 pub fn matrix_create_and_set_zeros(row_count: usize, col_count: usize) -> Result<Matrix>
 {
     match matrix_res_create_and_set_zeros(row_count, col_count) {
@@ -132,6 +147,7 @@ fn matrix_res_create_and_set_elems(row_count: usize, col_count: usize, elems: &[
     Ok(frontend.create_matrix_and_set_elems(row_count, col_count, elems)?)
 }
 
+/// Creates a matrix and sets the matrix elements.
 pub fn matrix_create_and_set_elems(row_count: usize, col_count: usize, elems: &[f32]) -> Result<Matrix>
 {
     match matrix_res_create_and_set_elems(row_count, col_count, elems) {
@@ -146,6 +162,7 @@ fn matrix_res_elems_and_transpose_flag(a: &Matrix) -> matrix::Result<(Vec<f32>, 
     Ok(frontend.elems_and_transpose_flag(a)?)
 }
 
+/// Returns the elements and the transpose flag of matrix.
 pub fn matrix_elems_and_transpose_flag(a: &Matrix) -> Result<(Vec<f32>, bool)>
 {
     match matrix_res_elems_and_transpose_flag(a) {
@@ -162,6 +179,7 @@ fn matrix_res_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Adds the `b` matrix to the `a` matrix.
 pub fn matrix_add(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_add(a, b) {
@@ -178,6 +196,7 @@ fn matrix_res_sub(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Subtracts the `b` matrix from the `a` matrix.
 pub fn matrix_sub(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_sub(a, b) {
@@ -198,6 +217,7 @@ fn matrix_res_mul(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Multiplies the `a` matrix by the `b` matrix.
 pub fn matrix_mul(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_mul(a, b) {
@@ -214,6 +234,7 @@ fn matrix_res_mul_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Multiplies the `a` matrix elements by the `b` matrix.
 pub fn matrix_mul_elems(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_mul_elems(a, b) {
@@ -230,6 +251,7 @@ fn matrix_res_div_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Divides the `a` matrix elements by the `b` matrix.
 pub fn matrix_div_elems(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_div_elems(a, b) {
@@ -246,6 +268,7 @@ fn matrix_res_add_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Adds the `b` scalar to the `a` matrix.
 pub fn matrix_add_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_add_for_scalar(a, b) {
@@ -262,6 +285,7 @@ fn matrix_res_sub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Subtracts the `b` scalar from the `a` matrix.
 pub fn matrix_sub_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_sub_for_scalar(a, b) {
@@ -278,6 +302,7 @@ fn matrix_res_rsub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Subtracts the `a` matrix from the `b` scalar.
 pub fn matrix_rsub_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_rsub_for_scalar(a, b) {
@@ -294,6 +319,7 @@ fn matrix_res_mul_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Multiplies the `a` matrix by the `b` scalar.
 pub fn matrix_mul_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_mul_for_scalar(a, b) {
@@ -310,6 +336,7 @@ fn matrix_res_div_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Divides the `a` matrix by the `b` scalar.
 pub fn matrix_div_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_div_for_scalar(a, b) {
@@ -326,6 +353,7 @@ fn matrix_res_rdiv_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Divides the `b` scalar by the `a` matrix elements.
 pub fn matrix_rdiv_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_rdiv_for_scalar(a, b) {
@@ -342,6 +370,7 @@ fn matrix_res_sigmoid(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates sigmoid function for the `a` matrix.
 pub fn matrix_sigmoid(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_sigmoid(a) {
@@ -358,6 +387,7 @@ fn matrix_res_tanh(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates hyperbolic tangent function for the `a` matrix.
 pub fn matrix_tanh(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_tanh(a) {
@@ -374,6 +404,7 @@ fn matrix_res_swish(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates swish function for the `a` matrix.
 pub fn matrix_swish(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_swish(a) {
@@ -390,6 +421,7 @@ fn matrix_res_softmax(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates softmax function for the `a` matrix.
 pub fn matrix_softmax(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_softmax(a) {
@@ -406,6 +438,7 @@ fn matrix_res_sqrt(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates square roots of the `a` matrix elements.
 pub fn matrix_sqrt(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_sqrt(a) {
@@ -422,6 +455,7 @@ fn matrix_res_really_transpose(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Indeed transposes the `a` matrix.
 pub fn matrix_really_transpose(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_really_transpose(a) {
@@ -445,6 +479,7 @@ fn matrix_res_repeat(a: &Matrix, n: usize) -> matrix::Result<Option<Matrix>>
     Ok(Some(b))
 }
 
+/// Repeats the `a` vector as column or a row.
 pub fn matrix_repeat(a: &Matrix, n: usize) -> Result<Option<Matrix>>
 {
     match matrix_res_repeat(a, n) {
@@ -465,6 +500,7 @@ fn matrix_res_to_matrix_array(a: &Matrix) -> matrix::Result<Object>
     Ok(Object::MatrixArray(a.row_count(), a.col_count(), transpose_flag, xs))
 }
 
+/// Converts the `a` matrix to the matrix array.
 pub fn matrix_to_matrix_array(a: &Matrix) -> Result<Object>
 {
     match matrix_res_to_matrix_array(a) {
@@ -481,6 +517,7 @@ fn matrix_res_abs(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates absolute values of the `a` matrix elements.
 pub fn matrix_abs(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_abs(a) {
@@ -497,6 +534,7 @@ fn matrix_res_pow(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Raises the `a` matrix elements to the power of the `b` matrix elements.
 pub fn matrix_pow(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_pow(a, b) {
@@ -513,6 +551,7 @@ fn matrix_res_pow_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Raises the `a` matrix elements to the power of the `b` scalar.
 pub fn matrix_pow_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_pow_for_scalar(a, b) {
@@ -529,6 +568,7 @@ fn matrix_res_rpow_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Raises the `b` scalar to the power of the `a` matrix elements.
 pub fn matrix_rpow_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_rpow_for_scalar(a, b) {
@@ -545,6 +585,7 @@ fn matrix_res_exp(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates exponential function for the `a` matrix elements.
 pub fn matrix_exp(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_exp(a) {
@@ -561,6 +602,7 @@ fn matrix_res_ln(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates natural logarithm of the `a` matrix elements.
 pub fn matrix_ln(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_ln(a) {
@@ -577,6 +619,7 @@ fn matrix_res_log2(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates base 2 logarithm of the `a` matrix elements.
 pub fn matrix_log2(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_log2(a) {
@@ -593,6 +636,7 @@ fn matrix_res_log10(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates base 10 logarithm of the `a` matrix elements.
 pub fn matrix_log10(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_log10(a) {
@@ -609,6 +653,7 @@ fn matrix_res_sin(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates sine function for the `a` matrix.
 pub fn matrix_sin(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_sin(a) {
@@ -625,6 +670,7 @@ fn matrix_res_cos(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates cosine function for the `a` matrix.
 pub fn matrix_cos(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_cos(a) {
@@ -641,6 +687,7 @@ fn matrix_res_tan(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates tangent function for the `a` matrix.
 pub fn matrix_tan(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_tan(a) {
@@ -657,6 +704,7 @@ fn matrix_res_asin(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates arcsine function for the `a` matrix.
 pub fn matrix_asin(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_asin(a) {
@@ -673,6 +721,7 @@ fn matrix_res_acos(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates arccosine function for the `a` matrix.
 pub fn matrix_acos(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_acos(a) {
@@ -689,6 +738,7 @@ fn matrix_res_atan(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates arctangent function for the `a` matrix.
 pub fn matrix_atan(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_atan(a) {
@@ -705,6 +755,7 @@ fn matrix_res_atan2(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Calculates arctangent function for the `a` matrix elements and the `b` matrix elements.
 pub fn matrix_atan2(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_atan2(a, b) {
@@ -721,6 +772,7 @@ fn matrix_res_atan2_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Calculates arctangent function for the `a` matrix elements and the `b` scalar.
 pub fn matrix_atan2_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_atan2_for_scalar(a, b) {
@@ -737,6 +789,7 @@ fn matrix_res_ratan2_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Calculates arctangent function for the `b` scalar and the `a` matrix elements.
 pub fn matrix_ratan2_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_ratan2_for_scalar(a, b) {
@@ -753,6 +806,7 @@ fn matrix_res_sinh(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates hyperbolic sine function for the `a` matrix.
 pub fn matrix_sinh(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_sinh(a) {
@@ -769,6 +823,7 @@ fn matrix_res_cosh(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates hyperbolic cosine function for the `a` matrix.
 pub fn matrix_cosh(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_cosh(a) {
@@ -785,6 +840,7 @@ fn matrix_res_asinh(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates inverse hyperbolic sine function for the `a` matrix.
 pub fn matrix_asinh(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_asinh(a) {
@@ -801,6 +857,7 @@ fn matrix_res_acosh(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates inverse hyperbolic cosine function for the `a` matrix.
 pub fn matrix_acosh(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_acosh(a) {
@@ -817,6 +874,7 @@ fn matrix_res_atanh(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates inverse hyperbolic tangent function for the `a` matrix.
 pub fn matrix_atanh(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_atanh(a) {
@@ -833,6 +891,7 @@ fn matrix_res_signum(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates signum function for the `a` matrix.
 pub fn matrix_signum(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_signum(a) {
@@ -849,6 +908,7 @@ fn matrix_res_ceil(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates ceil function for the `a` matrix.
 pub fn matrix_ceil(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_ceil(a) {
@@ -865,6 +925,7 @@ fn matrix_res_floor(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates floor function for the `a` matrix.
 pub fn matrix_floor(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_floor(a) {
@@ -881,6 +942,7 @@ fn matrix_res_round(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates round function for the `a` matrix.
 pub fn matrix_round(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_round(a) {
@@ -897,6 +959,7 @@ fn matrix_res_trunc(a: &Matrix) -> matrix::Result<Matrix>
     Ok(b)
 }
 
+/// Calculates trunc function for the `a` matrix.
 pub fn matrix_trunc(a: &Matrix) -> Result<Matrix>
 {
     match matrix_res_trunc(a) {
@@ -913,6 +976,7 @@ fn matrix_res_max(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Finds maximum values between the `a` matrix elements and the `b` matrix elements.
 pub fn matrix_max(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_max(a, b) {
@@ -929,6 +993,7 @@ fn matrix_res_max_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Finds maximum values between the `a` matrix elements and the `b` scalar.
 pub fn matrix_max_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_max_for_scalar(a, b) {
@@ -945,6 +1010,7 @@ fn matrix_res_min(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Finds minimum values between the `a` matrix elements and the `b` matrix elements.
 pub fn matrix_min(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
     match matrix_res_min(a, b) {
@@ -961,6 +1027,7 @@ fn matrix_res_min_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
     Ok(c)
 }
 
+/// Finds minimum values between the `a` matrix elements and the `b` scalar.
 pub fn matrix_min_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
     match matrix_res_min_for_scalar(a, b) {
@@ -969,6 +1036,10 @@ pub fn matrix_min_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
     }
 }
 
+/// Converts the string slice to an url name.
+///
+/// The character of string slice is escaped if the character of string slice isn't an URL
+/// unreserved character. If the path flag is set, slash character isn't escaped.
 pub fn str_to_url_name(s: &str, is_path: bool) -> String
 {
     let mut url_name = String::new();
@@ -982,6 +1053,10 @@ pub fn str_to_url_name(s: &str, is_path: bool) -> String
     url_name
 }
 
+/// Converts the string slice to an identifier.
+///
+/// If the character of string slice isn't identifier character, the character of string slice is
+/// replaced by a `_` character.
 pub fn str_to_ident(s: &str) -> String
 {
     let mut ident = String::new();
@@ -1008,9 +1083,11 @@ pub fn str_to_ident(s: &str) -> String
     ident
 }
 
+/// Prints the error to the standard error.
 pub fn eprint_error(err: &Error)
 { eprintln!("{}", err); }
 
+/// Prints the error with the stac trace to the standard error.
 pub fn eprint_error_with_stack_trace(err: &Error, stack_trace: &[(Option<Value>, Pos)])
 {
     eprintln!("{}", err);
