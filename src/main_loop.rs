@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of main loop.
 use std::ffi::OsString;
 use std::fs::create_dir_all;
 use std::io::Cursor;
@@ -289,6 +290,14 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
     })
 }
 
+/// A main loop.
+///
+/// The main loop parses and interprets the script in the Unlab scripting language for a
+/// non-interactive mode or lines for an interactive mode. The interactive mode is set if the path
+/// to a script isn't passed. Also, this function takes arguments, a history file, a root module,
+/// and paths to libraries and documentations. A flag of `Ctrl-C` interruption checker determines
+/// whether the main loop uses the `Ctrl-C` interruption checker. The flag of plotter windows
+/// determines whether the plotter windows can be shown.
 pub fn main_loop(path: Option<String>, args: Vec<String>, history_file: PathBuf, root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool) -> Option<i32>
 {
     match path {

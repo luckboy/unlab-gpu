@@ -1,10 +1,11 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A backend module.
 use std::fs::File;
 use std::io::ErrorKind;
 use std::io::Read;
@@ -33,27 +34,41 @@ use crate::serde::Serialize;
 use crate::toml;
 use crate::error::*;
 
+/// A backend enumeration.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 pub enum Backend
 {
+    /// An OpenCL backend.
     #[serde(rename = "OpenCL")]
     OpenCl,
+    /// A CUDA backend.
     #[serde(rename = "CUDA")]
     Cuda,
 }
 
+/// A structure of backend configuration.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct BackendConfig
 {
+    /// A backend.
     pub backend: Option<Backend>,
+    /// An ordinal number for the CUDA backend. Default value of this field is zero.
     pub ordinal: Option<usize>,
+    /// A platform index for the OpenCL backend. Default value of this field is zero.
     pub platform: Option<usize>,
+    /// A device index for the OpenCL backend. Default value of this field is zero.
     pub device: Option<usize>,
+    /// If this field is `true`, the CUDA backend uses the cuBLAS library. Default value of this
+    /// field is `true`.
     pub cublas: Option<bool>,
+    /// If this field is `true`, the CUDA backend uses the mma instruction. Default value of this
+    /// field is `false`.
     pub mma: Option<bool>,
 }
+
 impl BackendConfig
 {
+    /// Reads the backend configuration from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -68,6 +83,7 @@ impl BackendConfig
         }
     }
 
+    /// Loads the backend configuration from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -76,6 +92,8 @@ impl BackendConfig
         }
     }
 
+    /// Loads the backend configuration from the file if the file exists, otherwise this method
+    /// returns `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
@@ -142,6 +160,10 @@ fn initialize_cuda_backend(ordinal: usize, is_cublas: bool, is_mma: bool) -> Res
 fn initialize_cuda_backend(_ordinal: usize, _is_cublas: bool, _is_mma: bool) -> Result<()>
 { Err(Error::NoCudaBackend) }
 
+/// Initalizes a backend for matrices with the backend configuration.
+///
+/// If the backend configuration isn't passed, this method uses the default field values of
+/// backend configuration.
 pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<()>
 {
     #[cfg(feature = "cuda")]
@@ -170,12 +192,17 @@ pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<
     }
 }
 
+/// Initalizes a backend for matrices with the file of backend configuration.
+///
+/// If the file of backend configuration doesn't exist, this method uses the default field values
+/// of backend configuration.
 pub fn initialize_backend<P: AsRef<Path>>(path: P) -> Result<()>
 {
     let config = BackendConfig::load_opt(path)?;
     initialize_backend_with_config(&config)
 }
 
+/// Finalizes a backend for matrices.
 pub fn finalize_backend() -> Result<()>
 {
     match unset_default_backend() {

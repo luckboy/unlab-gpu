@@ -68,13 +68,13 @@ pub enum PkgPathConflict
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Stop
 {
-    /// A stop by a break statement.
+    /// A stop by a `break` statement.
     Break,
-    /// A stop by a continue statement.
+    /// A stop by a `continue` statement.
     Continue,
-    /// A stop by a return statement.
+    /// A stop by a `return` statement.
     Return,
-    /// A stop by a quit statement.
+    /// A stop by a `quit` statement.
     Quit,
     /// A stop by an error propagation.
     ErrorPropagation,

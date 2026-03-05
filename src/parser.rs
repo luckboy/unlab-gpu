@@ -886,7 +886,7 @@ impl<'a> Parser<'a>
 /// Parses the script is refered by the path with the root module of documentation and the current
 /// module of documentation.
 ///
-/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`].
+/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`] and [`Parser::parse`].
 pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>, doc_current_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 {
     match File::open(path.as_ref()) {
@@ -904,13 +904,13 @@ pub fn parse_with_doc_root_mod_and_doc_current_mod<P: AsRef<Path>>(path: P, doc_
 
 /// Parses the script is refered by the path with the root module of documentation.
 ///
-/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`].
+/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`] and [`Parser::parse`].
 pub fn parse_with_doc_root_mod<P: AsRef<Path>>(path: P, doc_root_mod: Option<Arc<RwLock<ModNode<String, Option<String>>>>>) -> Result<Tree>
 { parse_with_doc_root_mod_and_doc_current_mod(path, doc_root_mod, None) }
 
 /// Parses the script is refered by the path.
 ///
-/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`].
+/// See [`Parser::new_with_doc_root_mod_and_doc_current_mod`] and [`Parser::parse`].
 pub fn parse<P: AsRef<Path>>(path: P) -> Result<Tree>
 { parse_with_doc_root_mod(path, None) }
 

@@ -1,10 +1,11 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! An I/O module.
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::File;
@@ -409,6 +410,7 @@ fn read_value(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>, m
     }
 }
 
+/// Reads values from the reader.
 pub fn read_values(r: &mut dyn Read, env: &Env) -> Result<Vec<Value>>
 { 
     let mut object_tab: ObjectTab<Object> = ObjectTab::new();
@@ -586,6 +588,8 @@ fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Obje
     Ok(())
 }
 
+
+/// Writes the values to the writer.
 pub fn write_values(w: &mut dyn Write, values: &[Value]) -> Result<()>
 { 
     let mut object_tab: ObjectTab<Object> = ObjectTab::new();
@@ -598,6 +602,7 @@ pub fn write_values(w: &mut dyn Write, values: &[Value]) -> Result<()>
     Ok(())
 }
 
+/// Loads values from the file.
 pub fn load_values<P: AsRef<Path>>(path: P, env: &Env) -> Result<Vec<Value>>
 {
     match File::open(path) {
@@ -609,6 +614,7 @@ pub fn load_values<P: AsRef<Path>>(path: P, env: &Env) -> Result<Vec<Value>>
     }
 }
 
+/// Saves the values to the file.
 pub fn save_values<P: AsRef<Path>>(path: P, values: &[Value]) -> Result<()>
 {
     match File::create(path) {

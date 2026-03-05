@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of built-in functions.
 use std::cmp;
 use std::f32;
 use std::ffi::OsString;
@@ -152,6 +153,7 @@ fn get_first_arg_string(arg_values: &[Value], err_msg: &str) -> Result<String>
     }
 }
 
+/// A `type` built-in function.
 pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -187,6 +189,7 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// A `clone` built-in function.
 pub fn clone(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -202,15 +205,19 @@ pub fn clone(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `bool` built-in function.
 pub fn boolean(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::Bool(a.to_bool()))) }
 
+/// An `int` built-in function.
 pub fn int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::Int(a.to_i64()))) }
 
+/// A `float` built-in function.
 pub fn float(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::Float(a.to_f32()))) }
 
+/// A `string` built-in function.
 pub fn string(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::Object(Arc::new(Object::String(format!("{}", a)))))) }
 
@@ -242,6 +249,7 @@ fn checked_mul_row_count_and_col_count(row_count: i64, col_count: i64) -> Result
     }
 }
 
+/// A `zeros` built-in function.
 pub fn zeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -259,6 +267,7 @@ pub fn zeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// An `ones` built-in function.
 pub fn ones(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -277,6 +286,7 @@ pub fn ones(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// An `eye` built-in function.
 pub fn eye(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -297,6 +307,7 @@ pub fn eye(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// An `init` built-in function.
 pub fn init(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 4 {
@@ -323,6 +334,7 @@ pub fn init(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     }
 }
 
+/// An `initdiag` built-in function.
 pub fn initdiag(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -369,6 +381,7 @@ fn to_row_or_column(value: &Value) -> Result<Vec<f32>>
     }
 }
 
+/// A `matrix` built-in function.
 pub fn matrix(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -414,6 +427,7 @@ pub fn matrix(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `rowvector` built-in function.
 pub fn rowvector(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -439,6 +453,7 @@ pub fn rowvector(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(1, xs.len(), xs.as_slice())?))))
 }
 
+/// A `colvector` built-in function.
 pub fn colvector(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -464,9 +479,11 @@ pub fn colvector(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     Ok(Value::Object(Arc::new(Object::Matrix(matrix_create_and_set_elems(xs.len(), 1, xs.as_slice())?))))
 }
 
+/// A `matrixarray` built-in function.
 pub fn matrixarray(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, Value::to_matrix_array) }
 
+/// An `error` built-in function.
 pub fn error(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -484,6 +501,7 @@ pub fn error(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// An `array` built-in function.
 pub fn array(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -516,6 +534,7 @@ pub fn array(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `strong` built-in function.
 pub fn strong(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -534,6 +553,7 @@ pub fn strong(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `weak` built-in function.
 pub fn weak(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() > 1 {
@@ -547,6 +567,7 @@ pub fn weak(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// An `isempty` built-in function.
 pub fn isempty(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -578,6 +599,7 @@ pub fn isempty(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `length` built-in function.
 pub fn length(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -609,6 +631,7 @@ pub fn length(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `rows` built-in function.
 pub fn rows(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -627,6 +650,7 @@ pub fn rows(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `columns` built-in function.
 pub fn columns(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -651,6 +675,7 @@ pub fn columns(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `get` built-in function.
 pub fn get(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 || arg_values.len() > 3 {
@@ -752,6 +777,7 @@ pub fn get(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// A `getdiag` built-in function.
 pub fn getdiag(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -779,6 +805,7 @@ pub fn getdiag(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `split` built-in function.
 pub fn split(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -811,6 +838,7 @@ pub fn split(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `trim` built-in function.
 pub fn trim(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -828,6 +856,7 @@ pub fn trim(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `contains` built-in function.
 pub fn contains(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -845,6 +874,7 @@ pub fn contains(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `startswith` built-in function.
 pub fn startswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -862,6 +892,7 @@ pub fn startswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) ->
     }
 }
 
+/// An `endswith` built-in function.
 pub fn endswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -879,6 +910,7 @@ pub fn endswith(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `replace` built-in function.
 pub fn replace(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -896,6 +928,7 @@ pub fn replace(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// An `upper` built-in function.
 pub fn upper(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -913,6 +946,7 @@ pub fn upper(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `lower` built-in function.
 pub fn lower(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -939,6 +973,7 @@ enum SortType
     Incomparable,
 }
 
+/// A `sort` built-in function.
 pub fn sort(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -984,6 +1019,7 @@ pub fn sort(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `reverse` built-in function.
 pub fn reverse(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1005,6 +1041,7 @@ pub fn reverse(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// An `any` built-in function.
 pub fn any(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -1034,6 +1071,7 @@ pub fn any(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// An `all` built-in function.
 pub fn all(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -1063,6 +1101,7 @@ pub fn all(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// A `find` built-in function.
 pub fn find(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -1097,6 +1136,7 @@ pub fn find(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     }
 }
 
+/// A `filter` built-in function.
 pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -1132,6 +1172,7 @@ pub fn filter(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `max` built-in function.
 pub fn max(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -1190,6 +1231,7 @@ pub fn max(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// A `min` built-in function.
 pub fn min(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -1248,6 +1290,7 @@ pub fn min(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// An `imax` built-in function.
 pub fn imax(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1293,6 +1336,7 @@ pub fn imax(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// An `imin` built-in function.
 pub fn imin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1338,6 +1382,7 @@ pub fn imin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `push` built-in function.
 pub fn push(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1359,6 +1404,7 @@ pub fn push(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `pop` built-in function.
 pub fn pop(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1382,6 +1428,7 @@ pub fn pop(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// An `append` built-in function.
 pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1422,6 +1469,7 @@ pub fn append(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// An `insert` built-in function.
 pub fn insert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -1462,6 +1510,7 @@ pub fn insert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `remove` built-in function.
 pub fn remove(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1501,6 +1550,7 @@ pub fn remove(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// An `errorkind` built-in function.
 pub fn errorkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1518,6 +1568,7 @@ pub fn errorkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// An `errormsg` built-in function.
 pub fn errormsg(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1535,33 +1586,43 @@ pub fn errormsg(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// An `isequal` built-in function.
 pub fn isequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2(arg_values, |a, b| Ok(Value::Bool(a.eq_without_types(b)?))) }
 
+/// An `isnotequal` built-in function.
 pub fn isnotequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2(arg_values, |a, b| Ok(Value::Bool(!a.eq_without_types(b)?))) }
 
+/// An `isless` built-in function.
 pub fn isless(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2(arg_values, |a, b| Ok(Value::Bool(a < b))) }
 
+/// An `isgreaterequal` built-in function.
 pub fn isgreaterequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2(arg_values, |a, b| Ok(Value::Bool(a >= b))) }
 
+/// An `isgreater` built-in function.
 pub fn isgreater(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2(arg_values, |a, b| Ok(Value::Bool(a > b))) }
 
+/// An `islessequal` built-in function.
 pub fn islessequal(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2(arg_values, |a, b| Ok(Value::Bool(a <= b))) }
 
+/// A `sigmoid` built-in function.
 pub fn sigmoid(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function sigmoid", |a| 1.0 / (1.0 + (-a).exp()), matrix_sigmoid) }
 
+/// A `tanh` built-in function.
 pub fn tanh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function tanh", f32::tanh, matrix_tanh) }
 
+/// A `swish` built-in function.
 pub fn swish(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function swish", |a| a / (1.0 + (-a).exp()), matrix_swish) }
 
+/// A `softmax` built-in function.
 pub fn softmax(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1580,9 +1641,11 @@ pub fn softmax(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `sqrt` built-in function.
 pub fn sqrt(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function sqrt", f32::sqrt, matrix_sqrt) }
 
+/// A `reallytranspose` built-in function.
 pub fn reallytranspose(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1601,6 +1664,7 @@ pub fn reallytranspose(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value
     }
 }
 
+/// A `repeat` built-in function.
 pub fn repeat(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1632,6 +1696,7 @@ pub fn repeat(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `mod` built-in function.
 pub fn modulo(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1656,6 +1721,7 @@ pub fn modulo(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// An `abs` built-in function.
 pub fn abs(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1675,72 +1741,95 @@ pub fn abs(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// A `pow` built-in function.
 pub fn pow(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2_for_f32_and_matrix(arg_values, "unsupported types for function pow", f32::powf, matrix_pow_for_scalar, matrix_rpow_for_scalar, matrix_pow) }
 
+/// An `exp` built-in function.
 pub fn exp(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function exp", f32::exp, matrix_exp) }
 
+/// A `log` built-in function.
 pub fn log(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function log", f32::ln, matrix_ln) }
 
+/// A `log2` built-in function.
 pub fn log2(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function log2", f32::log2, matrix_log2) }
 
+/// A `log10` built-in function.
 pub fn log10(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function log10", f32::log10, matrix_log10) }
 
+/// A `sin` built-in function.
 pub fn sin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function sin", f32::sin, matrix_sin) }
 
+/// A `cos` built-in function.
 pub fn cos(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function cos", f32::cos, matrix_cos) }
 
+/// A `tan` built-in function.
 pub fn tan(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function tan", f32::tan, matrix_tan) }
 
+/// An `asin` built-in function.
 pub fn asin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function asin", f32::asin, matrix_asin) }
 
+/// An `acos` built-in function.
 pub fn acos(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function acos", f32::acos, matrix_acos) }
 
+/// An `atan` built-in function.
 pub fn atan(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function atan", f32::atan, matrix_atan) }
 
+/// An `atan2` built-in function.
 pub fn atan2(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun2_for_f32_and_matrix(arg_values, "unsupported types for function atan2", f32::atan2, matrix_atan2_for_scalar, matrix_ratan2_for_scalar, matrix_atan2) }
 
+/// A `sinh` built-in function.
 pub fn sinh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function sinh", f32::sinh, matrix_sinh) }
 
+/// A `cosh` built-in function.
 pub fn cosh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function cosh", f32::cosh, matrix_cosh) }
 
+/// An `asinh` built-in function.
 pub fn asinh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function asinh", f32::asinh, matrix_asinh) }
 
+/// An `acosh` built-in function.
 pub fn acosh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function acosh", f32::acosh, matrix_acosh) }
 
+/// An `atanh` built-in function.
 pub fn atanh(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function atanh", f32::atanh, matrix_atanh) }
 
+/// A `sign` built-in function.
 pub fn sign(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function sign", f32::signum, matrix_signum) }
 
+/// A `ceil` built-in function.
 pub fn ceil(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function ceil", f32::ceil, matrix_ceil) }
 
+/// A `floor` built-in function.
 pub fn floor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function floor", f32::floor, matrix_floor) }
 
+/// A `round` built-in function.
 pub fn round(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function round", f32::round, matrix_round) }
 
+/// A `trunc` built-in function.
 pub fn trunc(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1_for_f32_and_matrix(arg_values, "unsupported type for function trunc", f32::trunc, matrix_trunc) }
 
+/// A `rand` built-in function.
 pub fn rand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -1749,6 +1838,7 @@ pub fn rand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::Float(random()))
 }
 
+/// A `randi` built-in function.
 pub fn randi(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -1770,6 +1860,7 @@ pub fn randi(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `str2int` built-in function.
 pub fn str2int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1792,6 +1883,7 @@ pub fn str2int(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `str2float` built-in function.
 pub fn str2float(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1814,6 +1906,7 @@ pub fn str2float(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `hex2dec` built-in function.
 pub fn hex2dec(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1841,6 +1934,7 @@ pub fn hex2dec(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `char2code` built-in function.
 pub fn char2code(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1863,6 +1957,7 @@ pub fn char2code(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `code2char` built-in function.
 pub fn code2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -1888,6 +1983,7 @@ pub fn code2char(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `formatmillis` built-in function.
 pub fn formatmillis(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1917,6 +2013,7 @@ pub fn formatmillis(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
     }
 }
 
+/// A `withwidth` built-in function.
 pub fn withwidth(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 || arg_values.len() > 3 {
@@ -1961,6 +2058,7 @@ pub fn withwidth(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `withzeros` built-in function.
 pub fn withzeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -1982,6 +2080,7 @@ pub fn withzeros(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `readline` built-in function.
 pub fn readline(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -1999,6 +2098,7 @@ pub fn readline(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `format` built-in function.
 pub fn format(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     let mut s = String::new();
@@ -2008,6 +2108,7 @@ pub fn format(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::Object(Arc::new(Object::String(s))))
 }
 
+/// A `print` built-in function.
 pub fn print(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     match env.stdout() {
@@ -2027,6 +2128,7 @@ pub fn print(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::None)
 }
 
+/// A `println` built-in function.
 pub fn println(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     match env.stdout() {
@@ -2048,6 +2150,7 @@ pub fn println(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::None)
 }
 
+/// An `eprint` built-in function.
 pub fn eprint(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     match env.stderr() {
@@ -2067,6 +2170,7 @@ pub fn eprint(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     Ok(Value::None)
 }
 
+/// An `eprintln` built-in function.
 pub fn eprintln(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     match env.stderr() {
@@ -2088,6 +2192,7 @@ pub fn eprintln(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Re
     Ok(Value::None)
 }
 
+/// A `flush` built-in function.
 pub fn flush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2104,6 +2209,7 @@ pub fn flush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// An `eflush` built-in function.
 pub fn eflush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2120,6 +2226,7 @@ pub fn eflush(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `cd` built-in function.
 pub fn cd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2136,6 +2243,7 @@ pub fn cd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<
     }
 }
 
+/// A `pwd` built-in function.
 pub fn pwd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2147,6 +2255,7 @@ pub fn pwd(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// An `exist` built-in function.
 pub fn exist(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2160,6 +2269,7 @@ pub fn exist(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `filetype` built-in function.
 pub fn filetype(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2178,6 +2288,7 @@ pub fn filetype(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `dir` built-in function.
 pub fn dir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2199,6 +2310,7 @@ pub fn dir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// A `mkdir` built-in function.
 pub fn mkdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2211,6 +2323,7 @@ pub fn mkdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `rmdir` built-in function.
 pub fn rmdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2223,6 +2336,7 @@ pub fn rmdir(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `rmfile` built-in function.
 pub fn rmfile(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2235,6 +2349,7 @@ pub fn rmfile(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `copy` built-in function.
 pub fn copy(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -2255,6 +2370,7 @@ pub fn copy(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `rename` built-in function.
 pub fn rename(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -2275,6 +2391,7 @@ pub fn rename(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `spawn` built-in function.
 pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -2301,6 +2418,7 @@ pub fn spawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// An `exit` built-in function.
 pub fn exit(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2313,6 +2431,7 @@ pub fn exit(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `load` built-in function.
 pub fn load(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2326,6 +2445,7 @@ pub fn load(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result
     }
 }
 
+/// A `save` built-in function.
 pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -2339,6 +2459,7 @@ pub fn save(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `loadstr` built-in function.
 pub fn loadstr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2357,6 +2478,7 @@ pub fn loadstr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `savestr` built-in function.
 pub fn savestr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -2383,6 +2505,7 @@ pub fn savestr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `loadtoml` built-in function.
 pub fn loadtoml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2406,6 +2529,7 @@ pub fn loadtoml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `savetoml` built-in function.
 pub fn savetoml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -2437,6 +2561,7 @@ pub fn savetoml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `loadjson` built-in function.
 pub fn loadjson(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2460,6 +2585,7 @@ pub fn loadjson(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `savejson` built-in function.
 pub fn savejson(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -2491,6 +2617,7 @@ pub fn savejson(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// An `args` built-in function.
 pub fn args(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2500,6 +2627,7 @@ pub fn args(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result
     Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(shared_env_g.args().iter().map(|s| Value::Object(Arc::new(Object::String(s.clone())))).collect())))))
 }
 
+/// An `env` built-in function.
 pub fn env(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2508,6 +2636,7 @@ pub fn env(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
     Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(std::env::vars_os().map(|p| Value::Object(Arc::new(Object::String(format!("{}={}", p.0.to_string_lossy().into_owned(), p.1.to_string_lossy().into_owned()))))).collect())))))
 }
 
+/// A `scriptdir` built-in function.
 pub fn scriptdir(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2516,6 +2645,7 @@ pub fn scriptdir(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> R
     Ok(Value::Object(Arc::new(Object::String(env.script_dir().to_string_lossy().into_owned()))))
 }
 
+/// A `libpath` built-in function.
 pub fn libpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2525,6 +2655,7 @@ pub fn libpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::Object(Arc::new(Object::String(shared_env_g.lib_path().to_string_lossy().into_owned()))))
 }
 
+/// A `domain` built-in function.
 pub fn domain(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2594,6 +2725,7 @@ fn use_lib(interp: &mut Interp, env: &mut Env, lib_name: &str) -> Result<()>
     res
 }
 
+/// An `uselib` built-in function.
 pub fn uselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2611,6 +2743,7 @@ pub fn uselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::None)
 }
 
+/// A `reuselib` built-in function.
 pub fn reuselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2622,6 +2755,7 @@ pub fn reuselib(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::None)
 }
 
+/// A `run` built-in function.
 pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2636,6 +2770,7 @@ pub fn run(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     Ok(Value::None)
 }
 
+/// A `clock` built-in function.
 pub fn clock(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2679,6 +2814,7 @@ fn mod_pair_for_name(env: &Env, name: &str, is_var: bool) -> Result<(Arc<RwLock<
     }
 }
 
+/// An `usemod` built-in function.
 pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -2715,6 +2851,7 @@ pub fn usemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// An `usemods` built-in function.
 pub fn usemods(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2742,6 +2879,7 @@ pub fn usemods(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// An `usevar` built-in function.
 pub fn usevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -2789,6 +2927,7 @@ pub fn usevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// An `usevars` built-in function.
 pub fn usevars(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2816,6 +2955,7 @@ pub fn usevars(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `removeusemod` built-in function.
 pub fn removeusemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2837,6 +2977,7 @@ pub fn removeusemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `removeusevar` built-in function.
 pub fn removeusevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2858,6 +2999,7 @@ pub fn removeusevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `removemod` built-in function.
 pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2879,6 +3021,7 @@ pub fn removemod(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `removevar` built-in function.
 pub fn removevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2900,6 +3043,7 @@ pub fn removevar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `removelocalvar` built-in function.
 pub fn removelocalvar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2917,6 +3061,7 @@ pub fn removelocalvar(_interp: &mut Interp, env: &mut Env, arg_values: &[Value])
     }
 }
 
+/// A `checkintr` built-in function.
 pub fn checkintr(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2930,6 +3075,7 @@ pub fn checkintr(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> R
     Ok(Value::None)
 }
 
+/// A `backend` built-in function.
 pub fn backend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2938,6 +3084,7 @@ pub fn backend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     Ok(Value::Object(Arc::new(Object::String(String::from(matrix_backend_name()?)))))
 }
 
+/// A `version` built-in function.
 pub fn version(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2946,6 +3093,7 @@ pub fn version(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     Ok(Value::Object(Arc::new(Object::String(String::from(env!("CARGO_PKG_VERSION"))))))
 }
 
+/// A `reqver` built-in function.
 pub fn reqver(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -2972,6 +3120,7 @@ pub fn reqver(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
 }
 
 
+/// A `docpath` built-in function.
 pub fn docpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -2981,6 +3130,7 @@ pub fn docpath(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::Object(Arc::new(Object::String(shared_env_g.doc_path().to_string_lossy().into_owned()))))
 }
 
+/// A `doc` built-in function.
 pub fn doc(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() > 2 {
@@ -3073,6 +3223,7 @@ fn assert_op<F>(arg_values: &[Value], default_msg: Option<&str>, pair: Option<(V
     Ok(Value::None)
 }
 
+/// An `assert` built-in function.
 pub fn assert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -3085,6 +3236,7 @@ pub fn assert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }                                    
 }
 
+/// An `asserteq` built-in function.
 pub fn asserteq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 {
@@ -3096,6 +3248,7 @@ pub fn asserteq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// An `assertne` built-in function.
 pub fn assertne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 {
@@ -3107,6 +3260,7 @@ pub fn assertne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// An `assertnearlyeq` built-in function.
 pub fn assertnearlyeq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 3 {
@@ -3122,6 +3276,7 @@ pub fn assertnearlyeq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]
     }
 }
 
+/// An `assertnearlyne` built-in function.
 pub fn assertnearlyne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 3 {
@@ -3137,6 +3292,7 @@ pub fn assertnearlyne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]
     }
 }
 
+/// A `tests` built-in function.
 pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -3147,9 +3303,11 @@ pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::None)
 }
 
+/// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
 
+/// Adds the alias to the root module.
 pub fn add_alias(root_mod: &mut ModNode<Value, ()>, new_ident: String, old_ident: &String)
 {
     match root_mod.var(old_ident) {
@@ -3158,6 +3316,7 @@ pub fn add_alias(root_mod: &mut ModNode<Value, ()>, new_ident: String, old_ident
     }
 }
 
+/// Adds standard built-in functions to the root module.
 pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
 {
     root_mod.add_var(String::from("pi"), Value::Float(f32::consts::PI));

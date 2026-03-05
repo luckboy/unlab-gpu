@@ -5,12 +5,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-//! A tree module.
+//! A module of syntax tree.
 use std::fmt;
 use std::sync::Arc;
 use crate::error::*;
 
 /// A structure of syntax tree.
+///
+/// The syntax tree creates from tokens by a parser. An interpreter can take the syntax tree to
+/// interpretion.
 #[derive(Clone, Debug)]
 pub struct Tree(pub Vec<Node>);
 
@@ -86,19 +89,19 @@ pub enum Stat
     Expr(Box<Expr>, Pos),
     /// An assignment statement.
     Assign(Box<Expr>, Box<Expr>, Pos),
-    /// An if statement.
+    /// An `if` statement.
     If(Box<Expr>, Vec<Box<Stat>>, Vec<(Box<Expr>, Vec<Box<Stat>>)>, Option<Vec<Box<Stat>>>, Pos),
-    /// A for statement.
+    /// A `for` statement.
     For(String, Box<Expr>, Vec<Box<Stat>>, Pos),
-    /// A while statement.
+    /// A `while` statement.
     While(Box<Expr>, Vec<Box<Stat>>, Pos),
-    /// A break statement.
+    /// A `break` statement.
     Break(Pos),
-    /// A continue statement.
+    /// A `continue` statement.
     Continue(Pos),
-    /// A return statement.
+    /// A `return` statement.
     Return(Option<Box<Expr>>, Pos),
-    /// A quit statement.
+    /// A `quit` statement.
     Quit(Pos),
 }
 
@@ -147,13 +150,13 @@ pub enum Expr
     Var(Name, Pos),
     /// A function application.
     App(Box<Expr>, Vec<Box<Expr>>, Pos),
-    /// An unary operator.
+    /// An expression of unary operator.
     UnaryOp(UnaryOp, Box<Expr>, Pos),
-    /// A binary operator.
+    /// An expression of binary operator.
     BinOp(BinOp, Box<Expr>, Box<Expr>, Pos),
-    /// A logical AND operator.
+    /// A logical AND expression.
     And(Box<Expr>, Box<Expr>, Pos),
-    /// A logical OR operator.
+    /// A logical OR expression.
     Or(Box<Expr>, Box<Expr>, Pos),
     /// A field access.
     Field(Box<Expr>, String, Pos),
@@ -220,7 +223,7 @@ pub enum Lit
     FilledMatrix(MatrixRow, Box<Expr>),
     /// An array literal.
     Array(Vec<Box<Expr>>),
-    /// A filled array literal.
+    /// A filled array literal with one value.
     FilledArray(Box<Expr>, Box<Expr>),
     /// A structure literal.
     Struct(Vec<FieldPair>),
@@ -230,9 +233,9 @@ pub enum Lit
 #[derive(Clone, Debug)]
 pub enum MatrixRow
 {
-    /// A matrix row.
+    /// An matrix row.
     Row(Vec<Box<Expr>>),
-    /// A filled matrix row. 
+    /// A filled matrix row with one value.
     FilledRow(Box<Expr>, Box<Expr>),
 }
 
