@@ -233,12 +233,12 @@ impl<'a> Lexer<'a>
             Ok(_) => {
                 let path = self.path.clone();
                 let line_count = self.line;
-                let line_without_crnl = str_without_crnl(line.as_str());
-                let mut cs = line_without_crnl.chars().enumerate().map(|p| (p.1, Pos::new(path.clone(), line_count, p.0 + 1)));
+                let line_without_crlf = str_without_crlf(line.as_str());
+                let mut cs = line_without_crlf.chars().enumerate().map(|p| (p.1, Pos::new(path.clone(), line_count, p.0 + 1)));
                 let cs2: &mut dyn Iterator<Item = (char, Pos)> = &mut cs;
                 let mut cs3 = PushbackIter::new(cs2);
                 self.line_tokens.clear();
-                self.eol_column = line_without_crnl.chars().count() + 1;
+                self.eol_column = line_without_crlf.chars().count() + 1;
                 while self.read_token(&mut cs3) {}
                 self.line_tokens.push(Ok((Token::Newline, Pos::new(path, line_count, self.eol_column))));
                 self.line_tokens.reverse();

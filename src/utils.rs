@@ -61,7 +61,7 @@ impl<T: Iterator> Iterator for PushbackIter<T>
 }
 
 /// Returns the string slice without a NL character or a CRNL character sequence.
-pub fn str_without_crnl(s: &str) -> &str
+pub fn str_without_crlf(s: &str) -> &str
 {
     if s.ends_with('\n') {
         let s2 = &s[0..(s.len() - 1)];
