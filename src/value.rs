@@ -45,9 +45,11 @@ use crate::interp::*;
 use crate::tree::*;
 use crate::utils::*;
 
+/// A type of window identifier.
 #[cfg(feature = "plot")]
 pub type WindowId = winit::window::WindowId;
 
+/// A type of window identifier.
 #[cfg(not(feature = "plot"))]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct WindowId(());
@@ -391,11 +393,11 @@ impl Value
     /// Applies the function with one argument for a dot operation.
     ///
     /// If one element of one value or one field of one value is a floating-point number or a
-    /// matrix, this method applies the function with one argument for this element or this
-    /// field. If this element or this field is an array or a structure, this method recursively
-    /// invokes itself for this element or this field. This method ignores this element or this
-    /// field otherwise. This method returns an error with the error message if one value isn't
-    /// an array or an structure.
+    /// matrix, this method applies the function to one argument for this element or this field.
+    /// If this element or this field is an array or a structure, this method recursively invokes
+    /// itself for this element or this field. This method ignores this element or this field
+    /// otherwise. This method returns an error with the error message if one value isn't an
+    /// array or an structure.
     pub fn dot1<F>(&self, err_msg: &str, mut f: F) -> Result<Value>
         where F: FnMut(&Value) -> Result<Value>
     { self.dot1_with_fun_ref(err_msg, &mut f) }
@@ -472,7 +474,7 @@ impl Value
     /// Applies the function with two arguments for a dot operation.
     ///
     /// If two elements of two values or two fields of two values are floating-point numbers or
-    /// matrices, this method applies the function with two arguments for these elements or these
+    /// matrices, this method applies the function to two arguments for these elements or these
     /// fields. If these elements or these fields are arrays or structures, this method
     /// recursively invokes itself for these elements or these fields. This method compares these
     /// elements or these fields otherwise. If these elements or these fields aren't equal, this
@@ -482,7 +484,7 @@ impl Value
         where F: FnMut(&Value, &Value) -> Result<Value>
     { self.dot2_with_fun_ref(value, err_msg, &mut f) }
 
-    /// Applies the function with the arguments.
+    /// Applies the function to the arguments.
     pub fn apply(&self, interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
     { interp.apply_fun(env, self, arg_values) }
     

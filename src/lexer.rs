@@ -13,66 +13,125 @@ use crate::doc::*;
 use crate::error::*;
 use crate::utils::*;
 
+/// A token enumeration.
 #[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub enum Token
 {
+    /// A `(` token.
     LParen,
+    /// A `)` token.
     RParen,
+    /// A `[` token.
     LBracket,
+    /// A `]` token.
     RBracket,
+    /// A `{` token.
     LBrace,
+    /// A `}` token.
     RBrace,
+    /// A `.[` token.
     DotLBracket,
+    /// A `.]` token.
     DotRBracket,
+    /// A `?` token.
     Ques,
+    /// A `*` token.
     Star,
+    /// A `/` token.
     Slash,
+    /// A `+` token.
     Plus,
+    /// A `-` token.
     Minus,
+    /// A `.*` token.
     DotStar,
+    /// A `./` token.
     DotSlash,
+    /// A `.+` token.
     DotPlus,
+    /// A `.-` token.
     DotMinus,
+    /// A `<` token.
     Lt,
+    /// A `>=` token.
     GtEq,
+    /// A `>` token.
     Gt,
+    /// A `<=` token.
     LtEq,
+    /// A `=` token.
     Eq,
+    /// A `==` token.
     EqEq,
+    /// A `!=` token.
     ExEq,
+    /// A `'` token.
     Apos,
+    /// A `.` token.
     Dot,
+    /// A `:` token.
     Colon,
+    /// A `::` token.
     ColonColon,
+    /// A `,` token.
     Comma,
+    /// A token of newline or `;`.
     Newline,
+    /// An `and` keyword.
     And,
+    /// A `break` keyword.
     Break,
+    /// A `by` keyword.
     By,
+    /// A `continue` keyword.
     Continue,
+    /// An `else` keyword.
     Else,
+    /// An `end` keyword.
     End,
+    /// A `false` keyword.
     False,
+    /// A `fill` keyword.
     Fill,
+    /// A `for` keyword.
     For,
+    /// A `function` keyword.
     Function,
+    /// An `if` keyword.
     If,
+    /// An `in` keyword.
     In,
+    /// An `inf` keyword.
     Inf,
+    /// A `module` keyword.
     Module,
+    /// A `nan` keyword.
     Nan,
+    /// A `none` keyword.
     None,
+    /// A `not` keyword.
     Not,
+    /// An `or` keyword.
     Or,
+    /// A `quit` keyword.
     Quit,
+    /// A `return` keyword.
     Return,
+    /// A `root` keyword.
     Root,
+    /// A `to` keyword.
     To,
+    /// A `true` keyword.
     True,
+    /// A `while` keyword.
     While,
+    /// An integer number token.
     Int(i64),
+    /// A floating-point number token.
     Float(f32),
+    /// A string token.
     String(String),
+    /// An identifier token.
     Ident(String),
 }
 

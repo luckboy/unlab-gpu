@@ -71,7 +71,7 @@ impl Interp
         }
     }
 
-    /// Applies the function with the arguments.
+    /// Applies the function to the arguments.
     pub fn apply_fun(&mut self, env: &mut Env, fun_value: &Value, arg_values: &[Value]) -> Result<Value>
     {
         match fun_value {

@@ -588,7 +588,6 @@ fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Obje
     Ok(())
 }
 
-
 /// Writes the values to the writer.
 pub fn write_values(w: &mut dyn Write, values: &[Value]) -> Result<()>
 { 

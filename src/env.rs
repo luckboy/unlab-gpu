@@ -50,9 +50,11 @@ pub enum Output
     Cursor(Arc<RwLock<Cursor<Vec<u8>>>>),
 }
 
+/// A type of event loop proxy.
 #[cfg(feature = "plot")]
 pub type EventLoopProxy = winit::event_loop::EventLoopProxy<PlotterAppEvent>;
 
+/// A type of event loop proxy.
 #[cfg(not(feature = "plot"))]
 #[derive(Clone, Debug)]
 pub struct EventLoopProxy(());

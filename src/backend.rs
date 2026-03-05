@@ -52,23 +52,21 @@ pub struct BackendConfig
 {
     /// A backend.
     pub backend: Option<Backend>,
-    /// An ordinal number for the CUDA backend. Default value of this field is zero.
+    /// An ordinal number for the CUDA backend.
     pub ordinal: Option<usize>,
-    /// A platform index for the OpenCL backend. Default value of this field is zero.
+    /// A platform index for the OpenCL backend.
     pub platform: Option<usize>,
-    /// A device index for the OpenCL backend. Default value of this field is zero.
+    /// A device index for the OpenCL backend.
     pub device: Option<usize>,
-    /// If this field is `true`, the CUDA backend uses the cuBLAS library. Default value of this
-    /// field is `true`.
+    /// If this field is `true`, the CUDA backend uses the cuBLAS library.
     pub cublas: Option<bool>,
-    /// If this field is `true`, the CUDA backend uses the mma instruction. Default value of this
-    /// field is `false`.
+    /// If this field is `true`, the CUDA backend uses the mma instruction.
     pub mma: Option<bool>,
 }
 
 impl BackendConfig
 {
-    /// Reads the backend configuration from the reader.
+    /// Reads a backend configuration from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -83,7 +81,7 @@ impl BackendConfig
         }
     }
 
-    /// Loads the backend configuration from the file.
+    /// Loads a backend configuration from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -92,7 +90,7 @@ impl BackendConfig
         }
     }
 
-    /// Loads the backend configuration from the file if the file exists, otherwise this method
+    /// Loads a backend configuration from the file if the file exists, otherwise this method
     /// returns `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
@@ -160,7 +158,7 @@ fn initialize_cuda_backend(ordinal: usize, is_cublas: bool, is_mma: bool) -> Res
 fn initialize_cuda_backend(_ordinal: usize, _is_cublas: bool, _is_mma: bool) -> Result<()>
 { Err(Error::NoCudaBackend) }
 
-/// Initalizes a backend for matrices with the backend configuration.
+/// Initializes a backend for matrices with the backend configuration.
 ///
 /// If the backend configuration isn't passed, this method uses the default field values of
 /// backend configuration.
@@ -192,7 +190,7 @@ pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<
     }
 }
 
-/// Initalizes a backend for matrices with the file of backend configuration.
+/// Initializes a backend for matrices with the file of backend configuration.
 ///
 /// If the file of backend configuration doesn't exist, this method uses the default field values
 /// of backend configuration.
