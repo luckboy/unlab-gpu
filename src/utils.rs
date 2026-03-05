@@ -60,7 +60,7 @@ impl<T: Iterator> Iterator for PushbackIter<T>
     }
 }
 
-/// Returns the string slice without a LF character or a CRLF character sequence.
+/// Returns the string slice without the LF character and the CRLF character sequence.
 pub fn str_without_crlf(s: &str) -> &str
 {
     if s.ends_with('\n') {
