@@ -66,7 +66,7 @@ pub struct Mod(pub Vec<Node>);
 #[derive(Clone, Debug)]
 pub struct Fun(pub Vec<Arg>, pub Vec<Box<Stat>>);
 
-/// An srgument structure.
+/// An argument structure.
 #[derive(Clone, Debug)]
 pub struct Arg(pub String, pub Pos);
 

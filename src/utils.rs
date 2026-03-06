@@ -20,7 +20,7 @@ use crate::value::*;
 
 /// A structure of pushback iterator.
 ///
-/// The pushback iterator allows to push back an item to itself.
+/// The pushback iterator allows to push back an item.
 #[derive(Clone)]
 pub struct PushbackIter<T: Iterator>
 {
@@ -1036,7 +1036,7 @@ pub fn matrix_min_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
     }
 }
 
-/// Converts the string slice to an url name.
+/// Converts the string slice to an URL name.
 ///
 /// The character of string slice is escaped if the character of string slice isn't an URL
 /// unreserved character. If the path flag is set, slash character isn't escaped.

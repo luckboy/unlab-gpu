@@ -62,8 +62,8 @@ pub struct EventLoopProxy(());
 /// A structure of shared environment.
 ///
 /// The shared environment is part of an environment that has global properities which can be
-/// shared between different environments. These global properties are paths to libraries and
-/// documentations, arguments, used libraries, test suites, an event loop proxy, and othe
+/// shared between different environments. These global properties are paths of libraries and
+/// documentations, arguments, used libraries, test suites, an event loop proxy, and other
 /// properties. The event loop proxy is used to communication to with the main thread from the
 /// windows.
 #[derive(Clone)]
@@ -111,11 +111,11 @@ impl SharedEnv
     pub fn new(lib_path: OsString, doc_path: OsString, args: Vec<String>) -> Self
     { Self::new_with_intr_checker(lib_path, doc_path, args, Arc::new(EmptyIntrChecker::new())) }
 
-    /// Returns the path of libraries.
+    /// Returns the paths of libraries.
     pub fn lib_path(&self) -> &OsStr
     { self.lib_path.as_os_str() }
 
-    /// Returns the path of documentations.
+    /// Returns the paths of documentations.
     pub fn doc_path(&self) -> &OsStr
     { self.doc_path.as_os_str() }
 
@@ -355,7 +355,7 @@ impl Env
     /// Pushes the function module and a local variables to the stack for applies the function.
     ///
     /// This method pushes the function module and the local variables and returns `true` if all
-    /// identifiers of arguments are different; otherwise this method returns `false`. 
+    /// identifiers of arguments are different, otherwise this method returns `false`. 
     pub fn push_fun_mod_and_local_vars(&mut self, fun_mod_idents: &[String], args: &[Arg], arg_values: &[Value]) -> Result<bool>
     {
         let fun_mod = match ModNode::mod_from(&self.root_mod, fun_mod_idents, false)? {
