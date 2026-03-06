@@ -68,7 +68,7 @@ impl Home
     ///
     /// This method takes the Unlab-gpu home directory, the paths. The directories of binaries,
     /// libraries, and documnetations are located in the Unlab-gpu by default if the flag of work
-    /// directory isn't set, otherwise this directories are located in the work directory of
+    /// directory isn't set, otherwise these directories are located in the work directory of
     /// current package by default.
     pub fn new(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_work_dir: bool) -> Option<Self>
     {
