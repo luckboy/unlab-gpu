@@ -64,7 +64,7 @@ impl F32Key
     
     /// Converts the floating-point number to a key floating-point number.
     ///
-    /// This method retuns negated infinity if floating-point number is a NaN, otherwise the
+    /// This method retuns negated infinity if the floating-point number is NaN, otherwise the
     /// floating-point number.
     pub fn to_key_f32(&self) -> f32
     {

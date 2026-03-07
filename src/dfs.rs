@@ -1,17 +1,21 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of DFS algorithm.
 use std::collections::HashSet;
 use std::hash::Hash;
 
+/// An enumeration of DFS result.
 #[derive(Clone, Debug)]
 pub enum DfsResult<T>
 {
+    /// A success
     Success,
+    /// A cycle.
     Cycle(Vec<T>),
 }
 
@@ -28,6 +32,10 @@ fn find_cycle<T: Clone + Eq + Hash>(u: &T, vs: &[T], stack: &[(T, Vec<T>)], proc
     }
 }
 
+/// This function is implementation of DFS algorithm with cycle detection.
+///
+/// This function returns a path with the cycle if this function detects a cycle, otherwise returns
+/// a success.
 pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, visiteds: &mut HashSet<T>, data: &mut U, mut f: F, mut g: G) -> Result<DfsResult<T>, E>
     where F: FnMut(&T, &mut U) -> Result<Vec<T>, E>,
           G: FnMut(&T, &mut U) -> Result<(), E>

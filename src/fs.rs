@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A filesytem module.
 use std::collections::HashSet;
 use std::fs::copy;
 use std::fs::create_dir;
@@ -66,6 +67,9 @@ fn recursively_copy_with_path_bufs(src_path_buf: &mut PathBuf, dst_path_buf: &mu
     Ok(())
 }
 
+/// Recursively copies the files.
+///
+/// This function automatically creates a destition directory with parent directories.
 pub fn recursively_copy<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()>
 {
     let mut src_path_buf = PathBuf::from(src.as_ref());
@@ -112,6 +116,10 @@ fn recursively_remove_with_path_buf(path_buf: &mut PathBuf, is_force: bool) -> R
     Ok(())
 }
 
+/// Recursively removes the files.
+///
+/// This function doesn't returns an error for a directory or a file that doesn't exist if the
+/// force flag is set.
 pub fn recursively_remove<P: AsRef<Path>>(path: P, is_force: bool) -> Result<()>
 {
     let mut path_buf = PathBuf::from(path.as_ref());
@@ -155,6 +163,11 @@ fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, di
     Ok(())
 }
 
+/// Searches the path conflicts for the source directory and the destination directory.
+///
+/// This function returns the conflict paths and the paths of source directory for the optional
+/// depth. The paths of source directory and destination directory are compared. If these paths
+/// are same, there occurs the path conflict.
 pub fn conflicts<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, ignored_paths: &HashSet<PathBuf>, depth: Option<usize>) -> Result<(Vec<PathBuf>, Vec<PathBuf>)>
 {
     let mut paths: Option<Vec<PathBuf>> = Some(Vec::new());
@@ -204,6 +217,7 @@ fn get_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, paths: &mut Vec<
     Ok(())
 }
 
+/// Returns the paths in the directory for the optional depth.
 pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec<PathBuf>>
 {
     let mut paths: Vec<PathBuf> = Vec::new();
@@ -212,6 +226,9 @@ pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec
     Ok(paths)
 }
 
+/// Recursively copies files which are in the directories of paths.
+///
+/// See [`recursively_copy`].
 pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, paths: &[PathBuf]) -> Result<()>
 {
     for suffix_path_buf in paths {
@@ -224,6 +241,9 @@ pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst
     Ok(())
 }
 
+/// Recursively removes files which are in the directories of paths.
+///
+/// See [`recursively_remove`].
 pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf], is_force: bool) -> Result<()>
 {
     for suffix_path_buf in paths {
@@ -247,6 +267,8 @@ pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf
     Ok(())
 }
 
+/// Returns the path to one directory in the directory if this directory is only one in the
+/// directory, otherwise returns the path to the directory.
 pub fn only_one_dir_in_dir<P: AsRef<Path>>(path: P) -> Result<Option<PathBuf>>
 {
     let entries = read_dir(path)?;

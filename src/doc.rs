@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A documentation module.
 use std::fs::File;
 use std::fs::create_dir;
 use std::fs::write;
@@ -26,11 +27,20 @@ use crate::parser::*;
 use crate::tree::*;
 use crate::utils::*;
 
+/// A trait of documentation iterator.
+///
+/// A documenentation iterator is a normal iterator with a documentation collection. A parser 
+/// collects documentation by this interator and then documentation is stored in a documentation
+/// module
 pub trait DocIterator: Iterator
 {
+    /// Takes the documentation.
     fn take_doc(&mut self) -> Option<String>;
 }
 
+/// A structure of documentation iterator.
+///
+/// The documentation iterator is dummy that doesn't collect documentation.
 pub struct DocIter<T: Iterator>
 {
     iter: T,
@@ -38,12 +48,15 @@ pub struct DocIter<T: Iterator>
 
 impl<T: Iterator> DocIter<T>
 {
+    /// Create a documentation iterator.
     pub fn new(iter: T) -> Self
     { DocIter { iter, } }
 
+    /// Returns the immutable iterator.
     pub fn iter(&self) -> &T
     { &self.iter }
     
+    /// Returns the mutable iterator.
     pub fn iter_mut(&mut self) -> &mut T
     { &mut self.iter }
 }
