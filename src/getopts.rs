@@ -1,10 +1,11 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//!A module of getopts.
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -134,6 +135,7 @@ pub fn create_args(value: &Value, err_msg: &str) -> Result<Vec<String>>
     }
 }
 
+/// A `getopts` built-in function. 
 pub fn getopts(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -172,6 +174,7 @@ pub fn getopts(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields)))))
 }
 
+/// A `getoptsusage` built-in function. 
 pub fn getoptsusage(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {

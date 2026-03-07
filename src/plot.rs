@@ -1,10 +1,11 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A plotting module.
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -42,6 +43,9 @@ use crate::interp::*;
 use crate::utils::*;
 use crate::value::*;
 
+/// A structure of floating-point number key.
+///
+/// The floating-point number is used by surfaces which are drawn.
 #[derive(Copy, Clone, Debug)]
 pub struct F32Key
 {
@@ -50,12 +54,18 @@ pub struct F32Key
 
 impl F32Key
 {
+    /// Creates a floating-point number key.
     pub fn new(value: f32) -> Self
     { F32Key { value, } }
     
+    /// Retursn the floating-point number.
     pub fn to_f32(&self) -> f32
     { self.value }
     
+    /// Converts the floating-point number to a key floating-point number.
+    ///
+    /// This method retuns negated infinity if floating-point number is a NaN, otherwise the
+    /// floating-point number.
     pub fn to_key_f32(&self) -> f32
     {
         if !self.value.is_nan() {
@@ -87,42 +97,61 @@ impl PartialOrd for F32Key
     { Some(self.cmp(other)) }
 }
 
+/// A chart structure.
 #[derive(Clone, Debug)]
 pub struct Chart
 {
+    /// A chart title.
     pub title: Option<String>,
+    /// A window identfier.
     pub window_id: Option<WindowId>,
+    /// If this field is `true`, chart can be shown on the window.
     pub has_window: bool,
+    /// A path to a chart file.
     pub file: Option<String>,
+    /// A chart size.
     pub size: Option<(u32, u32)>,
 }
 
+/// A structure of axes 2D. 
 #[derive(Clone, Debug)]
 pub struct Axes2d
 {
+    /// A X axis.
     pub x: Range<f32>,
+    /// An Y axis.
     pub y: Range<f32>,
 }
 
+/// A structure of axes 3D. 
 #[derive(Clone, Debug)]
 pub struct Axes3d
 {
+    /// A X axis.
     pub x: Range<f32>,
+    /// An Y axis.
     pub y: Range<f32>,
+    /// A Z axis.
     pub z: Range<f32>,
 }
 
+/// A structure of histogram value.
 #[derive(Clone, Debug)]
 pub enum HistogramValue
 {
+    /// A boolean value.
     Bool(bool),
+    /// An integer number.
     Int(i64),
+    /// A floating-point number.
     Float(f32),
+    /// A string.
     String(Box<String>),
 }
 
 impl HistogramValue
 {
+    /// Converts any value to a boolean value.
     pub fn to_bool(&self) -> bool
     {
         match self {
@@ -133,6 +162,7 @@ impl HistogramValue
         }
     }
 
+    /// Converts any value to an integer number.
     pub fn to_i64(&self) -> i64
     {
         match self {
@@ -143,6 +173,7 @@ impl HistogramValue
         }
     }
 
+    /// Converts any value to a floating-point number.
     pub fn to_f32(&self) -> f32
     {
         match self {
@@ -153,6 +184,8 @@ impl HistogramValue
         }
     }
 
+    /// Converts the value to a boolean value if the value is an boolean type, otherwise this
+    /// method returns `None`.
     pub fn to_opt_bool(&self) -> Option<bool>
     {
         match self {
@@ -161,6 +194,8 @@ impl HistogramValue
         }
     }
 
+    /// Converts the value to an integer number if the value is an integer type or floating-point
+    /// type, otherwise this method returns `None`.
     pub fn to_opt_i64(&self) -> Option<i64>
     {
         match self {
@@ -170,6 +205,8 @@ impl HistogramValue
         }
     }
 
+    /// Converts the value to a floating-point number if the value is an integer type or
+    /// floating-point type, otherwise this method returns `None`.
     pub fn to_opt_f32(&self) -> Option<f32>
     {
         match self {
@@ -179,6 +216,8 @@ impl HistogramValue
         }
     }
 
+    /// Converts the value to a string if the value is a string type, otherwise this method
+    /// returns `None`.
     pub fn to_opt_string(&self) -> Option<String>
     {
         match self {
@@ -215,40 +254,63 @@ impl fmt::Display for HistogramValue
     }
 }
 
+/// A structure of histogram axes.
 #[derive(Clone, Debug)]
 pub struct HistogramAxes
 {
+    /// A X axis.
     pub x: Vec<HistogramValue>,
+    /// An Y axis.
     pub y: Range<usize>,
 }
 
+/// An enumeration of series 2D.
 #[derive(Clone, Debug)]
 pub enum Series2d
 {
+    /// A line series.
     Line(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A dashed line series.
     DashedLine(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A dotted line series.
     DottedLine(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A circle series.
     Circle(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A cross series.
     Cross(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A point series.
     Point(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A triagle series.
     Triangle(Vec<f32>, Vec<f32>, RGBColor, Option<String>),
 }
 
+/// An enumeration of series 3D.
 #[derive(Clone, Debug)]
 pub enum Series3d
 {
+    /// A line series.
     Line(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A dashed line series.
     DashedLine(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A dotted line series.
     DottedLine(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A circle series.
     Circle(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A cross series.
     Cross(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A point series.
     Point(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A triagle series.
     Triangle(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
+    /// A XY surface.
     XYSurface(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>, BTreeMap<F32Key, usize>, BTreeMap<F32Key, usize>),
+    /// A XZ surface.
     XZSurface(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>, BTreeMap<F32Key, usize>, BTreeMap<F32Key, usize>),
+    /// An YZ surface.
     YZSurface(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>, BTreeMap<F32Key, usize>, BTreeMap<F32Key, usize>),
 }
 
+/// A structure of histogram series.
 #[derive(Clone, Debug)]
 pub struct HistogramSeries(pub Vec<HistogramValue>, pub RGBColor, pub Option<String>);
 
@@ -540,16 +602,23 @@ fn draw_histogram<T: IntoDrawingArea>(backend: T, chart_desc: &Chart, axes: &His
     Ok(())
 }
 
+/// A structure of plotting.
+///
+/// The plotting contains chart, axes, and series.
 #[derive(Clone, Debug)]
 pub enum Plot
 {
+    /// A plotting for a `plot` built-in function.
     Plot(Chart, Axes2d, Vec<Series2d>),
+    /// A plotting for a `plot3` built-in function.
     Plot3(Chart, Axes3d, Vec<Series3d>),
+    /// A plotting for a `histogram` built-in function.
     Histogram(Chart, HistogramAxes, Vec<HistogramSeries>),
 }
 
 impl Plot
 {
+    /// Returns the chart.
     pub fn chart(&self) -> &Chart
     {
         match self {
@@ -568,7 +637,8 @@ impl Plot
             Plot::Histogram(chart, axes, serieses) => draw_histogram(backend, chart, axes, serieses.as_slice()),
         }
     }
-    
+
+    /// Draws and saves chart to the file.
     pub fn draw_and_save_to_file(&self) -> result::Result<(), Box<dyn error::Error>>
     {
         match &self.chart().file {
@@ -584,9 +654,11 @@ impl Plot
         }
     }
     
+    /// Draws the chart on the buffer.
     pub fn draw_on_buffer(&self, buf: &mut [u8], size: (u32, u32)) -> result::Result<(), Box<dyn error::Error>>
     { self.draw_with_backend(BitMapBackend::<BGRXPixel>::with_buffer_and_format(buf, size)?) }
 
+    /// Draws the chart on the window.
     pub fn draw_on_window(plot: &Arc<Self>, env: &Env) -> Result<Option<Option<WindowId>>>
     {
         if plot.chart().has_window {
@@ -608,10 +680,16 @@ impl Plot
     }
 }
 
+/// An enumeration of plotter application event.
+///
+/// The plotter application events are used by a thread of main loop to communication with a
+/// thread of plotter application.
 #[derive(Clone, Debug)]
 pub enum PlotterAppEvent
 {
+    /// A plotting event.
     Plot(Arc<Plot>, Sender<Option<WindowId>>),
+    /// A quit event
     Quit,
 }
 
@@ -654,6 +732,9 @@ impl WindowState
     }
 }
 
+/// A structure of plotter application.
+///
+/// A plotter application shows windows with charts.
 pub struct PlotterApp
 {
     icon: Icon,
@@ -663,6 +744,7 @@ pub struct PlotterApp
 
 impl PlotterApp
 {
+    /// Creates a plotter application.
     pub fn new(event_loop: &EventLoop<PlotterAppEvent>) -> Self
     {
         let context = Some(Context::new(unsafe { transmute::<DisplayHandle<'_>, DisplayHandle<'static>>(event_loop.display_handle().unwrap()) }).unwrap());
@@ -1349,6 +1431,7 @@ fn plot_for_plot(plot: &Arc<Plot>, env: &Env) -> Result<Value>
     }
 }
 
+/// A `plot` built-in function.
 pub fn plot(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -1381,6 +1464,7 @@ pub fn plot(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     plot_for_plot(&plot, env)
 }
 
+/// A `plot3` built-in function.
 pub fn plot3(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {
@@ -1417,6 +1501,7 @@ pub fn plot3(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result
     plot_for_plot(&plot, env)
 }
 
+/// A `histogram` built-in function.
 pub fn histogram(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 {

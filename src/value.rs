@@ -151,7 +151,7 @@ impl Value
         }
     }
 
-    /// Converts the value to an integer number if the value is a integer type or floating-point
+    /// Converts the value to an integer number if the value is an integer type or floating-point
     /// type, otherwise this method returns `None`.
     pub fn to_opt_i64(&self) -> Option<i64>
     {
@@ -162,7 +162,7 @@ impl Value
         }
     }
 
-    /// Converts the value to a floating-point number if the value is a integer type or
+    /// Converts the value to a floating-point number if the value is an integer type or
     /// floating-point type, otherwise this method returns `None`.
     pub fn to_opt_f32(&self) -> Option<f32>
     {
