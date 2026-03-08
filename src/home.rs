@@ -19,9 +19,9 @@ use std::path::PathBuf;
 ///
 /// The home contains paths to the Unlab-gpu home directory, configuration files, history file. By
 /// default, the Unlab-gpu home directory is located in the home directory. Also, the binary
-/// paths, the library paths, and the documentation paths are in the home. By default, the binary
-/// directory, the library directory, and the documentation directory are located in the Unlab-gpu
-/// home directory or the work directory of current package.
+/// paths, the library paths, and the documentation paths are in the home. The Unlab-gpu home
+/// directory or the work directory of current package has the binary directory, the library
+/// directory, and the documentation directory by default.
 #[derive(Clone, Debug)]
 pub struct Home
 {
