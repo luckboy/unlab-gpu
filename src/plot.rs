@@ -302,11 +302,11 @@ pub enum Series3d
     Point(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
     /// A triagle series.
     Triangle(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>),
-    /// A XY surface.
+    /// A surface on a X axis and an Y axis.
     XYSurface(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>, BTreeMap<F32Key, usize>, BTreeMap<F32Key, usize>),
-    /// A XZ surface.
+    /// A surface on a X axis and a Z axis.
     XZSurface(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>, BTreeMap<F32Key, usize>, BTreeMap<F32Key, usize>),
-    /// An YZ surface.
+    /// A surface on an Y axis and a Z axis.
     YZSurface(Vec<f32>, Vec<f32>, Vec<f32>, RGBColor, Option<String>, BTreeMap<F32Key, usize>, BTreeMap<F32Key, usize>),
 }
 
