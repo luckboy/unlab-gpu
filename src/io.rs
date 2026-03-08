@@ -613,7 +613,7 @@ pub fn load_values<P: AsRef<Path>>(path: P, env: &Env) -> Result<Vec<Value>>
     }
 }
 
-/// Saves the values to the file.
+/// Saves the values to a file.
 pub fn save_values<P: AsRef<Path>>(path: P, values: &[Value]) -> Result<()>
 {
     match File::create(path) {

@@ -62,8 +62,8 @@ pub struct EventLoopProxy(());
 /// A structure of shared environment.
 ///
 /// The shared environment is part of an environment that has global properities which can be
-/// shared between different environments. These global properties are paths of libraries and
-/// documentations, arguments, used libraries, test suites, an event loop proxy, and other
+/// shared between different environments. These global properties are library paths and
+/// documentation paths, arguments, used libraries, test suites, an event loop proxy, and other
 /// properties. The event loop proxy is used to communication to with the main thread from the
 /// windows.
 #[derive(Clone)]
@@ -111,11 +111,11 @@ impl SharedEnv
     pub fn new(lib_path: OsString, doc_path: OsString, args: Vec<String>) -> Self
     { Self::new_with_intr_checker(lib_path, doc_path, args, Arc::new(EmptyIntrChecker::new())) }
 
-    /// Returns the paths of libraries.
+    /// Returns the library paths.
     pub fn lib_path(&self) -> &OsStr
     { self.lib_path.as_os_str() }
 
-    /// Returns the paths of documentations.
+    /// Returns the documentation paths.
     pub fn doc_path(&self) -> &OsStr
     { self.doc_path.as_os_str() }
 

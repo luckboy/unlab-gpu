@@ -67,7 +67,7 @@ fn recursively_copy_with_path_bufs(src_path_buf: &mut PathBuf, dst_path_buf: &mu
     Ok(())
 }
 
-/// Recursively copies the files.
+/// Recursively copies the files and/or the directories.
 ///
 /// This function automatically creates a destition directory with parent directories.
 pub fn recursively_copy<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()>
@@ -116,7 +116,7 @@ fn recursively_remove_with_path_buf(path_buf: &mut PathBuf, is_force: bool) -> R
     Ok(())
 }
 
-/// Recursively removes the files.
+/// Recursively removes the files and/or the directories.
 ///
 /// This function doesn't returns an error for a directory or a file that doesn't exist if the
 /// force flag is set.
@@ -166,8 +166,8 @@ fn get_dir_paths_and_paths_in_dir(path: &Path, suffix_path_buf: &mut PathBuf, di
 /// Searches the path conflicts for the source directory and the destination directory.
 ///
 /// This function returns the conflict paths and the paths of source directory for the optional
-/// depth. The paths of source directory and destination directory are compared. If these paths
-/// are same, there occurs the path conflict.
+/// depth. The path of source directory are compared with the path of destination directory. If
+/// these paths are same, there occurs the path conflict.
 pub fn conflicts<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, ignored_paths: &HashSet<PathBuf>, depth: Option<usize>) -> Result<(Vec<PathBuf>, Vec<PathBuf>)>
 {
     let mut paths: Option<Vec<PathBuf>> = Some(Vec::new());
@@ -226,7 +226,7 @@ pub fn paths_in_dir<P: AsRef<Path>>(path: P, depth: Option<usize>) -> Result<Vec
     Ok(paths)
 }
 
-/// Recursively copies files which are in the directories of paths.
+/// Recursively copies the files and/or the directories which are in the directories of paths.
 ///
 /// See [`recursively_copy`].
 pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q, paths: &[PathBuf]) -> Result<()>
@@ -241,7 +241,7 @@ pub fn recursively_copy_paths_in_dir<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst
     Ok(())
 }
 
-/// Recursively removes files which are in the directories of paths.
+/// Recursively removes the files and/or the directories which are in the directories of paths.
 ///
 /// See [`recursively_remove`].
 pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf], is_force: bool) -> Result<()>
@@ -267,8 +267,8 @@ pub fn recursively_remove_paths_in_dir<P: AsRef<Path>>(path: P, paths: &[PathBuf
     Ok(())
 }
 
-/// Returns the path to one directory in the directory if this directory is only one in the
-/// directory, otherwise returns the path to the directory.
+/// Returns the path to one directory in the directory if the directory has only one entry that is
+/// the directory, otherwise returns the path to the directory.
 pub fn only_one_dir_in_dir<P: AsRef<Path>>(path: P) -> Result<Option<PathBuf>>
 {
     let entries = read_dir(path)?;

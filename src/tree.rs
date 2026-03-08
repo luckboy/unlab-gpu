@@ -13,7 +13,7 @@ use crate::error::*;
 /// A structure of syntax tree.
 ///
 /// The syntax tree creates from tokens by a parser. An interpreter can take the syntax tree to
-/// interpretion.
+/// interpretation.
 #[derive(Clone, Debug)]
 pub struct Tree(pub Vec<Node>);
 

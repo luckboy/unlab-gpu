@@ -18,10 +18,10 @@ use std::path::PathBuf;
 /// A structure of home.
 ///
 /// The home contains paths to the Unlab-gpu home directory, configuration files, history file. By
-/// default, the Unlab-gpu home directory is located in the home directory. Also, the paths of 
-/// binaries, libraries, and documentations are in the home object. By default, directories of
-/// binaries, libraries, and documentations are located in the Unlab-gpu home directory or the
-/// work directory of current package.
+/// default, the Unlab-gpu home directory is located in the home directory. Also, the binary
+/// paths, the library paths, and the documentation paths are in the home. By default, the binary
+/// directory, the library directory, and the documentation directory are located in the Unlab-gpu
+/// home directory or the work directory of current package.
 #[derive(Clone, Debug)]
 pub struct Home
 {
@@ -66,9 +66,9 @@ impl Home
     
     /// Creates a home.
     ///
-    /// This method takes the Unlab-gpu home directory, the paths. The directories of binaries,
-    /// libraries, and documnetations are located in the Unlab-gpu by default if the flag of work
-    /// directory isn't set, otherwise these directories are located in the work directory of
+    /// This method takes the Unlab-gpu home directory, the paths. The binary directory, the 
+    /// library directory, and the documentation directory are located in the Unlab-gpu by default
+    /// if the flag of work directory isn't set, otherwise these directories are located in the work directory of
     /// current package by default.
     pub fn new(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_work_dir: bool) -> Option<Self>
     {
@@ -129,15 +129,15 @@ impl Home
     pub fn pkg_config_file(&self) -> &Path
     { self.pkg_config_file.as_path() }
 
-    /// Returns the path of binaries.
+    /// Returns the binary paths.
     pub fn bin_path(&self) -> &OsStr
     { self.bin_path.as_os_str() }
 
-    /// Returns the path of libraries.
+    /// Returns the library paths.
     pub fn lib_path(&self) -> &OsStr
     { self.lib_path.as_os_str() }
 
-    /// Returns the path of documentations.
+    /// Returns the documentation paths.
     pub fn doc_path(&self) -> &OsStr
     { self.doc_path.as_os_str() }
 
@@ -153,20 +153,20 @@ impl Home
         Ok(())
     }
 
-    /// Adds the directory paths to the paths of binaries.
+    /// Adds the directory paths to the binary paths.
     ///
-    /// Each directory path is pushed front to the paths of binaries. An addition order of
-    /// directory paths is determined by the order of direcotry paths on the slice.
+    /// Each directory path is pushed front to the binary paths. An addition order of directory
+    /// paths is determined by the order of directory paths on the slice.
     pub fn add_dirs_to_bin_path(&mut self, dirs: &[String]) -> Result<(), JoinPathsError>
     { Self::add_dirs_to_path(&mut self.bin_path, dirs) }
 
-    /// Adds the directory paths to the paths of libraries.
+    /// Adds the directory paths to the library paths.
     ///
     /// See [`add_dirs_to_bin_path`](Self::add_dirs_to_bin_path).
     pub fn add_dirs_to_lib_path(&mut self, dirs: &[String]) -> Result<(), JoinPathsError>
     { Self::add_dirs_to_path(&mut self.lib_path, dirs) }
     
-    /// Adds the directory paths to the paths of documentations.
+    /// Adds the directory paths to the documentation paths.
     ///
     /// See [`add_dirs_to_bin_path`](Self::add_dirs_to_bin_path).
     pub fn add_dirs_to_doc_path(&mut self, dirs: &[String]) -> Result<(), JoinPathsError>

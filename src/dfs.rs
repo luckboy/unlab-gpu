@@ -32,10 +32,10 @@ fn find_cycle<T: Clone + Eq + Hash>(u: &T, vs: &[T], stack: &[(T, Vec<T>)], proc
     }
 }
 
-/// This function is implementation of DFS algorithm with cycle detection.
+/// This function is an implementation of DFS algorithm with a cycle detection.
 ///
-/// This function returns a path with the cycle if this function detects a cycle, otherwise returns
-/// a success.
+/// A graph is depth-first searched by this function. This function returns a path with the cycle
+/// if this function detects a cycle in the graph, otherwise returns a success.
 pub fn dfs<T: Clone + Eq + Hash, U, F, G, E>(start: &T, visiteds: &mut HashSet<T>, data: &mut U, mut f: F, mut g: G) -> Result<DfsResult<T>, E>
     where F: FnMut(&T, &mut U) -> Result<Vec<T>, E>,
           G: FnMut(&T, &mut U) -> Result<(), E>

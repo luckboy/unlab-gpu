@@ -20,7 +20,8 @@ use crate::value::*;
 
 /// A structure of pushback iterator.
 ///
-/// The pushback iterator allows to push back an item.
+/// The pushback iterator allows to push back an item. If the item is pushed back, the item can
+/// be again returned by the `next` method.
 #[derive(Clone)]
 pub struct PushbackIter<T: Iterator>
 {

@@ -40,7 +40,8 @@ pub trait DocIterator: Iterator
 
 /// A structure of documentation iterator.
 ///
-/// The documentation iterator is dummy that doesn't collect documentation.
+/// This structure represents the documentation iterator that is dummy and doesn't take the
+/// documentation.
 pub struct DocIter<T: Iterator>
 {
     iter: T,
