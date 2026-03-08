@@ -69,7 +69,11 @@ fn recursively_copy_with_path_bufs(src_path_buf: &mut PathBuf, dst_path_buf: &mu
 
 /// Recursively copies the files and/or the directories.
 ///
-/// This function automatically creates a destition directory with parent directories.
+/// This function automatically creates a destition directory with parent directories. If the
+/// canonical path of destination contains the canonical path of source, this function also
+/// returns an error. The file or the directory isn't copied if the canonical path of source is
+/// equal to the canonical path of destination. Symbolic links and device files aren't copied. If
+/// the symbolic link or the device file is occurred, this function also returns an error.
 pub fn recursively_copy<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()>
 {
     let mut src_path_buf = PathBuf::from(src.as_ref());
