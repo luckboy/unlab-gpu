@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A version module.
 use std::cmp::Ordering;
 use std::cmp::max;
 use std::fmt;
@@ -17,10 +18,13 @@ use crate::serde::Serialize;
 use crate::serde::Serializer;
 use crate::error::*;
 
+/// A pre-release identifier.
 #[derive(Clone, Debug)]
 pub enum PreReleaseIdent
 {
+    /// A numeric identfier.
     Numeric(u32),
+    /// An alphanumeric identifier.
     Alphanumeric(String),
 }
 
@@ -63,6 +67,10 @@ impl fmt::Display for PreReleaseIdent
     }
 }
 
+/// A version structure.
+///
+/// The version structure has version field and fields compatible with
+/// [SemVer](https://semver.org). 
 #[derive(Clone, Debug)]
 pub struct Version
 {
@@ -74,9 +82,11 @@ pub struct Version
 
 impl Version
 {
+    /// Creates a version.
     pub fn new(version: String, numeric_idents: Vec<u32>, pre_release_idents: Option<Vec<PreReleaseIdent>>, build_idents: Option<Vec<String>>) -> Self
     { Version { version, numeric_idents, pre_release_idents, build_idents, } }
     
+    /// Parses the string slice to a version.
     pub fn parse(s: &str) -> Result<Self>
     {
         let (pair_s, build) = match s.split_once('+') {
@@ -126,12 +136,15 @@ impl Version
         Ok(Self::new(String::from(s), numeric_idents, pre_release_idents, build_idents))
     }
     
+    /// Returns the version as the string slice.
     pub fn version(&self) -> &str
     { self.version.as_str() }
     
+    /// Returns the numeric identifiers.
     pub fn numeric_idents(&self) -> &[u32]
     { self.numeric_idents.as_slice() }
 
+    /// Retursn the pre-release identifiers.
     pub fn pre_release_idents(&self) -> Option<&[PreReleaseIdent]>
     {
         match &self.pre_release_idents {
@@ -140,6 +153,7 @@ impl Version
         }
     }
 
+    /// Returns the build indentifiers.
     pub fn build_idents(&self) -> Option<&[String]>
     {
         match &self.build_idents {
@@ -148,6 +162,8 @@ impl Version
         }
     }
 
+    /// Returns `true` if the numeric identifiers of versions are equal for the specified number
+    /// of numeric identifiers, otherwise `false`.
     pub fn eq_numeric_idents(&self, version: &Version, count: usize) -> bool
     {
         for i in 0..count {
@@ -253,16 +269,25 @@ impl<'de> Deserialize<'de> for Version
     { deserializer.deserialize_str(VersionVisitor) }
 }
 
+/// An enumeration of version  operator.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum VersionOp
 {
+    /// Eqaul.
     Eq,
+    /// Not equal.
     Ne,
+    /// Less than.
     Lt,
+    /// Greater than or equal to.
     Ge,
+    /// Greater than.
     Gt,
+    /// Less than or equal to.
     Le,
+    /// A default operator.
     Default,
+    /// A tylde operator.
     Tilde,
 }
 
@@ -283,15 +308,23 @@ impl fmt::Display for VersionOp
     }
 }
 
+/// An enumeration of single version requirement.
+///
+/// The single version requirement can have one version with a version operator or can be a
+/// wildcard. A version requirement uses many single version requirements which can be matched to
+/// a version while matching.
 #[derive(Clone, Debug)]
 pub enum SingleVersionReq
 {
+    /// A wildcard.
     Wildcard,
+    /// A pair of version operator and version.
     Pair(VersionOp, Version),
 }
 
 impl SingleVersionReq
 {
+    /// Parsers the string slice to a single version requirement.
     pub fn parse(s: &str) -> Result<Self>
     {
         let trimmed_s = s.trim();
@@ -323,6 +356,10 @@ impl SingleVersionReq
         }
     }
     
+    /// Matches the single version requirement to the version.
+    ///
+    /// This method returns `true` if the single version requirement is matched to the version,
+    /// otherwise `false`.
     pub fn matches(&self, version: &Version) -> bool
     {
         match self {
@@ -377,6 +414,11 @@ impl fmt::Display for SingleVersionReq
     }
 }
 
+/// A structure of version requirement.
+///
+/// The version requirement can be matched to the version and can contain many single version
+/// requirements which can be matched to version while matching. The version requirements are used
+/// to check versions by a package manager and a `reqver` built-in function.
 #[derive(Clone, Debug)]
 pub struct VersionReq
 {
@@ -385,9 +427,11 @@ pub struct VersionReq
 
 impl VersionReq
 {
+    /// Creates a version requirement.
     pub fn new(single_reqs: Vec<SingleVersionReq>) -> Self
     { VersionReq { single_reqs, } }
     
+    /// Parsers the string slice to a version requirement.
     pub fn parse(s: &str) -> Result<Self>
     {
         let mut single_reqs: Vec<SingleVersionReq> = Vec::new();
@@ -397,9 +441,14 @@ impl VersionReq
         Ok(VersionReq::new(single_reqs))
     }
     
+    /// Returns the single version requirements.
     pub fn single_reqs(&self) -> &[SingleVersionReq]
     { self.single_reqs.as_slice() }
 
+    /// Matches the version requirement to the version.
+    ///
+    /// This method returns `true` if the version requirement is matched to the version, otherwise
+    /// `false`.
     pub fn matches(&self, version: &Version) -> bool
     { self.single_reqs.iter().all(|sr| sr.matches(version)) }
 }
