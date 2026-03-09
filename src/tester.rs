@@ -109,7 +109,7 @@ pub trait Print
     
     fn print_test_counts(&self, passed_test_count: usize, failed_test_count: usize);
     
-    fn print_nl_for_error(&self);
+    fn print_lf_for_error(&self);
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -144,7 +144,7 @@ impl Print for EmptyPrinter
     fn print_test_counts(&self, _passed_test_count: usize, _failed_test_count: usize)
     {}
     
-    fn print_nl_for_error(&self)
+    fn print_lf_for_error(&self)
     {}
 }
 
@@ -167,13 +167,13 @@ fn idents_and_ident_to_string(idents: &[String], ident: &String) -> String
 #[derive(Debug)]
 pub struct StdPrinter
 {
-    has_nl_for_error: AtomicBool,
+    has_lf_for_error: AtomicBool,
 }
 
 impl StdPrinter
 {
     pub fn new() -> Self
-    { StdPrinter { has_nl_for_error: AtomicBool::new(false), } }
+    { StdPrinter { has_lf_for_error: AtomicBool::new(false), } }
 }
 
 impl Print for StdPrinter
@@ -182,11 +182,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Loading tests ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -198,11 +198,11 @@ impl Print for StdPrinter
             } else {
                 println!(" FAILED");
             }
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Test {} ...", idents_and_ident_to_string(idents, ident));
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -269,9 +269,9 @@ impl Print for StdPrinter
         }
     }
     
-    fn print_nl_for_error(&self)
+    fn print_lf_for_error(&self)
     {
-        if self.has_nl_for_error.swap(false, Ordering::SeqCst) {
+        if self.has_lf_for_error.swap(false, Ordering::SeqCst) {
             println!("");
         }
     }

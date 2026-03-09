@@ -102,7 +102,7 @@ pub trait Print
 
     fn print_cleaning(&self, is_done: bool);
     
-    fn print_nl_for_error(&self);
+    fn print_lf_for_error(&self);
     
     fn eprint_error(&self, err: &Error);
 }
@@ -178,7 +178,7 @@ impl Print for EmptyPrinter
     fn print_cleaning(&self, _is_done: bool)
     {}
     
-    fn print_nl_for_error(&self)
+    fn print_lf_for_error(&self)
     {}
     
     fn eprint_error(&self, _err: &Error)
@@ -189,13 +189,13 @@ impl Print for EmptyPrinter
 pub struct StdPrinter
 {
     byte_count: Mutex<f64>,
-    has_nl_for_error: AtomicBool,
+    has_lf_for_error: AtomicBool,
 }
 
 impl StdPrinter
 {
     pub fn new() -> Self
-    { StdPrinter { byte_count: Mutex::new(0.0), has_nl_for_error: AtomicBool::new(false), } }
+    { StdPrinter { byte_count: Mutex::new(0.0), has_lf_for_error: AtomicBool::new(false), } }
 }
 
 impl Print for StdPrinter
@@ -222,11 +222,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Updating {} ...", name);
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -245,7 +245,7 @@ impl Print for StdPrinter
             }
             println!("Downloading {} ...", name);
         }
-        self.has_nl_for_error.store(false, Ordering::SeqCst);
+        self.has_lf_for_error.store(false, Ordering::SeqCst);
         Ok(())
     }
 
@@ -257,7 +257,7 @@ impl Print for StdPrinter
             print!("  progress: {}KiB (?%)\r", (byte_count / 1024.0).ceil());
         }
         let _res = stdout().flush();
-        self.has_nl_for_error.store(true, Ordering::SeqCst);
+        self.has_lf_for_error.store(true, Ordering::SeqCst);
         {
             let mut byte_count_g = mutex_lock(&self.byte_count)?;
             *byte_count_g = byte_count;
@@ -269,11 +269,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Extracting {} ...", name);
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -281,11 +281,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Checking dependent version requirements ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -293,11 +293,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Searching path conflicts ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -305,11 +305,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Documenting {} ...", name);
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -317,11 +317,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Installing {} ...", name);
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -329,11 +329,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Removing {} ...", name);
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -341,11 +341,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Removing {} documentation ...", name);
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -353,11 +353,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Cleaning after installation ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -365,11 +365,11 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Cleaning before removal ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
     
@@ -377,12 +377,12 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
-            self.print_nl_for_error();
+            self.print_lf_for_error();
             print!("Cleaning after error ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
 
@@ -390,24 +390,24 @@ impl Print for StdPrinter
     {
         if is_done {
             println!(" done");
-            self.has_nl_for_error.store(false, Ordering::SeqCst);
+            self.has_lf_for_error.store(false, Ordering::SeqCst);
         } else {
             print!("Cleaning ...");
             let _res = stdout().flush();
-            self.has_nl_for_error.store(true, Ordering::SeqCst);
+            self.has_lf_for_error.store(true, Ordering::SeqCst);
         }
     }
     
-    fn print_nl_for_error(&self)
+    fn print_lf_for_error(&self)
     {
-        if self.has_nl_for_error.swap(false, Ordering::SeqCst) {
+        if self.has_lf_for_error.swap(false, Ordering::SeqCst) {
             println!("");
         }
     }
     
     fn eprint_error(&self, err: &Error)
     {
-        self.print_nl_for_error();
+        self.print_lf_for_error();
         eprintln!("{}", err);
     }
 }
