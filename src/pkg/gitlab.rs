@@ -5,11 +5,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of GitLab source.
 use std::str;
 use crate::serde_json;
 use super::*;
 
+/// A service domain.
 pub const SERVICE_DOMAIN: &'static str = "gitlab.com";
+/// A prefix of service domain.
 pub const SERVICE_DOMAIN_PREFIX: &'static str = "gitlab.";
 
 #[derive(Clone, Debug, Deserialize)]
@@ -18,6 +21,7 @@ struct Tag
     name: String,
 }
 
+/// A structure of GitLab source.
 #[derive(Clone)]
 pub struct GitLabSrc
 {
@@ -33,6 +37,7 @@ pub struct GitLabSrc
 
 impl GitLabSrc
 {
+    /// Creates a GitLab source.
     pub fn new(name: PkgName, old_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Self>
     {
         let original_name = old_name.as_ref().unwrap_or(&name);
@@ -56,9 +61,11 @@ impl GitLabSrc
         }
     }
     
+    /// Returns the package name.
     pub fn name(&self) -> &PkgName
     { &self.name }
 
+    /// Returns the old package name if the source has the old package name, otherwise `None`.
     pub fn old_name(&self) -> Option<&PkgName>
     { 
         match &self.old_name {
@@ -67,15 +74,19 @@ impl GitLabSrc
         }
     }
 
+    /// Returns the path to the Unlab-gpu home directory.
     pub fn home_dir(&self) -> &Path
     { self.home_dir.as_path() }
 
+    /// Returns the path to the work directory of current package.
     pub fn work_dir(&self) -> &Path
     { self.work_dir.as_path() }
 
+    /// Returns the printer.
     pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
     { &self.printer }
 
+    /// Returns the current package version.
     pub fn current_version(&self) -> Option<&Version>
     { 
         match &self.current_version {
@@ -175,11 +186,13 @@ impl Source for GitLabSrc
     }
 }
 
+/// A structure of factory of GitLab source.
 #[derive(Copy, Clone, Debug)]
 pub struct GitLabSrcFactory;
 
 impl GitLabSrcFactory
 {
+    /// Creates a factory of GitLab source.
     pub fn new() -> Self
     { GitLabSrcFactory }
 }

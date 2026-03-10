@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A package module.
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -58,60 +59,91 @@ pub mod bitbucket;
 pub mod github;
 pub mod gitlab;
 
+/// An User-Agent HTTP header for Curl.
 pub const USER_AGENT_HTTP_HEADER: &'static str = concat!("User-Agent: Unlab-pkg/", env!("CARGO_PKG_VERSION"));
 
+/// A printer trait.
+///
+/// The printer prints messages for a package manager. Some methods of printer has the done flag.
+/// the flag should be set if an operation is completed, othersise the flag should be unset.
 pub trait Print
 {
+    /// Prints the "Updating:" message.
     fn print_updating(&self);
 
+    /// Prints the "Pre-installing:" message.
     fn print_pre_installing(&self);
     
+    /// Prints the "Installing:" message.
     fn print_installing(&self);
 
+    /// Prints the "Pre-removing:" message.
     fn print_pre_removing(&self);
 
+    /// Prints the "Removing:" message.
     fn print_removing(&self);
 
+    /// Prints the "Documenting:" message.
     fn print_documenting(&self);
 
+    /// Prints the "Updating package ..." message.
     fn print_updating_pkg_versions(&self, name: &PkgName, is_done: bool);
     
+    /// Prints the "Downloading package ..." message.
     fn print_downloading_pkg_file(&self, name: &PkgName, is_done: bool) -> Result<()>;
 
+    /// Prints the "Downloading package ..." message with progress.
     fn print_downloading_pkg_file_with_progress(&self, name: &PkgName, byte_count: f64, total_byte_count: f64) -> Result<()>;
-    
+ 
+    /// Prints the "Extracting package ..." message. 
     fn print_extracting_pkg_file(&self, name: &PkgName, is_done: bool);
     
+    /// Prints the "Checking dependent version requirements ..." message.
     fn print_checking_dependent_version_reqs(&self, is_done: bool);
 
+    /// Prints the "Searching path conflicts ..." message.
     fn print_searching_path_conflicts(&self, is_done: bool);
 
+    /// Prints the "Documenting package ..." message.
     fn print_documenting_pkg(&self, name: &PkgName, is_done: bool);
     
+    /// Prints the "Installing package ..." message.
     fn print_installing_pkg(&self, name: &PkgName, is_done: bool);
 
+    /// Prints the "Removing package ..." message.
     fn print_removing_pkg(&self, name: &PkgName, is_done: bool);
 
+    /// Prints the "Removing package documentation ..." message.
     fn print_removing_pkg_doc(&self, name: &PkgName, is_done: bool);
     
+    /// Prints the "Cleaning after installation ..." message.
     fn print_cleaning_after_install(&self, is_done: bool);
 
+    /// Prints the "Cleaning before removal ..." messgage.
     fn print_cleaning_before_removal(&self, is_done: bool);
 
+    /// Prints the "Cleaning after error ..." message.
     fn print_cleaning_after_error(&self, is_done: bool);
 
+    /// Prints the "Cleaning ..." message.
     fn print_cleaning(&self, is_done: bool);
     
+    /// Prints the newline character for an occurred error.
     fn print_lf_for_error(&self);
     
+    /// Prints the error.
     fn eprint_error(&self, err: &Error);
 }
 
+/// A structure of empty printer.
+///
+/// The empty printer is dummy that doesn't print any messages.
 #[derive(Copy, Clone, Debug)]
 pub struct EmptyPrinter;
 
 impl EmptyPrinter
 {
+    /// Creates an empty printer.
     pub fn new() -> Self
     { EmptyPrinter }
 }
@@ -185,6 +217,10 @@ impl Print for EmptyPrinter
     {}
 }
 
+/// A structure of standard printer.
+///
+/// The standard printer prints messages to the standard output and error messages to the
+/// standard error.
 #[derive(Debug)]
 pub struct StdPrinter
 {
@@ -194,6 +230,7 @@ pub struct StdPrinter
 
 impl StdPrinter
 {
+    /// Creates a standard printer.
     pub fn new() -> Self
     { StdPrinter { byte_count: Mutex::new(0.0), has_lf_for_error: AtomicBool::new(false), } }
 }
@@ -412,22 +449,40 @@ impl Print for StdPrinter
     }
 }
 
+/// A source trait.
+///
+/// The source allows to access a package diractory. The package is automatically updated,
+/// downaloded, and extracted by the source if it is necessery. Also, the packege source allows
+/// to manually update the package versions. The package updating is called the updating of
+/// package versions.
 pub trait Source
 {
+    /// Updating the package versions.
     fn update(&mut self) -> Result<()>;
     
+    /// Returns the package versions.
     fn versions(&mut self) -> Result<&BTreeSet<Version>>;
     
+    /// Sets the current package version.
     fn set_current_version(&mut self, version: Version);
-    
+
+    /// Returns the package directory.
     fn dir(&mut self) -> Result<&Path>;
 }
 
+/// A trait of source factory.
+///
+/// The source factory creates source for the specified package.
 pub trait SourceCreate
 {
+    /// Creates a source.
     fn create(&self, name: PkgName, old_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Box<dyn Source + Send + Sync>>;
 }
 
+/// A structure of package name.
+///
+/// The package name often consists an account and a repository name. The account often contains
+/// the git hosting service and a login. The package name should contain one slash character.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct PkgName
 {
@@ -436,9 +491,13 @@ pub struct PkgName
 
 impl PkgName
 {
+    /// Creates a package name.
     pub fn new(name: String) -> Self
     { PkgName { name, } }
 
+    /// Parses the string slice to a package name.
+    ///
+    /// This method indeed checks whether the package name is correct.
     pub fn parse(s: &str) -> Result<Self>
     {
         if s.split('/').count() < 2 {
@@ -453,9 +512,11 @@ impl PkgName
         Ok(Self::new(String::from(s)))
     }
     
+    /// Returns the name as the string slice.
     pub fn name(&self) -> &str
     { self.name.as_str() }
     
+    /// Converts the package name to a path buffer.
     pub fn to_path_buf(&self) -> PathBuf
     { PathBuf::from(self.name.replace('/', path::MAIN_SEPARATOR_STR)) }
 }
@@ -499,48 +560,71 @@ impl<'de> Deserialize<'de> for PkgName
     { deserializer.deserialize_str(PkgNameVisitor) }
 }
 
+/// A structure of package information.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PkgInfo
 {
+    /// A package name.
     pub name: PkgName,
+    /// A package description.
     pub description: Option<String>,
+    /// A package authors.
     pub authors: Option<Vec<String>>,
+    /// A package license.
     pub license: Option<String>,
+    /// A required Unlab-gpu version.
     #[serde(rename = "unlab-gpu-version")]
     pub unlab_gpu_version: Option<VersionReq>,
 }
 
+/// An enumeration of source information of version.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum VersionSrcInfo
 {
+    /// A path to package directory.
     #[serde(rename = "dir")]
     Dir(String),
+    /// A path to package archive.
     #[serde(rename = "file")]
     File(String),
+    /// An URL to package archive.
     #[serde(rename = "url")]
     Url(String),
 }
 
+/// An enumeration of source information.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SrcInfo
 {
+    /// A new package name. 
     #[serde(rename = "renamed")]
     Renamed(PkgName),
+    /// Version with version source informations.
     #[serde(rename = "versions")]
     Versions(Arc<BTreeMap<Version, VersionSrcInfo>>),
 }
 
+/// A structure of package manifest.
+///
+/// The package manifest contains basic informations about package for example a package name,
+/// package description, and package dependencies. These informations can be used to package
+/// installation.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Manifest
 {
+    /// A package information.
     pub package: PkgInfo,
+    /// Package dependencies.
     pub dependencies: Option<HashMap<PkgName, VersionReq>>,
+    /// Package constraints.
     pub constraints: Option<Arc<HashMap<PkgName, VersionReq>>>,
+    /// Custrom sources.
     pub sources: Option<Arc<HashMap<PkgName, SrcInfo>>>,
 }
 
 impl Manifest
 {
+    /// Creates a package manifest.
     pub fn new(name: PkgName) -> Self
     {
         Manifest {
@@ -557,6 +641,7 @@ impl Manifest
         }
     }
     
+    /// Reads a package manifest from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -571,6 +656,7 @@ impl Manifest
         }
     }
 
+    /// Writes the package manifest to the writer.
     pub fn write(&self, w: &mut dyn Write) -> Result<()>
     {
         match toml::to_string(self) {
@@ -584,6 +670,7 @@ impl Manifest
         }
     }
 
+    /// Loads a package manifest from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -592,6 +679,8 @@ impl Manifest
         }
     }
 
+    /// Loads a package manifest from the file if the file exists, otherwise this method returns
+    /// `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
@@ -601,6 +690,7 @@ impl Manifest
         }
     }
 
+    /// Saves the package manifest to a file.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
     {
         match File::create(path) {
@@ -610,18 +700,23 @@ impl Manifest
     }
 }
 
+/// A structure of paths.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Paths
 {
+    /// Paths to binaries.
     pub bin: Vec<String>,
+    /// Paths to libraries.
     pub lib: Vec<String>,
 }
 
 impl Paths
 {
+    /// Creates paths.
     pub fn new(bin: Vec<String>, lib: Vec<String>) -> Self
     { Paths { bin, lib, } }
     
+    /// Reads paths from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -636,6 +731,7 @@ impl Paths
         }
     }
 
+    /// Writes the paths to the writer.
     pub fn write(&self, w: &mut dyn Write) -> Result<()>
     {
         match toml::to_string(self) {
@@ -649,6 +745,7 @@ impl Paths
         }
     }
     
+    /// Loads paths from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -657,6 +754,7 @@ impl Paths
         }
     }
 
+    /// Loads paths from the file if the file exists, otherwise this method returns `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
@@ -666,6 +764,7 @@ impl Paths
         }
     }
 
+    /// Saves the paths to a file.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
     {
         match File::create(path) {
@@ -675,17 +774,21 @@ impl Paths
     }
 }
 
+/// A structure of documentation paths.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DocPaths
 {
+    /// Paths to documentation.
     pub doc: Vec<String>,
 }
 
 impl DocPaths
 {
+    /// Creates documentation paths.
     pub fn new(doc: Vec<String>) -> Self
     { DocPaths { doc, } }
     
+    /// Reads documentation paths from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -700,6 +803,7 @@ impl DocPaths
         }
     }
 
+    /// Writes the documentation paths to the writer.
     pub fn write(&self, w: &mut dyn Write) -> Result<()>
     {
         match toml::to_string(self) {
@@ -713,6 +817,7 @@ impl DocPaths
         }
     }
     
+    /// Loads documentation paths from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -721,6 +826,8 @@ impl DocPaths
         }
     }
 
+    /// Loads documentation paths from the file if the file exists, otherwise this method returns
+    /// `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
@@ -730,6 +837,7 @@ impl DocPaths
         }
     }
 
+    /// Saves the documentation paths to a file.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
     {
         match File::create(path) {
@@ -739,17 +847,21 @@ impl DocPaths
     }
 }
 
+/// A structure of package versions.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Versions
 {
+    /// Package versions.
     pub versions: BTreeSet<Version>,
 }
 
 impl Versions
 {
+    /// Creates package versions.
     pub fn new(versions: BTreeSet<Version>) -> Self
     { Versions { versions, } }
     
+    /// Reads package versions from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -764,6 +876,7 @@ impl Versions
         }
     }
 
+    /// Writes the package versions to the writer.
     pub fn write(&self, w: &mut dyn Write) -> Result<()>
     {
         match toml::to_string(self) {
@@ -777,6 +890,7 @@ impl Versions
         }
     }
     
+    /// Loads package versions from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -785,6 +899,8 @@ impl Versions
         }
     }
 
+    /// Loads package versions from the file if the file exists, otherwise this method returns
+    /// `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
@@ -794,6 +910,7 @@ impl Versions
         }
     }
 
+    /// Saves the package versions to a file.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
     {
         match File::create(path) {
@@ -803,18 +920,23 @@ impl Versions
     }
 }
 
+/// A strcuture of package configuration.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PkgConfig
 {
+    /// An account.
     pub account: Option<String>,
+    /// A domain.
     pub domain: Option<String>,
 }
 
 impl PkgConfig
 {
+    /// Creates a package configuration.
     pub fn new(account: Option<String>, domain: Option<String>) -> Self
     { PkgConfig { account, domain, } }
     
+    /// Reads a package configuration from the reader.
     pub fn read(r: &mut dyn Read) -> Result<Self>
     {
         let mut s = String::new();
@@ -829,6 +951,7 @@ impl PkgConfig
         }
     }
 
+    /// Writes the package configuration to the writer.
     pub fn write(&self, w: &mut dyn Write) -> Result<()>
     {
         match toml::to_string(self) {
@@ -842,6 +965,7 @@ impl PkgConfig
         }
     }
     
+    /// Loads a package configuration from the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self>
     {
         match File::open(path) {
@@ -850,6 +974,8 @@ impl PkgConfig
         }
     }
 
+    /// Loads a package configuration from the file if the file exists, otherwise this method
+    /// returns `None`.
     pub fn load_opt<P: AsRef<Path>>(path: P) -> Result<Option<Self>>
     {
         match File::open(path) {
@@ -859,6 +985,7 @@ impl PkgConfig
         }
     }
 
+    /// Saves the package configurataion to a file.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>
     {
         match File::create(path) {
@@ -868,6 +995,7 @@ impl PkgConfig
     }
 }
 
+/// Reads versions from the reader.
 pub fn read_versions(r: &mut dyn Read) -> Result<HashMap<PkgName, Version>>
 {
     let mut s = String::new();
@@ -882,6 +1010,7 @@ pub fn read_versions(r: &mut dyn Read) -> Result<HashMap<PkgName, Version>>
     }
 }
 
+/// Writes the versions to the writer.
 pub fn write_versions(w: &mut dyn Write, versions: &HashMap<PkgName, Version>) -> Result<()>
 {
     match toml::to_string(versions) {
@@ -895,6 +1024,7 @@ pub fn write_versions(w: &mut dyn Write, versions: &HashMap<PkgName, Version>) -
     }
 }
 
+/// Loads versions from the file.
 pub fn load_versions<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Version>>
 {
     match File::open(path) {
@@ -903,6 +1033,7 @@ pub fn load_versions<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Version
     }
 }
 
+/// Loads versions from the file if the file exists, otherwise this function returns `None`.
 pub fn load_opt_versions<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgName, Version>>>
 {
     match File::open(path) {
@@ -912,6 +1043,8 @@ pub fn load_opt_versions<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgNa
     }
 }
 
+/// Loads versions from the file if the file exists, otherwise this function returns an empty
+/// hash map.
 pub fn load_versions_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Version>>
 {
     match File::open(path) {
@@ -921,6 +1054,7 @@ pub fn load_versions_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName
     }
 }
 
+/// Saves the versions to a file.
 pub fn save_versions<P: AsRef<Path>>(path: P, versions: &HashMap<PkgName, Version>) -> Result<()>
 {
     match File::create(path) {
@@ -929,6 +1063,7 @@ pub fn save_versions<P: AsRef<Path>>(path: P, versions: &HashMap<PkgName, Versio
     }
 }
 
+/// Reads version requirements from the reader.
 pub fn read_version_reqs(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq>>
 {
     let mut s = String::new();
@@ -943,6 +1078,7 @@ pub fn read_version_reqs(r: &mut dyn Read) -> Result<HashMap<PkgName, VersionReq
     }
 }
 
+/// Writes the version requirements to the writer.
 pub fn write_version_reqs(w: &mut dyn Write, version_reqs: &HashMap<PkgName, VersionReq>) -> Result<()>
 {
     match toml::to_string(version_reqs) {
@@ -956,6 +1092,7 @@ pub fn write_version_reqs(w: &mut dyn Write, version_reqs: &HashMap<PkgName, Ver
     }
 }
 
+/// Loads version requirements from the file.
 pub fn load_version_reqs<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
 {
     match File::open(path) {
@@ -964,6 +1101,8 @@ pub fn load_version_reqs<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, Ver
     }
 }
 
+/// Loads version requirements from the file if the file exists, otherwise this function returns
+/// `None`.
 pub fn load_opt_version_reqs<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgName, VersionReq>>>
 {
     match File::open(path) {
@@ -973,6 +1112,8 @@ pub fn load_opt_version_reqs<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<P
     }
 }
 
+/// Loads version requirements from the file if the file exists, otherwise this function returns
+/// an empty hash map.
 pub fn load_version_reqs_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, VersionReq>>
 {
     match File::open(path) {
@@ -982,6 +1123,7 @@ pub fn load_version_reqs_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<Pkg
     }
 }
 
+/// Saves the version requirements to a file.
 pub fn save_version_reqs<P: AsRef<Path>>(path: P, version_reqs: &HashMap<PkgName, VersionReq>) -> Result<()>
 {
     match File::create(path) {
@@ -990,6 +1132,7 @@ pub fn save_version_reqs<P: AsRef<Path>>(path: P, version_reqs: &HashMap<PkgName
     }
 }
 
+/// Reads source informations from the reader.
 pub fn read_src_infos(r: &mut dyn Read) -> Result<HashMap<PkgName, SrcInfo>>
 {
     let mut s = String::new();
@@ -1004,6 +1147,7 @@ pub fn read_src_infos(r: &mut dyn Read) -> Result<HashMap<PkgName, SrcInfo>>
     }
 }
 
+/// Writes the source informations to the writer.
 pub fn write_src_infos(w: &mut dyn Write, src_infos: &HashMap<PkgName, SrcInfo>) -> Result<()>
 {
     match toml::to_string(src_infos) {
@@ -1017,6 +1161,7 @@ pub fn write_src_infos(w: &mut dyn Write, src_infos: &HashMap<PkgName, SrcInfo>)
     }
 }
 
+/// Loads source informations from the file.
 pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInfo>>
 {
     match File::open(path) {
@@ -1025,6 +1170,8 @@ pub fn load_src_infos<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInf
     }
 }
 
+/// Loads source informations from the file if the file exists, otherwise this function returns
+/// `None`.
 pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgName, SrcInfo>>>
 {
     match File::open(path) {
@@ -1034,6 +1181,8 @@ pub fn load_opt_src_infos<P: AsRef<Path>>(path: P) -> Result<Option<HashMap<PkgN
     }
 }
 
+/// Loads source informations from the file if the file exists, otherwise this function returns
+/// an empty hash map.
 pub fn load_src_infos_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgName, SrcInfo>>
 {
     match File::open(path) {
@@ -1043,6 +1192,7 @@ pub fn load_src_infos_or_empty<P: AsRef<Path>>(path: P) -> Result<HashMap<PkgNam
     }
 }
 
+/// Saves the source informations to a file.
 pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcInfo>) -> Result<()>
 {
     match File::create(path) {
@@ -1051,6 +1201,7 @@ pub fn save_src_infos<P: AsRef<Path>>(path: P, src_infos: &HashMap<PkgName, SrcI
     }
 }
 
+/// Converts the tag name to a version.
 pub fn tag_name_to_version(tag_name: &str) -> Option<Version>
 {
     if tag_name.starts_with("v") {
@@ -1063,9 +1214,11 @@ pub fn tag_name_to_version(tag_name: &str) -> Option<Version>
     }
 }
 
+/// Converts the version to a tag name.
 pub fn version_to_tag_name(version: &Version) -> String
 { format!("v{}", version) }
 
+/// Returns a path to the variable directory.
 pub fn var_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(home_dir.as_ref());
@@ -1073,6 +1226,7 @@ pub fn var_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
     dir
 }
 
+/// Returns a path to the temporary director.
 pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
 {
     let mut dir = PathBuf::from(work_dir.as_ref());
@@ -1080,6 +1234,7 @@ pub fn tmp_dir<P: AsRef<Path>>(work_dir: P) -> PathBuf
     dir
 }
 
+/// Returns a path to the index directory.
 pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = var_dir(home_dir);
@@ -1087,6 +1242,7 @@ pub fn index_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
     dir
 }
 
+/// Returns a path to the cache directory.
 pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
 {
     let mut dir = var_dir(home_dir);
@@ -1094,6 +1250,7 @@ pub fn cache_dir<P: AsRef<Path>>(home_dir: P) -> PathBuf
     dir
 }
 
+/// Returns a path to the index directory for the specified package.
 pub fn pkg_index_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName) -> PathBuf
 {
     let mut dir = index_dir(home_dir);
@@ -1101,6 +1258,7 @@ pub fn pkg_index_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName) -> PathBuf
     dir
 }
 
+/// Returns a path to the variable directory for the specified package.
 pub fn pkg_cache_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName, version: &Version) -> PathBuf
 {
     let mut dir = cache_dir(home_dir);
@@ -1109,6 +1267,7 @@ pub fn pkg_cache_dir<P: AsRef<Path>>(home_dir: P, name: &PkgName, version: &Vers
     dir
 }
 
+/// Returns a path to the temporary directory for the specified package.
 pub fn pkg_tmp_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
 {
     let mut dir = tmp_dir(work_dir);
@@ -1117,6 +1276,7 @@ pub fn pkg_tmp_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Versio
     dir
 }
 
+/// Returns a path to the package directory while extracting.
 pub fn pkg_part_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
 {
     let mut dir = pkg_tmp_dir(work_dir, name, version);
@@ -1124,6 +1284,7 @@ pub fn pkg_part_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Versi
     dir
 }
 
+/// Returns a path to the package directory after extracting.
 pub fn pkg_dir<P: AsRef<Path>>(work_dir: P, name: &PkgName, version: &Version) -> PathBuf
 {
     let mut dir = pkg_tmp_dir(work_dir, name, version);
@@ -1154,6 +1315,10 @@ fn io_res_remove_and_rename_for_unupdated_pkg_versions(new_part_path: &Path, new
     }
 }
 
+/// Updates the package versions for the specified package.
+///
+/// This method overwrites the package versions if the package versions exist and the update flag
+/// is set, otherwise the package versios isn't overwritten.
 pub fn update_pkg_versions<P: AsRef<Path>, F, G>(name: &PkgName, old_name: &Option<PkgName>, home_dir: P, is_update: bool, printer: &Arc<dyn Print + Send + Sync>, f: F, g: G) -> Result<BTreeSet<Version>>
     where F: FnOnce() -> result::Result<curl::easy::Easy, curl::Error>,
         G: FnOnce(&[u8]) -> Result<BTreeSet<Version>>
@@ -1265,6 +1430,10 @@ fn curl_res_download_pkg_file(name: &PkgName, url: &str, part_file_path: &Path, 
     easy.perform()
 }
 
+/// Downloads the package archive for the specified package.
+///
+/// If the old package name is passed, this function writes the package archive in the directory
+/// for the old package name.
 pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgName>, version: &Version, url: &str, home_dir: P, printer: &Arc<dyn Print + Send + Sync>) -> Result<PathBuf>
 {
     let path_buf = pkg_cache_dir(home_dir.as_ref(), old_name.as_ref().unwrap_or(name), version);
@@ -1316,6 +1485,7 @@ pub fn download_pkg_file<P: AsRef<Path>>(name: &PkgName, old_name: &Option<PkgNa
     Ok(file_path_buf)
 }
 
+/// Extracts the package archive for the specified package.
 pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, work_dir: P, printer: &Arc<dyn Print + Send + Sync>, f: F) -> Result<PathBuf>
     where F: FnOnce() -> Result<PathBuf>
 {
@@ -1416,6 +1586,10 @@ pub fn extract_pkg_file<P: AsRef<Path>, F>(name: &PkgName, version: &Version, wo
     }
 }
 
+/// A structure of custom source.
+///
+/// The custom source is defined by an user. The user can specify the package versions and how to
+/// get a package.
 #[derive(Clone)]
 pub struct CustomSrc
 {
@@ -1431,6 +1605,7 @@ pub struct CustomSrc
 
 impl CustomSrc
 {
+    /// Creates a custom source.
     pub fn new(name: PkgName, home_dir: PathBuf, work_dir: PathBuf, version_src_infos: Arc<BTreeMap<Version, VersionSrcInfo>>, printer: Arc<dyn Print + Send + Sync>) -> Self
     {
         let versions: Arc<BTreeSet<Version>> = Arc::new(version_src_infos.keys().map(|v| v.clone()).collect()); 
@@ -1446,21 +1621,27 @@ impl CustomSrc
         }
     }
     
+    /// Returns the package name.
     pub fn name(&self) -> &PkgName
     { &self.name }
 
+    /// Returns the path to the Unlab-gpu home directory.
     pub fn home_dir(&self) -> &Path
     { self.home_dir.as_path() }
 
+    /// Returns the path to the work directory of current package.
     pub fn work_dir(&self) -> &Path
     { self.work_dir.as_path() }
 
+    /// Returns the source informations of versions.
     pub fn version_src_infos(&self) -> &Arc<BTreeMap<Version, VersionSrcInfo>>
     { &self.version_src_infos }
 
+    /// Returns the printer.
     pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
     { &self.printer }
 
+    /// Returns the current package version.
     pub fn current_version(&self) -> Option<&Version>
     { 
         match &self.current_version {
@@ -1509,22 +1690,13 @@ impl Source for CustomSrc
 }
 
 #[derive(Clone, Debug)]
-pub struct Pkg
+struct Pkg
 {
     dir: Option<PathBuf>,
     info_dir: Option<PathBuf>,
     new_part_info_dir: Option<PathBuf>,
     is_added_by_dependent: bool,
     has_new_version_from_bucket: bool,
-}
-
-pub fn default_src_factories() -> Vec<Arc<dyn SourceCreate + Send + Sync>>
-{
-    vec![
-        Arc::new(github::GitHubSrcFactory::new()),
-        Arc::new(gitlab::GitLabSrcFactory::new()),
-        Arc::new(bitbucket::BitbucketSrcFactory::new())
-    ]
 }
 
 impl Pkg
@@ -1739,6 +1911,16 @@ fn tx_get_or_create_bucket<'b, 'tx, T: ToBytes<'tx>>(tx: &'b Tx<'tx>, name: T) -
     }
 }
 
+/// Returns the factories of default sources.
+pub fn default_src_factories() -> Vec<Arc<dyn SourceCreate + Send + Sync>>
+{
+    vec![
+        Arc::new(github::GitHubSrcFactory::new()),
+        Arc::new(gitlab::GitLabSrcFactory::new()),
+        Arc::new(bitbucket::BitbucketSrcFactory::new())
+    ]
+}
+
 fn tx_delete_bucket<'tx, T: ToBytes<'tx>>(tx: &Tx<'tx>, name: T) -> Result<()>
 {
     match tx.delete_bucket(name) {
@@ -1812,6 +1994,13 @@ fn check_dir_for_pkg(path: &Path, name: &PkgName, err_msg: &str) -> Result<()>
     }
 }
 
+/// A structure of package manager.
+///
+/// The package manager is used to install packages and remove package. Default sources can be
+/// used to download and extract the packages by the package manager. The package manager
+/// installs the packages to the Unlab-gpu home directory by default where they are available
+/// for a user. Also, the packages can be installed as dependencies of current package by
+/// default.
 #[derive(Clone)]
 pub struct PkgManager
 {
@@ -1831,6 +2020,14 @@ pub struct PkgManager
 
 impl PkgManager
 {
+    /// Creates a package manager.
+    ///
+    /// This method takes paths to the Unlab-gpu home directory, the work directory, the binary
+    /// dirtectory, the library directory, and the documentation directory. The factories of
+    /// default soruces which allows to access to the package. This method takes the printer that
+    /// prints messages. If the packages isn't installed as the dependencies for the current
+    /// package, the path of work directory should be the path to the the Unlab-gpu home
+    /// directory.
     pub fn new(home_dir: PathBuf, work_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
     {
         let mut work_var_dir = work_dir.clone();
@@ -1861,36 +2058,46 @@ impl PkgManager
         })
     }
     
+    /// Returns the path to the Unlab-gpu home directory.
     pub fn home_dir(&self) -> &Path
     { self.home_dir.as_path() }
 
+    /// Returns the path to the work directory of current package.
     pub fn work_dir(&self) -> &Path
     { self.work_dir.as_path() }
-    
+
+    /// Returns the path to the binary directory.
     pub fn bin_dir(&self) -> &Path
     { self.bin_dir.as_path() }
 
+    /// Returns the path to the library directory.
     pub fn lib_dir(&self) -> &Path
     { self.lib_dir.as_path() }
     
+    /// Returns the path to the documentation directory.
     pub fn doc_dir(&self) -> &Path
     { self.doc_dir.as_path() }
 
+    /// Returns the locked versions of packages
     pub fn locks(&self) -> &HashMap<PkgName, Version>
     { &self.locks }
 
+    /// Sets the locked versions of packages.
     pub fn set_locks(&mut self, locks: HashMap<PkgName, Version>)
     { self.locks = locks; }
 
+    /// Loads the locked versions of packages.
     pub fn load_locks(&mut self) -> Result<()>
     {
         self.locks = load_versions_or_empty("Unlab.lock")?;
         Ok(())
     }
 
+    /// Saves the locked versions of packages.
     pub fn save_locks(&self) -> Result<()>
     { save_versions("Unlab.lock", &self.locks) }
     
+    /// Saves the locked version packages from the database.
     pub fn save_locks_from_pkg_versions(&self) -> Result<()>
     {
         let mut locks: HashMap<PkgName, Version> = HashMap::new();
@@ -1901,45 +2108,57 @@ impl PkgManager
         save_versions("Unlab.lock", &locks)
     }
     
+    /// Returns the constraints.
     pub fn constraints(&self) -> &Arc<HashMap<PkgName, VersionReq>>
     { &self.constraints }
 
+    /// Sets the constraints.
     pub fn set_constraints(&mut self, constraints: Arc<HashMap<PkgName, VersionReq>>)
     { self.constraints = constraints; }
 
+    /// Loads the constraints.
     pub fn load_constraints(&mut self) -> Result<()>
     {
         self.constraints = Arc::new(load_version_reqs_or_empty(self.constraints_file())?);
         Ok(())
     }
     
+    /// Returns the custom sources.
     pub fn sources(&self) -> &Arc<HashMap<PkgName, SrcInfo>>
     { &self.sources }
 
+    /// Sets the custom sources.
     pub fn set_sources(&mut self, sources: Arc<HashMap<PkgName, SrcInfo>>)
     { self.sources = sources; }
 
+    /// Loads the custom sources.
     pub fn load_sources(&mut self) -> Result<()>
     {
         self.sources = Arc::new(load_src_infos_or_empty(self.sources_file())?);
         Ok(())
     }
 
+    /// Returns the factories of sources.
     pub fn src_factories(&self) -> &[Arc<dyn SourceCreate + Send + Sync>]
     { self.src_factories.as_slice() }
-    
+
+    /// Returns the printer.
     pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
     { &self.printer }
     
+    /// Loads the manifest of current package.
     pub fn manifest() -> Result<Manifest>
     { Manifest::load("Unlab.toml") }
 
+    /// Saves the manifest of current package.
     pub fn save_manifest(manifest: &Manifest) -> Result<()>
     { manifest.save("Unlab.toml") }
     
+    /// Resets the package manager.
     pub fn reset(&mut self)
     { self.pkgs.clear(); }
     
+    /// Returns the path to the constraints.
     pub fn constraints_file(&self) -> PathBuf
     {
         let mut file = self.home_dir.clone();
@@ -1947,6 +2166,7 @@ impl PkgManager
         file
     }
 
+    /// Returns the path to the custom sources.
     pub fn sources_file(&self) -> PathBuf
     {
         let mut file = self.home_dir.clone();
@@ -1954,6 +2174,7 @@ impl PkgManager
         file
     }
     
+    /// Returns the path to the variable directory in the work directory.
     pub fn work_var_dir(&self) -> PathBuf
     {
         let mut dir = self.work_dir.clone();
@@ -1961,6 +2182,7 @@ impl PkgManager
         dir
     }    
 
+    /// Returns the path to the temporary directory in the work directory.
     pub fn work_tmp_dir(&self) -> PathBuf
     {
         let mut dir = self.work_dir.clone();
@@ -1968,6 +2190,7 @@ impl PkgManager
         dir
     }    
     
+    /// Returns the path to the information directory.
     pub fn info_dir(&self) -> PathBuf
     {
         let mut dir = self.work_var_dir();
@@ -1975,6 +2198,7 @@ impl PkgManager
         dir
     }
 
+    /// Returns the path to the information directory while pre-installing.
     pub fn new_part_info_dir(&self) -> PathBuf
     {
         let mut dir = self.work_var_dir();
@@ -1982,6 +2206,7 @@ impl PkgManager
         dir
     }
     
+    /// Returns the path to the information directory while installing.
     pub fn new_info_dir(&self) -> PathBuf
     {
         let mut dir = self.work_var_dir();
@@ -1989,6 +2214,7 @@ impl PkgManager
         dir
     }
 
+    /// Returns the path to the information directory for the specified package.
     pub fn pkg_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.info_dir();
@@ -1996,6 +2222,8 @@ impl PkgManager
         dir
     }
 
+    /// Returns the path to the information directory while pre-installing for the specified
+    /// package.
     pub fn pkg_new_part_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.new_part_info_dir();
@@ -2003,6 +2231,7 @@ impl PkgManager
         dir
     }
     
+    /// Returns the path to the information directory while installing for the specified package.
     pub fn pkg_new_info_dir(&self, name: &PkgName) -> PathBuf
     {
         let mut dir = self.new_info_dir();
@@ -2010,6 +2239,8 @@ impl PkgManager
         dir
     }
     
+    /// Returns the path to the documentation directory in the temporary directory for the
+    /// specified package.
     pub fn pkg_tmp_doc_dir(&self, name: &PkgName, version: &Version) -> PathBuf
     {
         let mut dir = self.work_tmp_dir();
@@ -2019,6 +2250,7 @@ impl PkgManager
         dir
     }
     
+    /// Creates a source for the specified package.
     pub fn create_source(&self, name: &PkgName) -> Result<Box<dyn Source + Send + Sync>>
     {
         match self.sources.get(name) {
@@ -2279,16 +2511,20 @@ impl PkgManager
         Ok(())
     }
     
+    /// Returns the package versions.
     pub fn pkg_versions(&self) -> Result<Vec<(PkgName, Version)>>
     { self.pkg_versions_for_bucket("versions") }
 
+    /// Calls the function for each package version.
     pub fn pkg_versions_in<F>(&self, f: F) -> Result<()>
         where F: FnMut(&PkgName, &Version) -> Result<()>
     { self.pkg_versions_for_bucket_in("versions", f) }
 
+    /// Returns the package version if the package is installed, otherwise `None`.
     pub fn pkg_version(&self, name: &PkgName) -> Result<Option<Version>>
     { self.pkg_version_for_bucket("versions", name) }
     
+    /// Returns the package manifest if the package is installed, otherwise `None`.
     pub fn pkg_manifest(&self, name: &PkgName) -> Result<Option<Manifest>>
     {
         let mut manifest_file = self.pkg_info_dir(name);
@@ -2296,6 +2532,7 @@ impl PkgManager
         Manifest::load_opt(manifest_file)
     }
 
+    /// Returns the package dependents if the package is installed, otherwise `None`.
     pub fn pkg_dependents(&self, name: &PkgName) -> Result<Option<HashMap<PkgName, VersionReq>>>
     {
         let mut dependents_file = self.pkg_info_dir(name);
@@ -2303,6 +2540,7 @@ impl PkgManager
         load_opt_version_reqs(dependents_file)
     }
 
+    /// Returns the package paths if the package is installed, otherwise `None`.
     pub fn pkg_paths(&self, name: &PkgName) -> Result<Option<Paths>>
     {
         let mut paths_file = self.pkg_info_dir(name);
@@ -2992,6 +3230,7 @@ impl PkgManager
         self.remove_pkg_versions_for_buckets("pkgs_to_remove", "versions")
     }
     
+    /// Updates the versions of packages.
     pub fn update(&self, names: &[PkgName]) -> Result<()>
     {
         self.printer.print_updating();
@@ -3002,6 +3241,12 @@ impl PkgManager
         Ok(())
     }
     
+    /// Installs the specified packages with depedencies.
+    ///
+    /// This method overwrites the versions of packages if the update flag is set, otherwise
+    /// the versions of the packages aren't updated. If the force flag is set, the packages with
+    /// the dependencies are reinstalled. The documentations are installed for the packages if
+    /// the documentation is set, otherwise the documentation aren't installed.
     pub fn install(&mut self, names: &[PkgName], is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
         self.printer.print_pre_installing();
@@ -3015,6 +3260,10 @@ impl PkgManager
         Ok(())
     }
     
+    /// Installs the dependencies for the current package.
+    ///
+    /// The unused packages are automatically removed from the work directory. See also
+    /// [install](Self::install).
     pub fn install_deps(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
         self.printer.print_pre_installing();
@@ -3035,6 +3284,7 @@ impl PkgManager
         Ok(())
     }
     
+    /// Removes the specified packages.
     pub fn remove(&mut self, names: &[PkgName]) -> Result<()>
     {
         self.printer.print_pre_removing();
@@ -3046,6 +3296,11 @@ impl PkgManager
         Ok(())
     }
     
+    /// Checks whether the preparation to the last operation or the last operations was
+    /// interrupted.
+    ///
+    /// If the preparation to the last operation or the last operation was interrupted, this
+    /// method returns an error with the appropriate message.
     pub fn check_last_op(&self, are_deps: bool) -> Result<()>
     {
         let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
@@ -3075,6 +3330,7 @@ impl PkgManager
         Ok(())
     }
 
+    /// Continues the interrupted last operation.
     pub fn cont(&self, is_doc: bool, are_deps: bool) -> Result<()>
     {
         let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
@@ -3121,6 +3377,7 @@ impl PkgManager
         Ok(())
     }
 
+    /// Cleans after the interrupted preparation to the last operation.
     pub fn clean(&self) -> Result<()>
     {
         let is_new_part_info_dir = match fs::metadata(self.new_part_info_dir()) {
@@ -3142,6 +3399,7 @@ impl PkgManager
         Ok(())
     }
     
+    /// Updates the versions of all packages.
     pub fn update_all(&self) -> Result<()>
     {
         let mut names: Vec<PkgName> = Vec::new();
@@ -3152,6 +3410,9 @@ impl PkgManager
         self.update(names.as_slice())
     }
 
+    /// Reinstalls all packages.
+    ///
+    /// See [install](Self::install).
     pub fn install_all(&mut self, is_update: bool, is_force: bool, is_doc: bool) -> Result<()>
     {
         let mut names: Vec<PkgName> = Vec::new();
@@ -3175,6 +3436,7 @@ impl PkgManager
         Ok(())
     }
 
+    /// Generates a documentation for the current package.
     pub fn generate_doc(&self) -> Result<()>
     {
         self.printer.print_documenting();
