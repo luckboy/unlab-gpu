@@ -198,7 +198,8 @@ pub struct Env
 
 impl Env
 {
-    /// Creates an environment with the script directory, the domain, and the shared environment.
+    /// Creates an environment with the path to script directory, the domain, and the shared
+    /// environment.
     ///
     /// Also, this method takes the root module that has the variables and other modules. 
     pub fn new_with_script_dir_and_domain_and_shared_env(root_mod: Arc<RwLock<ModNode<Value, ()>>>, script_dir: PathBuf, domain: Option<String>, shared_env: Arc<RwLock<SharedEnv>>) -> Self
@@ -256,7 +257,7 @@ impl Env
     pub fn stack(&self) -> &[(Arc<RwLock<ModNode<Value, ()>>>, BTreeMap<String, Value>)]
     { self.stack.as_slice() }
 
-    /// Returns the script directory.
+    /// Returns the path to script directory.
     pub fn script_dir(&self) -> &Path
     { self.script_dir.as_path() }
 

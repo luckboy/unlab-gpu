@@ -76,22 +76,39 @@ impl<T: Iterator> DocIterator for DocIter<T>
     { None }
 }
 
+/// An enumeration of argument of built-in function.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum BuiltinFunArg
 {
+    /// An Argument.
     Arg(String),
+    /// An optional argument.
     OptArg(String),
+    /// An optional arguments.
     DotDotDot,
 }
 
+/// A signature structure.
+///
+/// The signature specifies whether a variable is a normal variable, a function, or a built-in
+/// function. If the variable is the function or the built-in funciton, the signature also
+/// specifies which arguments are passed to the function or the built-in function.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Sig
 {
+    /// A normal variable.
     Var,
+    /// A function.
     Fun(Vec<String>),
+    /// A built-in function.
     BuiltinFun(Vec<BuiltinFunArg>),
 }
 
+/// A structure of documentation tree.
+///
+/// The documentation tree is a half result of documentation generation. The documentation tree
+/// has two module nodes which are a root modules of signature and a root module of documentation.
+/// These modules are used to finally generate a documentation.
 #[derive(Clone, Debug)]
 pub struct DocTree
 {
@@ -101,15 +118,19 @@ pub struct DocTree
 
 impl DocTree
 {
+    /// Creates a documentation tree.
     pub fn new(sig_root_mod: Arc<RwLock<ModNode<Sig, ()>>>, doc_root_mod: Arc<RwLock<ModNode<String, Option<String>>>>) -> Self
     { DocTree { sig_root_mod, doc_root_mod, } }
     
+    /// Returns the root module of signature.
     pub fn sig_root_mod(&self) -> &Arc<RwLock<ModNode<Sig, ()>>>
     { &self.sig_root_mod }
 
+    /// Returns the root module of documentation.
     pub fn doc_root_mod(&self) -> &Arc<RwLock<ModNode<String, Option<String>>>>
     { &self.doc_root_mod }
     
+    /// Locks the reader-writer locks of root modules with shared read access.
     pub fn read(&self) -> Result<DocTreeReadGuard<'_>>
     {
         let sig_root_mod_g = rw_lock_read(&*self.sig_root_mod)?;
@@ -118,6 +139,7 @@ impl DocTree
     }
 }
 
+/// A structure of guard of documentation tree.
 #[derive(Debug)]
 pub struct DocTreeReadGuard<'a>
 {
@@ -130,6 +152,7 @@ impl<'a> DocTreeReadGuard<'a>
     fn new(sig_root_mod_g: RwLockReadGuard<'a, ModNode<Sig, ()>>, doc_root_mod_g: RwLockReadGuard<'a, ModNode<String, Option<String>>>) -> Self
     { DocTreeReadGuard { sig_root_mod_g, doc_root_mod_g, } }
 
+    /// Returns the description of root module.
     pub fn desc(&self) -> Option<&String>
     { 
         match self.doc_root_mod_g.value() {
@@ -138,9 +161,11 @@ impl<'a> DocTreeReadGuard<'a>
         }
     }
     
+    /// Returns the subtrees of the documentation tree.
     pub fn subtrees(&self) -> Vec<(&String, DocTree)>
     { self.sig_root_mod_g.mods().iter().map(|(id, sm)| self.doc_root_mod_g.mod1(id).map(|dm| (id, DocTree::new(sm.clone(), dm.clone())))).flatten().collect() }
     
+    /// Returns the signatures with the optional descriptions.
     pub fn var_desc_pairs(&self) -> Vec<(&String, (&Sig, Option<&String>))>
     { self.sig_root_mod_g.vars().iter().map(|(id, s)| (id, (s, self.doc_root_mod_g.var(id)))).collect() }
 }
@@ -168,6 +193,13 @@ impl DocTreeEnv
     }
 }
 
+/// A structure of generator of documentation tree.
+///
+/// The generator of documentation tree takes a root module of documentation and then generates
+/// a documentation tree. A root module of signature are generated from the syntax tree while
+/// a generation of documentation tree. Applications of built-in function of running with
+/// documentation allows to documention generation from other files than the main file of
+/// library. By defaylt, a built-in function of running with documentation is `runwithdoc`.
 #[derive(Clone, Debug)]
 pub struct DocTreeGen
 {
@@ -178,21 +210,36 @@ pub struct DocTreeGen
 
 impl DocTreeGen
 {
+    /// Creates a generator of documentation tree with the path to script directory and the
+    /// identifier of built-in function of running with documentation.
+    ///
+    /// Also, this method takes the root module of documentation that can have the module
+    /// descriptions and the variable description.
     pub fn new_with_script_dir_and_run_with_doc_ident(doc_root_mod: Arc<RwLock<ModNode<String, Option<String>>>>, script_dir: PathBuf, run_with_doc_ident: String) -> Self
     { DocTreeGen { env: DocTreeEnv::new(doc_root_mod), script_dir, run_with_doc_ident, } }
 
+    /// Creates a generator of documentation tree with the path to script directory.
+    ///
+    /// See [`new_with_script_dir_and_run_with_doc_ident`](Self::new_with_script_dir_and_run_with_doc_ident).
     pub fn new_with_script_dir(doc_root_mod: Arc<RwLock<ModNode<String, Option<String>>>>, script_dir: PathBuf) -> Self
     { Self::new_with_script_dir_and_run_with_doc_ident(doc_root_mod, script_dir, String::from("runwithdoc")) }
 
+    /// Creates a generator of documentation tree.
+    ///
+    /// See [`new_with_script_dir_and_run_with_doc_ident`](Self::new_with_script_dir_and_run_with_doc_ident).
     pub fn new(doc_root_mod: Arc<RwLock<ModNode<String, Option<String>>>>) -> Self
     { Self::new_with_script_dir(doc_root_mod, PathBuf::from(".")) }
-    
+
+    /// Returns the path to script directory.
     pub fn script_dir(&self) -> &Path
     { self.script_dir.as_path() }
     
+    
+    /// Returns the identifier of built-in function of running with documentation.
     pub fn run_with_doc_ident(&self) -> &str
     { self.run_with_doc_ident.as_str() }
-    
+
+    /// Generates a documentation tree from the syntax tree.
     pub fn generate(&mut self, tree: &Tree) -> Result<DocTree>
     {
         self.generate_for_tree(tree)?;
@@ -348,6 +395,9 @@ impl DocTreeGen
     }
 }
 
+/// Generates a documentation tree for the script directory.
+///
+/// See [`DocTreeGen::new_with_script_dir_and_run_with_doc_ident`] and [`DocTreeGen::generate`].
 pub fn generate_doc_tree<P: AsRef<Path>>(script_dir: P) -> Result<DocTree>
 {
     let mut lib_file = PathBuf::from(script_dir.as_ref());
@@ -375,6 +425,10 @@ fn idents_to_string(idents: &[String]) -> String
     s
 }
 
+/// A strucuture of documentation generator.
+///
+/// The documentation generator generates a documentation in a documentation directory of library.
+/// The documentation tree is used to a documentation generation by the documentation generator.
 #[derive(Clone, Debug)]
 pub struct DocGen
 {
@@ -384,6 +438,7 @@ pub struct DocGen
 
 impl DocGen
 {
+    /// Creates a documentation generator.
     pub fn new<P: AsRef<Path>>(doc_dir: PathBuf, lib_path: P) -> Self
     {
         let lib_name = lib_path.as_ref().to_string_lossy().into_owned().replace(path::MAIN_SEPARATOR, "/");
@@ -392,9 +447,11 @@ impl DocGen
         DocGen { lib_name, lib_doc_dir, }
     }
     
+    /// Returns the library name.
     pub fn lib_name(&self) -> &str
     { self.lib_name.as_str() }
 
+    /// Returns the path to the documentation directory of library.
     pub fn lib_doc_dir(&self) -> &Path
     { self.lib_doc_dir.as_path() }
     
@@ -586,7 +643,8 @@ impl DocGen
         }
         Ok(())
     }
-    
+
+    /// Generates a documnetation from the documentation tree.
     pub fn generate(&self, doc_tree: &DocTree) -> Result<()>
     {
         let mut styles_path_buf = self.lib_doc_dir.clone();
@@ -611,6 +669,10 @@ impl DocGen
     }
 }
 
+/// Generates a documentation in the documentation directory for the library directory and the
+/// library path.
+///
+/// See [`generate_doc_tree`], [`DocGen::new`], and [`DocGen::generate`].
 pub fn generate_doc<P: AsRef<Path>, Q: AsRef<Path>, R: AsRef<Path>>(lib_dir: P, doc_dir: Q, lib_path: R) -> Result<()>
 {
     let mut script_dir = PathBuf::from(lib_dir.as_ref());

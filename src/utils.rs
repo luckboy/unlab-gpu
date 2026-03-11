@@ -85,7 +85,7 @@ pub fn mutex_lock<T>(mutex: &Mutex<T>) -> Result<MutexGuard<'_, T>>
     }
 }
 
-/// Locks reader-writer lock with shared read access.
+/// Locks the reader-writer lock with shared read access.
 pub fn rw_lock_read<T>(rw_lock: &RwLock<T>) -> Result<RwLockReadGuard<'_, T>>
 {
     match rw_lock.read() {
@@ -94,7 +94,7 @@ pub fn rw_lock_read<T>(rw_lock: &RwLock<T>) -> Result<RwLockReadGuard<'_, T>>
     }
 }
 
-/// Locks reader-writer lock with exclusive write access.
+/// Locks the reader-writer lock with exclusive write access.
 pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
 {
     match rw_lock.write() {
