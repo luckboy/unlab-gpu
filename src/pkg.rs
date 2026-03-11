@@ -2024,10 +2024,10 @@ impl PkgManager
     ///
     /// This method takes paths to the Unlab-gpu home directory, the work directory, the binary
     /// dirtectory, the library directory, and the documentation directory. The factories of
-    /// default soruces which allows to access to the package. This method takes the printer that
-    /// prints messages. If the packages isn't installed as the dependencies for the current
-    /// package, the path of work directory should be the path to the the Unlab-gpu home
-    /// directory.
+    /// default soruces which allows to access to the package. Also, this method takes the
+    /// printer that prints messages. If the packages isn't installed as the dependencies for
+    /// the current package, the path of work directory should be the path to the the Unlab-gpu
+    /// home directory.
     pub fn new(home_dir: PathBuf, work_dir: PathBuf, bin_dir: PathBuf, lib_dir: PathBuf, doc_dir: PathBuf, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, printer: Arc<dyn Print + Send + Sync>) -> Result<Self>
     {
         let mut work_var_dir = work_dir.clone();

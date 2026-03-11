@@ -308,9 +308,9 @@ pub enum BinOp
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum Name
 {
-    /// An absolute name with module identifiers and a variable identifier.
+    /// An absolute name with identifiers of modules and a variable identifier.
     Abs(Vec<String>, String),
-    /// A relative name with module identifiers and a variable identifier.
+    /// A relative name with identifiers of modules and a variable identifier.
     Rel(Vec<String>, String),
     /// A name with one identifier.
     Var(String),

@@ -199,7 +199,7 @@ impl DocTreeEnv
 /// a documentation tree. A root module of signature are generated from the syntax tree while
 /// a generation of documentation tree. Applications of built-in function of running with
 /// documentation allows to documention generation from other files than the main file of
-/// library. By defaylt, a built-in function of running with documentation is `runwithdoc`.
+/// library. By defaylt, the built-in function of running with documentation is `runwithdoc`.
 #[derive(Clone, Debug)]
 pub struct DocTreeGen
 {

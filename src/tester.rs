@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A tester module.
 use std::env::current_dir;
 use std::env::set_current_dir;
 use std::ffi::OsString;
@@ -28,6 +29,11 @@ use crate::parser::*;
 use crate::utils::*;
 use crate::value::*;
 
+/// A structure of test result.
+///
+/// The test result can be a success or a failure. A test error with a stack trace is in the
+/// result test if the test result is failure. Also, data from the standard output and the
+/// standard error stores in cursors which are in the test result.
 pub struct TestResult
 {
     error_pair: Option<(Error, Vec<(Option<Value>, Pos)>)>,
@@ -37,15 +43,20 @@ pub struct TestResult
 
 impl TestResult
 {
+    /// Creates a test result.
     pub fn new(error_pair: Option<(Error, Vec<(Option<Value>, Pos)>)>, stdout: Option<Arc<RwLock<Cursor<Vec<u8>>>>>, stderr: Option<Arc<RwLock<Cursor<Vec<u8>>>>>) -> TestResult
     { TestResult { error_pair, stdout, stderr } }
     
+    /// Returns `true` if the test result is success, otherwise `false`.
     pub fn is_success(&self) -> bool
     { self.error_pair.is_none() }
     
+    /// Returns `true` if the test result is failure, otherwise `false`.
     pub fn is_failure(&self) -> bool
     { self.error_pair.is_some() }
 
+    /// Returns the test error with the stack trace if the test result is failure, otherwise
+    /// `None`.
     pub fn error_pair(&self) -> Option<&(Error, Vec<(Option<Value>, Pos)>)>
     {
         match &self.error_pair {
@@ -54,6 +65,8 @@ impl TestResult
         }
     }
     
+    /// Returns the cursor of standard output if the test result has the cursor of standard
+    /// output, otherwise `None`.
     pub fn stdout(&self) -> Option<&Arc<RwLock<Cursor<Vec<u8>>>>>
     {
         match &self.stdout {
@@ -62,6 +75,8 @@ impl TestResult
         }
     }
 
+    /// Returns the cursor of standard error if the test result has the cursor of standard error,
+    /// otherwise `None`.
     pub fn stderr(&self) -> Option<&Arc<RwLock<Cursor<Vec<u8>>>>>
     {
         match &self.stderr {
@@ -69,7 +84,8 @@ impl TestResult
             None => None,
         }
     }
-    
+
+    /// Returns `true` if the test result has data from the standard output, otherwise `false`.
     pub fn has_stdout_data(&self) -> Result<bool>
     {
         match &self.stdout {
@@ -81,6 +97,7 @@ impl TestResult
         }
     }
 
+    /// Returns `true` if the test result has data from the standard error, otherwise `false`.
     pub fn has_stderr_data(&self) -> Result<bool>
     {
         match &self.stderr {
@@ -93,30 +110,48 @@ impl TestResult
     }
 }
 
+/// A printer trait.
+///
+/// The printer prints messages for a test result.
 pub trait Print
 {
+    /// Prints the "Loading tests ..." message.
     fn print_loading(&self, is_done: bool);
 
+    /// Prints the test running with the test identifier.
+    ///
+    /// This method prints "ok" for the test success or "FAILED" for the test failure if the test
+    /// is done, otherwise "FAILED".
     fn print_running_test(&self, idents: &Vec<String>, ident: &String, is_done: bool, is_ok: bool);
 
+    /// Prints an empty line.
     fn print_empty_line(&self);
     
+    /// Prints the "Successes:" message.
     fn print_successes(&self);
 
+    /// Prints the "Failures:" message.
     fn print_failures(&self);
     
+    /// Prints the test result with data from the standard output and the standard error.
     fn print_test_result(&self, idents: &Vec<String>, ident: &String, test_result: &TestResult) -> Result<()>;
     
+    /// Prints the number of passed tests and the number of failed tests. 
     fn print_test_counts(&self, passed_test_count: usize, failed_test_count: usize);
     
+    /// Prints the newline character for an occurred error.
     fn print_lf_for_error(&self);
 }
 
+/// A structure of empty printer.
+///
+/// The empty printer is dummy that doesn't print any messages.
 #[derive(Copy, Clone, Debug)]
 pub struct EmptyPrinter;
 
 impl EmptyPrinter
 {
+    /// Creates an empty printer.
     pub fn new() -> Self
     { EmptyPrinter }
 }
@@ -164,6 +199,9 @@ fn idents_and_ident_to_string(idents: &[String], ident: &String) -> String
     s
 }
 
+/// A structure of standard printer.
+///
+/// The standard printer prints messages to the standard output.
 #[derive(Debug)]
 pub struct StdPrinter
 {
@@ -172,6 +210,7 @@ pub struct StdPrinter
 
 impl StdPrinter
 {
+    /// Creates a standard printer.
     pub fn new() -> Self
     { StdPrinter { has_lf_for_error: AtomicBool::new(false), } }
 }
@@ -292,6 +331,11 @@ fn change_and_recusively_remove_dir<P: AsRef<Path>, Q: AsRef<Path>>(path: P, sav
     Ok(())
 }
 
+/// A tester structure.
+///
+/// The tester tests a library or libraries by running the tests which were written by a
+/// programmer. The test results can be collected by the tester in order to print the test
+/// results for the programmer.
 pub struct Tester
 {
     root_mod: Arc<RwLock<ModNode<Value, ()>>>,
@@ -305,6 +349,11 @@ pub struct Tester
 
 impl Tester
 {
+    /// Creates a tester.
+    ///
+    /// This method the root module, the library paths, the documentation library and the printer
+    /// that prints the messages. The flags of cursors determines whether data from the standard
+    /// output and the standard error are collect by the cursors.
     pub fn new(root_mod: Arc<RwLock<ModNode<Value, ()>>>, lib_path: OsString, doc_path: OsString, printer: Arc<dyn Print + Send + Sync>, are_stdout_cursors: bool, are_stderr_cursors: bool) -> Self
     {
         Tester {
@@ -318,27 +367,35 @@ impl Tester
         }
     }
 
+    /// Returns the root module.
     pub fn root_mod(&self) -> &Arc<RwLock<ModNode<Value, ()>>>
     { &self.root_mod }
     
+    /// Returns the shared environment.
     pub fn shared_env(&self) -> &Arc<RwLock<SharedEnv>>
     { &self.shared_env }
-    
+
+    /// Returns the stack trace.
     pub fn stack_trace(&self) -> &[(Option<Value>, Pos)]
     { self.stack_trace.as_slice() }
 
+    /// Returns the test results.
     pub fn test_results(&self) -> &[((Vec<String>, String), TestResult)]
     { self.test_results.as_slice() }
     
+    /// Returns the printer.
     pub fn printer(&self) -> &Arc<dyn Print + Send + Sync>
     { &self.printer }
     
+    /// Returns the flag of cursor of standard output.
     pub fn has_stdout_cursors(&self) -> bool
     { self.has_stdout_cursors }
 
+    /// Returns the flag of cursor of standard error.
     pub fn has_stderr_cursors(&self) -> bool
     { self.has_stderr_cursors }
     
+    /// Loads tests.
     pub fn load(&mut self) -> Result<()>
     {
         self.printer.print_loading(false);
@@ -378,7 +435,8 @@ impl Tester
         self.printer.print_loading(true);
         Ok(())
     }
-    
+
+    /// Runs the specified test by the idenfiers of modules and the function identifer.
     pub fn run_test(&mut self, idents: &Vec<String>, ident: &String) -> Result<()>
     {
         self.printer.print_running_test(idents, ident, false, false);
@@ -442,6 +500,7 @@ impl Tester
         Ok(())
     }
 
+    /// Runs the tests in the specified test suite by the identifiers of modules.
     pub fn run_tests_in_test_suite(&mut self, idents: &Vec<String>) -> Result<()>
     {
         let is_test_suite = {
@@ -468,6 +527,7 @@ impl Tester
         Ok(())
     }
 
+    /// Runs all tests.
     pub fn run_all_tests(&mut self) -> Result<()>
     {
         let mut test_suites: Vec<Vec<String>> = {
@@ -481,9 +541,11 @@ impl Tester
         Ok(())
     }
     
+    /// Prints an empty line.
     pub fn print_empty_line(&self)
     { self.printer.print_empty_line() }
 
+    /// Prints the test successes.
     pub fn print_successes(&self) -> Result<()>
     {
         let mut count = 0usize;
@@ -503,6 +565,7 @@ impl Tester
         Ok(())
     }
 
+    /// Prints the test failures.
     pub fn print_failures(&self) -> Result<()>
     {
         let mut count = 0usize;
@@ -522,6 +585,7 @@ impl Tester
         Ok(())
     }
     
+    /// Prints the number of passed tests and the number of failed tests. 
     pub fn print_test_counts(&self)
     {
         let mut passed_test_count = 0usize;
