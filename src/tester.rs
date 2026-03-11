@@ -40,10 +40,10 @@ impl TestResult
     pub fn new(error_pair: Option<(Error, Vec<(Option<Value>, Pos)>)>, stdout: Option<Arc<RwLock<Cursor<Vec<u8>>>>>, stderr: Option<Arc<RwLock<Cursor<Vec<u8>>>>>) -> TestResult
     { TestResult { error_pair, stdout, stderr } }
     
-    pub fn is_ok(&self) -> bool
+    pub fn is_success(&self) -> bool
     { self.error_pair.is_none() }
     
-    pub fn is_failed(&self) -> bool
+    pub fn is_failure(&self) -> bool
     { self.error_pair.is_some() }
 
     pub fn error_pair(&self) -> Option<&(Error, Vec<(Option<Value>, Pos)>)>
@@ -488,14 +488,14 @@ impl Tester
     {
         let mut count = 0usize;
         for (_, test_result) in &self.test_results {
-            if test_result.is_ok() && (test_result.has_stdout_data()? || test_result.has_stderr_data()?) {
+            if test_result.is_success() && (test_result.has_stdout_data()? || test_result.has_stderr_data()?) {
                 count += 1;
             }
         }
         if count > 0 {
             self.printer.print_successes();
             for ((idents, ident), test_result) in &self.test_results {
-                if test_result.is_ok() && (test_result.has_stdout_data()? || test_result.has_stderr_data()?) {
+                if test_result.is_success() && (test_result.has_stdout_data()? || test_result.has_stderr_data()?) {
                     self.printer.print_test_result(idents, ident, test_result)?;
                 }
             }
@@ -507,14 +507,14 @@ impl Tester
     {
         let mut count = 0usize;
         for (_, test_result) in &self.test_results {
-            if !test_result.is_ok() {
+            if !test_result.is_success() {
                 count += 1;
             }
         }
         if count > 0 {
             self.printer.print_failures();
             for ((idents, ident), test_result) in &self.test_results {
-                if !test_result.is_ok() {
+                if !test_result.is_success() {
                     self.printer.print_test_result(idents, ident, test_result)?;
                 }
             }
@@ -527,7 +527,7 @@ impl Tester
         let mut passed_test_count = 0usize;
         let mut failed_test_count = 0usize;
         for (_, test_result) in &self.test_results {
-            if test_result.is_ok() {
+            if test_result.is_success() {
                 passed_test_count += 1;
             } else {
                 failed_test_count += 1;
