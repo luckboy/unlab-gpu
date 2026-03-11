@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of package commands.
 use std::env::current_dir;
 use std::env::set_current_dir;
 use std::env::split_paths;
@@ -181,10 +182,12 @@ fn list_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, l
     }
 }
 
+/// A `list` command.
 pub fn list<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `list-deps` command.
 pub fn list_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { list_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -223,10 +226,12 @@ fn search_with_dep_flag<F>(patterns :&[String], home_dir: &Option<String>, bin_p
     }
 }
 
+/// A `search` command.
 pub fn search<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `search-deps` command.
 pub fn search_deps<F>(patterns :&[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { search_with_dep_flag(patterns, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -296,10 +301,12 @@ fn show_with_dep_flag<F>(name :&str, is_manifest: bool, are_dependents: bool, ar
     }
 }
 
+/// A `show` command.
 pub fn show<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `show-dep` command.
 pub fn show_dep<F>(name :&str, is_manifest: bool, are_dependents: bool, are_paths: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { show_with_dep_flag(name, is_manifest, are_dependents, are_paths, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -336,10 +343,12 @@ fn update_with_dep_flag<F>(names: &[String], home_dir: &Option<String>, bin_path
     }
 }
 
+/// A `update` command.
 pub fn update<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { update_with_dep_flag(names, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `update-deps` command.
 pub fn update_deps<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { update_with_dep_flag(names, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -353,6 +362,7 @@ fn res_install(pkg_manager: &mut PkgManager, pkg_names: &[PkgName], is_update: b
     Ok(())
 }
 
+/// An `install` command.
 pub fn install<F>(names: &[String], is_update: bool, is_force: bool, is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -383,6 +393,7 @@ fn res_install_all(pkg_manager: &mut PkgManager, is_update: bool, is_force: bool
     Ok(())
 }
 
+/// An `install-all` command.
 pub fn install_all<F>(is_update: bool, is_force: bool, is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -411,6 +422,7 @@ fn res_install_deps(pkg_manager: &mut PkgManager, is_update: bool, is_force: boo
     Ok(())
 }
 
+/// An `install-deps` command.
 pub fn install_deps<F>(is_update: bool, is_force: bool, is_doc: bool, is_locked: bool, is_unlocked: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -435,6 +447,7 @@ fn res_remove(pkg_manager: &mut PkgManager, pkg_names: &[PkgName]) -> Result<()>
     Ok(())
 }
 
+/// A `remove` command.
 pub fn remove<F>(names: &[String], home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -473,10 +486,12 @@ fn check_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, 
     }
 }
 
+/// A `check` command.
 pub fn check<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { check_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `check-deps` command.
 pub fn check_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { check_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -507,10 +522,12 @@ fn continue_with_dep_flag<F>(is_doc: bool, home_dir: &Option<String>, bin_path: 
     }
 }
 
+/// A `continue` command.
 pub fn cont<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `continue-deps` command.
 pub fn continue_deps<F>(is_doc: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { continue_with_dep_flag(is_doc, home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -532,10 +549,12 @@ fn clean_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, 
     }
 }
 
+/// A `clean` command.
 pub fn clean<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { clean_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
 
+/// A `clean-deps` command.
 pub fn clean_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 { clean_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
@@ -547,6 +566,7 @@ fn res_lock(pkg_manager: &PkgManager) -> Result<()>
     Ok(())
 }
 
+/// A `lock` command.
 pub fn lock<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -573,6 +593,7 @@ fn io_res_clean_dir<P: AsRef<Path>>(dir: P, msg: &str) -> io::Result<()>
     Ok(())
 }
 
+/// A `clean-index` command.
 pub fn clean_index<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -590,6 +611,7 @@ pub fn clean_index<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_
     }
 }
 
+/// A `clean-cache` command.
 pub fn clean_cache<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -619,6 +641,7 @@ fn res_clean_work() -> Result<()>
     }
 }
 
+/// A `clean-work` command.
 pub fn clean_work<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -665,6 +688,7 @@ fn res_config(home: &Home, account: &Option<String>, domain: &Option<String>) ->
     Ok(())
 }
 
+/// A `config` command.
 pub fn config<F>(account: &Option<String>, domain: &Option<String>, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -752,6 +776,7 @@ fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is
     }
 }
 
+/// A `init` command.
 pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -880,6 +905,7 @@ fn change_and_remove_dir<P: AsRef<Path>, Q: AsRef<Path>>(path: P, saved_current_
     Ok(())
 }
 
+/// A `new` command.
 pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -966,11 +992,13 @@ fn run_with_opt_name<F, G>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr
     exit_code
 }
 
+/// A `run` command.
 pub fn run<F, G>(name: &str, args: Vec<String>, is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool,
         G: FnOnce(&mut ModNode<Value, ()>)
 { run_with_opt_name(Some(name), args, is_ctrl_c_intr_checker, are_plotter_windows, home_dir, bin_path, lib_path, doc_path, f, g) }
 
+/// A `console` command.
 pub fn console<F, G>(is_ctrl_c_intr_checker: bool, are_plotter_windows: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool,
         G: FnOnce(&mut ModNode<Value, ()>)
@@ -983,6 +1011,7 @@ fn res_doc(pkg_manager: &PkgManager) -> Result<()>
     Ok(())
 }
 
+/// A `doc` command.
 pub fn doc<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
@@ -1024,6 +1053,7 @@ fn res_test(tester: &mut Tester, test_name: &Option<TestName>, are_success_outpu
     Ok(())
 }
 
+/// A `test` command.
 pub fn test<F, G>(name: &Option<String>, is_test_suite: bool, are_success_outputs: bool, are_output_cursors: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F, g: G) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool,
         G: FnOnce(&mut ModNode<Value, ()>)
@@ -1111,6 +1141,7 @@ fn res_clean_test() -> Result<()>
     }
 }
 
+/// A `clean-test` command.
 pub fn clean_test<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
