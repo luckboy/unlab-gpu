@@ -116,7 +116,7 @@ definitions of number literals is:
     integer = "0", ("X" | "x"), hex digit, {hex digit}
             | digit, {digit};
     float = digit, {digit}, ".", digit, {digit}, [exponent]
-          | digit, {digit}, [exponent];
+          | digit, {digit}, exponent;
     exponent = ("E" | "e"), [("+" | "-")], digit, {digit};
     hex digit = digit
               | "A" | "B" | "C" | "D" | "E" | "F"
@@ -135,7 +135,7 @@ literals is:
                  | "\", oct digit, oct digit
                  | "\", oct digit
                  | "\a" | "\b" | "\t" | "\n" | "\v" | "\f" | "\r"
-                 | "\", string char;
+                 | "\", escape char;
     escape char = ?any character except LF character?;
     unicode escape = "\U", hex digit, hex digit, hex digit, hex digit, hex digit, hex digit
                    | "\u", hex digit, hex digit, hex digit, hex digit;
@@ -147,7 +147,7 @@ literals is:
 
 ### Idendifiers
 
-Identifiers begin from the `_` character or the UTF-8 character with the Alphabetic property. Other
+Identifiers begin from the `_` character or the UTF-8 character with the Alphabetic property. A next
 character of identifiers can be the `_` character or the UTF-8 character that has the Alphabetic
 property, the Nd category, the Nl category, or the No category. The lexical definitions of
 identifiers literals is:
