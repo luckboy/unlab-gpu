@@ -163,6 +163,63 @@ The lexical definition of identifiers literals is:
     alphabetic char = ?UTF-8 character with Alphabetic property?;
     numeric char = ?UTF-8 character with Nd category, Nl category, or No category?;
 
+## Values
+
+Value types are:
+
+- none
+- boolean
+- integer number
+- floating-point number
+- reference to immutable object
+- strong reference to mutable object
+- weak reference to mutable object
+
+### Immutable objects
+
+Immutable object types are:
+
+- string
+- integer range
+- floating-point range
+- matrix
+- function
+- matrix array
+- matrix row slice
+- error
+- window identifier
+
+### Mutable objects
+
+Mutable object types are:
+
+- array
+- structure
+
+### Value properties
+
+Value types and object types with properties are:
+
+| Value type or object type | Properties          | Index type | Element type          | Boolean    |
+| ------------------------- | ------------------- | ---------- | --------------------- | ---------- |
+| none                      |                     |            |                       | `false`    |
+| boolean                   |                     |            |                       |            |
+| integer number            |                     |            |                       | `a != 0`   |
+| floating-point number     |                     |            |                       | `a != 0.0` |
+| string                    | iterable, indexable | number     | string                | `true`     |
+| integer range             | iterable            |            | integer number        | `true`     |
+| floating-point range      | iterable            |            | floating-point number | `true`     |
+| function                  | applicable          |            |                       | `true`     |
+| matrix                    |                     |            |                       | `true`     |
+| matrix array              | iterable, indexable | number     | matrix row slice      | `true`     |
+| matrix row slice          | iterable, indexable | number     | floating-point number | `true`     |
+| error                     |                     |            |                       | `false`    |
+| window identifier         |                     |            |                       | `true`     |
+| array                     | iterable, indexable | number     | any value             | `true`     |
+| structure                 | indexable           | string     | any value             | `true`     |
+
+Strong references only has the properties for the mutable objects.
+
 ## Nodes
 
 The syntax of nodes is:
@@ -417,7 +474,7 @@ are equal, otherwise the `true` value.
 
 The `==` operator and the `!=` operator don't compare two matrices. The result of these operators is
 the `false` value for the `==` operator or the `true` value for the `!=` operator if two values are
-matrices.
+matrices. These operator doesn't compare value types for integer numbers and floating-point numbers.
 
 ### Expressions of logical operator
 
@@ -442,7 +499,8 @@ The syntax of expression of field access is:
 
     field access expression = expression, ".", identifier;
 
-The expression of field access allows to access to the structure fields by the identifier.
+The expression of field access allows to access to the structure fields by the identifier. The
+expression of field access is assignable.
 
 ### Range expressions
 
@@ -470,10 +528,10 @@ Expresions and operators with arities and priorities are:
 
 | Expression or operator | Arity          | Priority |
 | ---------------------- | -------------- | -------- |
-| Parenthesis            |                | 12       |
-| Literal                |                | 12       |
-| Name                   |                | 12       |
-| Function appliaction   |                | 11       |
+| parenthesis            |                | 12       |
+| literal                |                | 12       |
+| name                   |                | 12       |
+| function appliaction   |                | 11       |
 | `[]`                   | binary         | 11       |
 | `.`                    | binary         | 11       |
 | `?`                    | unary          | 10       |
