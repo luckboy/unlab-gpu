@@ -311,13 +311,14 @@ The quit statement leaves from a script or an interpreter.
 
 The syntax of expression is:
 
-    expresion = literal
+    expresion = "(", expression, ")"
+              | literal
               | name
               | function application
               | unary op expression
               | binary op expression
               | logical expression
-              | field access
+              | field access expression
               | range expression
               | error propagation expression;
 
@@ -342,8 +343,8 @@ The syntax of expression of unary operator is:
 
 The `-` operator negates the number or the matrix.
 
-The `.-` operator recursively negates the loating-point numbers and/or the matrices. The element or
-the field are ignored if it isn't a floating-point number, a matrix, an array, or a structure. If the
+The `.-` operator recursively negates the loating-point numbers and/or the matrices. One element or
+one field is ignored if it isn't a floating-point number, a matrix, an array, or a structure. If the
 expression value is an integer number, the expresion value is converted to a floating-point number and
 then is negated.
 
@@ -372,8 +373,8 @@ The syntax of expression of binary operator is:
                          | expression, "==", expression
                          | expression, "!=", expression;
 
-The `[` `]` operator is an index operator that allows to access to an element or a field. An
-expression created by this operator is assignable.
+The `[]` operator is an index operator that allows to access to an element or a field. An expression
+created by this operator is assignable if the first expression value is an array or a structure.
 
 The `*` operator multiplies the number or matrix by the number or the matrix.
 
@@ -385,16 +386,117 @@ The `/` operator divides the number or the matrix by the number.
 The `.*` operator divides the number or the elements of matrix by the number or the elements of
 matrix.
 
-The `+` operator adds the number or matrix to the number or the matrix.
+The `+` operator adds the number or matrix to the number or the matrix. Also, two strings, two arrays,
+two structures can be added by this operator. If two fields in two structures have same a field
+idendifier, the field from the first expression assigns to a field of result structure.
 
 The `.+` operator adds the number or the elements of matrix by the number or the elements of matrix.
 
-The `-` operator subtracts the number or matrix to the number or the matrix.
+The `-` operator subtracts the number or matrix from the number or the matrix.
 
-The `.-` operator subtracts the number or the elements of matrix by the number or the elements of
+The `.-` operator subtracts the number or the elements of matrix from the number or the elements of
 matrix.
 
-The arithmetic binary operator with dot recursively performs an operation on numbers and/or the 
+The arithmetic binary operator without dot converts one value to a floating-point number and then
+performs operation if one value is an integer number.
+
+The arithmetic binary operator with dot recursively performs an operation on numbers and/or the
 matrices. Two elements or two fields are compares with types if they aren't floating-point numbers,
-matrices, arrays, or a structures. If the expression value is an integer number, the expression value
-is converted to a floating-point number and then there performs the operation.
+matrices, arrays, or a structures. If two elements or two fields aren't equal, the error occurs. If
+the expression value is an integer number, the expression value is converted to a floating-point
+number and then there performs the operation.
+
+The comparison operator except the `==` operator and the `!=` operator comperes the boolean value to
+the boolean value, the number to the number, the string to the string.
+
+The `==` operator comperes two values. The result of this operator is the `true` value if two values
+are equal, otherwise the `false` value.
+
+The `!=` operator comperes two values. The result of this operator is the `false` value if two values
+are equal, otherwise the `true` value.
+
+The `==` operator and the `!=` operator don't compare two matrices. The result of these operators is
+the `false` value for the `==` operator or the `true` value for the `!=` operator if two values are
+matrices.
+
+### Expressions of logical operator
+
+The syntax of expression of logical operator is:
+
+    logical op expression = expression, "and", expression
+                          | expression, "or", expression;
+
+The `and` operator performs the logical-AND operation. The result of this operator is the second
+expression value if the first expression value is the `true` value after conversion to the boolean
+value, otherwise the first expression value.
+
+The `or` operator performs the logical-OR operation. The result of this operator is the first
+expression value if the first expression value is the `true` value after conversion to the boolean
+value, otherwise the second expression value.
+
+These operators evaluate the second expression if it is necessary.
+
+### Expressions of field access
+
+The syntax of expression of field access is:
+
+    field access expression = expression, ".", identifier;
+
+The expression of field access allows to access to the structure fields by the identifier.
+
+### Range expressions
+
+The syntax of range expression is:
+
+    range expression = expression, "to", expression, ["by", expression];
+
+The range expression creates a range. The expression values in the range expression must be numbers.
+The range is a floating-point range if at least one expression value is floating-point number,
+otherwise an integer range.
+
+### Expressions of propagation error
+
+The syntax of expression of propagation error is:
+
+    propagation error expression = expression, "?";
+
+The expression of error propagation allows to propagate error. If the expression value is the `none`
+value or an error value, there leaves from a function with the result that is this value or prints the
+error outside the function.
+
+### Expression precedence
+
+Expresions and operators with arities and priorities are:
+
+| Expression or operator | Arity          | Priority |
+| ---------------------- | -------------- | -------- |
+| Parenthesis            |                | 12       |
+| Literal                |                | 12       |
+| Name                   |                | 12       |
+| Function appliaction   |                | 11       |
+| `[]`                   | binary         | 11       |
+| `.`                    | binary         | 11       |
+| `?`                    | unary          | 10       |
+| `'`                    | unary          | 9        |
+| `-`                    | unary          | 8        |
+| `.-`                   | unary          | 8        |
+| `not`                  | unary          | 8        |
+| `*`                    | binary         | 7        |
+| `.*`                   | binary         | 7        |
+| `/`                    | binary         | 7        |
+| `./`                   | binary         | 7        |
+| `+`                    | binary         | 6        |
+| `.+`                   | binary         | 6        |
+| `-`                    | binary         | 6        |
+| `.-`                   | binary         | 6        |
+| `to` `by`              | binary/ternary | 5        |
+| `<`                    | binary         | 4        |
+| `>=`                   | binary         | 4        |
+| `>`                    | binary         | 4        |
+| `<=`                   | binary         | 4        |
+| `==`                   | binary         | 3        |
+| `!=`                   | binary         | 3        |
+| `and`                  | binary         | 2        |
+| `or`                   | binary         | 1        |
+
+Associative of all expression and all operators is left to right.
