@@ -287,7 +287,7 @@ The syntax of assignment statement is:
     assign statement = expression , "=", expression;
 
 The assignment stament is a statement that assigns the second expression value to a variable, an 
-element, or a field. The error occurs if the first expression isn't assignable.
+element, or a field. An error occurs if the first expression isn't assignable.
 
 ### If statements
 
@@ -337,7 +337,7 @@ The syntax of break statement is:
 
     break statement = "break";
 
-The break statement stops a loop. If the break statement is used outside the loop, the error occurs.
+The break statement stops a loop. If the break statement is used outside the loop, an error occurs.
 
 ### Continue statements
 
@@ -346,7 +346,7 @@ The syntax of continue statement is:
     continue statement = "continue";
 
 The continue statement skips the rest statements of loop to the next iteration. If the continue
-statement also is used outside the loop, the error occurs.
+statement also is used outside a loop, an error occurs.
 
 ### Return statements
 
@@ -389,7 +389,7 @@ The syntax of function application is:
     expressions = [expression, {",", expression}, [","]];
 
 The function application applies the function expression to the arguments. If a value of function
-expression isn't function, the error occurs.
+expression isn't a function, an error occurs.
 
 ### Expressions of unary operators
 
@@ -462,7 +462,7 @@ performs operation if one value is an integer number.
 
 The arithmetic binary operator with dot recursively performs an operation on numbers and/or the
 matrices. Two elements or two fields are compares with types if they aren't floating-point numbers,
-matrices, arrays, or a structures. If two elements or two fields aren't equal, the error occurs. If
+matrices, arrays, or a structures. If two elements or two fields aren't equal, an error occurs. If
 the expression value is an integer number, the expression value is converted to a floating-point
 number and then there performs the operation.
 
@@ -581,8 +581,6 @@ The syntax of none literal is:
 
     none literal = "none";
 
-The none literal represents the none value.
-
 ### Boolean literals
 
 The syntax of none literal is:
@@ -590,36 +588,29 @@ The syntax of none literal is:
     none literal = "false"
                  | "true";
 
-The boolean literal represents the boolean value that is `false` or `true`.
+### Integer literals
 
-### Literals of interger numbers
-
-The syntax of literal of integer number is:
+The syntax of integer literal is:
 
     integer number literal = integer;
 
-The literal of integer number represents the value of integer number.
+### Floating-point literals
 
-### Literals of floating-point numbers
-
-The syntax of literal of floating-point number is:
+The syntax of float-point literal is:
 
     float number literal = float
                          | "inf"
                          | "nan";
 
-The literal of floating-point number represents the value of floating-point number. The literal of
-floating number can also be infinity or NaN.
+The floating-point literal can also be an infinity or a NaN.
 
-### String literal
+### String literals
 
 The syntax of string literal is:
 
     string literal = string;
 
-The string literal represents the string value.
-
-### Matrix literal
+### Matrix literals
 
 The syntax of matrix literal is:
 
@@ -634,24 +625,90 @@ The syntax of matrix literal is:
                | expressions;
     expressions = [expression, {",", expression}, [","]];
 
-The matrix literal represents the matrix value. The matrix or the matrix row can be filled with the
-filling matrix or the filling expression by using the `fill` keyword. The filling matrix row or the
-filling expression is separately evaluated for each matrix row and each element. The expression after
-the `fill` keyword specifies the number of rows for the filled matrix or the number of columns for the
-filled matrix row.
+The matrix or the matrix row can be filled with the filling matrix or the filling expression by using
+the `fill` keyword. The filling matrix row or the filling expression is separately evaluated for each
+matrix row and each element. The expression after the `fill` keyword specifies the number of rows for
+the filled matrix or the number of columns for the filled matrix row. Each element of matrix literal
+must be a number that is converted to floating-point number. If this element isn't a number, an error
+occurs.
 
 ### Array literal
 
 The syntax of array literal is:
 
-    array literal = ".[", {newline},
+    array literal = ".[",
+                    {newline},
                     (
                         expression, "fill", expression
                       | expressions
                     ),
-                    {newline}, ".]";
+                    {newline},
+                    ".]";
     expressions = [expression, {",", expression}, [","]];
 
-The array literal represents the array value. The array can also be filled with the filling expression
-by the `fill` keyword. The filling expresson is separately evaluated for each element. The expression
-after the `fill` keyword specifies the number of elements.
+The array can also be filled with the filling expression by the `fill` keyword. The filling expresson
+is separately evaluated for each element. The expression after the `fill` keyword specifies the number
+of elements.
+
+### Structyre literal
+
+The syntax of structure literal is:
+
+    structure literal = "{", field pairs, "}";
+    field pairs = {newline}, [field pair, {newline, {newline}, field pair}, [newline, {newline}]];
+    field pair = identifier, ":", expression;
+
+The field with same identifier can only be defined once in same structure.
+
+## Name
+
+The syntax of name is:
+
+    name = absolute name
+         | relative name
+         | variable name;
+
+### Root module and current module
+
+The root module is the hihgest module in the module tree and is only one.
+
+The current module can be a module that is currently defined or a module of the current function. The 
+current function is a function that is currently executed by an interpreter.
+
+### Absolute names
+
+The syntax of absolute name is:
+
+    absolute name = ["::"], "root", "::", {identifier, "::"}, identifier;
+
+The identifiers of absolute name except the last identifier refers descendant modules from the root
+module. The last identifier refers to the variable that is in the last descendant module of the root.
+The first identifier can't refer to an used module in the root module.
+
+### Relative names
+
+The syntax of relative name is:
+
+    relative name = "::", {identifier, "::"}, identifier
+                  | identfier, "::", {identifier, "::"}, identifier;
+
+The identifiers of relative name except the last identifier refers descendant modules from the current
+module or the root module. The last identifier refers to the variable that is in the last descendant
+module of the current module if this module exists, otherwise the variable that is in the last
+descendant module of the root module. The first identifier for the current module can refer to an used
+module or an used variable in the current module if the variable or the module with the first
+identifier isn't defined.
+
+### Variable names
+
+The syntax of variable name is:
+
+    variable name = identifier;
+
+The identifier can refer to:
+
+- the local variable if the local variable exists for reading or an interpreter is inside a function
+  for writing
+- the variable that is defined in the current module if the variable exists in the current module
+- the variable that is used in the current module if the variable is used in the current module
+- the variable that is defined in the root module if the variable exists in the root module
