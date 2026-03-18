@@ -175,6 +175,8 @@ Value types are:
 - strong reference to mutable object
 - weak reference to mutable object
 
+The integer numbers are 64-bit and floating-point numbers are 32-bit.
+
 ### Immutable objects
 
 Immutable object types are:
@@ -305,7 +307,7 @@ The syntax of if statement is:
 The if statement is a statement that executes the condition statement for the first fulfilled
 condition that and skips other statements with conditions. If any condition isn't fulfilled, the
 statements after the `else` keyword is executed. The condition is fulfilled if the condition
-expression can be converted to the `true` value.
+expression can be converted to `true`.
 
 ### For statements
 
@@ -327,7 +329,7 @@ The syntax of while statement is:
                       "end";
 
 The while statement is a loop that executes the statements for iterations until expression can be
-converted to the `true` value if the break statements doesn't occur.
+converted to `true` if the break statements doesn't occur.
 
 ### Break statements
 
@@ -389,7 +391,7 @@ The syntax of function application is:
 The function application applies the function expression to the arguments. If a value of function
 expression isn't function, the error occurs.
 
-### Expressions of unary operator
+### Expressions of unary operators
 
 The syntax of expression of unary operator is:
 
@@ -410,7 +412,7 @@ value.
 
 The `'` operator transposes matrix.
 
-### Expressions of binary operator
+### Expressions of binary operators
 
 The syntax of expression of binary operator is:
 
@@ -430,8 +432,9 @@ The syntax of expression of binary operator is:
                          | expression, "==", expression
                          | expression, "!=", expression;
 
-The `[]` operator is an index operator that allows to access to an element or a field. An expression
-created by this operator is assignable if the first expression value is an array or a structure.
+The `[]` operator is an index operator that allows to access to elements or fields. An indexing
+for numbers begins from one. An expression created by this operator is assignable if the first
+expression value is an array or a structure.
 
 The `*` operator multiplies the number or matrix by the number or the matrix.
 
@@ -466,17 +469,17 @@ number and then there performs the operation.
 The comparison operator except the `==` operator and the `!=` operator comperes the boolean value to
 the boolean value, the number to the number, the string to the string.
 
-The `==` operator comperes two values. The result of this operator is the `true` value if two values
-are equal, otherwise the `false` value.
+The `==` operator comperes two values. The result of this operator is `true` if two values are equal,
+otherwise `false`.
 
-The `!=` operator comperes two values. The result of this operator is the `false` value if two values
-are equal, otherwise the `true` value.
+The `!=` operator comperes two values. The result of this operator is `false` if two values are equal,
+otherwise `true`.
 
 The `==` operator and the `!=` operator don't compare two matrices. The result of these operators is
-the `false` value for the `==` operator or the `true` value for the `!=` operator if two values are
-matrices. These operator doesn't compare value types for integer numbers and floating-point numbers.
+`false` for the `==` operator or `true` for the `!=` operator if two values are matrices. These
+operator doesn't compare value types for integer numbers and floating-point numbers.
 
-### Expressions of logical operator
+### Expressions of logical operators
 
 The syntax of expression of logical operator is:
 
@@ -484,12 +487,12 @@ The syntax of expression of logical operator is:
                           | expression, "or", expression;
 
 The `and` operator performs the logical-AND operation. The result of this operator is the second
-expression value if the first expression value is the `true` value after conversion to the boolean
-value, otherwise the first expression value.
+expression value if the first expression value is `true` after conversion to the boolean value,
+otherwise the first expression value.
 
 The `or` operator performs the logical-OR operation. The result of this operator is the first
-expression value if the first expression value is the `true` value after conversion to the boolean
-value, otherwise the second expression value.
+expression value if the first expression value is `true` after conversion to the boolean value,
+otherwise the second expression value.
 
 These operators evaluate the second expression if it is necessary.
 
@@ -558,3 +561,97 @@ Expresions and operators with arities and priorities are:
 | `or`                   | binary         | 1        |
 
 Associative of all expression and all operators is left to right.
+
+## Literals
+
+The syntax of literal is:
+
+    literal = none literal
+            | boolean literal
+            | integer number literal
+            | float number literal
+            | string literal
+            | matrix literal
+            | array literal
+            | structure literal;
+
+### None literals
+
+The syntax of none literal is:
+
+    none literal = "none";
+
+The none literal represents the none value.
+
+### Boolean literals
+
+The syntax of none literal is:
+
+    none literal = "false"
+                 | "true";
+
+The boolean literal represents the boolean value that is `false` or `true`.
+
+### Literals of interger numbers
+
+The syntax of literal of integer number is:
+
+    integer number literal = integer;
+
+The literal of integer number represents the value of integer number.
+
+### Literals of floating-point numbers
+
+The syntax of literal of floating-point number is:
+
+    float number literal = float
+                         | "inf"
+                         | "nan";
+
+The literal of floating-point number represents the value of floating-point number. The literal of
+floating number can also be infinity or NaN.
+
+### String literal
+
+The syntax of string literal is:
+
+    string literal = string;
+
+The string literal represents the string value.
+
+### Matrix literal
+
+The syntax of matrix literal is:
+
+    matrix literal = "[", {newline},
+                     (
+                         matrix row, newline, {newline}, "fill", expression, {newline}
+                       | matrix rows
+                     ),
+                     "]";
+    matrix rows = {newline}, [matrix row, {newline, {newline}, matrix row}, [newline, {newline}]];
+    matrix row = expression, "fill", expression
+               | expressions;
+    expressions = [expression, {",", expression}, [","]];
+
+The matrix literal represents the matrix value. The matrix or the matrix row can be filled with the
+filling matrix or the filling expression by using the `fill` keyword. The filling matrix row or the
+filling expression is separately evaluated for each matrix row and each element. The expression after
+the `fill` keyword specifies the number of rows for the filled matrix or the number of columns for the
+filled matrix row.
+
+### Array literal
+
+The syntax of array literal is:
+
+    array literal = ".[", {newline},
+                    (
+                        expression, "fill", expression
+                      | expressions
+                    ),
+                    {newline}, ".]";
+    expressions = [expression, {",", expression}, [","]];
+
+The array literal represents the array value. The array can also be filled with the filling expression
+by the `fill` keyword. The filling expresson is separately evaluated for each element. The expression
+after the `fill` keyword specifies the number of elements.
