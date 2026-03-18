@@ -220,7 +220,14 @@ Value types and object types with properties are:
 | array                     | iterable, indexable | number     | any value             | `true`     |
 | structure                 | indexable           | string     | any value             | `true`     |
 
-Strong references only has the properties for the mutable objects.
+Strong references only have the properties for the mutable objects.
+
+A string element is a character that is represented by other string.
+
+An element of matrix array is a row of matrix array that is referred by a matrix row slice.
+
+A structure element is a structure field and a structure index is a field identifier that refers to
+the structure field.
 
 ## Nodes
 
@@ -614,12 +621,9 @@ The syntax of string literal is:
 
 The syntax of matrix literal is:
 
-    matrix literal = "[", {newline},
-                     (
-                         matrix row, newline, {newline}, "fill", expression, {newline}
-                       | matrix rows
-                     ),
-                     "]";
+    matrix literal = "[", {newline}, fillable matrix row, "]";
+    fillable matrix rows = matrix row, newline, {newline}, "fill", expression, {newline}
+                         | matrix rows;
     matrix rows = {newline}, [matrix row, {newline, {newline}, matrix row}, [newline, {newline}]];
     matrix row = expression, "fill", expression
                | expressions;
@@ -636,14 +640,9 @@ occurs.
 
 The syntax of array literal is:
 
-    array literal = ".[",
-                    {newline},
-                    (
-                        expression, "fill", expression
-                      | expressions
-                    ),
-                    {newline},
-                    ".]";
+    array literal = ".[", {newline}, fillable expressions, {newline}, ".]";
+    fillable expressions = expression, "fill", expression
+                         | expressions;
     expressions = [expression, {",", expression}, [","]];
 
 The array can also be filled with the filling expression by the `fill` keyword. The filling expresson
