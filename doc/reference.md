@@ -16,8 +16,8 @@ semantics of this scriping language.
 
 ## Notation
 
-This document uses EBNF to describes the lexical definitions of this scriping language and syntax of
-this scripting language.
+This document uses [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) to
+describes the lexical definitions of this scriping language and syntax of this scripting language.
 
 ## Lexical conventions
 
