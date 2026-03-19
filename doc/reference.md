@@ -686,7 +686,7 @@ current function is a function that is currently executed by an interpreter.
 
 The syntax of absolute name is:
 
-    absolute name = ["::"], "root", "::", {identifier, "::"}, identifier;
+    absolute name = ["::"], "root", "::", identifier, {"::", identifier};
 
 The identifiers of absolute name except the last identifier refer to descendant modules from the root
 module. The last identifier refers to the variable that is in the last referred module or the root
@@ -696,8 +696,8 @@ module. The first identifier can't refer to an used module in the root module.
 
 The syntax of relative name is:
 
-    relative name = "::", {identifier, "::"}, identifier
-                  | identfier, "::", {identifier, "::"}, identifier;
+    relative name = "::", identifier, {"::", identifier}
+                  | identfier, "::", identifier, {"::", identifier};
 
 The identifiers of relative name except the last identifier refer to the descendant modules from the
 current module if all these modules from the current module exist, otherwise the descendant modules
