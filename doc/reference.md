@@ -291,10 +291,11 @@ The syntax of statements is:
 
 The syntax of assignment statement is:
 
-    assign statement = expression , "=", expression;
+    assign statement = expression, "=", expression;
 
-The assignment stament is a statement that assigns the second expression value to a variable, an 
-element, or a field. An error occurs if the first expression isn't assignable.
+The assignment stament is a statement that assigns the second expression value to a variable, an
+element, or a field. An error occurs if the first expression isn't assignable. The variable or the
+structure field is created by this statement if the variable or the structure field doesn't exist.
 
 ### If statements
 
@@ -680,9 +681,9 @@ The syntax of absolute name is:
 
     absolute name = ["::"], "root", "::", {identifier, "::"}, identifier;
 
-The identifiers of absolute name except the last identifier refers descendant modules from the root
-module. The last identifier refers to the variable that is in the last descendant module of the root.
-The first identifier can't refer to an used module in the root module.
+The identifiers of absolute name except the last identifier refer to descendant modules from the root
+module. The last identifier refers to the variable that is in the last referred module or the root
+module. The first identifier can't refer to an used module in the root module.
 
 ### Relative names
 
@@ -691,12 +692,12 @@ The syntax of relative name is:
     relative name = "::", {identifier, "::"}, identifier
                   | identfier, "::", {identifier, "::"}, identifier;
 
-The identifiers of relative name except the last identifier refers descendant modules from the current
-module or the root module. The last identifier refers to the variable that is in the last descendant
-module of the current module if this module exists, otherwise the variable that is in the last
-descendant module of the root module. The first identifier for the current module can refer to an used
-module or an used variable in the current module if the variable or the module with the first
-identifier isn't defined.
+The identifiers of relative name except the last identifier refer to the descendant modules from the
+current module if all these modules from the current module exist, otherwise the descendant modules
+from the root module. The last identifier refers to the variable that is in the last referred module
+of the current module. The first identifier for the current module can refer to an used module or an
+used variable in the current module if the variable or the module with the first identifier isn't
+defined.
 
 ### Variable names
 
