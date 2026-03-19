@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-//! A module of Bitbucket source.
+//! A module of [Bitbucket](https://bitbucket.org) source.
 use std::str;
 use crate::serde_json;
 use super::*;
@@ -27,7 +27,7 @@ struct Tags
     values: Vec<Tag>,
 }
 
-/// A structure of Bitbucket source.
+/// A structure of [Bitbucket](https://bitbucket.org) source.
 #[derive(Clone)]
 pub struct BitbucketSrc
 {
@@ -43,7 +43,7 @@ pub struct BitbucketSrc
 
 impl BitbucketSrc
 {
-    /// Creates a Bitbucket source.
+    /// Creates a [Bitbucket](https://bitbucket.org) source.
     pub fn new(name: PkgName, old_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Self>
     {
         let original_name = old_name.as_ref().unwrap_or(&name);
@@ -183,13 +183,13 @@ impl Source for BitbucketSrc
     }
 }
 
-/// A structure of factory of Bitbucket source.
+/// A structure of factory of [Bitbucket](https://bitbucket.org) source.
 #[derive(Copy, Clone, Debug)]
 pub struct BitbucketSrcFactory;
 
 impl BitbucketSrcFactory
 {
-    /// Creates a factory of Bitbucket source.
+    /// Creates a factory of [Bitbucket](https://bitbucket.org) source.
     pub fn new() -> Self
     { BitbucketSrcFactory }
 }

@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-//! A module of GitLab source.
+//! A module of [GitLab](https://about.gitlab.com) source.
 use std::str;
 use crate::serde_json;
 use super::*;
@@ -21,7 +21,7 @@ struct Tag
     name: String,
 }
 
-/// A structure of GitLab source.
+/// A structure of [GitLab](https://about.gitlab.com) source.
 #[derive(Clone)]
 pub struct GitLabSrc
 {
@@ -37,7 +37,7 @@ pub struct GitLabSrc
 
 impl GitLabSrc
 {
-    /// Creates a GitLab source.
+    /// Creates a [GitLab](https://about.gitlab.com) source.
     pub fn new(name: PkgName, old_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Self>
     {
         let original_name = old_name.as_ref().unwrap_or(&name);
@@ -186,13 +186,13 @@ impl Source for GitLabSrc
     }
 }
 
-/// A structure of factory of GitLab source.
+/// A structure of factory of [GitLab](https://about.gitlab.com) source.
 #[derive(Copy, Clone, Debug)]
 pub struct GitLabSrcFactory;
 
 impl GitLabSrcFactory
 {
-    /// Creates a factory of GitLab source.
+    /// Creates a factory of [GitLab](https://about.gitlab.com) source.
     pub fn new() -> Self
     { GitLabSrcFactory }
 }

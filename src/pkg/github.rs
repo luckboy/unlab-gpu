@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-//! A module of GitHub source.
+//! A module of [GitHub](https://github.com) source.
 use std::str;
 use crate::serde_json;
 use super::*;
@@ -22,7 +22,7 @@ struct Ref
     ref1: String,
 }
 
-/// A structure of GitHub source.
+/// A structure of [GitHub](https://github.com) source.
 #[derive(Clone)]
 pub struct GitHubSrc
 {
@@ -38,7 +38,7 @@ pub struct GitHubSrc
 
 impl GitHubSrc
 {
-    /// Creates a GitHub source.
+    /// Creates a [GitHub](https://github.com) source.
     pub fn new(name: PkgName, old_name: Option<PkgName>, home_dir: PathBuf, work_dir: PathBuf, printer: Arc<dyn Print + Send + Sync>) -> Option<Self>
     {
         let original_name = old_name.as_ref().unwrap_or(&name);
@@ -184,13 +184,13 @@ impl Source for GitHubSrc
     }
 }
 
-/// A structure of factory of GitHub source.
+/// A structure of factory of [GitHub](https://github.com) source.
 #[derive(Copy, Clone, Debug)]
 pub struct GitHubSrcFactory;
 
 impl GitHubSrcFactory
 {
-    /// Creates a factory of GitHub source.
+    /// Creates a factory of [GitHub](https://github.com) source.
     pub fn new() -> Self
     { GitHubSrcFactory }
 }
