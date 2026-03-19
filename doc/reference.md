@@ -25,7 +25,7 @@ this scripting language.
 
 The lexical definition of whitespace is:
 
-    whitespace = whitespace, {whitespace};
+    whitespace = whitespace char, {whitespace char};
     whitespace char = ?UTF-8 character with White_Space property?
 
 The whitespace can be separators between tokens.
@@ -380,7 +380,7 @@ The syntax of expression is:
 
     expresion = "(", expression, ")"
               | literal
-              | name
+              | variable
               | function application
               | unary op expression
               | binary op expression
@@ -388,6 +388,12 @@ The syntax of expression is:
               | field access expression
               | range expression
               | error propagation expression;
+
+### Variables
+
+The syntax of variable is:
+
+    variable = name;
 
 ### Function application
 
