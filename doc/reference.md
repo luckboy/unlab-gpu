@@ -632,8 +632,9 @@ The syntax of matrix literal is:
     fillable matrix rows = matrix row, newline, {newline}, "fill", expression, {newline}
                          | matrix rows;
     matrix rows = {newline}, [matrix row, {newline, {newline}, matrix row}, [newline, {newline}]];
-    matrix row = expression, "fill", expression
-               | expressions;
+    matrix row = fillable expressions;
+    fillable expressions = expression, "fill", expression
+                         | expressions;
     expressions = [expression, {",", expression}, [","]];
 
 The matrix or the matrix row can be filled with the filling matrix or the filling expression by using
