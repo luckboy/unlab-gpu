@@ -679,7 +679,7 @@ The syntax of name is:
 
 The root module is the hihgest module in the module tree and is only one.
 
-The current module can be a module that is currently defined or a module of the current function. The 
+The current module can be a module that is currently defined or a module of the current function. The
 current function is a function that is currently executed by an interpreter.
 
 ### Absolute names
@@ -688,9 +688,9 @@ The syntax of absolute name is:
 
     absolute name = ["::"], "root", "::", identifier, {"::", identifier};
 
-The identifiers of absolute name except the last identifier refer to descendant modules from the root
-module. The last identifier refers to the variable that is in the last referred module or the root
-module. The first identifier can't refer to an used module in the root module.
+The identifiers of absolute name except the last identifier refer to the descendant modules from the
+root module. The last identifier refers to the variable that is in the last referred module or the
+root module. The first identifier can't refer to an used module in the root module.
 
 ### Relative names
 
