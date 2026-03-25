@@ -833,13 +833,13 @@ impl Value
                     (Value::Int(_) | Value::Float(_), Value::Int(_) | Value::Float(_)) => Ok(Value::Float(self.to_f32() / value.to_f32())),
                     (Value::Object(object), Value::Int(_) | Value::Float(_)) => {
                         match &**object {
-                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(a, value.to_f32())?)))),
+                            Object::Matrix(a) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_div_for_scalar(a, value.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for dot division"))),
                         }
                     },
                     (Value::Int(_) | Value::Float(_), Value::Object(object2)) => {
                         match &**object2 {
-                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_mul_for_scalar(b, self.to_f32())?)))),
+                            Object::Matrix(b) => Ok(Value::Object(Arc::new(Object::Matrix(matrix_rdiv_for_scalar(b, self.to_f32())?)))),
                             _ => Err(Error::Interp(String::from("unsupported types for dot division"))),
                         }
                     },
