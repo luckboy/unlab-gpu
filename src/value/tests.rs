@@ -3540,14 +3540,14 @@ fn test_value_bin_op_divides_values_for_dot_div_operator()
         5.0, 6.0
     ];
     let value = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, c.as_slice()))));
-    match value.bin_op(BinOp::Div, &Value::Int(3)) {
+    match value.bin_op(BinOp::DotDiv, &Value::Int(3)) {
         Ok(value3) => {
             let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(c.as_slice(), 3, 2, |x| x / 3.0)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
     }
-    match value.bin_op(BinOp::Div, &Value::Float(3.0)) {
+    match value.bin_op(BinOp::DotDiv, &Value::Float(3.0)) {
         Ok(value3) => {
             let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(c.as_slice(), 3, 2, |x| x / 3.0)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
@@ -3555,14 +3555,14 @@ fn test_value_bin_op_divides_values_for_dot_div_operator()
         Err(_) => assert!(false),
     }
     let value2 = Value::Object(Arc::new(Object::Matrix(Matrix::new_with_elems(3, 2, d.as_slice()))));
-    match Value::Int(1 * 2 * 3 * 4 * 5 * 6).bin_op(BinOp::Div, &value2) {
+    match Value::Int(1 * 2 * 3 * 4 * 5 * 6).bin_op(BinOp::DotDiv, &value2) {
         Ok(value3) => {
             let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(d.as_slice(), 2, 3, |y| (1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
         },
         Err(_) => assert!(false),
     }
-    match Value::Float((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0).bin_op(BinOp::Div, &value2) {
+    match Value::Float((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0).bin_op(BinOp::DotDiv, &value2) {
         Ok(value3) => {
             let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, expected_unary_op(d.as_slice(), 2, 3, |y| ((1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0) / 32.0) / y)));
             assert_eq!(Value::Object(matrix_array), value3.to_matrix_array().unwrap());
