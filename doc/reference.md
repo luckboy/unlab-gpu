@@ -657,7 +657,7 @@ The array can also be filled with the filling expression by the `fill` keyword. 
 is separately evaluated for each element. The expression after the `fill` keyword specifies the number
 of elements.
 
-### Structyre literal
+### Structure literal
 
 The syntax of structure literal is:
 
