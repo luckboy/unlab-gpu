@@ -246,6 +246,10 @@ impl<T, U> ModNode<T, U>
     pub fn value(&self) -> &U
     { &self.value }
     
+    /// Sets the module value.
+    pub fn set_value(&mut self, value: U)
+    { self.value = value; }
+    
     /// Returns the module for the identifiers of modules if the module exists, otherwise `None`.
     ///
     /// If flag of used modules is set, the first identifier of module can refers to the used
