@@ -3533,7 +3533,7 @@ impl PkgManager
             }
             let mut sig_root_mod: ModNode<Sig, ()> = ModNode::new(());
             let mut doc_root_mod: ModNode<String, Option<String>> = ModNode::new(None);
-            // Add standard built-in function documentation
+            // Adds standard built-in function documentation.
             let doc_tree = DocTree::new(Arc::new(RwLock::new(sig_root_mod)), Arc::new(RwLock::new(doc_root_mod)));
             let doc_gen = DocGen::new(self.doc_dir.clone(), doc_path);
             doc_gen.generate(&doc_tree)?;
