@@ -408,7 +408,7 @@ pub fn generate_doc_tree<P: AsRef<Path>>(script_dir: P) -> Result<DocTree>
     doc_tree_gen.generate(&tree)
 }
 
-fn str_to_hmtl(s: &str) -> String
+fn str_to_html(s: &str) -> String
 { s.replace('&', "&amp;").replace('<', "&lt;").replace(">", "&gt;") }
 
 fn idents_to_string(idents: &[String]) -> String
@@ -563,12 +563,12 @@ impl DocGen
         if !idents.is_empty() {
             write!(&mut w, "{} in ", idents_to_string(idents))?;
         }
-        write!(&mut w, "{} - Unlab", str_to_hmtl(self.lib_name.as_str()))?;
+        write!(&mut w, "{} - Unlab", str_to_html(self.lib_name.as_str()))?;
         writeln!(&mut w, "</title>")?;
         writeln!(&mut w, "</head>")?;
         writeln!(&mut w, "<body>")?;
         writeln!(&mut w, "<header>")?;
-        writeln!(&mut w, "<h1><a href=\"{}\">{}</a></h1>", Self::str_to_href("index.html", depth), str_to_hmtl(self.lib_name.as_str()))?;
+        writeln!(&mut w, "<h1><a href=\"{}\">{}</a></h1>", Self::str_to_href("index.html", depth), str_to_html(self.lib_name.as_str()))?;
         writeln!(&mut w, "</header>")?;
         match idents.first() {
             Some(first_ident) => {
