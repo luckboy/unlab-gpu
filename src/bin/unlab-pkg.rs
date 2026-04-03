@@ -39,6 +39,8 @@ use unlab_gpu::pkg_cmds::console;
 use unlab_gpu::pkg_cmds::doc;
 use unlab_gpu::pkg_cmds::test;
 use unlab_gpu::pkg_cmds::clean_test;
+use unlab_gpu::pkg_cmds::std_doc;
+use unlab_gpu::pkg_cmds::std_doc_deps;
 use unlab_gpu::Home;
 use unlab_gpu::add_std_builtin_funs;
 
@@ -303,6 +305,10 @@ enum Subcmd
     Test(TestArgs),
     /// Clean test directory in work directory
     CleanTest,
+    /// Generate documentation of standard library
+    StdDoc,
+    /// Generate documentation of standard library for current package
+    StdDocDeps,
 }
 
 #[derive(Parser, Debug)]
@@ -452,6 +458,12 @@ fn main()
         },
         Subcmd::CleanTest => {
             clean_test(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+        },
+        Subcmd::StdDoc => {
+            std_doc(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
+        },
+        Subcmd::StdDocDeps => {
+            std_doc_deps(&args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, src_factories, add_dirs)
         },
     };
     match exit_code {

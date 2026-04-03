@@ -31,6 +31,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::RwLock;
 use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
 use jammdb::Bucket;
@@ -52,6 +53,7 @@ use crate::dfs::*;
 use crate::doc::*;
 use crate::error::*;
 use crate::fs::*;
+use crate::mod_node::*;
 use crate::utils::*;
 use crate::version::*;
 
@@ -3497,6 +3499,44 @@ impl PkgManager
                 }
                 generate_doc(pkg_lib_dir.as_path(), self.doc_dir.as_path(), path)?;
             }
+            self.printer.print_documenting_pkg(&name, true);
+        }
+        Ok(())
+    }
+    
+    /// Generates a documentation of the standard built-in functions.
+    pub fn generate_std_doc(&self) -> Result<()>
+    {
+        self.printer.print_documenting();
+        let name = PkgName::new(String::from("std/root"));
+        let mut doc_path = PathBuf::from("std");
+        doc_path.push("root");
+        let mut lib_doc_dir = self.doc_dir.clone();
+        lib_doc_dir.push(doc_path.as_path());
+        match fs::metadata(lib_doc_dir.as_path()) {
+            Ok(_) => {
+                self.printer.print_removing_pkg_doc(&name, false);
+                match recursively_remove_paths_in_dir(self.doc_dir.as_path(), &[doc_path.clone()], true) {
+                    Ok(()) => (),
+                    Err(err) => return Err(Error::Io(err)),
+                }
+                self.printer.print_removing_pkg_doc(&name, true);
+            },
+            Err(err) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => return Err(Error::Io(err)),
+        }
+        {
+            self.printer.print_documenting_pkg(&name, false);
+            match create_dir_all(lib_doc_dir.as_path()) {
+                Ok(()) => (),
+                Err(err) => return Err(Error::Io(err)),
+            }
+            let mut sig_root_mod: ModNode<Sig, ()> = ModNode::new(());
+            let mut doc_root_mod: ModNode<String, Option<String>> = ModNode::new(None);
+            // Add standard built-in function documentation
+            let doc_tree = DocTree::new(Arc::new(RwLock::new(sig_root_mod)), Arc::new(RwLock::new(doc_root_mod)));
+            let doc_gen = DocGen::new(self.doc_dir.clone(), doc_path);
+            doc_gen.generate(&doc_tree)?;
             self.printer.print_documenting_pkg(&name, true);
         }
         Ok(())

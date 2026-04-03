@@ -1157,3 +1157,37 @@ pub fn clean_test<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_p
         },
     }
 }
+
+fn res_std_doc(pkg_manager: &PkgManager, are_deps: bool) -> Result<()>
+{
+    pkg_manager.check_last_op(are_deps)?;
+    pkg_manager.generate_std_doc()?;
+    Ok(())
+}
+
+fn std_doc_with_dep_flag<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, are_deps: bool, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{
+    let pkg_manager = match create_pkg_manager(home_dir, bin_path, lib_path, doc_path, src_factories, are_deps, f) {
+        Some(tmp_pkg_manager) => tmp_pkg_manager,
+        None => return Some(1),
+    };
+    match res_std_doc(&pkg_manager, are_deps) {
+        Ok(()) => None,
+        Err(err) => {
+            pkg_manager.printer().print_lf_for_error();
+            eprint_error(&err);
+            Some(1)
+        },
+    }
+}
+
+/// A `std-doc` command.
+pub fn std_doc<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{ std_doc_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, false, f) }
+
+/// A `std-doc-deps` command.
+pub fn std_doc_deps<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, src_factories: Vec<Arc<dyn SourceCreate + Send + Sync>>, f: F) -> Option<i32>
+    where F: FnOnce(&mut Home) -> bool
+{ std_doc_with_dep_flag(home_dir, bin_path, lib_path, doc_path, src_factories, true, f) }
