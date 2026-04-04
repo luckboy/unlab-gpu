@@ -68,7 +68,7 @@ for a non-numeric value if the `x` value isn't `none`, `false`, or an error, oth
     ]));
     doc_root_mod.add_var(String::from("float"), String::from(&doc[1..]));
     let doc = r#"
-Converts any value to a string.
+Converts the `x` value to a string.
 "#;
     sig_root_mod.add_var(String::from("string"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("x"))
@@ -86,4 +86,56 @@ $$ \begin{bmatrix} 0 & 0 & \cdots & 0 \\ 0 & 0 & \cdots & 0 \\ \vdots & \vdots &
         BuiltinFunArg::Arg(String::from("M"))
     ]));
     doc_root_mod.add_var(String::from("zeros"), String::from(&doc[1..]));
+    let doc = r#"
+Returns a matrix with ones that has the `N` number of rows and the `M` number of columns.
+
+The returned matrix is:
+
+$$ \begin{bmatrix} 1 & 1 & \cdots & 1 \\ 1 & 1 & \cdots & 1 \\ \vdots & \vdots & \ddots & \vdots \\ 1 & 1 & \cdots & 1 \end{bmatrix} $$
+"#;
+    sig_root_mod.add_var(String::from("ones"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("N")),
+        BuiltinFunArg::Arg(String::from("M"))
+    ]));
+    doc_root_mod.add_var(String::from("ones"), String::from(&doc[1..]));
+    let doc = r#"
+Returns an identity matrix that has the `N` number of rows and columns.
+
+The identity matrix is:
+
+$$ \begin{bmatrix} 1 & 0 & \cdots & 0 \\ 0 & 1 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & 1 \end{bmatrix} $$
+"#;
+    sig_root_mod.add_var(String::from("eye"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("N"))
+    ]));
+    doc_root_mod.add_var(String::from("eye"), String::from(&doc[1..]));
+    let doc = r#"
+Returns an initialized matrix that has the `N` number of rows and the `M` number of columns.
+
+This function applies the `f` function to the `d` value and the element indices for each element of
+initialized matrix. The initialized matrix is:
+
+$$ \begin{bmatrix} f(d, 1, 1) & f(d, 1, 2) & \cdots & f(d, 1, M) \\ f(d, 2, 1)  & f(d, 2, 2) & \cdots & f(d, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(d, N, 1) & f(d, N, 2) & \cdots & f(d, N, M) \end{bmatrix} $$
+"#;
+    sig_root_mod.add_var(String::from("init"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("N")),
+        BuiltinFunArg::Arg(String::from("M")),
+        BuiltinFunArg::Arg(String::from("d")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ]));
+    doc_root_mod.add_var(String::from("init"), String::from(&doc[1..]));
+    let doc = r#"
+Returns an initialized diagonal matrix that has the `N` number of rows and columns.
+
+This function applies the `f` function to the `d` value and the element index for each element of
+main diagonal of initialized diagonal matrix. The initialized diagonal matrix is:
+
+$$ \begin{bmatrix} f(d, 1) & 0 & \cdots & 0 \\ 0  & f(d, 2) & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & f(d, N) \end{bmatrix} $$
+"#;
+    sig_root_mod.add_var(String::from("initdiag"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("N")),
+        BuiltinFunArg::Arg(String::from("d")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ]));
+    doc_root_mod.add_var(String::from("initdiag"), String::from(&doc[1..]));
 }
