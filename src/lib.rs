@@ -37,6 +37,7 @@ pub use unmtx_gpu as matrix;
 pub use winit;
 
 pub mod backend;
+pub mod builtin_doc;
 pub mod builtins;
 pub mod dfs;
 pub mod doc;

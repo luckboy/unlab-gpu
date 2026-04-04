@@ -49,6 +49,7 @@ use crate::serde::Deserialize;
 use crate::serde::Deserializer;
 use crate::serde::Serialize;
 use crate::serde::Serializer;
+use crate::builtin_doc::*;
 use crate::dfs::*;
 use crate::doc::*;
 use crate::error::*;
@@ -3533,7 +3534,7 @@ impl PkgManager
             }
             let mut sig_root_mod: ModNode<Sig, ()> = ModNode::new(());
             let mut doc_root_mod: ModNode<String, Option<String>> = ModNode::new(None);
-            // Adds standard built-in function documentation.
+            add_std_builtin_fun_doc(&mut sig_root_mod, &mut doc_root_mod);
             let doc_tree = DocTree::new(Arc::new(RwLock::new(sig_root_mod)), Arc::new(RwLock::new(doc_root_mod)));
             let doc_gen = DocGen::new(self.doc_dir.clone(), doc_path);
             doc_gen.generate(&doc_tree)?;
