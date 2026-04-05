@@ -11,9 +11,9 @@ use crate::mod_node::*;
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"
-Returns a string corresponding to the value type.
+Returns a string corresponding to the value type or the object type.
 
-The stings corresponding to the value types are:
+The stings corresponding to the value types or the object types are:
 
 - `"none"` - none value
 - `"bool"` - boolean value
@@ -36,44 +36,56 @@ The stings corresponding to the value types are:
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("type"), String::from(&doc[1..]));
-    let doc = r#"
-Converts the `x` value to a boolean value.
 
-This function returns `true` if the `x` value isn't `none`, `false`, zero, or an error, otherwise
+    let doc = r#"
+Clones the `X` object.
+
+If the `X` object isn't a mutable object, this function returns the `X` object.
+"#;
+    sig_root_mod.add_var(String::from("bool"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("bool"), String::from(&doc[1..]));
+    
+    
+    let doc = r#"
+Converts the `X` value to a boolean value.
+
+This function returns `true` if the `X` value isn't `none`, `false`, zero, or an error, otherwise
 `false`.
 "#;
     sig_root_mod.add_var(String::from("bool"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("bool"), String::from(&doc[1..]));
     
     let doc = r#"
-Converts the `x` value to an integer number.
+Converts the `X` value to an integer number.
 
-The `x` number is converted to an integer number by this function. This function returns `1` for a
-non-numeric value if the `x` value isn't `none`, `false`, or an error, otherwise `0`.
+The `X` number is converted to an integer number by this function. This function returns `1` for a
+non-numeric value if the `X` value isn't `none`, `false`, or an error, otherwise `0`.
 "#;
     sig_root_mod.add_var(String::from("int"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("int"), String::from(&doc[1..]));
     
     let doc = r#"
-Converts the `x` value to a float-point number.
+Converts the `X` value to a float-point number.
 
-The `x` number is converted to a float-point number by this function. This function returns `1.0`
-for a non-numeric value if the `x` value isn't `none`, `false`, or an error, otherwise `0.0`.
+The `X` number is converted to a float-point number by this function. This function returns `1.0`
+for a non-numeric value if the `X` value isn't `none`, `false`, or an error, otherwise `0.0`.
 "#;
     sig_root_mod.add_var(String::from("float"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("float"), String::from(&doc[1..]));
     
     let doc = r#"
-Converts the `x` value to a string.
+Converts the `X` value to a string.
 "#;
     sig_root_mod.add_var(String::from("string"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("string"), String::from(&doc[1..]));
     let doc = r#"
@@ -116,10 +128,10 @@ $$ \begin{bmatrix} 1 & 0 & \cdots & 0 \\ 0 & 1 & \cdots & 0 \\ \vdots & \vdots &
     let doc = r#"
 Returns an initialized matrix that has the `N` number of rows and the `M` number of columns.
 
-This function applies the `f` function to the `d` value and the element indices for each element of
-initialized matrix. The initialized matrix is:
+This function applies the `f` function to the `D` value and the element indices for each element
+of initialized matrix. The initialized matrix is:
 
-$$ \begin{bmatrix} f(d, 1, 1) & f(d, 1, 2) & \cdots & f(d, 1, M) \\ f(d, 2, 1) & f(d, 2, 2) & \cdots & f(d, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(d, N, 1) & f(d, N, 2) & \cdots & f(d, N, M) \end{bmatrix} $$
+$$ \begin{bmatrix} f(\mathbf{D}, 1, 1) & f(\mathbf{D}, 1, 2) & \cdots & f(\mathbf{D}, 1, M) \\ f(\mathbf{D}, 2, 1) & f(\mathbf{D}, 2, 2) & \cdots & f(\mathbf{D}, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(\mathbf{D}, N, 1) & f(\mathbf{D}, N, 2) & \cdots & f(\mathbf{D}, N, M) \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("init"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N")),
@@ -132,14 +144,14 @@ $$ \begin{bmatrix} f(d, 1, 1) & f(d, 1, 2) & \cdots & f(d, 1, M) \\ f(d, 2, 1) &
     let doc = r#"
 Returns an initialized diagonal matrix that has the `N` number of rows and columns.
 
-This function applies the `f` function to the `d` value and the element index for each element of
+This function applies the `f` function to the `D` value and the element index for each element of
 main diagonal of initialized diagonal matrix. The initialized diagonal matrix is:
 
-$$ \begin{bmatrix} f(d, 1) & 0 & \cdots & 0 \\ 0  & f(d, 2) & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & f(d, N) \end{bmatrix} $$
+$$ \begin{bmatrix} f(\mathbf{D}, 1) & 0 & \cdots & 0 \\ 0  & f(\mathbf{D}, 2) & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & f(\mathbf{D}, N) \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("initdiag"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N")),
-        BuiltinFunArg::Arg(String::from("d")),
+        BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
     ]));
     doc_root_mod.add_var(String::from("initdiag"), String::from(&doc[1..]));
@@ -187,7 +199,7 @@ $$ \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_N \end{bmatrix} $$
     let doc = r#"
 Converts the `X` matrix to a matrix array.
 
-If the `X` value is the matrix array, this function returns the `X` value.
+If the `X` object is a matrix array, this function returns the `X` object.
 "#;
     sig_root_mod.add_var(String::from("matrixarray"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -197,7 +209,7 @@ If the `X` value is the matrix array, this function returns the `X` value.
     let doc = r#"
 Creates an error from the `kind` string and the `msg` string.
 
-The `kind` string is an error kind and the `msg` string is a message.
+The `kind` string is an error kind and the `msg` string is an error message.
 "#;
     sig_root_mod.add_var(String::from("error"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("kind")),
@@ -236,9 +248,9 @@ If the `x` reference is weak, this function returns the `x` reference.
     doc_root_mod.add_var(String::from("weak"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns `true` if the `X` value is empty, otherwise `false`. 
+Returns `true` if the `X` object is empty, otherwise `false`.
 
-The `X` value can be a string, a matrix array, a matrix row slice, or an array. 
+The `X` object can be a string, a matrix array, a matrix row slice, or an array. 
 "#;
     sig_root_mod.add_var(String::from("isempty"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -246,10 +258,10 @@ The `X` value can be a string, a matrix array, a matrix row slice, or an array.
     doc_root_mod.add_var(String::from("isempty"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the length of `X` value. 
+Returns the length for the`X` object.
 
-The `X` value can be a string, a matrix array, a matrix row slice, or an array. This function
-returns the number of rows for a matrix array and the number of columns for a matrix row slice. 
+The `X` object can be a string, a matrix array, a matrix row slice, or an array. This function
+returns the number of rows for a matrix array or the number of columns for a matrix row slice. 
 "#;
     sig_root_mod.add_var(String::from("length"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -257,9 +269,9 @@ returns the number of rows for a matrix array and the number of columns for a ma
     doc_root_mod.add_var(String::from("length"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the number of rows of `X` value.
+Returns the number of rows for `X` object.
 
-The `X` value can be a matrix or a matrix array.
+The `X` object can be a matrix or a matrix array.
 "#;
     sig_root_mod.add_var(String::from("rows"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -267,9 +279,9 @@ The `X` value can be a matrix or a matrix array.
     doc_root_mod.add_var(String::from("rows"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the number of columns of `X` value.
+Returns the number of columns of `X` object.
 
-The `X` value can be a matrix or a matrix array.
+The `X` object can be a matrix or a matrix array.
 "#;
     sig_root_mod.add_var(String::from("columns"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -277,13 +289,14 @@ The `X` value can be a matrix or a matrix array.
     doc_root_mod.add_var(String::from("columns"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the element of `X` indexable value with the index or the indices if the `X` indexable 
-value contains the element, otherwise `none`.
+Returns the element with one index or two indices for the `X` indexable object if the `X`
+indexable object contains the element, otherwise `none`.
 
-If the `j` index is passed to this function and the `X` value is matrix array, this function
-returns the element of the `X` matrix array with the `i` row index and the `j`  column index. This
-function returns the field of the `X` structure with the `i` identifier if the `X` value is
-structure.
+If the `j` column index is passed and the `X` value is a matrix array, this function returns the
+element of the `X` matrix array with the `i` row index and the `j`  column index. This function
+returns the matrix row slice for a matrix array or the element of matrix for a matrix row slice if
+the `j` column index isn't passed. This function returns the field of the `X` structure with the
+`i` identifier if the `j` column index isn't passed and the `X` object is structure.
 "#;
     sig_root_mod.add_var(String::from("get"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -293,7 +306,7 @@ structure.
     doc_root_mod.add_var(String::from("get"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the element of diagonal of `X` matrix array with the `i` index if the diagonal of `X`
+Returns the element with the `i` index for the diagonal of `X` matrix array if the diagonal of `X`
 matrix array contains the element, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("getdiag"), Sig::BuiltinFun(vec![
@@ -301,4 +314,23 @@ matrix array contains the element, otherwise `none`.
         BuiltinFunArg::Arg(String::from("i"))
     ]));
     doc_root_mod.add_var(String::from("getdiag"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the substrings of `s` string which are separated by the `t` string.
+
+If the `t` string isn't passed, the separator is whitespaces.
+"#;
+    sig_root_mod.add_var(String::from("split"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::OptArg(String::from("t"))
+    ]));
+    doc_root_mod.add_var(String::from("split"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the `s` string without the starting whitespaces and the ending whitespaces.
+"#;
+    sig_root_mod.add_var(String::from("trim"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("trim"), String::from(&doc[1..]));
 }
