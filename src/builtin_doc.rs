@@ -11,7 +11,7 @@ use crate::mod_node::*;
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"
-Returns a string corresponding to the value type or the object type.
+Returns a string corresponding to the type of `X` value.
 
 The stings corresponding to the value types or the object types are:
 
@@ -382,7 +382,7 @@ Replaces all occurrences of `t` string in the `s` string with the `u` string.
     doc_root_mod.add_var(String::from("replace"), String::from(&doc[1..]));
 
     let doc = r#"
-Changes all lowercase characters in the `s` string to the corresponding uppercase characters.
+Returns an uppercase string corresponding the `s` string.
 "#;
     sig_root_mod.add_var(String::from("upper"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s"))
@@ -390,7 +390,7 @@ Changes all lowercase characters in the `s` string to the corresponding uppercas
     doc_root_mod.add_var(String::from("upper"), String::from(&doc[1..]));
 
     let doc = r#"
-Changes all uppercase characters in the `s` string to the corresponding lowercase characters.
+Returns a lowercase string corresponding the `s` string.
 "#;
     sig_root_mod.add_var(String::from("lower"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s"))
