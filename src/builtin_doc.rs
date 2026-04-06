@@ -423,8 +423,8 @@ Reverses the order of elements in the `x` array.
     doc_root_mod.add_var(String::from("reverse"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns `true`
-for any element in the `X` iterable object, otherwise `false`.
+Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns a
+convertible value to `true` for any element in the `X` iterable object, otherwise `false`.
 "#;
     sig_root_mod.add_var(String::from("any"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -434,8 +434,8 @@ for any element in the `X` iterable object, otherwise `false`.
     doc_root_mod.add_var(String::from("any"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns `true` 
-for all elements in the `X` iterable object, otherwise `false`.
+Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns a
+convertible value to `true` for all elements in the `X` iterable object, otherwise `false`.
 "#;
     sig_root_mod.add_var(String::from("all"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -445,11 +445,12 @@ for all elements in the `X` iterable object, otherwise `false`.
     doc_root_mod.add_var(String::from("all"), String::from(&doc[1..]));
 
     let doc = r#"
-Finds the element in the `X` iterable object and then returns an index of this element.
+Finds the element in the `X` iterable object.
 
-This function applies the `f` function to the `D` value and the element in the `x` iterable object
-($f(\mathbf{D}, x_i)$) until the `f` function returns `true` and then returns the index of this 
-element. If the `f` function doesn't return `true` for any element, this function returns `none`.
+This function applies the `f` function to the `D` value and each element in the `x` iterable
+object ($f(\mathbf{D}, x_i)$) until the `f` function returns a convertible value to `true` and
+then returns the index of this element. If the `f` function doesn't return the convertible value
+to `true` for any element, this function returns `none`.
 "#;
     sig_root_mod.add_var(String::from("find"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -459,11 +460,11 @@ element. If the `f` function doesn't return `true` for any element, this functio
     doc_root_mod.add_var(String::from("find"), String::from(&doc[1..]));
 
     let doc = r#"
-Filters the elements in the `X` iterable object and then returns indices of the filtered element.
+Filters the elements in the `X` iterable object.
 
 This function applies the `f` function to the `D` value and each element in the `x` iterable
 object ($f(\mathbf{D}, x_i)$) and then returns the indices of elements for which the `f` function
-returns `true`.
+returns a convertible value to `true`.
 "#;
     sig_root_mod.add_var(String::from("filter"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
