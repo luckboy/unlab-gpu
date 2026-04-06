@@ -33,7 +33,7 @@ The stings corresponding to the value types or the object types are:
 - `"weak"` - weak reference
 "#;
     sig_root_mod.add_var(String::from("type"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("type"), String::from(&doc[1..]));
 
@@ -335,4 +335,65 @@ Returns the `s` string without the start whitespaces and the end whitespaces.
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("trim"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the `s` string without the start whitespaces and the end whitespaces.
+"#;
+    sig_root_mod.add_var(String::from("trim"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("trim"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the `true` if the `s` string contains the `t`, otherwise `false`.
+"#;
+    sig_root_mod.add_var(String::from("contains"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t"))
+    ]));
+    doc_root_mod.add_var(String::from("contains"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the `true` if the `t` is the prefix of `s` string, otherwise `false`.
+"#;
+    sig_root_mod.add_var(String::from("startswith"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t"))
+    ]));
+    doc_root_mod.add_var(String::from("startswith"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the `true` if the `t` is the suffix of `s` string, otherwise `false`.
+"#;
+    sig_root_mod.add_var(String::from("endswith"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t"))
+    ]));
+    doc_root_mod.add_var(String::from("endswith"), String::from(&doc[1..]));
+
+    let doc = r#"
+Replaces all occurrences of `t` string in the `s` string with the `u` string.
+"#;
+    sig_root_mod.add_var(String::from("replace"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t")),
+        BuiltinFunArg::Arg(String::from("u"))
+    ]));
+    doc_root_mod.add_var(String::from("replace"), String::from(&doc[1..]));
+
+    let doc = r#"
+Changes all lowercase characters in the `s` string to the corresponding uppercase characters.
+"#;
+    sig_root_mod.add_var(String::from("upper"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("upper"), String::from(&doc[1..]));
+
+    let doc = r#"
+Changes all uppercase characters in the `s` string to the corresponding lowercase characters.
+"#;
+    sig_root_mod.add_var(String::from("lower"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("lower"), String::from(&doc[1..]));
 }
