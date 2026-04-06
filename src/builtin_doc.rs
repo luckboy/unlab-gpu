@@ -128,8 +128,8 @@ $$ \begin{bmatrix} 1 & 0 & \cdots & 0 \\ 0 & 1 & \cdots & 0 \\ \vdots & \vdots &
     let doc = r#"
 Returns an initialized matrix that has the `N` number of rows and the `M` number of columns.
 
-This function applies the `f` function to the `D` value and the element indices for each element
-of initialized matrix. The initialized matrix is:
+This function applies the `f` function to the `D` value and the element indices
+($f(\mathbf{D}, i, j)$) for each element of initialized matrix. The initialized matrix is:
 
 $$ \begin{bmatrix} f(\mathbf{D}, 1, 1) & f(\mathbf{D}, 1, 2) & \cdots & f(\mathbf{D}, 1, M) \\ f(\mathbf{D}, 2, 1) & f(\mathbf{D}, 2, 2) & \cdots & f(\mathbf{D}, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(\mathbf{D}, N, 1) & f(\mathbf{D}, N, 2) & \cdots & f(\mathbf{D}, N, M) \end{bmatrix} $$
 "#;
@@ -144,8 +144,9 @@ $$ \begin{bmatrix} f(\mathbf{D}, 1, 1) & f(\mathbf{D}, 1, 2) & \cdots & f(\mathb
     let doc = r#"
 Returns an initialized diagonal matrix that has the `N` number of rows and columns.
 
-This function applies the `f` function to the `D` value and the element index for each element of
-main diagonal of initialized diagonal matrix. The initialized diagonal matrix is:
+This function applies the `f` function to the `D` value and the element index
+($f(\mathbf{D}, i)$) for each element of main diagonal of initialized diagonal matrix. The
+initialized diagonal matrix is:
 
 $$ \begin{bmatrix} f(\mathbf{D}, 1) & 0 & \cdots & 0 \\ 0  & f(\mathbf{D}, 2) & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & f(\mathbf{D}, N) \end{bmatrix} $$
 "#;
@@ -157,10 +158,10 @@ $$ \begin{bmatrix} f(\mathbf{D}, 1) & 0 & \cdots & 0 \\ 0  & f(\mathbf{D}, 2) & 
     doc_root_mod.add_var(String::from("initdiag"), String::from(&doc[1..]));
     
     let doc = r#"
-Creates a matrix from the `X` iterable value that contains the iterable values which contains
+Creates a matrix from the `X` iterable object that contains the iterable objects which contains
 the numbers.
 
-If the `X` value is a matrix, this function returns the `X` value. The created matrix is:
+If the `X` object is a matrix, this function returns the `X` object. The created matrix is:
 
 $$ \begin{bmatrix} x_{1 1} & x_{1 2} & \cdots & x_{1M} \\ x_{2 1} & x_{2 2} & \cdots & x_{2M} \\ \vdots & \vdots & \ddots & \vdots \\ x_{N1} & x_{N2} & \cdots & x_{NM} \end{bmatrix} $$
 
@@ -171,9 +172,9 @@ $$ \begin{bmatrix} x_{1 1} & x_{1 2} & \cdots & x_{1M} \\ x_{2 1} & x_{2 2} & \c
     doc_root_mod.add_var(String::from("matrix"), String::from(&doc[1..]));
     
     let doc = r#"
-Creates a matrix with one row from the `x` iterable value that contains the numbers.
+Creates a matrix with one row from the `x` iterable object that contains the numbers.
 
-If the `x` value is a matrix with one row, this function returns the `x` value. The created matrix
+If the `x` object is a matrix with one row, this function returns the `x` object. The created matrix
 with one row is:
 
 $$ \begin{bmatrix} x_1 & x_2 & \cdots & x_N \end{bmatrix} $$
@@ -184,9 +185,9 @@ $$ \begin{bmatrix} x_1 & x_2 & \cdots & x_N \end{bmatrix} $$
     doc_root_mod.add_var(String::from("rowvector"), String::from(&doc[1..]));
     
     let doc = r#"
-Creates a matrix with one column vector from the `x` iterable value that contains the numbers.
+Creates a matrix with one column vector from the `x` iterable object that contains the numbers.
 
-If the `x` value is a matrix with one column, this function returns the `x` value. The created
+If the `x` object is a matrix with one column, this function returns the `x` object. The created
 matrix with one column is:
 
 $$ \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_N \end{bmatrix} $$
@@ -373,6 +374,8 @@ Returns the `true` if the `t` is the suffix of `s` string, otherwise `false`.
 
     let doc = r#"
 Replaces all occurrences of `t` string in the `s` string with the `u` string.
+
+This function returns a new string with replaced occurrences of `t` string to the `u` string.
 "#;
     sig_root_mod.add_var(String::from("replace"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -396,4 +399,76 @@ Returns a lowercase string corresponding the `s` string.
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("lower"), String::from(&doc[1..]));
+
+    let doc = r#"
+Sorts boolean values, numbers, or strings in the `x` array.
+
+This function uses ascending sort order to sorting. Each element in the `x` array must have same
+sorting value type that can be the boolean type, the number type, or the string type. If two or
+more elements in the `x` array have the different sorting value types, an error occurs. The
+integer numbers and the the floating-point numbers have same sorting value type. An error occurs
+if any element in the `x` array is `nan`.
+"#;
+    sig_root_mod.add_var(String::from("sort"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("sort"), String::from(&doc[1..]));
+
+    let doc = r#"
+Reverses the order of elements in the `x` array.
+"#;
+    sig_root_mod.add_var(String::from("reverse"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("reverse"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns `true`
+for any element in the `X` iterable object, otherwise `false`.
+"#;
+    sig_root_mod.add_var(String::from("any"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ]));
+    doc_root_mod.add_var(String::from("any"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns `true` 
+for all elements in the `X` iterable object, otherwise `false`.
+"#;
+    sig_root_mod.add_var(String::from("all"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ]));
+    doc_root_mod.add_var(String::from("all"), String::from(&doc[1..]));
+
+    let doc = r#"
+Finds the element in the `X` iterable object and then returns an index of this element.
+
+This function applies the `f` function to the `D` value and the element in the `x` iterable object
+($f(\mathbf{D}, x_i)$) until the `f` function returns `true` and then returns the index of this 
+element. If the `f` function doesn't return `true` for any element, this function returns `none`.
+"#;
+    sig_root_mod.add_var(String::from("find"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ]));
+    doc_root_mod.add_var(String::from("find"), String::from(&doc[1..]));
+
+    let doc = r#"
+Filters the elements in the `X` iterable object and then returns indices of the filtered element.
+
+This function applies the `f` function to the `D` value and each element in the `x` iterable
+object ($f(\mathbf{D}, x_i)$) and then returns the indices of elements for which the `f` function
+returns `true`.
+"#;
+    sig_root_mod.add_var(String::from("filter"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ]));
+    doc_root_mod.add_var(String::from("filter"), String::from(&doc[1..]));
 }
