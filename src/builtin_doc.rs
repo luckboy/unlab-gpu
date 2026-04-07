@@ -208,9 +208,7 @@ If the `X` object is a matrix array, this function returns the `X` object.
     doc_root_mod.add_var(String::from("matrixarray"), String::from(&doc[1..]));
     
     let doc = r#"
-Creates an error from the `kind` string and the `msg` string.
-
-The `kind` string is an error kind and the `msg` string is an error message.
+Creates an error with the `kind` error kind and the `msg` message which are strings.
 "#;
     sig_root_mod.add_var(String::from("error"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("kind")),
