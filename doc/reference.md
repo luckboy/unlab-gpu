@@ -461,7 +461,7 @@ The `.*` operator divides the number or the elements of matrix by the number or 
 matrix.
 
 The `+` operator adds the number or matrix to the number or the matrix. Also, two strings, two arrays,
-two structures can be added by this operator. If two fields in two structures have same a field
+two structures can be added by this operator. If two fields in two structures have same field
 idendifier, the field from the first expression assigns to a field of result structure.
 
 The `.+` operator adds the number or the elements of matrix by the number or the elements of matrix.
