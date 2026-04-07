@@ -472,4 +472,114 @@ returns a convertible value to `true`.
         BuiltinFunArg::Arg(String::from("f"))
     ]));
     doc_root_mod.add_var(String::from("filter"), String::from(&doc[1..]));
+
+    let doc = r#"
+Finds maximum element in the `X` iterable object or maximum values between the `X` value and the
+`Y` value.
+
+If the `Y` value is passed and the `X` value and the `Y` value are numbers, this function finds 
+maximum value between the `X` number and the `Y` number. If the `Y` value is passed and the `X`
+value or the `Y` value is a matrix, this function finds maximum values between the elemets of
+matrix and the number. If the `Y` value is passed and the `X` value and the `Y` value are 
+matrices, this function finds maximum values between the elements of `X` matrix and the elements
+of `Y` matrix.
+"#;
+    sig_root_mod.add_var(String::from("max"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::OptArg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("max"), String::from(&doc[1..]));
+
+    let doc = r#"
+Finds minimum element in the `X` iterable object or minimum values between the `X` value and the
+`Y` value.
+
+If the `Y` value is passed and the `X` value and the `Y` value are numbers, this function finds 
+minimum value between the `X` number and the `Y` number. If the `Y` value is passed and the `X`
+value or the `Y` value is a matrix, this function finds minimum values between the elemets of
+matrix and the number. If the `Y` value is passed and the `X` value and the `Y` value are 
+matrices, this function finds minumum values between the elements of `X` matrix and the elements
+of `Y` matrix.
+"#;
+    sig_root_mod.add_var(String::from("min"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::OptArg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("min"), String::from(&doc[1..]));
+
+    let doc = r#"
+Finds maximum element in the `x` iterable object and returns its index.
+"#;
+    sig_root_mod.add_var(String::from("imax"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
+
+    let doc = r#"
+Finds minumum element in the `x` iterable object and returns its index.
+"#;
+    sig_root_mod.add_var(String::from("imax"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
+
+    let doc = r#"
+Pushes the `y` value to the back of `x` array.
+"#;
+    sig_root_mod.add_var(String::from("push"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ]));
+    doc_root_mod.add_var(String::from("push"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the last element from the `x` array and returns the last element.
+
+If the `x` array is empty, this function returns `none`.
+"#;
+    sig_root_mod.add_var(String::from("pop"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("pop"), String::from(&doc[1..]));
+
+    let doc = r#"
+Appends the `y` mutable object to the `x` mutable object.
+
+The `x` mutable object and the `y` mutable object must be arrays or structures. If two fields in
+two structures have same field identifier, the field in the first structure is overwritten by a
+value from the field in the second structure.
+"#;
+    sig_root_mod.add_var(String::from("append"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ]));
+    doc_root_mod.add_var(String::from("append"), String::from(&doc[1..]));
+
+    let doc = r#"
+Inserts the `y` value to the `x` mutable object.
+
+If `x` mutable object is an array, this function inserts the `y` value as an element with the `i`
+index to the `x` array and moves all elements after the inserted element to right. If `x` mutable
+object is a structure, this function inserts the `x` value as a field with the `i` identifier to
+the `x` structure.
+"#;
+    sig_root_mod.add_var(String::from("insert"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("i")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ]));
+    doc_root_mod.add_var(String::from("insert"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the element from the `x` mutable object.
+
+If `x` mutable object is an array, this function removes an element with the `i` index from
+the `x` array and moves all elements after the removed element to left. If `x` mutable object
+is a structure, this function removes a feild with the `i` identifier from the `x` structure.
+"#;
+    sig_root_mod.add_var(String::from("remove"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("i"))
+    ]));
+    doc_root_mod.add_var(String::from("remove"), String::from(&doc[1..]));
 }
