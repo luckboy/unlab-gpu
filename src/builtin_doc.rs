@@ -423,8 +423,8 @@ Reverses the order of elements in the `x` array.
     doc_root_mod.add_var(String::from("reverse"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns a
-convertible value to `true` for any element in the `X` iterable object, otherwise `false`.
+Returns `true` if the `f` function with the passed `D` value returns a convertible value to `true`
+for any element in the `X` iterable object ($f(\mathbf{D}, {\mathbf{x}}_i)$), otherwise `false`.
 "#;
     sig_root_mod.add_var(String::from("any"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -434,8 +434,9 @@ convertible value to `true` for any element in the `X` iterable object, otherwis
     doc_root_mod.add_var(String::from("any"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns `true` if the `f` function with the passed `D` value ($f(\mathbf{D}, x_i)$) returns a
-convertible value to `true` for all elements in the `X` iterable object, otherwise `false`.
+Returns `true` if the `f` function with the passed `D` value returns a convertible value to `true`
+for all elements in the `X` iterable object ($f(\mathbf{D}, {\mathbf{x}}_i)$), otherwise
+`false`.
 "#;
     sig_root_mod.add_var(String::from("all"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -447,10 +448,10 @@ convertible value to `true` for all elements in the `X` iterable object, otherwi
     let doc = r#"
 Finds the element in the `X` iterable object.
 
-This function applies the `f` function to the `D` value and each element in the `x` iterable
-object ($f(\mathbf{D}, x_i)$) until the `f` function returns a convertible value to `true` and
-then returns the index of this element. If the `f` function doesn't return the convertible value
-to `true` for any element, this function returns `none`.
+This function applies the `f` function to the `D` value and each element in the `X` iterable
+object ($f(\mathbf{D}, {\mathbf{x}}_i)$) until the `f` function returns a convertible value to 
+`true` and then returns the index of this element. If the `f` function doesn't return the 
+convertible value to `true` for any element, this function returns `none`.
 "#;
     sig_root_mod.add_var(String::from("find"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -462,9 +463,9 @@ to `true` for any element, this function returns `none`.
     let doc = r#"
 Filters the elements in the `X` iterable object.
 
-This function applies the `f` function to the `D` value and each element in the `x` iterable
-object ($f(\mathbf{D}, x_i)$) and then returns the indices of elements for which the `f` function
-returns a convertible value to `true`.
+This function applies the `f` function to the `D` value and each element in the `X` iterable
+object ($f(\mathbf{D}, {\mathbf{x}}_i)$) and then returns the indices of elements for which the
+`f` function returns a convertible value to `true`.
 "#;
     sig_root_mod.add_var(String::from("filter"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -524,64 +525,64 @@ Finds minumum element in the `x` iterable object and returns its index.
     doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
 
     let doc = r#"
-Pushes the `y` value to the back of `x` array.
+Pushes the `y` value to the back of `X` array.
 "#;
     sig_root_mod.add_var(String::from("push"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("y"))
     ]));
     doc_root_mod.add_var(String::from("push"), String::from(&doc[1..]));
 
     let doc = r#"
-Removes the last element from the `x` array and returns the last element.
+Removes the last element from the `X` array and returns the last element.
 
-If the `x` array is empty, this function returns `none`.
+If the `X` array is empty, this function returns `none`.
 "#;
     sig_root_mod.add_var(String::from("pop"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("pop"), String::from(&doc[1..]));
 
     let doc = r#"
-Appends the `y` mutable object to the `x` mutable object.
+Appends the `Y` mutable object to the `X` mutable object.
 
-The `x` mutable object and the `y` mutable object must be arrays or structures. If two fields in
+The `X` mutable object and the `Y` mutable object must be arrays or structures. If two fields in
 two structures have same field identifier, the field in the first structure is overwritten by a
 value from the field in the second structure.
 "#;
     sig_root_mod.add_var(String::from("append"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x")),
-        BuiltinFunArg::Arg(String::from("y"))
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
     ]));
     doc_root_mod.add_var(String::from("append"), String::from(&doc[1..]));
 
     let doc = r#"
-Inserts the `y` value to the `x` mutable object.
+Inserts the `y` value to the `X` mutable object.
 
-If the `x` mutable object is an array, this function inserts the `y` value as an element with the
-`i` index to the `x` array, moves all elements after the inserted element to right, and returns
-`none`.  If the `x` mutable object is a structure, this function inserts the `x` value as a field
-with the `i` identifier to the `x` structure and then returns the replaced field. This function
-returns `none` if the `x` structure doesn't contain the field with the `i` identifier. 
+If the `X` mutable object is an array, this function inserts the `y` value as an element with the
+`i` index to the `X` array, moves all elements after the inserted element to right, and returns
+`none`.  If the `X` mutable object is a structure, this function inserts the `X` value as a field
+with the `i` identifier to the `X` structure and then returns the replaced field. This function
+returns `none` if the `X` structure doesn't contain the field with the `i` identifier. 
 "#;
     sig_root_mod.add_var(String::from("insert"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("i")),
         BuiltinFunArg::Arg(String::from("y"))
     ]));
     doc_root_mod.add_var(String::from("insert"), String::from(&doc[1..]));
 
     let doc = r#"
-Removes the element from the `x` mutable object.
+Removes the element from the `X` mutable object.
 
-If the `x` mutable object is an array, this function removes an element with the `i` index from
-the `x` array and moves all elements after the removed element to left. If the `x` mutable object
-is a structure, this function removes a field with the `i` identifier from the `x` structure.
-This finction returns the removed element or the removed field if the `x` mutable object contains
+If the `X` mutable object is an array, this function removes an element with the `i` index from
+the `X` array and moves all elements after the removed element to left. If the `X` mutable object
+is a structure, this function removes a field with the `i` identifier from the `X` structure.
+This finction returns the removed element or the removed field if the `X` mutable object contains
 the element with the `i` index or the field with the `i` identifier, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("remove"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("i"))
     ]));
     doc_root_mod.add_var(String::from("remove"), String::from(&doc[1..]));
