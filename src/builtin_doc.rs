@@ -291,15 +291,15 @@ The `X` object can be a matrix or a matrix array.
     doc_root_mod.add_var(String::from("columns"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the element in the `X` indexable object for one index or two indices if the `X`
+Returns the element with one index or two indices in the `X` indexable object if the `X`
 indexable object contains the element, otherwise `none`.
 
 If the `j` index is passed and the `X` value is a matrix array, this function returns the element
-in the `X` matrix array for the `i` row index and the `j`  column index. This function returns the
-string with one UTF-8 character for a string, the matrix row slice for a matrix array, or the
+with the `i` row index and the `j`  column index in the `X` matrix array. This function returns
+the string with one UTF-8 character for a string, the matrix row slice for a matrix array, or the
 element of matrix for a matrix row slice if the `j` index isn't passed. This function returns the
-field in the `X` structure for the `i` identifier if the `j` index isn't passed and the `X` object
-is structure.
+field with the `i` identifier in the `X` structure if the `j` index isn't passed and the `X`
+object is structure.
 "#;
     sig_root_mod.add_var(String::from("get"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -309,7 +309,7 @@ is structure.
     doc_root_mod.add_var(String::from("get"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the element in the diagonal of `X` matrix array for the `i` index if the diagonal of `X`
+Returns the element with the `i` index in the diagonal of `X` matrix array if the diagonal of `X`
 matrix array contains the element, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("getdiag"), Sig::BuiltinFun(vec![
@@ -559,9 +559,10 @@ value from the field in the second structure.
 Inserts the `y` value to the `x` mutable object.
 
 If the `x` mutable object is an array, this function inserts the `y` value as an element with the
-`i` index to the `x` array and moves all elements after the inserted element to right. If the `x`
-mutable object is a structure, this function inserts the `x` value as a field with the `i` 
-identifier to the `x` structure.
+`i` index to the `x` array, moves all elements after the inserted element to right, and returns
+`none`.  If the `x` mutable object is a structure, this function inserts the `x` value as a field
+with the `i` identifier to the `x` structure and then returns the replaced field. This function
+returns `none` if the `x` structure doesn't contain the field with the `i` identifier. 
 "#;
     sig_root_mod.add_var(String::from("insert"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -576,6 +577,8 @@ Removes the element from the `x` mutable object.
 If the `x` mutable object is an array, this function removes an element with the `i` index from
 the `x` array and moves all elements after the removed element to left. If the `x` mutable object
 is a structure, this function removes a field with the `i` identifier from the `x` structure.
+This finction returns the removed element or the removed field if the `x` mutable object contains
+the element with the `i` index or the field with the `i` identifier, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("remove"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("x")),
