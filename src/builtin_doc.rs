@@ -558,10 +558,10 @@ value from the field in the second structure.
     let doc = r#"
 Inserts the `y` value to the `x` mutable object.
 
-If `x` mutable object is an array, this function inserts the `y` value as an element with the `i`
-index to the `x` array and moves all elements after the inserted element to right. If `x` mutable
-object is a structure, this function inserts the `x` value as a field with the `i` identifier to
-the `x` structure.
+If the `x` mutable object is an array, this function inserts the `y` value as an element with the
+`i` index to the `x` array and moves all elements after the inserted element to right. If the `x`
+mutable object is a structure, this function inserts the `x` value as a field with the `i` 
+identifier to the `x` structure.
 "#;
     sig_root_mod.add_var(String::from("insert"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -573,9 +573,9 @@ the `x` structure.
     let doc = r#"
 Removes the element from the `x` mutable object.
 
-If `x` mutable object is an array, this function removes an element with the `i` index from
-the `x` array and moves all elements after the removed element to left. If `x` mutable object
-is a structure, this function removes a feild with the `i` identifier from the `x` structure.
+If the `x` mutable object is an array, this function removes an element with the `i` index from
+the `x` array and moves all elements after the removed element to left. If the `x` mutable object
+is a structure, this function removes a field with the `i` identifier from the `x` structure.
 "#;
     sig_root_mod.add_var(String::from("remove"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("x")),
