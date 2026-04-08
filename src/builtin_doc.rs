@@ -716,4 +716,20 @@ This function is a mathematical function that takes a number, a matrix, or a mut
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("sqrt"), String::from(&doc[1..]));
+
+    let doc = r#"
+Indeed transposes the `X` matrix (${\mathbf{X}}^\top$).
+"#;
+    sig_root_mod.add_var(String::from("reallytranspose"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("reallytranspose"), String::from(&doc[1..]));
+
+    let doc = r#"
+This function is alias to the [`reallytranspose`](#var.reallytranspose) function.
+"#;
+    sig_root_mod.add_var(String::from("rt"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("rt"), String::from(&doc[1..]));
 }
