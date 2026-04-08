@@ -217,12 +217,12 @@ Creates an error with the `kind` error kind and the `msg` message which are stri
     doc_root_mod.add_var(String::from("error"), String::from(&doc[1..]));
 
     let doc = r#"
-Creates an array from the `x` iterable value.
+Creates an array from the `X` iterable object.
 
-If the `x` value is an array, this function returns the `x` value.
+If the `X` value is an array, this function returns the `X` value.
 "#;
     sig_root_mod.add_var(String::from("array"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("array"), String::from(&doc[1..]));
 
@@ -474,10 +474,12 @@ object ($f(\mathbf{D}, {\mathbf{x}}_i)$) and then returns the indices of element
 
     let doc = r#"
 Finds maximum element in the `X` iterable object or maximum value between the `X` value and the
-`Y` value ($\max(x, y)$) ($\max(x_{ij}, y)$) ($\max(x, y_{ij})$) ($\max(x_{ij}, y_{ij})$).
+`Y` value ($\max(x, y)$, $\max(x_{ij}, y)$, $\max(x, y_{ij})$, or $\max(x_{ij}, y_{ij})$).
 
 This function with two arguments is a mathematical function that takes numbers, matrices, and/or
-mutable objects.
+mutable objects. If the `X` value and the `Y` value are integer numbers, this function also
+returns an integer number. This function returns `none` if the `X` iterable object is empty and
+the `Y` value isn't passed.
 "#;
     sig_root_mod.add_var(String::from("max"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -487,10 +489,12 @@ mutable objects.
 
     let doc = r#"
 Finds minimum element in the `X` iterable object or minimum value between the `X` value and the
-`Y` value ($\min(x, y)$) ($\min(x_{ij}, y)$) ($\min(x, y_{ij})$) ($\min(x_{ij}, y_{ij})$).
+`Y` value ($\min(x, y)$, $\min(x_{ij}, y)$, $\min(x, y_{ij})$, or $\min(x_{ij}, y_{ij})$).
 
 This function with two arguments is a mathematical function that takes numbers, matrices, and/or
-mutable objects.
+mutable objects. If the `X` value and the `Y` value are integer numbers, this function also
+returns an integer number. This function returns `none` if the `X` iterable object is empty and
+the `Y` value isn't passed.
 "#;
     sig_root_mod.add_var(String::from("min"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -499,20 +503,24 @@ mutable objects.
     doc_root_mod.add_var(String::from("min"), String::from(&doc[1..]));
 
     let doc = r#"
-Finds maximum element in the `x` iterable object and returns its index.
+Finds maximum element in the `X` iterable object and returns its index.
+
+This function returns `none` if the `X` iterable object is empty.
 "#;
     sig_root_mod.add_var(String::from("imax"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
 
     let doc = r#"
-Finds minumum element in the `x` iterable object and returns its index.
+Finds minumum element in the `X` iterable object and returns its index.
+
+This function returns `none` if the `X` iterable object is empty.
 "#;
-    sig_root_mod.add_var(String::from("imax"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("x"))
+    sig_root_mod.add_var(String::from("imin"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
     ]));
-    doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
+    doc_root_mod.add_var(String::from("imin"), String::from(&doc[1..]));
 
     let doc = r#"
 Pushes the `y` value to the back of the`X` array.
@@ -678,7 +686,7 @@ This function is a mathematical function that takes a number, a matrix, or a mut
     doc_root_mod.add_var(String::from("sigmoid"), String::from(&doc[1..]));
 
     let doc = r#"
-Calculates sigmoid function for the `X` value ($\tanh(\mathbf{X})$).
+Calculates hyperbolic tangent for the `X` value ($\tanh(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
@@ -708,7 +716,7 @@ This function is a mathematical function that takes a number, a matrix, or a mut
     doc_root_mod.add_var(String::from("softmax"), String::from(&doc[1..]));
 
     let doc = r#"
-Calculates square root of the `X` value ($\sqrt{x}$) ($\sqrt{x_{ij}}$).
+Calculates square root of the `X` value ($\sqrt{x}$ or $\sqrt{x_{ij}}$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
@@ -732,4 +740,261 @@ This function is alias to the [`reallytranspose`](#var.reallytranspose) function
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("rt"), String::from(&doc[1..]));
+
+    let doc = r#"
+Repeats the `x` vector as column or row.
+"#;
+    sig_root_mod.add_var(String::from("repeat"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("repeat"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates remainder of division the `x` value by the `y` value ($\operatorname{mod}(x, y)$).
+
+If the `x` value and the `y` value are integer numbers, this function also returns an integer
+number.
+"#;
+    sig_root_mod.add_var(String::from("mod"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ]));
+    doc_root_mod.add_var(String::from("mod"), String::from(&doc[1..]));
+    
+    let doc = r#"
+Calculates absolute value of the `X` value ($|x|$ or $|x_{ij}|$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object. If
+the `X` value is an integer number, this function also returns an integer value.
+"#;
+    sig_root_mod.add_var(String::from("abs"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("abs"), String::from(&doc[1..]));
+
+    let doc = r#"
+Raises the `X` value to the power of the `Y` value ($x^y$, ${x_{ij}}^y$, $x^{y_{ij}}$, or
+${x_{ij}}^{y_{ij}}$).
+
+This function is a mathematical function that takes numbers, matrices, and/or mutable objects.
+"#;
+    sig_root_mod.add_var(String::from("pow"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("pow"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates exponentional function of the `X` value ($e^x$ or $e^{x_{ij}}$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("exp"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("exp"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates natural logarithm of the `X` value ($\ln{x}$ or $\ln{x_{ij}}$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("log"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("log"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates base 2 logarithm of the `X` value ($\log_2{x}$ or $\log_2{x_{ij}}$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("log2"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("log2"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates base 10 logarithm of the `X` value ($\log_10{x}$ or $\log_10{x_{ij}}$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("log10"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("log10"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates sine function for the `X` value ($\sin(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("sin"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("sin"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates cosine function for the `X` value ($\cos(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("cos"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("cos"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates tangent function for the `X` value ($\tan(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("tan"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("tan"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates arcsine function for the `X` value ($\arcsin(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("asin"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("asin"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates arccosine function for the `X` value ($\arccos(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("acos"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("acos"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates arctangent function for the `X` value ($\arctan(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("atan"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("atan"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates arctangent function for the `X` value and the `Y` value ($\arctan(\frac{x}{y})$,
+$\arctan(\frac{x_{ij}}{y})$, $\arctan(\frac{x}{y_{ij}})$, or $\arctan(\frac{x_{ij}}{y_{ij}})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("atan2"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("atan2"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates hyperbolic sine function for the `X` value ($\sinh(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("sinh"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("sinh"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates hyperbolic cosine function for the `X` value ($\cosh(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("cosh"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("cosh"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates inverse hyperbolic sine function for the `X` value
+($\operatorname{arsinh}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("asinh"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("asinh"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates inverse hyperbolic cosine function for the `X` value
+($\operatorname{arcosh}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("acosh"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("acosh"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates inverse hyperbolic tangent function for the `X` value
+($\operatorname{artanh}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("atanh"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("atanh"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates signum function for the `X` value ($\operatorname{sgn}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("sign"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("sign"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates ceil function for the `X` value ($\operatorname{ceil}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("ceil"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("ceil"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates floor function for the `X` value ($\operatorname{floor}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("floor"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("floor"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates round function for the `X` value ($\operatorname{round}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("round"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("round"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates trunc function for the `X` value ($\operatorname{trunc}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("trunc"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("trunc"), String::from(&doc[1..]));
 }
