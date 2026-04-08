@@ -476,9 +476,11 @@ performs operation if one value is an integer number.
 
 The arithmetic binary operator with dot recursively performs an operation on numbers and/or the
 matrices. Two elements or two fields are compares with types if they aren't floating-point numbers,
-matrices, arrays, or a structures. If two elements or two fields aren't equal, an error occurs. If
-the expression value is an integer number, the expression value is converted to a floating-point
-number and then there performs the operation.
+matrices, arrays, or a structures and two expresion values are arrays or structures. If two elements
+or two fields aren't equal, an error occurs. One element or one field is ignored if it isn't a
+floating-point number, a matrix, an array, or a structure and only one expression value is an array
+or a structure. If the expression value is an integer number, the expression value is converted to a
+floating-point number and then there performs the operation.
 
 The comparison operator except the `==` operator and the `!=` operator comperes the boolean value to
 the boolean value, the number to the number, the string to the string.
