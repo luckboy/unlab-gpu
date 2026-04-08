@@ -578,6 +578,22 @@ the element with the `i` index or the field with the `i` identifier, otherwise `
     doc_root_mod.add_var(String::from("remove"), String::from(&doc[1..]));
 
     let doc = r#"
+Returns the error kind for the `e` error.
+"#;
+    sig_root_mod.add_var(String::from("errorkind"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("e"))
+    ]));
+    doc_root_mod.add_var(String::from("errorkind"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the error message for the `e` error.
+"#;
+    sig_root_mod.add_var(String::from("errormsg"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("e"))
+    ]));
+    doc_root_mod.add_var(String::from("errormsg"), String::from(&doc[1..]));
+    
+    let doc = r#"
 Returns `true` if the `X` value is equal to the `Y` value, otherwise `false`.
 
 This function doesn't compare matrices. The result of this function is `false` if two values are
