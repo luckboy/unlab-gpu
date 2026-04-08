@@ -476,8 +476,9 @@ object ($f(\mathbf{D}, {\mathbf{x}}_i)$) and then returns the indices of element
 Finds maximum element in the `X` iterable object or maximum value between the `X` value and the
 `Y` value ($\max(x, y)$, $\max(x_{ij}, y)$, $\max(x, y_{ij})$, or $\max(x_{ij}, y_{ij})$).
 
-This function with two arguments is a mathematical function that takes numbers, matrices, and/or
-mutable objects. If the `X` value and the `Y` value are integer numbers, this function also
+This function with two arguments is a mathematical function that takes two arguments. This
+argument can be a number, a matrix, or a mutable object. These arguments can't be a matrix and a
+mutable object. If the `X` value and the `Y` value are integer numbers, this function also
 returns an integer number. This function returns `none` if the `X` iterable object is empty and
 the `Y` value isn't passed.
 "#;
@@ -491,8 +492,9 @@ the `Y` value isn't passed.
 Finds minimum element in the `X` iterable object or minimum value between the `X` value and the
 `Y` value ($\min(x, y)$, $\min(x_{ij}, y)$, $\min(x, y_{ij})$, or $\min(x_{ij}, y_{ij})$).
 
-This function with two arguments is a mathematical function that takes numbers, matrices, and/or
-mutable objects. If the `X` value and the `Y` value are integer numbers, this function also
+This function with two arguments is a mathematical function that takes two arguments. This
+argument can be a number, a matrix, or a mutable object. These arguments can't be a matrix and a
+mutable object. If the `X` value and the `Y` value are integer numbers, this function also
 returns an integer number. This function returns `none` if the `X` iterable object is empty and
 the `Y` value isn't passed.
 "#;
@@ -776,7 +778,8 @@ the `X` value is an integer number, this function also returns an integer value.
 Raises the `X` value to the power of the `Y` value ($x^y$, ${x_{ij}}^y$, $x^{y_{ij}}$, or
 ${x_{ij}}^{y_{ij}}$).
 
-This function is a mathematical function that takes numbers, matrices, and/or mutable objects.
+This function is a mathematical function that takes two arguments. This argument can be a number,
+a matrix, or a mutable object. These arguments can't be a matrix and a mutable object.
 "#;
     sig_root_mod.add_var(String::from("pow"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -888,7 +891,8 @@ This function is a mathematical function that takes a number, a matrix, or a mut
 Calculates arctangent function for the `X` value and the `Y` value ($\arctan(\frac{x}{y})$,
 $\arctan(\frac{x_{ij}}{y})$, $\arctan(\frac{x}{y_{ij}})$, or $\arctan(\frac{x_{ij}}{y_{ij}})$).
 
-This function is a mathematical function that takes a number, a matrix, or a mutable object.
+This function is a mathematical function that takes two arguments. This argument can be a number,
+a matrix, or a mutable object. These arguments can't be a matrix and a mutable object.
 "#;
     sig_root_mod.add_var(String::from("atan2"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
