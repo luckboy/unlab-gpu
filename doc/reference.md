@@ -416,10 +416,10 @@ The syntax of expression of unary operator is:
 
 The `-` operator negates the number or the matrix.
 
-The `.-` operator recursively negates the loating-point numbers and/or the matrices. One element or
-one field is ignored if it isn't a floating-point number, a matrix, an array, or a structure. If the
-expression value is an integer number, the expresion value is converted to a floating-point number and
-then is negated.
+The `.-` operator recursively negates the floating-point numbers and/or the matrices. One element or
+one field is ignored if it isn't a floating-point number, a matrix, an array, or a structure. The
+expression value can be a number, a matrix, an array, or a structure. If the expression value is an
+integer number, the expresion value is converted to a floating-point number and then is negated.
 
 The `not` operator converts the expression value to a boolean value and then negates the boolean
 value.
@@ -464,7 +464,7 @@ The `+` operator adds the number or matrix to the number or the matrix. Also, tw
 two structures can be added by this operator. If two fields in two structures have same field
 idendifier, the field from the first expression assigns to a field of result structure.
 
-The `.+` operator adds the number or the elements of matrix by the number or the elements of matrix.
+The `.+` operator adds the number or the elements of matrix to the number or the elements of matrix.
 
 The `-` operator subtracts the number or matrix from the number or the matrix.
 
@@ -474,12 +474,14 @@ matrix.
 The arithmetic binary operator without dot converts one value to a floating-point number and then
 performs operation if one value is an integer number.
 
-The arithmetic binary operator with dot recursively performs an operation on numbers and/or the
-matrices. Two elements or two fields are compares with types if they aren't floating-point numbers,
-matrices, arrays, or a structures and two expresion values are arrays or structures. If two elements
-or two fields aren't equal, an error occurs. One element or one field is ignored if it isn't a
-floating-point number, a matrix, an array, or a structure and only one expression value is an array
-or a structure. If the expression value is an integer number, the expression value is converted to a
+The arithmetic binary operator with dot recursively performs an operation on the floating-point
+numbers and/or the matrices. Two elements or two fields are compares with types if they aren't
+floating-point numbers, matrices, arrays, or a structures and two expresion values are arrays or
+structures. If two elements or two fields aren't equal, an error occurs. One element or one field is
+ignored if it isn't a floating-point number, a matrix, an array, or a structure; one expression value
+is an array or a structure; and other expression value is a number. The expression value can be a
+number, a matrix, an array or a structure. Two expression values can't be a matrix and an array or a
+structure. If the expression value is an integer number, the expression value is converted to a
 floating-point number and then there performs the operation.
 
 The comparison operator except the `==` operator and the `!=` operator comperes the boolean value to
