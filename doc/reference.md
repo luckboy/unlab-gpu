@@ -491,7 +491,7 @@ otherwise `true`.
 
 The `==` operator and the `!=` operator don't compare two matrices. The result of these operators is
 `false` for the `==` operator or `true` for the `!=` operator if two values are matrices. These
-operator doesn't compare value types for integer numbers and floating-point numbers.
+operators don't compare value types for integer numbers and floating-point numbers.
 
 ### Expressions of logical operators
 
