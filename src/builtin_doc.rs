@@ -11,7 +11,7 @@ use crate::mod_node::*;
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"
-Returns a string corresponding to the type of `X` value.
+Returns a string corresponding to the type of the `X` value.
 
 The stings corresponding to the value types or the object types are:
 
@@ -38,7 +38,7 @@ The stings corresponding to the value types or the object types are:
     doc_root_mod.add_var(String::from("type"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns a copy of `X` object.
+Returns a copy of the `X` object.
 
 If the `X` object isn't a mutable object, this function returns the `X` object.
 "#;
@@ -307,8 +307,8 @@ object is structure.
     doc_root_mod.add_var(String::from("get"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the element with the `i` index in the diagonal of `X` matrix array if the diagonal of `X`
-matrix array contains the element, otherwise `none`.
+Returns the element with the `i` index in the diagonal of the `X` matrix array if the diagonal of
+`X` matrix array contains the element, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("getdiag"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -317,7 +317,7 @@ matrix array contains the element, otherwise `none`.
     doc_root_mod.add_var(String::from("getdiag"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the substrings of `s` string which are separated by the `t` string.
+Returns the substrings of the `s` string which are separated by the `t` string.
 
 If the `t` string isn't passed, this function uses whitespaces as a separator.
 "#;
@@ -353,7 +353,7 @@ Returns the `true` if the `s` string contains the `t`, otherwise `false`.
     doc_root_mod.add_var(String::from("contains"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the `true` if the `t` is the prefix of `s` string, otherwise `false`.
+Returns the `true` if the `t` is the prefix of the `s` string, otherwise `false`.
 "#;
     sig_root_mod.add_var(String::from("startswith"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -362,7 +362,7 @@ Returns the `true` if the `t` is the prefix of `s` string, otherwise `false`.
     doc_root_mod.add_var(String::from("startswith"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the `true` if the `t` is the suffix of `s` string, otherwise `false`.
+Returns the `true` if the `t` is the suffix of the `s` string, otherwise `false`.
 "#;
     sig_root_mod.add_var(String::from("endswith"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -371,9 +371,9 @@ Returns the `true` if the `t` is the suffix of `s` string, otherwise `false`.
     doc_root_mod.add_var(String::from("endswith"), String::from(&doc[1..]));
 
     let doc = r#"
-Replaces all occurrences of `t` string in the `s` string with the `u` string.
+Replaces all occurrences of the `t` string in the `s` string with the `u` string.
 
-This function returns a new string with replaced occurrences of `t` string to the `u` string.
+This function returns a new string with replaced occurrences of the `t` string to the `u` string.
 "#;
     sig_root_mod.add_var(String::from("replace"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -473,15 +473,11 @@ object ($f(\mathbf{D}, {\mathbf{x}}_i)$) and then returns the indices of element
     doc_root_mod.add_var(String::from("filter"), String::from(&doc[1..]));
 
     let doc = r#"
-Finds maximum element in the `X` iterable object or maximum values between the `X` value and the
-`Y` value.
+Finds maximum element in the `X` iterable object or maximum value between the `X` value and the
+`Y` value ($\max(x, y)$) ($\max(x_{ij}, y)$) ($\max(x, y_{ij})$) ($\max(x_{ij}, y_{ij})$).
 
-If the `Y` value is passed and the `X` value and the `Y` value are numbers, this function finds 
-maximum value between the `X` number and the `Y` number. If the `Y` value is passed and the `X`
-value or the `Y` value is a matrix, this function finds maximum values between the elemets of
-matrix and the number. If the `Y` value is passed and the `X` value and the `Y` value are 
-matrices, this function finds maximum values between the elements of `X` matrix and the elements
-of `Y` matrix.
+This function with two arguments is a mathematical function that takes numbers, matrices, and/or
+mutable objects.
 "#;
     sig_root_mod.add_var(String::from("max"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -490,15 +486,11 @@ of `Y` matrix.
     doc_root_mod.add_var(String::from("max"), String::from(&doc[1..]));
 
     let doc = r#"
-Finds minimum element in the `X` iterable object or minimum values between the `X` value and the
-`Y` value.
+Finds minimum element in the `X` iterable object or minimum value between the `X` value and the
+`Y` value ($\min(x, y)$) ($\min(x_{ij}, y)$) ($\min(x, y_{ij})$) ($\min(x_{ij}, y_{ij})$).
 
-If the `Y` value is passed and the `X` value and the `Y` value are numbers, this function finds 
-minimum value between the `X` number and the `Y` number. If the `Y` value is passed and the `X`
-value or the `Y` value is a matrix, this function finds minimum values between the elemets of
-matrix and the number. If the `Y` value is passed and the `X` value and the `Y` value are 
-matrices, this function finds minumum values between the elements of `X` matrix and the elements
-of `Y` matrix.
+This function with two arguments is a mathematical function that takes numbers, matrices, and/or
+mutable objects.
 "#;
     sig_root_mod.add_var(String::from("min"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -523,7 +515,7 @@ Finds minumum element in the `x` iterable object and returns its index.
     doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
 
     let doc = r#"
-Pushes the `y` value to the back of `X` array.
+Pushes the `y` value to the back of the`X` array.
 "#;
     sig_root_mod.add_var(String::from("push"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -584,4 +576,128 @@ the element with the `i` index or the field with the `i` identifier, otherwise `
         BuiltinFunArg::Arg(String::from("i"))
     ]));
     doc_root_mod.add_var(String::from("remove"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `X` value is equal to the `Y` value, otherwise `false`.
+
+This function doesn't compare matrices. The result of this function is `false` if two values are
+matrices. This function doesn't compare value types for integer numbers and floating-point
+numbers.
+"#;
+    sig_root_mod.add_var(String::from("isequal"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("isequal"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `X` value isn't equal to the `Y` value, otherwise `false`.
+
+This function doesn't compare matrices. The result of this function is `true` if two values are
+matrices. This function doesn't compare value types for integer numbers and floating-point
+numbers.
+"#;
+    sig_root_mod.add_var(String::from("isnotequal"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("isnotequal"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `X` value is less than the `Y` value, otherwise `false`.
+
+This function compares two boolean values, two numbers, or two strings. The result of this
+function is `false` for two other values.
+"#;
+    sig_root_mod.add_var(String::from("isless"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("isless"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `X` value is greater than or equal to the `Y` value, otherwise `false`.
+
+This function compares two boolean values, two numbers, or two strings. The result of this
+function is `false` for two other values.
+"#;
+    sig_root_mod.add_var(String::from("isgreaterequal"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("isgreaterequal"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `X` value is greater than the `Y` value, otherwise `false`.
+
+This function compares two boolean values, two numbers, or two strings. The result of this
+function is `false` for two other values.
+"#;
+    sig_root_mod.add_var(String::from("isgreater"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("isgreater"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `X` value is less than or equal to the `Y` value, otherwise `false`.
+
+This function compares two boolean values, two numbers, or two strings. The result of this
+function is `false` for two other values.
+"#;
+    sig_root_mod.add_var(String::from("islessequal"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("Y"))
+    ]));
+    doc_root_mod.add_var(String::from("islessequal"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates sigmoid function for the `X` value ($\operatorname{sigmoid}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("sigmoid"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("sigmoid"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates sigmoid function for the `X` value ($\tanh(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("tanh"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("tanh"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates swish function for the `X` value ($\operatorname{swish}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("swish"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("swish"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates softmax function for the `X` value ($\operatorname{softmax}(\mathbf{X})$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("softmax"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("softmax"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates square root of the `X` value ($\sqrt{x}$) ($\sqrt{x_{ij}}$).
+
+This function is a mathematical function that takes a number, a matrix, or a mutable object.
+"#;
+    sig_root_mod.add_var(String::from("sqrt"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("sqrt"), String::from(&doc[1..]));
 }
