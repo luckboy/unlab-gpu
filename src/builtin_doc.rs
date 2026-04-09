@@ -13,7 +13,7 @@ pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod
     let doc = r#"
 Returns a string corresponding to the type of the `X` value.
 
-The stings corresponding to the value types or the object types are:
+The stings corresponding to the value types and the object types are:
 
 - `"none"` - none value
 - `"bool"` - boolean value
@@ -93,7 +93,7 @@ Returns a matrix with zeros that has the `N` number of rows and the `M` number o
 
 The returned matrix is:
 
-$$ \begin{bmatrix} 0 & 0 & \cdots & 0 \\ 0 & 0 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & 0 \end{bmatrix} $$
+$$ \begin{bmatrix} 0 & 0 & \ldots & 0 \\ 0 & 0 & \ldots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \ldots & 0 \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("zeros"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N")),
@@ -106,7 +106,7 @@ Returns a matrix with ones that has the `N` number of rows and the `M` number of
 
 The returned matrix is:
 
-$$ \begin{bmatrix} 1 & 1 & \cdots & 1 \\ 1 & 1 & \cdots & 1 \\ \vdots & \vdots & \ddots & \vdots \\ 1 & 1 & \cdots & 1 \end{bmatrix} $$
+$$ \begin{bmatrix} 1 & 1 & \ldots & 1 \\ 1 & 1 & \ldots & 1 \\ \vdots & \vdots & \ddots & \vdots \\ 1 & 1 & \ldots & 1 \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("ones"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N")),
@@ -119,7 +119,7 @@ Returns an identity matrix that has the `N` number of rows and columns.
 
 The identity matrix is:
 
-$$ \begin{bmatrix} 1 & 0 & \cdots & 0 \\ 0 & 1 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & 1 \end{bmatrix} $$
+$$ \begin{bmatrix} 1 & 0 & \ldots & 0 \\ 0 & 1 & \ldots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \ldots & 1 \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("eye"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N"))
@@ -131,7 +131,7 @@ Returns an initialized matrix that has the `N` number of rows and the `M` number
 This function applies the `f` function to the `D` value and the element indices
 ($f(\mathbf{D}, i, j)$) for each element of initialized matrix. The initialized matrix is:
 
-$$ \begin{bmatrix} f(\mathbf{D}, 1, 1) & f(\mathbf{D}, 1, 2) & \cdots & f(\mathbf{D}, 1, M) \\ f(\mathbf{D}, 2, 1) & f(\mathbf{D}, 2, 2) & \cdots & f(\mathbf{D}, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(\mathbf{D}, N, 1) & f(\mathbf{D}, N, 2) & \cdots & f(\mathbf{D}, N, M) \end{bmatrix} $$
+$$ \begin{bmatrix} f(\mathbf{D}, 1, 1) & f(\mathbf{D}, 1, 2) & \ldots & f(\mathbf{D}, 1, M) \\ f(\mathbf{D}, 2, 1) & f(\mathbf{D}, 2, 2) & \ldots & f(\mathbf{D}, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(\mathbf{D}, N, 1) & f(\mathbf{D}, N, 2) & \ldots & f(\mathbf{D}, N, M) \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("init"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N")),
@@ -148,7 +148,7 @@ This function applies the `f` function to the `D` value and the element index
 ($f(\mathbf{D}, i)$) for each element of main diagonal of initialized diagonal matrix. The
 initialized diagonal matrix is:
 
-$$ \begin{bmatrix} f(\mathbf{D}, 1) & 0 & \cdots & 0 \\ 0  & f(\mathbf{D}, 2) & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & f(\mathbf{D}, N) \end{bmatrix} $$
+$$ \begin{bmatrix} f(\mathbf{D}, 1) & 0 & \ldots & 0 \\ 0  & f(\mathbf{D}, 2) & \ldots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \ldots & f(\mathbf{D}, N) \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("initdiag"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("N")),
@@ -163,7 +163,7 @@ the numbers.
 
 If the `X` object is a matrix, this function returns the `X` object. The created matrix is:
 
-$$ \begin{bmatrix} x_{1 1} & x_{1 2} & \cdots & x_{1M} \\ x_{2 1} & x_{2 2} & \cdots & x_{2M} \\ \vdots & \vdots & \ddots & \vdots \\ x_{N1} & x_{N2} & \cdots & x_{NM} \end{bmatrix} $$
+$$ \begin{bmatrix} x_{1 1} & x_{1 2} & \ldots & x_{1M} \\ x_{2 1} & x_{2 2} & \ldots & x_{2M} \\ \vdots & \vdots & \ddots & \vdots \\ x_{N1} & x_{N2} & \ldots & x_{NM} \end{bmatrix} $$
 
 "#;
     sig_root_mod.add_var(String::from("matrix"), Sig::BuiltinFun(vec![
@@ -177,7 +177,7 @@ Creates a matrix with one row from the `x` iterable object that contains the num
 If the `x` object is a matrix with one row, this function returns the `x` object. The created matrix
 with one row is:
 
-$$ \begin{bmatrix} x_1 & x_2 & \cdots & x_N \end{bmatrix} $$
+$$ \begin{bmatrix} x_1 & x_2 & \ldots & x_N \end{bmatrix} $$
 "#;
     sig_root_mod.add_var(String::from("rowvector"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("x"))
