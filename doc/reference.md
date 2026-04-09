@@ -362,7 +362,7 @@ The syntax of return statement is:
 
     return statement = "return", [expression];
 
-The return statement leaves from a function and then the function returns a value of expresion or the
+The return statement leaves from a function and then the function returns a value of expression or the
 `None` value if the expression isn't passed. If the return statement is used outside a function, the
 error occurs.
 
@@ -374,20 +374,20 @@ The syntax of quit statement is:
 
 The quit statement leaves from a script or an interpreter.
 
-## Exressions
+## Expressions
 
 The syntax of expression is:
 
-    expresion = "(", expression, ")"
-              | literal
-              | variable
-              | function application
-              | unary op expression
-              | binary op expression
-              | logical expression
-              | field access expression
-              | range expression
-              | error propagation expression;
+    expression = "(", expression, ")"
+               | literal
+               | variable
+               | function application
+               | unary op expression
+               | binary op expression
+               | logical expression
+               | field access expression
+               | range expression
+               | error propagation expression;
 
 ### Variables
 
@@ -402,8 +402,8 @@ The syntax of function application is:
     function application = expression, "(", expressions, ")";
     expressions = [expression, {",", expression}, [","]];
 
-The function application applies the function expression to the arguments. If a value of function
-expression isn't a function, an error occurs.
+The function application applies the function to the arguments. If the first operand isn't a function,
+an error occurs.
 
 ### Expressions of unary operators
 
@@ -418,10 +418,10 @@ The `-` operator negates the number or the matrix.
 
 The `.-` operator recursively negates the floating-point numbers and/or the matrices. One element or
 one field is ignored if it isn't a floating-point number, a matrix, an array, or a structure. The
-expression value can be a number, a matrix, an array, or a structure. If the expression value is an
-integer number, the expresion value is converted to a floating-point number and then is negated.
+operand can be a number, a matrix, an array, or a structure. If the operand is an integer number,
+the operand is converted to a floating-point number and then is negated.
 
-The `not` operator converts the expression value to a boolean value and then negates the boolean
+The `not` operator converts the operand to a boolean value and then negates the boolean
 value.
 
 The `'` operator transposes matrix.
@@ -448,7 +448,7 @@ The syntax of expression of binary operator is:
 
 The `[]` operator is an index operator that allows to access to elements or fields. An indexing
 for numbers begins from one. An expression created by this operator is assignable if the first
-expression value is an array or a structure.
+operand is an array or a structure.
 
 The `*` operator multiplies the number or matrix by the number or the matrix.
 
@@ -476,13 +476,13 @@ performs operation if one value is an integer number.
 
 The arithmetic binary operator with dot recursively performs an operation on the floating-point
 numbers and/or the matrices. Two elements or two fields are compares with types if they aren't
-floating-point numbers, matrices, arrays, or a structures and two expresion values are arrays or
-structures. If two elements or two fields aren't equal, an error occurs. One element or one field is
-ignored if it isn't a floating-point number, a matrix, an array, or a structure; one expression value
-is an array or a structure; and other expression value is a number. The expression value can be a
-number, a matrix, an array or a structure. Two expression values can't be a matrix and an array or a
-structure. If the expression value is an integer number, the expression value is converted to a
-floating-point number and then there performs the operation.
+floating-point numbers, matrices, arrays, or a structures and two operands are arrays or structures.
+If two elements or two fields aren't equal, an error occurs. One element or one field is ignored if it
+isn't a floating-point number, a matrix, an array, or a structure; one operand is an array or a
+structure; and other operand is a number. The operand can be a number, a matrix, an array or a
+structure. Two operands can't be a matrix and an array or a structure. If the operand is an integer
+number, the operand is converted to a floating-point number and then there performs the
+operation.
 
 The comparison operator except the `==` operator and the `!=` operator comperes the boolean value to
 the boolean value, the number to the number, the string to the string.
@@ -505,12 +505,12 @@ The syntax of expression of logical operator is:
                           | expression, "or", expression;
 
 The `and` operator performs the logical-AND operation. The result of this operator is the second
-expression value if the first expression value is `true` after conversion to the boolean value,
-otherwise the first expression value.
+operand if the first operand is `true` after conversion to the boolean value,
+otherwise the first operand.
 
 The `or` operator performs the logical-OR operation. The result of this operator is the first
-expression value if the first expression value is `true` after conversion to the boolean value,
-otherwise the second expression value.
+operand if the first operand is `true` after conversion to the boolean value,
+otherwise the second operand.
 
 These operators evaluate the second expression if it is necessary.
 
@@ -529,9 +529,9 @@ The syntax of range expression is:
 
     range expression = expression, "to", expression, ["by", expression];
 
-The range expression creates a range. The expression values in the range expression must be numbers.
-The range is a floating-point range if at least one expression value is floating-point number,
-otherwise an integer range.
+The range expression creates a range. The operands in the range expression must be numbers. The range
+is a floating-point range if at least one operand is floating-point number, otherwise an
+integer range.
 
 ### Expressions of propagation error
 
@@ -539,13 +539,13 @@ The syntax of expression of propagation error is:
 
     propagation error expression = expression, "?";
 
-The expression of error propagation allows to propagate error. If the expression value is the `none`
-value or an error value, there leaves from a function with the result that is this value or prints the
-error outside the function.
+The expression of error propagation allows to propagate error. If the operand is the `none` value or
+an error value, there leaves from a function with the result that is this value or prints the error
+outside the function.
 
 ### Expression precedence
 
-Expresions and operators with arities and priorities are:
+Expressions and operators with arities and priorities are:
 
 | Expression or operator | Arity          | Priority |
 | ---------------------- | -------------- | -------- |
