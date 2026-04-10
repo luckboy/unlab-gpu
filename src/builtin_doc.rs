@@ -1001,4 +1001,89 @@ This function is a mathematical function that takes a number, a matrix, or a mut
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("trunc"), String::from(&doc[1..]));
+
+    let doc = r#"
+Generates a random floating-point number in range $[0, 1)$.
+"#;
+    sig_root_mod.add_var(String::from("rand"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("rand"), String::from(&doc[1..]));
+
+    let doc = r#"
+Generates a random integer number in range $[1, N]$ or range $[N, M]$.
+"#;
+    sig_root_mod.add_var(String::from("randi"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("N")),
+        BuiltinFunArg::OptArg(String::from("M"))
+    ]));
+    doc_root_mod.add_var(String::from("randi"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `s` string to an integer number.
+
+If the `s` string can be converted to the integer number, this function returns an error with the
+error kind `"parseint"`.
+"#;
+    sig_root_mod.add_var(String::from("str2int"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("str2int"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the hexadecimal number that is represented by the `s` string to a decimal integer number.
+
+If the `s` string can be converted to the decimal integer number, this function returns an error 
+with the error kind `"parseint"`.
+"#;
+    sig_root_mod.add_var(String::from("hex2dec"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("hex2dec"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the first character of the `s` string to a character code that is represended by an
+integer number.
+
+If the `s` string is empty, this function returns `none`.
+"#;
+    sig_root_mod.add_var(String::from("char2code"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("char2code"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the first character of the `s` string to a character code.
+
+If the `s` string is empty, this function returns `none`.
+"#;
+    sig_root_mod.add_var(String::from("char2code"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("char2code"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `x` character code to the string with the character.
+
+If the `x` character code is invalid, this function returns `none`.
+"#;
+    sig_root_mod.add_var(String::from("code2char"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ]));
+    doc_root_mod.add_var(String::from("code2char"), String::from(&doc[1..]));
+
+    let doc = r#"
+Formats the `millis` number of milliseconds according to the `fmt` format.
+
+The formats with examples are:
+
+- `"s"` - seconds for exmaple `"1234.567s"`
+- `"ms"` - minutes and seconds for example `"12m34.567s"`
+- `"hms"` - hours, minutes, and seconds for example `"12h34m56.789s"`
+
+If the `fmt` format is invalid, this function returns an error with the error kind `"format"`.
+"#;
+    sig_root_mod.add_var(String::from("formatmillis"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("fmt")),
+        BuiltinFunArg::Arg(String::from("millis"))
+    ]));
+    doc_root_mod.add_var(String::from("formatmillis"), String::from(&doc[1..]));
 }
