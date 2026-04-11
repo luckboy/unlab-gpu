@@ -1179,8 +1179,8 @@ Prints the values with the newline character to the standard error.
 Flushes the stream of standard output.
 
 This function writes all unwritten buffered data in the stream of standard output to the standard 
-output. If an I/O error occurs while this operation, this function returns an error with the `io`
-error kind. This function returns `true` for success of this operation.
+output. This function returns `true` if an I/O error doesn't occur while this operation,
+otherwise an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("flush"), Sig::BuiltinFun(vec![]));
     doc_root_mod.add_var(String::from("flush"), String::from(&doc[1..]));
@@ -1189,9 +1189,134 @@ error kind. This function returns `true` for success of this operation.
 Flushes the stream of standard error.
 
 This function writes all unwritten buffered data in the stream of standard error to the standard
-error. If an I/O error occurs while this operation, this function returns an error with the `io`
-error kind. This function returns `true` for success of this operation.
+error. This function returns `true` if an I/O error doesn't occur while this operation, otherwise
+an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("eflush"), Sig::BuiltinFun(vec![]));
     doc_root_mod.add_var(String::from("eflush"), String::from(&doc[1..]));
+
+    let doc = r#"
+Changes the current working directory to the `path` directory.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("cd"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("cd"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the path of current working directory.
+
+If an I/O error occur while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("pwd"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("pwd"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` if the `path` file exists, otherwise `false`.
+
+If an I/O error occur while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("exist"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("exist"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns a file type as a string for the `path` file.
+
+The file types are:
+
+- `"dir"` - directory
+- `"file"` - any file except directory
+
+If an I/O error occur while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("filetype"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("filetype"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns file names in the `path` directory.
+
+If an I/O error occur while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("dir"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("dir"), String::from(&doc[1..]));
+    
+    let doc = r#"
+This function is alias to the [`dir`](#var.dir) function.
+"#;
+    sig_root_mod.add_var(String::from("ls"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("ls"), String::from(&doc[1..]));
+
+    let doc = r#"
+Creates a `path` directory.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("mkdir"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("mkdir"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the `path` directory.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("rmdir"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("rmdir"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the `path` file.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("rmfile"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("rmfile"), String::from(&doc[1..]));
+
+    let doc = r#"
+Copies the content of the `srcpath` file with the permissions to the `dstpath` file.
+
+This function overwrites the content of the `dstpath` file if the `dstpath` file already exists.
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("copy"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("srcpath")),
+        BuiltinFunArg::Arg(String::from("dstpath"))
+    ]));
+    doc_root_mod.add_var(String::from("copy"), String::from(&doc[1..]));
+
+    let doc = r#"
+Renames the `oldpath` file to the `newpath` name.
+
+This function replaces the `newpath` file if the `newpath` file already exists. This function
+returns `true` if an I/O error doesn't occur while this operation, otherwise an error with the
+`"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("rename"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("oldpath")),
+        BuiltinFunArg::Arg(String::from("newpath"))
+    ]));
+    doc_root_mod.add_var(String::from("rename"), String::from(&doc[1..]));
 }
