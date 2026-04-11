@@ -1098,7 +1098,8 @@ of `X` value is padded with spaces according to the `align` alignment. The align
 - `"right"` - right alignment
 
 If the `align` alignment isn't passed, this function uses the left alignment for the string of
-the `X` value by default.
+the `X` value by default. If the `width` width and/or the `align` alignment are/is invalid, this 
+function returns an error with the `"format"` error kind.
 "#;
     sig_root_mod.add_var(String::from("withwidth"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -1111,7 +1112,8 @@ the `X` value by default.
 Formats the `X` value with the zero padding according to the `width` width.
 
 If the string of the `X` value has a number of characters less than the `width` width, the string
-of `X` value is padded with zeros according to the right alignment.
+of `X` value is padded with zeros according to the right alignment. If the `width` width is 
+invalid, this function returns an error with the `"format"` error kind.
 "#;
     sig_root_mod.add_var(String::from("withzeros"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
