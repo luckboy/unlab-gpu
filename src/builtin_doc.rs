@@ -1021,7 +1021,7 @@ Generates a random integer number in range $[1, N]$ or range $[N, M]$.
 Converts the `s` string to an integer number.
 
 If the `s` string can be converted to the integer number, this function returns an error with the
-error kind `"parseint"`.
+`"parseint"` error kind.
 "#;
     sig_root_mod.add_var(String::from("str2int"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s"))
@@ -1029,7 +1029,18 @@ error kind `"parseint"`.
     doc_root_mod.add_var(String::from("str2int"), String::from(&doc[1..]));
 
     let doc = r#"
-Converts the hexadecimal number that is represented by the `s` string to a decimal integer number.
+Converts the `s` string to a floating-point number.
+
+If the `s` string can be converted to the floating-point number, this function returns an error
+with the `"parsefloat"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("str2int"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("str2int"), String::from(&doc[1..]));    
+    
+    let doc = r#"
+Converts the hexadecimal number as the `s` string to a decimal integer number.
 
 If the `s` string can be converted to the decimal integer number, this function returns an error 
 with the error kind `"parseint"`.
@@ -1040,8 +1051,7 @@ with the error kind `"parseint"`.
     doc_root_mod.add_var(String::from("hex2dec"), String::from(&doc[1..]));
 
     let doc = r#"
-Converts the first character of the `s` string to a character code that is represended by an
-integer number.
+Converts the first character of the `s` string to a character code as an integer number.
 
 If the `s` string is empty, this function returns `none`.
 "#;
@@ -1051,17 +1061,7 @@ If the `s` string is empty, this function returns `none`.
     doc_root_mod.add_var(String::from("char2code"), String::from(&doc[1..]));
 
     let doc = r#"
-Converts the first character of the `s` string to a character code.
-
-If the `s` string is empty, this function returns `none`.
-"#;
-    sig_root_mod.add_var(String::from("char2code"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("s"))
-    ]));
-    doc_root_mod.add_var(String::from("char2code"), String::from(&doc[1..]));
-
-    let doc = r#"
-Converts the `x` character code to the string with the character.
+Converts the character code as the `x` integer number to the string with the character.
 
 If the `x` character code is invalid, this function returns `none`.
 "#;
@@ -1079,11 +1079,117 @@ The formats with examples are:
 - `"ms"` - minutes and seconds for example `"12m34.567s"`
 - `"hms"` - hours, minutes, and seconds for example `"12h34m56.789s"`
 
-If the `fmt` format is invalid, this function returns an error with the error kind `"format"`.
+If the `fmt` format is invalid, this function returns an error with the `"format"` error kind.
 "#;
     sig_root_mod.add_var(String::from("formatmillis"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("fmt")),
         BuiltinFunArg::Arg(String::from("millis"))
     ]));
     doc_root_mod.add_var(String::from("formatmillis"), String::from(&doc[1..]));
+
+    let doc = r#"
+Formats the `X` value according to the `width` width and the `align` alignment.
+
+If the string of the `X` value has a number of characters less than the `width` width, the string
+of `X` value is padded with spaces according to the `align` alignment. The alignments are:
+
+- `"left"` - left alignment
+- `"center"` - center alignment
+- `"right"` - right alignment
+
+If the `align` alignment isn't passed, this function uses the left alignment for the string of
+the `X` value by default.
+"#;
+    sig_root_mod.add_var(String::from("withwidth"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("width")),
+        BuiltinFunArg::OptArg(String::from("align"))
+    ]));
+    doc_root_mod.add_var(String::from("withwidth"), String::from(&doc[1..]));
+
+    let doc = r#"
+Formats the `X` value with the zero padding according to the `width` width.
+
+If the string of the `X` value has a number of characters less than the `width` width, the string
+of `X` value is padded with zeros according to the right alignment.
+"#;
+    sig_root_mod.add_var(String::from("withzeros"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("width"))
+    ]));
+    doc_root_mod.add_var(String::from("withzeros"), String::from(&doc[1..]));
+
+    let doc = r#"
+Reads a line from the standard input.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error 
+kind.
+"#;
+    sig_root_mod.add_var(String::from("readline"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("readline"), String::from(&doc[1..]));
+
+    let doc = r#"
+Formats the values.
+"#;
+    sig_root_mod.add_var(String::from("format"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot,
+    ]));
+    doc_root_mod.add_var(String::from("format"), String::from(&doc[1..]));
+
+    let doc = r#"
+Prints the values to the standard output.
+"#;
+    sig_root_mod.add_var(String::from("print"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot,
+    ]));
+    doc_root_mod.add_var(String::from("print"), String::from(&doc[1..]));
+
+    let doc = r#"
+Prints the values with the newline character to the standard output.
+"#;
+    sig_root_mod.add_var(String::from("println"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot,
+    ]));
+    doc_root_mod.add_var(String::from("println"), String::from(&doc[1..]));
+
+    let doc = r#"
+Prints the values to the standard error.
+"#;
+    sig_root_mod.add_var(String::from("eprint"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot,
+    ]));
+    doc_root_mod.add_var(String::from("eprint"), String::from(&doc[1..]));
+
+    let doc = r#"
+Prints the values with the newline character to the standard error.
+"#;
+    sig_root_mod.add_var(String::from("eprintln"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot,
+    ]));
+    doc_root_mod.add_var(String::from("eprintln"), String::from(&doc[1..]));
+
+    let doc = r#"
+Flushes the stream of standard output.
+
+This function writes all unwritten buffered data in the stream of standard output to the standard 
+output. If an I/O error occurs while this operation, this function returns an error with the `io`
+error kind. This function returns `true` for success of this operation.
+"#;
+    sig_root_mod.add_var(String::from("flush"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("flush"), String::from(&doc[1..]));
+
+    let doc = r#"
+Flushes the stream of standard error.
+
+This function writes all unwritten buffered data in the stream of standard error to the standard
+error. If an I/O error occurs while this operation, this function returns an error with the `io`
+error kind. This function returns `true` for success of this operation.
+"#;
+    sig_root_mod.add_var(String::from("eflush"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("eflush"), String::from(&doc[1..]));
 }
