@@ -1135,7 +1135,7 @@ Formats the values.
 "#;
     sig_root_mod.add_var(String::from("format"), Sig::BuiltinFun(vec![
         BuiltinFunArg::OptArg(String::from("X")),
-        BuiltinFunArg::DotDotDot,
+        BuiltinFunArg::DotDotDot
     ]));
     doc_root_mod.add_var(String::from("format"), String::from(&doc[1..]));
 
@@ -1144,7 +1144,7 @@ Prints the values to the standard output.
 "#;
     sig_root_mod.add_var(String::from("print"), Sig::BuiltinFun(vec![
         BuiltinFunArg::OptArg(String::from("X")),
-        BuiltinFunArg::DotDotDot,
+        BuiltinFunArg::DotDotDot
     ]));
     doc_root_mod.add_var(String::from("print"), String::from(&doc[1..]));
 
@@ -1153,7 +1153,7 @@ Prints the values with the newline character to the standard output.
 "#;
     sig_root_mod.add_var(String::from("println"), Sig::BuiltinFun(vec![
         BuiltinFunArg::OptArg(String::from("X")),
-        BuiltinFunArg::DotDotDot,
+        BuiltinFunArg::DotDotDot
     ]));
     doc_root_mod.add_var(String::from("println"), String::from(&doc[1..]));
 
@@ -1162,7 +1162,7 @@ Prints the values to the standard error.
 "#;
     sig_root_mod.add_var(String::from("eprint"), Sig::BuiltinFun(vec![
         BuiltinFunArg::OptArg(String::from("X")),
-        BuiltinFunArg::DotDotDot,
+        BuiltinFunArg::DotDotDot
     ]));
     doc_root_mod.add_var(String::from("eprint"), String::from(&doc[1..]));
 
@@ -1171,7 +1171,7 @@ Prints the values with the newline character to the standard error.
 "#;
     sig_root_mod.add_var(String::from("eprintln"), Sig::BuiltinFun(vec![
         BuiltinFunArg::OptArg(String::from("X")),
-        BuiltinFunArg::DotDotDot,
+        BuiltinFunArg::DotDotDot
     ]));
     doc_root_mod.add_var(String::from("eprintln"), String::from(&doc[1..]));
 
@@ -1319,4 +1319,26 @@ returns `true` if an I/O error doesn't occur while this operation, otherwise an 
         BuiltinFunArg::Arg(String::from("newpath"))
     ]));
     doc_root_mod.add_var(String::from("rename"), String::from(&doc[1..]));
+
+    let doc = r#"
+Executes the command with the `cmdname` command name and the arguments as a child process.
+
+This function returns the exit code if an I/O error doesn't occur while this operation, otherwise
+an error with the `"io"` error kind. Also, this function returns an error with the `"exitstatus"`
+error kind if child process terminated by signal.
+"#;
+    sig_root_mod.add_var(String::from("spawn"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("cmdname")),
+        BuiltinFunArg::OptArg(String::from("arg")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("spawn"), String::from(&doc[1..]));
+
+    let doc = r#"
+Terminates the current process with the `exitcode` exit code.
+"#;
+    sig_root_mod.add_var(String::from("exit"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("exitcode"))
+    ]));
+    doc_root_mod.add_var(String::from("exit"), String::from(&doc[1..]));
 }
