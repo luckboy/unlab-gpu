@@ -1341,4 +1341,157 @@ Terminates the current process with the `exitcode` exit code.
         BuiltinFunArg::Arg(String::from("exitcode"))
     ]));
     doc_root_mod.add_var(String::from("exit"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads values from the `path` file in the binary format.
+
+If an I/O error occur while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("load"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("load"), String::from(&doc[1..]));
+
+    let doc = r#"
+Saves the values to the `path` file in the binary format.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("save"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("save"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads a string from the `path` text file.
+
+If an I/O error occur while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("loadstr"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("loadstr"), String::from(&doc[1..]));
+
+    let doc = r#"
+Saves the `s` string to the `path` text file.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("savestr"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("savestr"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads a value from the `path` file in the TOML format.
+
+If an error occur while this operation, this function returns an error with the `"io"` error kind
+or the `"toml"` kind error.
+"#;
+    sig_root_mod.add_var(String::from("loadtoml"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("loadtoml"), String::from(&doc[1..]));
+
+    let doc = r#"
+Saves the `X` value to the `path` file in the TOML format.
+
+This function returns `true` if an error doesn't occur while this operation, otherwise an error
+with the `"io"` error kind or the `"toml"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("savetoml"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("savetoml"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads a value from the `path` file in the JSON format.
+
+If an error occur while this operation, this function returns an error with the `"io"` error kind
+or the `"json"` kind error.
+"#;
+    sig_root_mod.add_var(String::from("loadjson"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("loadjson"), String::from(&doc[1..]));
+
+    let doc = r#"
+Saves the `X` value to the `path` file in the JSON format.
+
+This function returns `true` if an error doesn't occur while this operation, otherwise an error
+with the `"io"` error kind or the `"json"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("savejson"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("X"))
+    ]));
+    doc_root_mod.add_var(String::from("savejson"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the arguments which are passed for this script.
+"#;
+    sig_root_mod.add_var(String::from("args"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("args"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the environment variables of current process as strings.
+"#;
+    sig_root_mod.add_var(String::from("env"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("env"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the path to the script directory.
+"#;
+    sig_root_mod.add_var(String::from("scriptdir"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("scriptdir"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the library paths as the string.
+"#;
+    sig_root_mod.add_var(String::from("libpath"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("libpath"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the domain of current library.
+"#;
+    sig_root_mod.add_var(String::from("domain"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("domain"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads the library with the `libname` library name if the library isn't already loaded.
+
+If the library is already loaded, this function doesn't load the library.
+"#;
+    sig_root_mod.add_var(String::from("uselib"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("libname"))
+    ]));
+    doc_root_mod.add_var(String::from("uselib"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads the library with the `libname` library name even if the library is already loaded.
+"#;
+    sig_root_mod.add_var(String::from("reuselib"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("libname"))
+    ]));
+    doc_root_mod.add_var(String::from("reuselib"), String::from(&doc[1..]));
+
+    let doc = r#"
+Runs the script that is refers by the `path` path.
+
+If the `path` path is relative, the script is runned from the script directory. The `/` path
+separators can be used in the `path` path regardless of the operating system because  the `/`
+path separators are replaced to the system path separators.
+"#;
+    sig_root_mod.add_var(String::from("run"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("run"), String::from(&doc[1..]));
 }
