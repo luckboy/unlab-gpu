@@ -694,7 +694,7 @@ The syntax of absolute name is:
 
 The identifiers of absolute name except the last identifier refer to the descendant modules from the
 root module. The last identifier refers to the variable that is in the last referred module or the
-root module. The first identifier can't refer to an used module in the root module.
+root module. The first identifier can't refer to an imported module in the root module.
 
 ### Relative names
 
@@ -706,9 +706,9 @@ The syntax of relative name is:
 The identifiers of relative name except the last identifier refer to the descendant modules from the
 current module if all these modules from the current module exist, otherwise the descendant modules
 from the root module. The last identifier refers to the variable that is in the last referred module
-of the current module. The first identifier for the current module can refer to an used module or an
-used variable in the current module if the variable or the module with the first identifier isn't
-defined.
+of the current module. The first identifier for the current module can refer to an imported module or
+an imported variable in the current module if the variable or the module with the first identifier
+isn't efined.
 
 ### Variable names
 
@@ -721,5 +721,6 @@ The identifier can refer to:
 - the local variable if the local variable exists for reading or an interpreter is inside a function
   for writing
 - the variable that is defined in the current module if the variable exists in the current module
-- the variable that is used in the current module if the variable is used in the current module
+- the variable that is imported in the current module if the variable is imported in the current
+  module
 - the variable that is defined in the root module if the variable exists in the root module
