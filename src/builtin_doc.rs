@@ -1345,8 +1345,8 @@ Terminates the current process with the `exitcode` exit code.
     let doc = r#"
 Loads values from the `path` file in the binary format.
 
-If an I/O error occur while this operation, this function returns an error with the `"io"` error
-kind.
+This function returns the loaded values if an I/O error doesn't occur while this operation, 
+otherwise an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("load"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -1369,8 +1369,8 @@ error with the `"io"` error kind.
     let doc = r#"
 Loads a string from the `path` text file.
 
-If an I/O error occur while this operation, this function returns an error with the `"io"` error
-kind.
+This function returns the loaded string if an I/O error doesn't occur while this operation,
+otherwise an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("loadstr"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -1392,8 +1392,8 @@ error with the `"io"` error kind.
     let doc = r#"
 Loads a value from the `path` file in the TOML format.
 
-If an error occur while this operation, this function returns an error with the `"io"` error kind
-or the `"toml"` kind error.
+This function returns the loaded value if an error doesn't occur while this operation, otherwise
+an error with the `"io"` error kind or the `"toml"` kind error.
 "#;
     sig_root_mod.add_var(String::from("loadtoml"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -1415,8 +1415,8 @@ with the `"io"` error kind or the `"toml"` error kind.
     let doc = r#"
 Loads a value from the `path` file in the JSON format.
 
-If an error occur while this operation, this function returns an error with the `"io"` error kind
-or the `"json"` kind error.
+This function returns the loaded value if an error doesn't occur while this operation, otherwise
+an error with the `"io"` error kind or the `"json"` kind error.
 "#;
     sig_root_mod.add_var(String::from("loadjson"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("path"))
