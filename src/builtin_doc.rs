@@ -1460,7 +1460,7 @@ Returns the library paths as the string.
     doc_root_mod.add_var(String::from("libpath"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the domain of current library.
+Returns the domain of current library if interpreter is in the libary, otherwise `None`.
 "#;
     sig_root_mod.add_var(String::from("domain"), Sig::BuiltinFun(vec![]));
     doc_root_mod.add_var(String::from("domain"), String::from(&doc[1..]));
@@ -1470,7 +1470,9 @@ Loads the library with the `libname` library name if the library isn't already l
 this function doesn't load the library.
 
 The library with the `libname` library name is loaded in the root module. The `libname` library
-should contain the domain and the name which are separeted by the `/` character. 
+name should contain the domain and the name which are separeted by the `/` character. If the
+`libname` library name hasn't the domain and the interpreter is in the library, this function
+loads the library with the domain of current library.
 "#;
     sig_root_mod.add_var(String::from("uselib"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("libname"))
@@ -1481,7 +1483,9 @@ should contain the domain and the name which are separeted by the `/` character.
 Loads the library with the `libname` library name even if the library is already loaded.
 
 The library with the `libname` library name is loaded in the root module. The `libname` library
-should contain the domain and the name which are separeted by the `/` character. 
+name should contain the domain and the name which are separeted by the `/` character. If the
+`libname` library name hasn't the domain and the interpreter is in the library, this function
+loads the library with the domain of current library.
 "#;
     sig_root_mod.add_var(String::from("reuselib"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("libname"))
@@ -1606,4 +1610,142 @@ Removes the local variable with the `ident` identifier.
         BuiltinFunArg::Arg(String::from("ident"))
     ]));
     doc_root_mod.add_var(String::from("removelocalvar"), String::from(&doc[1..]));
+
+    let doc = r#"
+An interruption error occurs if an interruption is occurred.
+"#;
+    sig_root_mod.add_var(String::from("checkintr"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("checkintr"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the backend name as a string.
+"#;
+    sig_root_mod.add_var(String::from("backend"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("backend"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the Unlab-gpu version.
+"#;
+    sig_root_mod.add_var(String::from("version"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("version"), String::from(&doc[1..]));
+
+    let doc = r#"
+An version error if the Unlab-gpu version isn't matched to the `s` version requirement.
+"#;
+    sig_root_mod.add_var(String::from("reqver"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ]));
+    doc_root_mod.add_var(String::from("reqver"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the documentation paths as the string.
+"#;
+    sig_root_mod.add_var(String::from("docpath"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("docpath"), String::from(&doc[1..]));
+
+    let doc = r#"
+Opens the documentation.
+
+If the `libname` library name isn't passed, this function opens this documentation. The `libname`
+library name should contain the domain and the name which are separeted by the `/` character. 
+"#;
+    sig_root_mod.add_var(String::from("doc"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("libname"))
+    ]));
+    doc_root_mod.add_var(String::from("doc"), String::from(&doc[1..]));
+
+    let doc = r#"
+This function is alias to the [`doc`](#var.doc) function.
+"#;
+    sig_root_mod.add_var(String::from("help"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::OptArg(String::from("libname"))
+    ]));
+    doc_root_mod.add_var(String::from("help"), String::from(&doc[1..]));
+
+    let doc = r#"
+Asserts that the `V` value is `true`.
+
+An assertion error occurs if the `V` value isn't `true`. If next arguments are passed, an
+assertion error has the message that is the formatted next arguments.
+"#;
+    sig_root_mod.add_var(String::from("assert"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("V")),
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("assert"), String::from(&doc[1..]));
+
+    let doc = r#"
+Asserts that the `L` value is equal to the `R` value.
+
+An assertion error occurs if the `L` value isn't equal to the `R` value. If next arguments are
+passed, an assertion error has the message that is the formatted next arguments.
+"#;
+    sig_root_mod.add_var(String::from("asserteq"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("L")),
+        BuiltinFunArg::Arg(String::from("R")),
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("asserteq"), String::from(&doc[1..]));
+
+    let doc = r#"
+Asserts that the `L` value isn't equal to the `R` value.
+
+An assertion error occurs if the `L` value is equal to the `R` value. If next arguments are
+passed, an assertion error has the message that is the formatted next arguments.
+"#;
+    sig_root_mod.add_var(String::from("assertne"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("L")),
+        BuiltinFunArg::Arg(String::from("R")),
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("assertne"), String::from(&doc[1..]));
+
+    let doc = r#"
+Asserts that the difference between the `L` value and the `R` value is greater than the `eps`
+value.
+
+An assertion error occurs if the difference between the `L` value and the `R` value isn't greater
+than the `eps` value. If next arguments are passed, an assertion error has the message that is
+the formatted next arguments. The differences are recursively checked like comparison without
+types for matrix arrays, matrix row slices, arrays, or structures. The difference between two
+elements or two fields are checked if two elements or two fields are numbers, otherwise this
+function compares two element or two fields.
+"#;
+    sig_root_mod.add_var(String::from("assertnearlyeq"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("L")),
+        BuiltinFunArg::Arg(String::from("R")),
+        BuiltinFunArg::Arg(String::from("eps")),
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("assertnearlyeq"), String::from(&doc[1..]));
+
+    let doc = r#"
+Asserts that the difference between the `L` value and the `R` value isn't greater than the `eps`
+value.
+
+An assertion error occurs if the difference between the `L` value and the `R` value is greater
+than the `eps` value. If next arguments are passed, an assertion error has the message that is
+the formatted next arguments. The differences are recursively checked like comparison without
+types for matrix arrays, matrix row slices, arrays, or structures. The difference between two
+elements or two fields are checked if two elements or two fields are numbers, otherwise this
+function compares two element or two fields.
+"#;
+    sig_root_mod.add_var(String::from("assertnearlyne"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("L")),
+        BuiltinFunArg::Arg(String::from("R")),
+        BuiltinFunArg::Arg(String::from("eps")),
+        BuiltinFunArg::OptArg(String::from("X")),
+        BuiltinFunArg::DotDotDot
+    ]));
+    doc_root_mod.add_var(String::from("assertnearlyne"), String::from(&doc[1..]));
+
+    let doc = r#"
+Adds the current module to the test suites.
+"#;
+    sig_root_mod.add_var(String::from("tests"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("tests"), String::from(&doc[1..]));
 }
