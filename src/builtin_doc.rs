@@ -1466,9 +1466,11 @@ Returns the domain of current library.
     doc_root_mod.add_var(String::from("domain"), String::from(&doc[1..]));
 
     let doc = r#"
-Loads the library with the `libname` library name if the library isn't already loaded.
+Loads the library with the `libname` library name if the library isn't already loaded, otherwise
+this function doesn't load the library.
 
-If the library is already loaded, this function doesn't load the library.
+The library with the `libname` library name is loaded in the root module. The `libname` library
+should contain the domain and the name which are separeted by the `/` character. 
 "#;
     sig_root_mod.add_var(String::from("uselib"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("libname"))
@@ -1477,6 +1479,9 @@ If the library is already loaded, this function doesn't load the library.
 
     let doc = r#"
 Loads the library with the `libname` library name even if the library is already loaded.
+
+The library with the `libname` library name is loaded in the root module. The `libname` library
+should contain the domain and the name which are separeted by the `/` character. 
 "#;
     sig_root_mod.add_var(String::from("reuselib"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("libname"))
@@ -1486,12 +1491,119 @@ Loads the library with the `libname` library name even if the library is already
     let doc = r#"
 Runs the script that is refers by the `path` path.
 
-If the `path` path is relative, the script is runned from the script directory. The `/` path
-separators can be used in the `path` path regardless of the operating system because  the `/`
-path separators are replaced to the system path separators.
+If the `path` path is relative, the script is runned from the script directory. The script is
+runned in the current module. The `/` path separators can be used in the `path` path regardless
+of the operating system because  the `/` path separators are replaced to the system path
+separators.
 "#;
     sig_root_mod.add_var(String::from("run"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("run"), String::from(&doc[1..]));
+
+    let doc = r#"
+This function is alias to the [`run`](#var.run) function.
+
+This alias adds the documetation comments from the `path` file while documentation generation. 
+The `path` path should be a string literal so that documentation comment are added.
+"#;
+    sig_root_mod.add_var(String::from("runwithdoc"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ]));
+    doc_root_mod.add_var(String::from("runwithdoc"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the elapsed time in milliseconds since an interpreter start.
+"#;
+    sig_root_mod.add_var(String::from("clock"), Sig::BuiltinFun(vec![]));
+    doc_root_mod.add_var(String::from("clock"), String::from(&doc[1..]));
+
+    let doc = r#"
+Imports the module with the `modname` name in the current module.
+
+If the `newident` identifier is passed, the module is imported as module with the `newident`
+identifier. The `modname` module should contain the module identifiers which are separated by the
+`::` character sequence. The `modname` name can have the `::` prefix.
+"#;
+    sig_root_mod.add_var(String::from("usemod"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("modname")),
+        BuiltinFunArg::OptArg(String::from("newident"))
+    ]));
+    doc_root_mod.add_var(String::from("usemod"), String::from(&doc[1..]));
+
+    let doc = r#"
+Imports all modules from the module with the `modname` name in the current module.
+
+The `modname` name should contain the module identifiers which are separated by the `::` 
+character sequence. The `modname` name can have the `::` prefix.
+"#;
+    sig_root_mod.add_var(String::from("usemods"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("modname"))
+    ]));
+    doc_root_mod.add_var(String::from("usemods"), String::from(&doc[1..]));
+
+    let doc = r#"
+Imports the module with the `varname` name in the current module.
+
+If the `newident` identifier is passed, the variable is imported as module with the `newident`
+identifier. The `varname` name should contain the module identifiers and/or the variable 
+identifier which are separated by the `::` character sequence. The `modname` name can have the
+`::` prefix.
+"#;
+    sig_root_mod.add_var(String::from("usevar"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("varname")),
+        BuiltinFunArg::OptArg(String::from("newident"))
+    ]));
+    doc_root_mod.add_var(String::from("usevar"), String::from(&doc[1..]));
+
+    let doc = r#"
+Imports all variables from the module with the `modname` name in the current module.
+
+The `modname` name should contain the module identifiers which are separated by the `::` 
+character sequence. The `modname` name can have the `::` prefix.
+"#;
+    sig_root_mod.add_var(String::from("usevars"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("modname"))
+    ]));
+    doc_root_mod.add_var(String::from("usevars"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the module import with the `ident` identifier from the current module.
+"#;
+    sig_root_mod.add_var(String::from("removeusemod"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("ident"))
+    ]));
+    doc_root_mod.add_var(String::from("removeusemod"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the variable import with the `ident` identifier from the current module.
+"#;
+    sig_root_mod.add_var(String::from("removeusevar"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("ident"))
+    ]));
+    doc_root_mod.add_var(String::from("removeusevar"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the module with the `ident` identifier from the current module.
+"#;
+    sig_root_mod.add_var(String::from("removemod"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("ident"))
+    ]));
+    doc_root_mod.add_var(String::from("removemod"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the variable with the `ident` identifier from the current module.
+"#;
+    sig_root_mod.add_var(String::from("removevar"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("ident"))
+    ]));
+    doc_root_mod.add_var(String::from("removevar"), String::from(&doc[1..]));
+
+    let doc = r#"
+Removes the local variable with the `ident` identifier.
+"#;
+    sig_root_mod.add_var(String::from("removelocalvar"), Sig::BuiltinFun(vec![
+        BuiltinFunArg::Arg(String::from("ident"))
+    ]));
+    doc_root_mod.add_var(String::from("removelocalvar"), String::from(&doc[1..]));
 }
