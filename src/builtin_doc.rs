@@ -11,6 +11,30 @@ use crate::mod_node::*;
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"
+A $\pi$ number.
+"#;
+    sig_root_mod.add_var(String::from("pi"), Sig::Var);
+    doc_root_mod.add_var(String::from("pi"), String::from(&doc[1..]));
+
+    let doc = r#"
+An $e$ number.
+"#;
+    sig_root_mod.add_var(String::from("e"), Sig::Var);
+    doc_root_mod.add_var(String::from("e"), String::from(&doc[1..]));
+
+    let doc = r#"
+A machine epsilon number.
+"#;
+    sig_root_mod.add_var(String::from("eps"), Sig::Var);
+    doc_root_mod.add_var(String::from("eps"), String::from(&doc[1..]));
+
+    let doc = r#"
+A path separator that can be `"/"` for Unix or `"\\"` for Windows.
+"#;
+    sig_root_mod.add_var(String::from("pathsep"), Sig::Var);
+    doc_root_mod.add_var(String::from("pathsep"), String::from(&doc[1..]));
+    
+    let doc = r#"
 Returns a string corresponding to the type of the `X` value.
 
 The stings corresponding to the value types and the object types are:
@@ -227,22 +251,22 @@ If the `X` value is an array, this function returns the `X` value.
     doc_root_mod.add_var(String::from("array"), String::from(&doc[1..]));
 
     let doc = r#"
-Converts the `r` reference to the strong reference.
+Converts the `R` reference to the strong reference.
 
-If the `r` reference is strong, this function returns the `r` reference. 
+If the `R` reference is strong, this function returns the `R` reference. 
 "#;
     sig_root_mod.add_var(String::from("strong"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("r"))
+        BuiltinFunArg::Arg(String::from("R"))
     ]));
     doc_root_mod.add_var(String::from("strong"), String::from(&doc[1..]));
     
     let doc = r#"
-Converts the `r` reference to the weak reference.
+Converts the `R` reference to the weak reference.
 
-If the `r` reference is weak, this function returns the `r` reference. 
+If the `R` reference is weak, this function returns the `R` reference. 
 "#;
     sig_root_mod.add_var(String::from("weak"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("r"))
+        BuiltinFunArg::Arg(String::from("R"))
     ]));
     doc_root_mod.add_var(String::from("weak"), String::from(&doc[1..]));
 
