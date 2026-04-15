@@ -295,9 +295,9 @@ indexable object contains the element, otherwise `none`.
 If the `j` index is passed and the `X` value is a matrix array, this function returns the element
 with the `i` row index and the `j`  column index in the `X` matrix array. This function returns
 the string with one UTF-8 character for a string, the matrix row slice for a matrix array, or the
-element of matrix for a matrix row slice if the `j` index isn't passed. This function returns the
-field with the `i` identifier in the `X` structure if the `j` index isn't passed and the `X`
-object is structure.
+element of matrix for a matrix row slice if the `j` index isn't passed. The field with the `i` 
+identifier in the `X` structure is returned if the `j` index isn't passed and the `X` object is
+structure.
 "#;
     sig_root_mod.add_var(String::from("get"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -1131,7 +1131,7 @@ kind.
     doc_root_mod.add_var(String::from("readline"), String::from(&doc[1..]));
 
     let doc = r#"
-Formats the values.
+Formats the values and then returns the formatted values as a string.
 "#;
     sig_root_mod.add_var(String::from("format"), Sig::BuiltinFun(vec![
         BuiltinFunArg::OptArg(String::from("X")),
@@ -1179,7 +1179,7 @@ Prints the values with the newline character to the standard error.
 Flushes the stream of standard output.
 
 This function writes all unwritten buffered data in the stream of standard output to the standard 
-output. This function returns `true` if an I/O error doesn't occur while this operation,
+output. Also, this function returns `true` if an I/O error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("flush"), Sig::BuiltinFun(vec![]));
@@ -1189,8 +1189,8 @@ otherwise an error with the `"io"` error kind.
 Flushes the stream of standard error.
 
 This function writes all unwritten buffered data in the stream of standard error to the standard
-error. This function returns `true` if an I/O error doesn't occur while this operation, otherwise
-an error with the `"io"` error kind.
+error. Also, this function returns `true` if an I/O error doesn't occur while this operation,
+otherwise an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("eflush"), Sig::BuiltinFun(vec![]));
     doc_root_mod.add_var(String::from("eflush"), String::from(&doc[1..]));
@@ -1298,8 +1298,8 @@ error with the `"io"` error kind.
 Copies the content of the `srcpath` file with the permissions to the `dstpath` file.
 
 This function overwrites the content of the `dstpath` file if the `dstpath` file already exists.
-This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
-error with the `"io"` error kind.
+Also, this function returns `true` if an I/O error doesn't occur while this operation, otherwise
+an error with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("copy"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("srcpath")),
@@ -1310,9 +1310,9 @@ error with the `"io"` error kind.
     let doc = r#"
 Renames the `oldpath` file to the `newpath` name.
 
-This function replaces the `newpath` file if the `newpath` file already exists. This function
-returns `true` if an I/O error doesn't occur while this operation, otherwise an error with the
-`"io"` error kind.
+This function replaces the `newpath` file if the `newpath` file already exists. Also, this
+function returns `true` if an I/O error doesn't occur while this operation, otherwise an error
+with the `"io"` error kind.
 "#;
     sig_root_mod.add_var(String::from("rename"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("oldpath")),
