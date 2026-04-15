@@ -42,7 +42,7 @@ Immutable object types are:
 - error
 - window identifier
 
-Mutable objects are:
+Mutable object types are:
 
 - array
 - structure
@@ -76,6 +76,27 @@ floating-point numbers, matrices, or mutable object and two arguments are mutabl
 elements or two fields aren't equal, an error occurs. One element or one field is ignored if it
 isn't a floating-point number, a matrix, or a mutable object; one argument is a mutable object;
 and other argument is a number.
+
+# TOML format and JSON format
+
+The functions to loading values and saving values for the
+[TOML](https://en.wikipedia.org/wiki/TOML) format and the
+[JSON](https://en.wikipedia.org/wiki/JSON) format are:
+
+- [`loadtoml`](#var.loadtoml)
+- [`savetoml`](#var.savetoml)
+- [`loadjson`](#var.loadjson)
+- [`savejson`](#var.savejson)
+
+These functions load and/or save the following values:
+
+- none
+- boolean
+- integer number
+- floating-point number
+- string
+- array
+- structure
 "#;
     match doc_root_mod.value() {
         Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
@@ -1486,7 +1507,7 @@ error with the `"io"` error kind.
     doc_root_mod.add_var(String::from("savestr"), String::from(&doc[1..]));
 
     let doc = r#"
-Loads a value from the `path` file in the TOML format.
+Loads a value from the `path` file in the [TOML](https://en.wikipedia.org/wiki/TOML) format.
 
 This function returns the loaded value if an error doesn't occur while this operation, otherwise
 an error with the `"io"` error kind or the `"toml"` kind error.
@@ -1497,7 +1518,7 @@ an error with the `"io"` error kind or the `"toml"` kind error.
     doc_root_mod.add_var(String::from("loadtoml"), String::from(&doc[1..]));
 
     let doc = r#"
-Saves the `X` value to the `path` file in the TOML format.
+Saves the `X` value to the `path` file in the [TOML](https://en.wikipedia.org/wiki/TOML) format.
 
 This function returns `true` if an error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind or the `"toml"` error kind.
@@ -1509,7 +1530,7 @@ with the `"io"` error kind or the `"toml"` error kind.
     doc_root_mod.add_var(String::from("savetoml"), String::from(&doc[1..]));
 
     let doc = r#"
-Loads a value from the `path` file in the JSON format.
+Loads a value from the `path` file in the [JSON](https://en.wikipedia.org/wiki/JSON) format.
 
 This function returns the loaded value if an error doesn't occur while this operation, otherwise
 an error with the `"io"` error kind or the `"json"` kind error.
@@ -1520,7 +1541,7 @@ an error with the `"io"` error kind or the `"json"` kind error.
     doc_root_mod.add_var(String::from("loadjson"), String::from(&doc[1..]));
 
     let doc = r#"
-Saves the `X` value to the `path` file in the JSON format.
+Saves the `X` value to the `path` file in the [JSON](https://en.wikipedia.org/wiki/JSON) format.
 
 This function returns `true` if an error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind or the `"json"` error kind.
