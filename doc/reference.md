@@ -417,9 +417,10 @@ The syntax of expression of unary operator is:
 The `-` operator negates the number or the matrix.
 
 The `.-` operator recursively negates the floating-point numbers and/or the matrices. One element or
-one field is ignored if it isn't a floating-point number, a matrix, an array, or a structure. The
-operand can be a number, a matrix, an array, or a structure. If the operand is an integer number,
-the operand is converted to a floating-point number and then is negated.
+one field is ignored if it isn't a floating-point number, a matrix, an array, or a structure and
+one operand is an array or a structure. The operand can be a number, a matrix, an array, or a
+structure. If the operand is an integer number, the operand is converted to a floating-point number
+and then is negated.
 
 The `not` operator converts the operand to a boolean value and then negates the boolean
 value.
@@ -462,7 +463,7 @@ matrix.
 
 The `+` operator adds the number or matrix to the number or the matrix. Also, two strings, two arrays,
 two structures can be added by this operator. If two fields in two structures have same field
-idendifier, the field from the first expression assigns to a field of result structure.
+idendifier, the field from the first operand assigns to a field of result structure.
 
 The `.+` operator adds the number or the elements of matrix to the number or the elements of matrix.
 
