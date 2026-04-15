@@ -11,6 +11,77 @@ use crate::mod_node::*;
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"
+Standard library that is a basic library for the Unlab scripting language.
+
+This library contains basic functions to operate on numbers, matrices, arrays, structures, and
+other objects. Also, this library allows access to system operations by providing system
+functions. Functions to testing also are provided by this library.
+
+# Values and objects
+
+Value types are:
+
+- none
+- boolean
+- integer number
+- floating-point number
+- reference to immutable object
+- strong reference to mutable object
+- weak reference to mutable object
+
+Immutable object types are:
+
+- string
+- integer range
+- floating-point range
+- matrix
+- function
+- matrix array
+- matrix row slice
+- error
+- window identifier
+
+Mutable objects are:
+
+- array
+- structure
+
+Indexable object types are:
+
+- string
+- matrix array
+- matrix row slice
+- array
+- structure
+
+Iterable object types are:
+
+- string
+- integer range
+- floating-point range
+- matrix array
+- matrix row slice
+- array
+
+# Mathematical functions
+
+A mathematical function with one argument recursivaly performs an operation on floating-point
+number and/or matrices. One element or one field is ignored if it isn't floating-point number,
+matrix, or mutable object and one argument is a mutable object.
+
+A mathematical function with two arguments recursively performs an operation on floating-point
+number and/or matrices. Two elements or two fields are compares with types if they aren't 
+floating-point numbers, matrices, or mutable object and two arguments are mutable objects. If two
+elements or two fields aren't equal, an error occurs. One element or one field is ignored if it
+isn't a floating-point number, a matrix, or a mutable object; one argument is a mutable object;
+and other argument is a number.
+"#;
+    match doc_root_mod.value() {
+        Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
+        None => doc_root_mod.set_value(Some(String::from(&doc[1..]))),
+    }
+    
+    let doc = r#"
 A $\pi$ number.
 "#;
     sig_root_mod.add_var(String::from("pi"), Sig::Var);
