@@ -15,7 +15,8 @@ Standard library that is a basic library for the Unlab scripting language.
 
 This library contains basic functions to operate on numbers, matrices, arrays, structures, and
 other objects. Also, this library allows access to system operations by providing system
-functions. Functions to testing also are provided by this library.
+functions. Functions to running scripts, loading libraries, and testing also are provided by this
+library.
 
 # Values and objects
 
