@@ -1550,8 +1550,9 @@ Returns the elapsed time in milliseconds since an interpreter start.
 Imports the module with the `modname` name in the current module.
 
 If the `newident` identifier is passed, the module is imported as module with the `newident`
-identifier. The `modname` module should contain the module identifiers which are separated by the
-`::` character sequence. The `modname` name can have the `::` prefix.
+identifier. The `modname` name should contain the module identifiers which are separated by the
+`::` character sequence. The first module identifier in the `modname` name can be the `root`
+keyword that refers to the root module. The `modname` name can have the `::` prefix.
 "#;
     sig_root_mod.add_var(String::from("usemod"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("modname")),
@@ -1563,7 +1564,8 @@ identifier. The `modname` module should contain the module identifiers which are
 Imports all modules from the module with the `modname` name in the current module.
 
 The `modname` name should contain the module identifiers which are separated by the `::` 
-character sequence. The `modname` name can have the `::` prefix.
+character sequence.  The first module identifier in the `modname` name can be the `root` keyword
+that refers to the root module. The `modname` name can have the `::` prefix.
 "#;
     sig_root_mod.add_var(String::from("usemods"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("modname"))
@@ -1575,8 +1577,9 @@ Imports the module with the `varname` name in the current module.
 
 If the `newident` identifier is passed, the variable is imported as module with the `newident`
 identifier. The `varname` name should contain the module identifiers and/or the variable 
-identifier which are separated by the `::` character sequence. The `modname` name can have the
-`::` prefix.
+identifier which are separated by the `::` character sequence. The first module identifier in the
+`varname` name can be the `root` keyword that refers to the root module. The `varname` name can
+have the `::` prefix.
 "#;
     sig_root_mod.add_var(String::from("usevar"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("varname")),
@@ -1588,7 +1591,8 @@ identifier which are separated by the `::` character sequence. The `modname` nam
 Imports all variables from the module with the `modname` name in the current module.
 
 The `modname` name should contain the module identifiers which are separated by the `::` 
-character sequence. The `modname` name can have the `::` prefix.
+character sequence.  The first module identifier in the `modname` name can be the `root`
+keyword that refers to the root module. The `modname` name can have the `::` prefix.
 "#;
     sig_root_mod.add_var(String::from("usevars"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("modname"))
