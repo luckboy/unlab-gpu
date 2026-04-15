@@ -79,9 +79,9 @@ and other argument is a number.
 
 # TOML format and JSON format
 
-The functions to loading values and saving values for the
+This library contains the following functions to loading values and saving values for the
 [TOML](https://en.wikipedia.org/wiki/TOML) format and the
-[JSON](https://en.wikipedia.org/wiki/JSON) format are:
+[JSON](https://en.wikipedia.org/wiki/JSON) format:
 
 - [`loadtoml`](#var.loadtoml)
 - [`savetoml`](#var.savetoml)
