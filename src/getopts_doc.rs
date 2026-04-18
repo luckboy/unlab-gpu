@@ -24,13 +24,13 @@ option array contains the following elements:
 - short option name that is one character
 - long option name that can be empty string
 - description
-- hint that can be empty string and is used in place of the option argument in the usage
-  (optional)
-- flag of the option argument are (optional):
-  - `"yes"` - option argument is required (default for hint that isn't empty)
-  - `"no"` - no option argument (default for hint that is empty)
+- hint that is used in place of the option argument in the usage
+  (optional) (default: empty string)
+- flag of the option argument can have the following values (optional):
+  - `"yes"` - option argument is required (default for hint that isn't empty string)
+  - `"no"` - no option argument (default for hint that is empty string)
   - `"maybe"` - option argument is optional
-- flag of the option occurence are (optional):
+- flag of the option occurence can have the following values (optional):
   - `"req"` - option can occur once
   - `"optional"` - option can occur at most once (default)
   - `"multi"` - option can occur zero or more times
@@ -46,11 +46,12 @@ Parses the arguments for the `opts` options.
 The `args` arguments are parsed if the `args` arguments are passed. This function returns a
 structure with the following fields:
 
-- `opts` - structure with options as fields
+- `opts` - structure with option fields which have option names as field identifiers
 - `free` - free arguments as array
 
-All `-` characters in the identifiers of option fields of result are replaced to the `_`
-characters. The option field of result is array of option arguments if the option is matched by
+The option name can be long option name if long option name isn't an empty string, otherwise short 
+option name. All `-` characters in the identifiers of option fields of result are replaced by the
+`_` characters. The option field of result is array of option arguments if the option is matched by
 this function, otherwise `none`.
 
 # Examples
