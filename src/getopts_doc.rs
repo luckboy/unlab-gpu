@@ -52,7 +52,7 @@ structure with the following fields:
 The option name can be long option name if long option name isn't an empty string, otherwise short 
 option name. All `-` characters in the identifiers of option fields of result are replaced by the
 `_` characters. The option field of result is array of option arguments if the option is matched by
-this function, otherwise `none`.
+this function, otherwise `none`. This function can return an error with the `getopts` error kind.
 
 # Examples
 
@@ -61,7 +61,7 @@ opts = .[.]
 push(opts, .[ "a", "abc", "Abc option" .])
 push(opts, .[ "d", "def", "Def option", "FILE" .])
 push(opts, .[ "g", "ghi", "Ghi option" .])
-println(getopts(opts, .[ "-a", "--def", "file.txt" .]))
+println(getopts(opts, .[ "-a", "--def", "file.txt" .])?)
 ```
 "#;
     sig_root_mod.add_var(String::from("getopts"), Sig::BuiltinFun(vec![
