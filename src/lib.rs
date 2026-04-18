@@ -45,6 +45,7 @@ pub mod env;
 pub mod error;
 pub mod fs;
 pub mod getopts;
+pub mod getopts_doc;
 pub mod home;
 pub mod interp;
 pub mod intr;

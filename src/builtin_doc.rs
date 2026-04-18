@@ -7,6 +7,7 @@
 //
 use crate::doc::*;
 use crate::mod_node::*;
+use crate::getopts_doc::*;
 
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
@@ -1869,4 +1870,6 @@ Adds the current module to the test suites.
 "#;
     sig_root_mod.add_var(String::from("tests"), Sig::BuiltinFun(vec![]));
     doc_root_mod.add_var(String::from("tests"), String::from(&doc[1..]));
+
+    add_getopts_doc(sig_root_mod, doc_root_mod);
 }
