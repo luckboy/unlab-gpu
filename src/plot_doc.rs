@@ -21,6 +21,24 @@ functions which are:
 - [`histogram`](#var.histogram)
 - [`hist`](#var.hist)
 
+The `chart` chart description can contain for example axes and a title. The fields of chart
+description are:
+
+- `title` - the chart title (optional)
+- `x` - the $X$ axis can be:
+  - the array with two elements which are a range of $X$ axis for the 2D chart or the 3D chart
+  - the iterable object with the values for the histogram
+- `y` - the $Y$ axis can be the array with two elements which are a range of $Y$ axis for all
+  charts
+- `z` - the $Z$ axis can be the array with two elements which are a range of $Z$ axis for the 3D
+  chart
+- `windowid` - the window identifier (optional)
+- `haswindow` - if this field has the convertible value to `true`, the window with the chart is
+  shown (default: true) (optional)
+- `file` - the path to the image file with the chart (supported formats are: PNG, SVG) (optional)
+- `size` - the array with two elements which are width and height in pixels (default: 640x480)
+  (optional)
+
 The series represents date that is plotted in a chart as for example a line, points, or a surface
 with same color. Also, series can have series string that consists of the series kind, the color,
 and the label. The syntax of series string is:
