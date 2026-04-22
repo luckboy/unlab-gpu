@@ -21,8 +21,9 @@ functions which are:
 - [`histogram`](#var.histogram)
 - [`hist`](#var.hist)
 
-The series represents date that is related to each other. Also, series can have series string that
-consists of series kind, color, and label. The syntax of series string is:
+The series represents date that is plotted in a chart as for example a line, points, or a surface
+with same color. Also, series can have series string that consists of the series kind, the color,
+and the label. The syntax of series string is:
 
 ```
 series string = [series kind], [series color], [",", label]
@@ -52,7 +53,17 @@ The series color can be:
 - `k` - black
 - `w` - white
 
-The label is separated from the series kind and the series color by comma. 
+If the series color isn't passed in the series string, the default series color is used from the
+following colors in order for the specified series:
+
+- red
+- blue
+- green
+- cyan
+- yellow
+- magenta
+
+The label is separated from the series kind and the series color by comma character. 
 "#;
     match doc_root_mod.value() {
         Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
