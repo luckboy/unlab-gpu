@@ -58,6 +58,8 @@ pub mod pkg;
 pub mod pkg_cmds;
 #[cfg(feature = "plot")]
 pub mod plot;
+#[cfg(feature = "plot")]
+pub mod plot_doc;
 pub mod tester;
 pub mod tree;
 pub mod utils;

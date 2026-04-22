@@ -6,8 +6,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use crate::doc::*;
-use crate::mod_node::*;
 use crate::getopts_doc::*;
+use crate::mod_node::*;
+#[cfg(feature = "plot")]
+use crate::plot_doc::*;
 
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
@@ -1872,4 +1874,6 @@ Adds the current module to the test suites.
     doc_root_mod.add_var(String::from("tests"), String::from(&doc[1..]));
 
     add_getopts_doc(sig_root_mod, doc_root_mod);
+    #[cfg(feature = "plot")]
+    add_plot_doc(sig_root_mod, doc_root_mod);
 }

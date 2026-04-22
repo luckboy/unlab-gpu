@@ -13,7 +13,8 @@ pub fn add_getopts_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut M
     let doc = r#"
 # Getopts functions
 
-This library contains the getopts functions which are:
+The getopts functions allow to parse arguments and create usage for options. This library contains
+the getopts functions which are:
 
 - [`getopts`](#var.getopts)
 - [`getoptsusage`](#var.getoptsusage)
