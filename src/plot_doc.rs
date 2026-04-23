@@ -40,8 +40,9 @@ description are:
   (optional)
 
 The series represents date that is plotted in a chart as for example a line, points, or a surface
-with same color. Also, series can have series string that consists of the series kind, the color,
-and the label. The syntax of series string is:
+with same color. The `Xi` data, the `Yi` data, and the `Zi` data of the series should be iterable
+objects. Also, series can have series string that consists of the series kind, the color, and the
+label. The syntax of series string is:
 
 ```
 series string = [series kind], [series color], [",", label]
@@ -56,9 +57,9 @@ The series kind can be:
 - `x` - cross
 - `.` - point
 - `^` - triangle
-- `sxy` - surface on a $X$ axis and an $Y$ axis.
-- `sxz` - surface on a $X$ axis and a $Z$ axis.
-- `syz` - surface on an $Y$ axis and a $Z$ axis.
+- `sxy` - surface on the $X$ axis and the $Y$ axis
+- `sxz` - surface on the $X$ axis and the $Z$ axis
+- `syz` - surface on the $Y$ axis and the $Z$ axis
 
 The series color can be:
 
@@ -124,31 +125,20 @@ plot(chart, -1.0 to 1.0 by 0.02, f, ",x^2")?
 Draws the 3D chart on the window and/or saves to the file.
 
 The series consists of the `Xi` values, the `Yi` values, the `Zi` values, and the `si` series
-string. Two functions with one argument can be two of arguments for line series. The surface
-object with the rows and the columns can be:
+string. Two functions with one argument can be two of arguments for line series. One function with
+two arguments can be one argument for surface series. The surface object with the rows and the
+columns or the surface function can be:
 
-- the `Z` object for the surface on a $X$ axis and an $Y$ axis
-- the `Y` object for the surface on a $X$ axis and a $Z$ axis
-- the `X` object for the surface on an $Y$ axis and a $Z$ axis
+- the `Z` object for the surface on the $X$ axis and the $Y$ axis
+- the `Y` object for the surface on the $X$ axis and the $Z$ axis
+- the `X` object for the surface on the $Y$ axis and the $Z$ axis
 
-The columns and the rows of surface object are:
+The columns or the first argument of surface function and the rows of surface object or the second
+argument of surface function are:
 
-- the `X` values and the `Y` values for the surface on a $X$ axis and an $Y$ axis
-- the `X` values and the `Z` values for the surface on a $X$ axis and a $Z$ axis
-- the `Y` values and the `Z` values for the surface on an $Y$ axis and a $Z$ axis
-
-One function with two arguments can be one argument for surface series. The surface function can
-be:
-
-- the `Z` function for the surface on a $X$ axis and an $Y$ axis
-- the `Y` function for the surface on a $X$ axis and a $Z$ axis
-- the `X` function for the surface on an $Y$ axis and a $Z$ axis
-
-Two arguments of surface function are:
-
-- the `X` values and the `Y` values for the surface on a $X$ axis and an $Y$ axis
-- the `X` values and the `Z` values for the surface on a $X$ axis and a $Z$ axis
-- the `Y` values and the `Z` values for the surface on an $Y$ axis and a $Z$ axis
+- the `X` values and the `Y` values for the surface on the $X$ axis and the $Y$ axis
+- the `X` values and the `Z` values for the surface on the $X$ axis and the $Z$ axis
+- the `Y` values and the `Z` values for the surface on the $Y$ axis and the $Z$ axis
 
 This function can return an error with the `plot` error kind.
 
