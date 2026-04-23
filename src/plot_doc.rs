@@ -26,12 +26,15 @@ description are:
 
 - `title` - the chart title (optional)
 - `x` - the $X$ axis can be:
-  - the array with two elements which are a range of $X$ axis for the 2D chart or the 3D chart
+  - the array with two elements which are a floating-point range of $X$ axis for the 2D chart or
+    the 3D chart
   - the iterable object with the values for the histogram
-- `y` - the $Y$ axis can be the array with two elements which are a range of $Y$ axis for all
-  charts
-- `z` - the $Z$ axis can be the array with two elements which are a range of $Z$ axis for the 3D
-  chart
+- `y` - the $Y$ axis can be:
+  - the array with two elements which are a floating-point range of $Y$ axis for the 2D chart or
+    the 3D chart
+  - the array with two elements which are an unsigned integer range of $Y$ axis for the histogram
+- `z` - the $Z$ axis can be the array with two elements which are a floating-point range of $Z$
+  axis for the 3D chart
 - `windowid` - the window identifier (optional)
 - `haswindow` - if this field has the convertible value to `true`, the window with the chart is
   shown (default: true) (optional)
@@ -40,12 +43,18 @@ description are:
   (optional)
 
 The series represents date that is plotted in a chart as for example a line, points, or a surface
-with same color. The `Xi` data, the `Yi` data, and the `Zi` data of the series should be iterable
-objects. Also, series can have series string that consists of the series kind, the color, and the
-label. The syntax of series string is:
+with same color. Also, the series can have series a string that consists of the series kind, the
+color, and the label. The syntax of series string is:
 
 ```
 series string = [series kind], [series color], [",", label]
+```
+
+Also, the histogram series can have a string that consists of the color and the label. The syntax
+of histogram series string is:
+
+```
+histogram series string = [series color], [",", label]
 ```
 
 The series kind can be:
@@ -92,9 +101,9 @@ The label is separated from the series kind and the series color by comma charac
     let doc = r#"
 Draws the 2D chart on the window and/or saves to the file.
 
-The series consists of the `Xi` values, the `Yi` values, and the `si` series string. One function
-with one argument can be one of arguments for series. This function can return an error with the
-`plot` error kind.
+The series consists of the `Xi` object, the `Yi` object, and the `si` series string. The `Xi`
+object and the `Yi` object can be iterable objects. One function with one argument can be one of
+objects for series. This function can return an error with the `plot` error kind.
 
 # Examples
 
@@ -124,10 +133,11 @@ plot(chart, -1.0 to 1.0 by 0.02, f, ",x^2")?
     let doc = r#"
 Draws the 3D chart on the window and/or saves to the file.
 
-The series consists of the `Xi` values, the `Yi` values, the `Zi` values, and the `si` series
-string. Two functions with one argument can be two of arguments for line series. One function with
-two arguments can be one argument for surface series. The surface object with the rows and the
-columns or the surface function can be:
+The series consists of the `Xi` object, the `Yi` object, the `Zi` object, and the `si` series
+string. The `Xi` object, the `Yi` object, and the `Zi` object can be iterable objects. Two
+functions with one argument can be two of arguments for line series. One function with two
+arguments can be one argument for surface series. The surface object with the rows and the columns
+or the surface function can be:
 
 - the `Z` object for the surface on the $X$ axis and the $Y$ axis
 - the `Y` object for the surface on the $X$ axis and the $Z$ axis
@@ -188,8 +198,8 @@ plot3(chart, -3.0 to 3.0 by 0.1, f, -3.0 to 3.0 by 0.1, "sxz,surface")?
     let doc = r#"
 Draws the histogram on the window and/or saves to the file.
 
-The series consists of the `di` data and the `si` series string. The `di` data should be an array.
-The element in the array can be:
+The series consists of the `di` data and the `si` series string. The `di` data should be an
+iterable object. The element in the iterable object can be:
 
 - boolean value
 - integer number 
