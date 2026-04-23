@@ -137,14 +137,14 @@ The series consists of the `Xi` object, the `Yi` object, the `Zi` object, and th
 string. The `Xi` object, the `Yi` object, and the `Zi` object can be iterable objects. Two
 functions with one argument can be two of arguments for line series. One function with two
 arguments can be one argument for surface series. The surface object with the rows and the columns
-or the surface function can be:
+or the surface function with two arguments can be:
 
 - the `Z` object for the surface on the $X$ axis and the $Y$ axis
 - the `Y` object for the surface on the $X$ axis and the $Z$ axis
 - the `X` object for the surface on the $Y$ axis and the $Z$ axis
 
-The columns or the first argument of surface function and the rows of surface object or the second
-argument of surface function are:
+The columns of surface object or the first argument of surface function and the rows of surface
+object or the second argument of surface function are:
 
 - the `X` values and the `Y` values for the surface on the $X$ axis and the $Y$ axis
 - the `X` values and the `Z` values for the surface on the $X$ axis and the $Z$ axis
