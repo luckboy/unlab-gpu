@@ -954,6 +954,18 @@ fn create_f32_range(value: &Value) -> Result<Range<f32>>
                         Some(elem) => elem.to_f32(),
                         None => return Err(Error::Interp(String::from("no element for range"))),
                     };
+                    if start.is_nan() {
+                        return Err(Error::Interp(String::from("range start is nan")));
+                    }
+                    if start.is_infinite() {
+                        return Err(Error::Interp(String::from("range start is infinite")));
+                    }
+                    if end.is_nan() {
+                        return Err(Error::Interp(String::from("range end is nan")));
+                    }
+                    if end.is_infinite() {
+                        return Err(Error::Interp(String::from("range end is infinite")));
+                    }
                     Ok(start..end)
                 },
                 _ => Err(Error::Interp(String::from("unsupported type for range"))),
