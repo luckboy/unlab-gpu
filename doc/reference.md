@@ -553,7 +553,7 @@ Expressions and operators with arities and priorities are:
 | parenthesis            |                | 12       |
 | literal                |                | 12       |
 | name                   |                | 12       |
-| function appliaction   |                | 11       |
+| function application   |                | 11       |
 | `[]`                   | binary         | 11       |
 | `.`                    | binary         | 11       |
 | `?`                    | unary          | 10       |
