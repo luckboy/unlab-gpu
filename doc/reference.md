@@ -531,8 +531,8 @@ The syntax of range expression is:
     range expression = expression, "to", expression, ["by", expression];
 
 The range expression creates a range. The operands in the range expression must be numbers. The range
-is a floating-point range if at least one operand is floating-point number, otherwise an
-integer range.
+is a floating-point range if at least one operand is floating-point number, otherwise an integer
+range. If the operand isn't passed, the step of range expression is one.
 
 ### Expressions of propagation error
 
