@@ -364,7 +364,9 @@ The syntax of return statement is:
 
 The return statement leaves from a function and then the function returns a value of expression or the
 `None` value if the expression isn't passed. If the return statement is used outside a function, the
-error occurs.
+error occurs. If the return statement is the last interpred stetement in the function, the return
+statement can be replaced by the expression. If the last interpreted statement in the function is the
+assignment statement, the return statement  without the expression can be omitted.
 
 ### Quit statements
 
@@ -532,7 +534,7 @@ The syntax of range expression is:
 
 The range expression creates a range. The operands in the range expression must be numbers. The range
 is a floating-point range if at least one operand is floating-point number, otherwise an integer
-range. If the operand isn't passed, the step of range expression is one.
+range. If the third operand isn't passed, the step of range expression is one.
 
 ### Expressions of propagation error
 
