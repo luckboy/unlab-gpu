@@ -47,7 +47,7 @@ can be runned by invoke the following command in the interactive mode:
 unlab-gpu
 ```
 
-The sample interaction in the interactive mode is:
+The sample interaction in the interactive mode is here:
 
 ```
 unlab-gpu:1> println("Hello world!!!")
@@ -76,11 +76,12 @@ unlab-gpu script.un
 ## Basic values
 
 Basic values in the Unlab scripting language are represented by numbers, matrices, and strings.
+Operators in the Unlab scripting language operates on the basic values.
 
 ### Numbers
 
 Numbers in this scripting language can be integer numbers or floating-point numbers. The sample
-integer numbers are:
+integer numbers are here:
 
 ```unlab
 1234
@@ -88,7 +89,8 @@ integer numbers are:
 0
 ```
 
-Also, the integer numbers can be in hexadecimal system. The sample integer in hexadecimal system are:
+Also, the integer numbers can be in hexadecimal system. The sample integer in hexadecimal system are
+here:
 
 ```unlab
 0x12ab
@@ -96,7 +98,7 @@ Also, the integer numbers can be in hexadecimal system. The sample integer in he
 0xffff
 ```
 
-The sample floating-point numbers are:
+The sample floating-point numbers are here:
 
 ```unlab
 12.34
@@ -110,8 +112,8 @@ The sample floating-point numbers are:
 
 ### Matrices
 
-Matrices in this scripting language are 2-D arrays which contains floating-point numbers. The sample
-matrix is:
+Matrices in this scripting language are 2D arrays which contains floating-point numbers. The sample
+matrix is here:
 
 ```unlab
 [
@@ -120,10 +122,34 @@ matrix is:
 ]
 ```
 
-Matrix also can be written in one line. The sample matrices in one line are:
+The matrix also can be written in one line. The sample matrices in one line are here:
 
 ```unlab
 [1, 2, 3; 4, 5, 6]
 [1, 1.5; 2, 2.5; 3, 3.5]
 [1, 2; 3, 4]
+```
+
+The matrices can have the filled rows with the floating-point numbers and be filled with the rows. The
+sample matrices with the filled rows with the floating-point numbers are here:
+
+```unlab
+[
+    1 fill 3
+    2, 3, 4
+    5 fill 3
+]
+[1 fill 3; 2, 3, 4; 5 fill 3]
+[1.5 fill 2; 2.5 fill 2; 3, 3.5]
+```
+
+The sample filled matrices with the rows are here:
+
+```unlab
+[
+    1, 2, 3
+    fill 3
+]
+[1, 2, 3; fill 3]
+[1 fill 2; fill 3]
 ```
