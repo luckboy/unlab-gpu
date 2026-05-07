@@ -646,7 +646,7 @@ The syntax of matrix literal is:
 
 The matrix or the matrix row can be filled with the filling matrix or the filling expression by using
 the `fill` keyword. The filling matrix row or the filling expression is separately evaluated for each
-matrix row and each element. The expression after the `fill` keyword specifies the number of rows for
+matrix row or each element. The expression after the `fill` keyword specifies the number of rows for
 the filled matrix or the number of columns for the filled matrix row. Each element of matrix literal
 must be a number that is converted to floating-point number. If this element isn't a number, an error
 occurs.
