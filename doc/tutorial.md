@@ -47,7 +47,7 @@ can be runned by invoke the following command in the interactive mode:
 unlab-gpu
 ```
 
-The sample interaction in the interactive mode:
+The sample interaction in the interactive mode is:
 
 ```
 unlab-gpu:1> println("Hello world!!!")
@@ -60,7 +60,9 @@ unlab-gpu:5> println(f(2))
 unlab-gpu:6> quit
 ```
 
-You can leave from the interpreter by invoke the `quit` command.
+You can leave from the interpreter by invoke the `quit` command. If you want to browse the standard
+documentation, you can run the `doc()` command or the `help()` command to browse the standard
+documentation.
 
 ### Non-interactive mode
 
@@ -69,4 +71,59 @@ can be runned by invoke the following command in the non-interactive mode for th
 
 ```
 unlab-gpu script.un
+```
+
+## Basic values
+
+Basic values in the Unlab scripting language are represented by numbers, matrices, and strings.
+
+### Numbers
+
+Numbers in this scripting language can be integer numbers or floating-point numbers. The sample
+integer numbers are:
+
+```unlab
+1234
+-1234
+0
+```
+
+Also, the integer numbers can be in hexadecimal system. The sample integer in hexadecimal system are:
+
+```unlab
+0x12ab
+0XABCD
+0xffff
+```
+
+The sample floating-point numbers are:
+
+```unlab
+12.34
+-12.34
+0.56
+1.234e-5
+1.234e+5
+2e10
+0.0
+```
+
+### Matrices
+
+Matrices in this scripting language are 2-D arrays which contains floating-point numbers. The sample
+matrix is:
+
+```unlab
+[
+    1, 2, 3
+    4, 5, 6
+]
+```
+
+Matrix also can be written in one line. The sample matrices in one line are:
+
+```unlab
+[1, 2, 3; 4, 5, 6]
+[1, 1.5; 2, 2.5; 3, 3.5]
+[1, 2; 3, 4]
 ```
