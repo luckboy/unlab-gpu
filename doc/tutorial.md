@@ -130,26 +130,92 @@ The matrix also can be written in one line. The sample matrices in one line are 
 [1, 2; 3, 4]
 ```
 
-The matrices can have the filled rows with the floating-point numbers and be filled with the rows. The
-sample matrices with the filled rows with the floating-point numbers are here:
+The matrices can have the filled rows with the filling floating-point numbers and be filled with the
+filling rows by using the `fill` keyword. The `=` character is used to assign a value to a variable.
+You can try how the matrix rows are filled with the filling floating-point number by enter the
+following lines to the interpreter:
 
 ```unlab
-[
+A = [
     1 fill 3
     2, 3, 4
     5 fill 3
 ]
-[1 fill 3; 2, 3, 4; 5 fill 3]
-[1.5 fill 2; 2.5 fill 2; 3, 3.5]
+B = [1 fill 3;  2 fill 3; 3, 4, 5]
+C = [1.5 fill 2; 2.5 fill 2; 3, 3.5]
+println("A = ", A)
+println("B = ", B)
+println("C = ", C)
 ```
 
-The sample filled matrices with the rows are here:
+The output of the above lines is here:
+
+```
+A = [
+              1           1           1
+              2           3           4
+              5           5           5
+]
+B = [
+              1           1           1
+              2           2           2
+              3           4           5
+]
+C = [
+         1.5000      1.5000
+         2.5000      2.5000
+              3      3.5000
+]
+```
+
+You can try how the filled matrices are filled with the filling row by enter the following lines to
+the interpreter:
 
 ```unlab
-[
+A = [
     1, 2, 3
     fill 3
 ]
-[1, 2, 3; fill 3]
-[1 fill 2; fill 3]
+B = [3, 2, 1; fill 3]
+C = [1 fill 2; fill 3]
+println("A = ", A)
+println("B = ", B)
+println("C = ", C)
+```
+
+The output of the above lines is here:
+
+```
+A = [
+              1           2           3
+              1           2           3
+              1           2           3
+]
+B = [
+              3           2           1
+              3           2           1
+              3           2           1
+]
+C = [
+              1           1
+              1           1
+              1           1
+]
+```
+
+The filling row or the filling expression is separately evaluated for each matrix row or each element.
+You can use it for example generation of random matrix by enter the following lines to the
+interpreter:
+
+```unlab
+println([rand() fill 3; fill 2])
+```
+
+The output of the above lines is here:
+
+```
+[
+         0.8534      0.4617      0.9736
+         0.7208      0.5610      0.1972
+]
 ```
