@@ -304,8 +304,7 @@ The output of the above lines is here:
 5 / 2 = 2
 ```
 
-These operators also can operate floating-point numbers. You can try how these operators work on the
-floating-point numbers by enter the following lines to the interpreter:
+These operators also can operate on floating-point numbers. You can try how these operators work on the floating-point numbers by enter the following lines to the interpreter:
 
 ```unlab
 println("-1.0 = ", -1.0)
@@ -323,4 +322,285 @@ The output of the above lines is here:
 5.0 - 2.0 = 3
 2.0 * 3.0 = 6
 5.0 / 2.0 = 2.5000
+```
+
+These operators also can operates on matrices except the `/` division operator. The multiplication two
+matrices works as in linear algebra. You can try how these operators work on the matrices by enter the
+following lines to the interpreter:
+
+```unlab
+A = [1, 2, 3; 4, 5, 6]
+B = [4, 5, 6; 7, 8, 9]
+C = [9, 8, 7; 6, 5, 4]
+D = [8, 7; 6, 5; 4, 3]
+println("-A = ", -A)
+println("A + B = ", A + B)
+println("C - A = ", C - A)
+println("A * D = ", A * D)
+```
+
+The output of the above lines is here:
+
+```
+-A = [
+             -1          -2          -3
+             -4          -5          -6
+]
+A + B = [
+              5           7           9
+             11          13          15
+]
+C - A = [
+              8           6           4
+              2           0          -2
+]
+A * D = [
+             32          26
+             86          71
+]
+```
+
+You can used these operators for the matrices and numbers. You can try how these operators work on
+the matrices and the numbers by enter the following lines to the interpreter:
+
+```unlab
+A = [1, 2, 3; 4, 5, 6]
+println("A + 2 = ", A + 2)
+println("A - 2 = ", A - 2)
+println("A * 3 = ", A * 3)
+println("A / 3 = ", A / 3)
+println("3 + A = ", 3 + A)
+println("3 - A = ", 3 - A)
+println("2 * A = ", 2 * A)
+```
+
+The output of the above lines is here:
+
+```
+A + 2 = [
+              3           4           5
+              6           7           8
+]
+A - 2 = [
+             -1           0           1
+              2           3           4
+]
+A * 3 = [
+              3           6           9
+             12          15          18
+]
+A / 3 = [
+         0.3333      0.6667           1
+         1.3333      1.6667           2
+]
+3 + A = [
+              4           5           6
+              7           8           9
+]
+3 - A = [
+              2           1           0
+             -1          -2          -3
+]
+2 * A = [
+              2           4           6
+              8          10          12
+]
+```
+
+Also, you can use the arithmetic operators with the dot character which operates on elements of
+matrices instead of the matrices. You can try how these operators work on the matrices by enter the
+following lines to the interpreter:
+
+```unlab
+A = [1, 2, 3; 4, 5, 6]
+B = [4, 5, 6; 7, 8, 9]
+C = [9, 8, 7; 6, 5, 4]
+println(".-A = ", .-A)
+println("A .+ B = ", A .+ B)
+println("C .- A = ", C .- A)
+println("A .* B = ", A .* B)
+println("A ./ B = ", A ./ B)
+```
+
+The output of the above lines is here:
+
+```
+.-A = [
+             -1          -2          -3
+             -4          -5          -6
+]
+A .+ B = [
+              5           7           9
+             11          13          15
+]
+C .- A = [
+              8           6           4
+              2           0          -2
+]
+A .* B = [
+              4          10          18
+             28          40          54
+]
+A ./ B = [
+         0.2500      0.4000      0.5000
+         0.5714      0.6250      0.6667
+]
+```
+
+The arithmetic operators with the dot character can operates the matrices and the numbers. You can try
+how these operators work on the matrices and the numbers by enter the following lines to the
+interpreter:
+
+```unlab
+A = [1, 2, 3; 4, 5, 6]
+println("A .+ 2 = ", A .+ 2)
+println("A .- 2 = ", A .- 2)
+println("A .* 3 = ", A .* 3)
+println("A ./ 3 = ", A ./ 3)
+println("3 .+ A = ", 3 .+ A)
+println("3 .- A = ", 3 .- A)
+println("2 .* A = ", 2 .* A)
+println("2 ./ A = ", 2 ./ A)
+```
+
+The output of the above lines is here:
+
+```
+A .+ 2 = [
+              3           4           5
+              6           7           8
+]
+A .- 2 = [
+             -1           0           1
+              2           3           4
+]
+A .* 3 = [
+              3           6           9
+             12          15          18
+]
+A ./ 3 = [
+         0.3333      0.6667           1
+         1.3333      1.6667           2
+]
+3 .+ A = [
+              4           5           6
+              7           8           9
+]
+3 .- A = [
+              2           1           0
+             -1          -2          -3
+]
+2 .* A = [
+              2           4           6
+              8          10          12
+]
+2 ./ A = [
+              2           1      0.6667
+         0.5000      0.4000      0.3333
+]
+```
+
+Two strings can be concatated by using the `+` addition operator. You can concatenate two strings by enter the following line to the interpreter:
+
+```unlab
+println("abc" + "def")
+```
+
+The output of the above line is here:
+
+```
+abcdef
+```
+
+### Comparison operators
+
+Comparison operators are used to compare two numbers. The integer numbers and the floating-point
+numbers can be compared. The boolean values are returned by the comparison operators. The compareson
+operators are:
+
+- `==` - equal
+- `!=` - not equal
+- `<` - less
+- `>=` - greater than or equal to
+- `>` - greater
+- `<=` - less than or equal to
+
+The matrices isn't compared by these operators. You can try how these operators work on the integer
+numbers by enter the following lines to the interpreter:
+
+```unlab
+println("2 == 3 = ", 2 == 3)
+println("2 == 2 = ", 2 == 2)
+println("2 != 3 = ", 2 != 3)
+println("2 != 2 = ", 2 != 2)
+println("2 < 3 = ", 2 < 3)
+println("2 >= 3 = ", 2 >= 3)
+println("2 > 3 = ", 2 > 3)
+println("2 <= 3 = ", 2 <= 3)
+```
+
+The output of the above lines is here:
+
+```
+2 == 3 = false
+2 == 2 = true
+2 != 3 = true
+2 != 2 = false
+2 < 3 = true
+2 >= 3 = false
+2 > 3 = false
+2 <= 3 = true
+```
+
+You can try how these operators work on the floating-point numbers by enter the following lines to the 
+interpreter:
+
+```unlab
+println("2.0 == 3.0 = ", 2.0 == 3.0)
+println("2.0 == 2.0 = ", 2.0 == 2.0)
+println("2.0 != 3.0 = ", 2.0 != 3.0)
+println("2.0 != 2.0 = ", 2.0 != 2.0)
+println("2.0 < 3.0 = ", 2.0 < 3.0)
+println("2.0 >= 3.0 = ", 2.0 >= 3.0)
+println("2.0 > 3.0 = ", 2.0 > 3.0)
+println("2.0 <= 3.0 = ", 2.0 <= 3.0)
+```
+
+The output of the above lines is here:
+
+```
+2.0 == 3.0 = false
+2.0 == 2.0 = true
+2.0 != 3.0 = true
+2.0 != 2.0 = false
+2.0 < 3.0 = true
+2.0 >= 3.0 = false
+2.0 > 3.0 = false
+2.0 <= 3.0 = true
+```
+
+Also, two strings can be compared by these operators. You can try how these operators work on the strings by enter the following lines to the interpreter:
+
+```unlab
+println("abc == def = ", "abc" == "def")
+println("abc == abc = ", "abc" == "abc")
+println("abc != def = ", "abc" != "def")
+println("abc != abc = ", "abc" != "abc")
+println("abc < def = ", "abc" < "def")
+println("abc >= def = ", "abc" >= "def")
+println("abc > def = ", "abc" > "def")
+println("abc <= def = ", "abc" <= "def")
+```
+
+The output of the above lines is here:
+
+```
+abc == def = false
+abc == abc = true
+abc != def = true
+abc != abc = false
+abc < def = true
+abc >= def = false
+abc > def = false
+abc <= def = true
 ```
