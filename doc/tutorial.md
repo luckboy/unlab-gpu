@@ -131,9 +131,8 @@ The matrix also can be written in one line. The sample matrices in one line are 
 ```
 
 The matrices can have the filled rows with the filling floating-point numbers and be filled with the
-filling rows by using the `fill` keyword. The `=` character is used to assign a value to a variable.
-You can try how the matrix rows are filled with the filling floating-point number by enter the
-following lines to the interpreter:
+filling rows by using the `fill` keyword. You can try how the matrix rows are filled with the filling
+floating-point number by enter the following lines to the interpreter:
 
 ```unlab
 A = [
@@ -204,18 +203,124 @@ C = [
 ```
 
 The filling row or the filling expression is separately evaluated for each matrix row or each element.
-You can use it for example generation of random matrix by enter the following lines to the
+You can use it for example generation of random matrix by enter the following line to the
 interpreter:
 
 ```unlab
 println([rand() fill 3; fill 2])
 ```
 
-The output of the above lines is here:
+The output of the above line is here:
 
 ```
 [
          0.8534      0.4617      0.9736
          0.7208      0.5610      0.1972
 ]
+```
+
+Some functions from the standard library can create some matrices. These functions are the `zeros`
+function, the `ones` function, and the `eye` function. These function takes the number of rows and the number of columns except the `eye` function. The `eye` function takes one number for the rows and
+the columns. You can create a matrix with zeros and then show it by enter the following line to the
+interpreter:
+
+```unlab
+println(zeros(2, 3))
+```
+
+The output of the above line is here:
+
+```
+[
+              0           0           0
+              0           0           0
+]
+```
+
+You can create a matrix with ones and then show it by enter the following line to the interpreter:
+
+```unlab
+println(ones(2, 3))
+```
+
+The output of the above line is here:
+
+```
+[
+              1           1           1
+              1           1           1
+]
+```
+
+You can create an identity matrix and then show it by enter the following line to the interpreter:
+
+```unlab
+println(eye(3))
+```
+
+The output of the above line is here:
+
+```
+[
+              1           0           0
+              0           1           0
+              0           0           1
+]
+```
+
+### Strings
+
+Strings are texts which can be shown by the `println` function. The sample strings are here:
+
+```
+"abcdef"
+"abc123"
+"Hello world!!!"
+""
+```
+
+### Arithmentic operators
+
+Arithmentic operators allows you to execute the arithmetic operations on basic values. The arithmetic
+operators are the `-` negation operator, the `+` addition operator, the `-` subtraction operator, the
+`*` multiplication operator, and the `/` division operator. You can try how these operators work on
+the integer numbers by enter the following lines to the interpreter:
+
+```unlab
+println("-1 = ", -1)
+println("2 + 3 = ", 2 + 3)
+println("5 - 2 = ", 5 - 2)
+println("2 * 3 = ", 2 * 3)
+println("5 / 2 = ", 5 / 2)
+```
+
+The output of the above lines is here:
+
+```
+-1 = -1
+2 + 3 = 5
+5 - 2 = 3
+2 * 3 = 6
+5 / 2 = 2
+```
+
+These operators also can operate floating-point numbers. You can try how these operators work on the
+floating-point numbers by enter the following lines to the interpreter:
+
+```unlab
+println("-1.0 = ", -1.0)
+println("2.0 + 3.0 = ", 2.0 + 3.0)
+println("5.0 - 2.0 = ", 5.0 - 2.0)
+println("2.0 * 3.0 = ", 2.0 * 3.0)
+println("5.0 / 2.0 = ", 5.0 / 2.0)
+```
+
+The output of the above lines is here:
+
+```
+-1.0 = -1
+2.0 + 3.0 = 5
+5.0 - 2.0 = 3
+2.0 * 3.0 = 6
+5.0 / 2.0 = 2.5000
 ```
