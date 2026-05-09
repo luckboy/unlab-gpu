@@ -632,7 +632,7 @@ conditions or loops in the Unlab scriting language.
 
 ### Assignment statement
 
-An assignment statement allows you to assign a value to a variable or an assignable expression by
+An assignment statement allows you to assign a value to a variable or other assignable expression by
 using the `=` character. You can try how the assignment statement works by enter the following lines to the interpreter:
 
 ```unlab
