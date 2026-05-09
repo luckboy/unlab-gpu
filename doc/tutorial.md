@@ -407,7 +407,7 @@ A / 3 = [
 ]
 ```
 
-Also, you can use the arithmetic operators with the dot character which operates on elements of
+Also, you can use the arithmetic operators with the dot characters which operates on elements of
 matrices instead of the matrices. You can try how these operators work on the matrices by enter the
 following lines to the interpreter:
 
@@ -447,8 +447,8 @@ A ./ B = [
 ]
 ```
 
-The arithmetic operators with the dot character can operates the matrices and the numbers. You can try
-how these operators work on the matrices and the numbers by enter the following lines to the
+The arithmetic operators with the dot characters can operates the matrices and the numbers. You can
+try how these operators work on the matrices and the numbers by enter the following lines to the
 interpreter:
 
 ```unlab
@@ -603,4 +603,88 @@ abc < def = true
 abc >= def = false
 abc > def = false
 abc <= def = true
+```
+
+## Control flow
+
+A control flow specifies the execution order of statements. The statements can be for example
+conditions or loops in the Unlab scriting language.
+
+### Assignment statement
+
+An assignment statement allows you to assign a value to a variable or an assignable expression by
+using the `=` character. You can try how the assignment statement works by enter the following lines to the interpreter:
+
+```unlab
+x = 1234
+println("x = ", x)
+```
+
+The output of the above lines is here:
+
+```
+x = 1234
+```
+
+### If statement
+
+If you want some statements to be conditionally executed, you can use the if statement. You can try
+how the if statement works by enter the following lines to the interpreter:
+
+```unlab
+x = 1
+if x > 0
+    y = x + 1
+    println("y = ", y)
+end
+```
+
+The output of the above lines is here:
+
+```
+y = 2
+```
+
+If you want the first statements or the second statements to be executed, you can use the if statement
+with the `else` keyword. The first statements are executed if the condition is fulfilled, otherwise
+the second statements are executed. You can try how the if statement with the `else` keyword works by
+enter the following lines to the interpreter:
+
+```unlab
+x = 2
+if x == 1
+    println("x is one")
+else
+    println("x isn't one")
+end
+```
+
+The output of the above lines is here:
+
+```
+x isn't one
+```
+
+You can use the if statement for more options by using the `else` keyword and the `if` keyword. The
+condition statements are executed for the first fullfilled condition or the statements after the
+`else` keyword are executed. You can try how the if statement works for more options by enter the
+following lines to the interpreter:
+
+```unlab
+x = 3
+if x == 1
+    println("x is one")
+else if x == 2
+    println("x is two")
+else if x == 3
+    println("x is three")
+else
+    println("x has other value")
+end
+```
+
+The output of the above lines is here:
+
+```
+x is three
 ```
