@@ -312,8 +312,8 @@ The syntax of if statement is:
                    ],
                    "end";
 
-The if statement is a statement that executes the condition statement for the first fulfilled
-condition that and skips other statements with conditions. If any condition isn't fulfilled, the
+The if statement is a statement that executes the condition statements for the first fulfilled
+condition and then skips other statements with conditions. If any condition isn't fulfilled, the
 statements after the `else` keyword is executed. The condition is fulfilled if the condition
 expression can be converted to `true`.
 
