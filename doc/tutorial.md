@@ -805,7 +805,7 @@ statement. You can try how the continue statement works by enter the following l
 
 ```unlab
 for i in 1 to 10
-    if i == 5 or i == 10
+    if i == 2 or i == 5 or i == 7 or i == 10
         continue
     end
     println("i = ", i)
@@ -816,11 +816,9 @@ The output of the above lines is here:
 
 ```
 i = 1
-i = 2
 i = 3
 i = 4
 i = 6
-i = 7
 i = 8
 i = 9
 ```
