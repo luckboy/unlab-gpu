@@ -686,7 +686,7 @@ x isn't one
 ```
 
 You can use the if statement for more options by using the `else` keyword and the `if` keyword. The
-condition statements are executed for the first fullfilled condition or the statements after the
+condition statements are executed for the first fulfilled condition or the statements after the
 `else` keyword are executed. You can try how the if statement works for more options by enter the
 following lines to the interpreter:
 
@@ -707,4 +707,120 @@ The output of the above lines is here:
 
 ```
 x is three
+```
+
+### For statement
+
+A for statement is a loop that executes the specified number of times. The number of iterations is
+specified by for example the integer range. You can try how the for statement with the integer range
+works by enter the following lines to the interpreter:
+
+```unlab
+for i in 1 to 5
+    println("i = ", i)
+end
+```
+
+The output of the above lines is here:
+
+```
+i = 1
+i = 2
+i = 3
+i = 4
+i = 5
+```
+
+Also, this loop can iterate over the sequence of values. You can try how the for statement with the
+sequence works by enter the following lines to the interpreter:
+
+```unlab
+for i in .[ 1, 2, 4, 6 .]
+    println("i = ", i)
+end
+```
+
+The output of the above lines is here:
+
+```
+i = 1
+i = 2
+i = 4
+i = 6
+```
+
+This loop indeed iterates over an iterable value and executes the statements for each element of
+iterable value.
+
+### While statement
+
+A while statement is a loop that executes the statements for iterations until the condition isn't
+fulfilled. You can try the while statement by enter the following lines to the interpreter.
+
+```unlab
+i = 1
+while i <= 5
+    println("i = ", i)
+    i = i + 1
+end
+```
+
+The output of the above lines is here:
+
+```
+i = 1
+i = 2
+i = 3
+i = 4
+i = 5
+```
+
+### Break statement
+
+If you want the interpreter to leave from a loop, you can use the `break` keyword as a break
+statement. You can try how the break statement works by enter the following lines to the interpreter:
+
+```unlab
+for i in 1 to 10
+    if i == 5
+        break
+    end
+    println("i = ", i)
+end
+```
+
+The output of the above lines is here:
+
+```
+i = 1
+i = 2
+i = 3
+i = 4
+```
+
+### Continue statement
+
+If you want the interpreter to skip some iterations, you can use the `continue` keyword as a continue
+statement. You can try how the continue statement works by enter the following lines to the interpreter:
+
+```unlab
+for i in 1 to 10
+    if i == 5 or i == 10
+        continue
+    end
+    println("i = ", i)
+end
+```
+
+The output of the above lines is here:
+
+```
+i = 1
+i = 2
+i = 3
+i = 4
+i = 6
+i = 7
+i = 8
+i = 9
 ```
