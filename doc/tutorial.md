@@ -605,6 +605,26 @@ abc > def = false
 abc <= def = true
 ```
 
+### Transpose operator
+
+A transpose operator allows you to transpose the matrix. You can try how this operator work by enter
+the following lines to the interpreter:
+
+```unlab
+A = [1, 2, 3; 4, 5, 6]
+println("A' = ", A')
+```
+
+The output of the above lines is here:
+
+```
+A' = [
+              1           4
+              2           5
+              3           6
+]
+```
+
 ## Control flow
 
 A control flow specifies the execution order of statements. The statements can be for example
