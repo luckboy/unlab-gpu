@@ -718,6 +718,7 @@ works by enter the following lines to the interpreter:
 ```unlab
 for i in 1 to 5
     println("i = ", i)
+    println("i * i = ", i * i)
 end
 ```
 
@@ -725,10 +726,15 @@ The output of the above lines is here:
 
 ```
 i = 1
+i * i = 1
 i = 2
+i * i = 4
 i = 3
+i * i = 9
 i = 4
+i * i = 16
 i = 5
+i * i = 25
 ```
 
 Also, this loop can iterate over the sequence of values. You can try how the for statement with the
@@ -761,6 +767,7 @@ fulfilled. You can try the while statement by enter the following lines to the i
 i = 1
 while i <= 5
     println("i = ", i)
+    println("i * i = ", i * i)
     i = i + 1
 end
 ```
@@ -769,10 +776,15 @@ The output of the above lines is here:
 
 ```
 i = 1
+i * i = 1
 i = 2
+i * i = 4
 i = 3
+i * i = 9
 i = 4
+i * i = 16
 i = 5
+i * i = 25
 ```
 
 ### Break statement
