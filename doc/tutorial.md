@@ -839,8 +839,8 @@ i = 9
 
 Functions allow you to uses same code in different places. The function can have the arguments which
 have different values for the different function application. Local variables can defined in the function body by the assignment statements. The local variable only is available in the function body.
-Also, the function can return different values. You can try how the function definition with
-applications works by enter the following lines to the interpreter:
+Also, the function can return different values which are from the last statement. You can try how the
+function definition with applications works by enter the following lines to the interpreter:
 
 ```unlab
 function f(x, y)
@@ -909,4 +909,47 @@ fib(0) = 0
 fib(1) = 1
 fib(5) = 5
 fib(10) = 55
+```
+
+### Return statement
+A return statement leaves from the function with the return value. You can try how the return
+statement with the return value by enter the following lines to the interpreter:
+
+```unlab
+function f(x, y)
+    if y == 0
+        return 0
+    end
+    x / y
+end
+println("f(5, 2) = ", f(5, 2))
+println("f(4, 0) = ", f(4, 0))
+```
+
+The output of the above lines is here:
+
+```
+f(5, 2) = 2
+f(4, 0) = 0
+```
+
+If you want the function to return the none value, you can omit the return expression. You can try how
+the return statement without the return value by enter the following lines to the interpreter:
+
+```unlab
+function f(x, y)
+    if y == 0
+        return
+    end
+    mod(x, y)
+end
+println("f(5, 2) = ", f(5, 2))
+println("f(4, 0) = ", f(4, 0))
+```
+
+The output of the above lines is here:
+
+```
+f(5, 2) = 1
+f(4, 0) = none
 ```
