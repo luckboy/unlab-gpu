@@ -838,8 +838,9 @@ i = 9
 ### Functions
 
 Functions allow you to uses same code in different places. The function can have the arguments which
-have different values for the different function application. Local variables can defined in the function body by the assignment statements. You can try how the function definition with applications
-works by enter the following lines to the interpreter:
+have different values for the different function application. Local variables can defined in the function body by the assignment statements. The local variable only is available in the function body.
+Also, the function can return different values. You can try how the function definition with
+applications works by enter the following lines to the interpreter:
 
 ```unlab
 function f(x, y)
