@@ -834,3 +834,78 @@ i = 6
 i = 8
 i = 9
 ```
+
+### Functions
+
+Functions allow you to uses same code in different places. The function can have the arguments which
+have different values for the different function application. Local variables can defined in the function body by the assignment statements. You can try how the function definition with applications
+works by enter the following lines to the interpreter:
+
+```unlab
+function f(x, y)
+    a = x * y
+    b = x / y
+    z = a + b
+    z
+end
+println("f(4, 2) = ", f(4, 2))
+println("f(6, 3) = ", f(6, 3))
+```
+
+The output of the above lines is here:
+
+```
+f(4, 2) = 10
+f(6, 3) = 20
+```
+
+The sample function with the loop in the body and the sample applications are here:
+
+```unlab
+function f(N)
+    x = 1
+    for i in 1 to N
+        x = x * i
+    end
+    x
+end
+println("f(0) = ", f(0))
+println("f(5) = ", f(5))
+println("f(10) = ", f(10))
+```
+
+The output of the above lines is here:
+
+```
+f(0) = 1
+f(5) = 120
+f(10) = 3628800
+```
+
+Also, the functions can be recursively applied. You can try how the recursion works on the fibonacci
+sequence example by enter the following lines to the interpreter:
+
+```unlab
+function fib(N)
+    if N == 0
+        0
+    else if N == 1
+        1
+    else
+        fib(N - 2) + fib(N - 1)
+    end
+end
+println("fib(0) = ", fib(0))
+println("fib(1) = ", fib(1))
+println("fib(5) = ", fib(5))
+println("fib(10) = ", fib(10))
+```
+
+The output of the above lines is here:
+
+```
+fib(0) = 0
+fib(1) = 1
+fib(5) = 5
+fib(10) = 55
+```
