@@ -73,6 +73,34 @@ can be runned by invoke the following command in the non-interactive mode for th
 unlab-gpu script.un
 ```
 
+## Lines and comments
+
+A code in the Unlab scripting language is divided to lines. The sample lines in this scriping language
+are here:
+
+```unlab
+println("Hello world!!!")
+x = 1 + 2
+println("x = ", x)
+```
+
+The lines can be joint to one line by using the semicolon character. The sample lines which are joint
+one line:
+
+```unlab
+println("Hello world!!!"); x = 1 + 2; println("x = ", x)
+```
+
+This scripting language has comments which can be used to describe the code. The comments starts with
+the `#` character or the `%` character. The sample comments are here:
+
+```unlab
+# First comment.
+% secomd comment.
+x = 1 + 2 # Adds one to two.
+println(x) % Prints the x value.
+```
+
 ## Basic values
 
 Basic values in the Unlab scripting language are represented by numbers, matrices, and strings.
