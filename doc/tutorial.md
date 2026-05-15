@@ -1372,3 +1372,62 @@ u = {
     num: 1.5000
 }
 ```
+
+### Matrix arrays and Matrix row slice
+
+Matrix arrays are created from the matrices and allows you to access the elements by an indexing. The
+matrices can't be indexed and iterated because they are in the GPU memory. The `matrixarray` function
+creates the matrix array from the matrix. The elements in the matrix array are the matrix row slice
+while an indexing or an iterating. The matrix array and the matrix row slice are indexable and
+iterable. You can try how the index operator works for the matrix array and the matrix row slice by
+enter the following lines to the interpreter:
+
+```unlab
+A = matrixarray([1, 2, 3; 4, 5, 6])
+println("A[1] = ", A[1])
+println("A[2][2] = ", A[2][2])
+println("A[2][3] = ", A[2][3])
+```
+
+The output of the above lines is here:
+
+```
+A[1] = [ 1 2 3 ]
+A[2][2] = 5
+A[2][3] = 6
+```
+
+You can try how the for loops with the matrix array and the matrix row slices by enter the following
+lines to the interpreter:
+
+```unlab
+A = matrixarray([1, 2, 3; 4, 5, 6])
+println("A:")
+for a in A
+    println("a = ", a)
+end
+println("A[1]:")
+for a in A[1]
+    println("a = ", a, " for A[1]")
+end
+println("A[2]:")
+for a in A[2]
+    println("a = ", a, " for A[2]")
+end
+```
+
+The output of the above lines is here:
+
+```
+A:
+a = [ 1 2 3 ]
+a = [ 4 5 6 ]
+A[1]:
+a = 1 for A[1]
+a = 2 for A[1]
+a = 3 for A[1]
+A[2]:
+a = 4 for A[2]
+a = 5 for A[2]
+a = 6 for A[2]
+```
