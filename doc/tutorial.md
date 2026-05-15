@@ -140,7 +140,7 @@ The sample floating-point numbers are here:
 
 ### Matrices
 
-Matrices in this scripting language are 2D arrays which contains floating-point numbers. The sample
+Matrices in this scripting language are 2D arrays which contain floating-point numbers. The sample
 matrix is here:
 
 ```unlab
@@ -150,7 +150,7 @@ matrix is here:
 ]
 ```
 
-The matrix also can be written in one line. The sample matrices in one line are here:
+The matrix also can be written in one line. The sample matrices in single lines are here:
 
 ```unlab
 [1, 2, 3; 4, 5, 6]
@@ -1066,3 +1066,311 @@ b is false
 
 The logical operator can operates on other values and other objects. Also, these operators evaluate
 the second operand if it is necessary.
+
+### Ranges
+
+Ranges can be used in the for loops because ranges are iterable values. The range can be integer or
+floating-point. The sample integer ranges are here:
+
+```unlab
+1 to 5
+4 to 8
+1 to 0
+```
+
+The sample floating-point ranges are here:
+
+```unlab
+1.0 to 5.0
+4.5 to 8.5
+1.0 to 0.0
+```
+
+The range have step that is one by default. The range step is written after the `by` keyword. The
+sample ranges with steps are here:
+
+```unlab
+1 to 4 by 2
+4.5 to 8.0 by 0.5
+5 to 1 by -1
+```
+
+You can try how the for loops with the ranges by enter the following lines to the interpreter:
+
+```unlab
+println("1 to 5:")
+for i in 1 to 5
+    println("i = ", i)
+end
+println("4.5 to 8.0 by 0.5:")
+for i in 4.5 to 8.0 by 0.5
+    println("i = ", i)
+end
+println("5 to 1 by -1:")
+for i in 5 to 1 by -1
+    println("i = ", i)
+end
+```
+
+The output of the above lines is here:
+
+```
+1 to 5:
+i = 1
+i = 2
+i = 3
+i = 4
+i = 5
+4.5 to 8.0 by 0.5:
+i = 4.5000
+i = 5
+i = 5.5000
+i = 6
+i = 6.5000
+i = 7
+i = 7.5000
+i = 8
+5 to 1 by -1:
+i = 5
+i = 4
+i = 3
+i = 2
+i = 1
+```
+
+### Arrays
+
+Arrays contain elements which can be any values. The array is an iterable and an indexable. The sample
+array is here:
+
+```unlab
+.[
+    1, 2.5, "abc"
+.]
+```
+
+The array can be written in one line. The samples arrays in single lines are here:
+
+```
+.[ 1, 2.5, "abc" .]
+.[ 3.5, 4, "def", true .]
+.[.]
+```
+
+The index operator allows you to access to an element in the array. An indexing begins from one. You
+can try how the index operator works for array by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5, "abc", true .]
+println("xs[1] = ", xs[1])
+println("xs[3] = ", xs[3])
+println("xs[4] = ", xs[4])
+```
+
+The output of the above lines is here:
+
+```
+xs[1] = 1
+xs[3] = abc
+xs[4] = true
+```
+
+Any value can be assigned to the element in the array because the index operator creates the
+expressions that is assignable expression for the arrays. You can try how the assignment statements
+work for the array elements by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5, "abc", true .]
+xs[2] = 4
+println("xs = ", xs)
+xs[4] = "def"
+println("xs = ", xs)
+```
+
+The output of the above lines is here:
+
+```
+xs = .[ 1 4 abc true .]
+xs = .[ 1 4 abc def .]
+```
+
+The array can be used in the for loop bacuase the array is an iterable object. You can try how the for 
+loops with the arrays by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5, "abc" .]
+ys = .[ 3.5, 4, "def", true .]
+println("xs:")
+for x in xs
+    println("x = ", x)
+end
+println("ys:")
+for y in ys
+    println("y = ", y)
+end
+```
+
+The output of the above lines is here:
+
+```
+xs:
+x = 1
+x = 2.5000
+x = abc
+ys:
+y = 3.5000
+y = 4
+y = def
+y = true
+```
+
+The array can be added to other array by using the `+` addition operator. You can try how the `+`
+addition operator works with the arrays by enter the following lines to the interpreter:
+
+```
+xs = .[ 1, 2.5 .]
+ys = .[ "abc", true .]
+zs = xs + ys
+println("xs = ", xs)
+println("ys = ", ys)
+println("zs = ", zs)
+```
+
+The output of the above lines is here:
+
+```
+xs = .[ 1 2.5000 .]
+ys = .[ abc true .]
+zs = .[ 1 2.5000 abc true .]
+```
+
+### Structures
+
+Structures contain fields which are identified by identifiers and can have any values. The structure
+also is indexable. The sample structure is here:
+
+```unlab
+{
+    num: 1.5
+    int: 2
+    name: "abc"
+}
+```
+
+The structure can be written in one line. The samples structures in single lines are here:
+
+```
+{ num: 1.5; int: 2; name: "abc" }
+{ int: 3; num: 4.5; name: "def" }
+{}
+```
+
+You can use the `.` operator to have access to the structure fields. You can try how the `.` operator
+works for the structure by enter the following lines to the interpreter:
+
+```unlab
+s = { num: 1.5; int: 2; name: "abc" }
+println("s.num = ", s.num)
+println("s.name = ", s.name)
+```
+
+The output of the above lines is here:
+
+```
+s.num = 1.5000
+s.name = abc
+```
+
+You can assign any value to the structure field or create the structure field by the assignment statement by because the `.` operator creates the assignable expressions for the structures. You can
+try how the assignment statements with the `.` operators work for the structure fields by enter the
+following lines to the interpreter:
+
+```unlab
+s = { num: 1.5; int: 2; name: "abc" }
+s.num = 3.5
+s.name = "def"
+s.bool = true
+println("s = ", s)
+```
+
+The output of the above lines is here:
+
+```
+s = {
+    bool: true
+    int: 2
+    name: def
+    num: 3.5000
+}
+```
+
+The index operator also can be used for the structures because the structures are indexable objects.
+The indices for the structure are strings. You can try how the index operator works for array by enter the following lines to the interpreter:
+
+```unlab
+s = { num: 1.5; int: 2; name: "abc" }
+println("s[\"num\"] = ", s.num)
+println("s[\"name\"] = ", s.name)
+```
+
+The output of the above lines is here:
+
+```
+s["num"] = 1.5000
+s["name"] = abc
+```
+
+The index operator creates the assignable expressions for the structures. You can try how the
+assignment statements with the index operators work for the structure fields by enter the following
+lines to the interpreter:
+
+```unlab
+s = { num: 1.5; int: 2; name: "abc" }
+s["num"] = 3.5
+s["name"] = "def"
+s["bool"] = true
+println("s = ", s)
+```
+
+The output of the above lines is here:
+
+```
+s = {
+    bool: true
+    int: 2
+    name: def
+    num: 3.5000
+}
+```
+
+You can add two structure by using the `+` addition operator. You can try how the `+`
+addition operator works with the structures by enter the following lines to the interpreter:
+
+```unlab
+s = { num: 1.5; name: "abc" }
+t = { num: 3.5; int: 2; bool: true }
+u = s + t
+println("s = ", s)
+println("t = ", t)
+println("u = ", u)
+```
+
+The output of the above lines is here:
+
+```
+s = {
+    name: abc
+    num: 1.5000
+}
+t = {
+    bool: true
+    int: 2
+    num: 3.5000
+}
+u = {
+    bool: true
+    int: 2
+    name: abc
+    num: 1.5000
+}
+```
