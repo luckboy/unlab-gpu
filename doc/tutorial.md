@@ -1157,8 +1157,9 @@ The array can be written in one line. The samples arrays in single lines are her
 .[.]
 ```
 
-The index operator allows you to access to an element in the array. An indexing begins from one. You
-can try how the index operator works for array by enter the following lines to the interpreter:
+The index operator allows you to access to an element in an indexable object as the array. An indexing 
+for numbers begins from one. You can try how the index operator works for the array by enter the 
+following lines to the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5, "abc", true .]
@@ -1175,9 +1176,8 @@ xs[3] = abc
 xs[4] = true
 ```
 
-Any value can be assigned to the element in the array because the index operator creates the
-expressions that is assignable expression for the arrays. You can try how the assignment statements
-work for the array elements by enter the following lines to the interpreter:
+Any values can be assigned to the element in the array. You can try how the assignment statements work
+for the array elements by enter the following lines to the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5, "abc", true .]
@@ -1194,8 +1194,8 @@ xs = .[ 1 4 abc true .]
 xs = .[ 1 4 abc def .]
 ```
 
-The array can be used in the for loop bacuase the array is an iterable object. You can try how the for 
-loops with the arrays by enter the following lines to the interpreter:
+The array can be used in the for loop. You can try how the for loops with the arrays by enter the
+following lines to the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5, "abc" .]
@@ -1281,9 +1281,8 @@ s.num = 1.5000
 s.name = abc
 ```
 
-You can assign any value to the structure field or create the structure field by the assignment statement by because the `.` operator creates the assignable expressions for the structures. You can
-try how the assignment statements with the `.` operators work for the structure fields by enter the
-following lines to the interpreter:
+You can assign any value to the structure field or create the structure field by the assignment statement with the `.` operator. You can try how the assignment statements with the `.` operators work
+for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
 s = { num: 1.5; int: 2; name: "abc" }
@@ -1304,8 +1303,8 @@ s = {
 }
 ```
 
-The index operator also can be used for the structures because the structures are indexable objects.
-The indices for the structure are strings. You can try how the index operator works for array by enter the following lines to the interpreter:
+The index operator also can be used for the structures. The indices for the structure are strings. You
+can try how the index operator works for array by enter the following lines to the interpreter:
 
 ```unlab
 s = { num: 1.5; int: 2; name: "abc" }
@@ -1320,9 +1319,8 @@ s["num"] = 1.5000
 s["name"] = abc
 ```
 
-The index operator creates the assignable expressions for the structures. You can try how the
-assignment statements with the index operators work for the structure fields by enter the following
-lines to the interpreter:
+The assignment statement with the index operator allows you to asign any values to the structure
+fields. You can try how the assignment statements with the index operators work for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
 s = { num: 1.5; int: 2; name: "abc" }
