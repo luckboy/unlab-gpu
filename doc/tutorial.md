@@ -96,7 +96,7 @@ the `#` character or the `%` character. The sample comments are here:
 
 ```unlab
 # First comment.
-% secomd comment.
+% second comment.
 x = 1 + 2 # Adds one to two.
 println(x) % Prints the x value.
 ```
@@ -635,7 +635,7 @@ abc <= def = true
 
 ### Transpose operator
 
-A transpose operator allows you to transpose the matrix. You can try how this operator work by enter
+A transpose operator allows you to transpose the matrix. You can try how this operator works by enter
 the following lines to the interpreter:
 
 ```unlab
@@ -981,3 +981,88 @@ The output of the above lines is here:
 f(5, 2) = 1
 f(4, 0) = none
 ```
+
+## More values and objects
+
+This scripting language contains more values and objects than the basic values. These objects are
+for example arrays and structures.
+
+### Boolean values
+
+A boolean value can be `true` or `false`. Logical operators can operate the boolean values. The
+logical operators are the `not`, the `and` operator, and the `or` operator. You can try how the `not`
+operator works by enter the following lines to the interpreter:
+
+```unlab
+println("not false = ", not false)
+println("not true = ", not true)
+```
+
+The output of the above lines is here:
+
+```
+not false = true
+not true = false
+```
+
+You can try how the `and` operator works by enter the following lines to the interpreter:
+
+```unlab
+println("false and false = ", false and false)
+println("false and true = ", false and true)
+println("true and false = ", true and false)
+println("true and true = ", true and true)
+```
+
+The output of the above lines is here:
+
+```
+false and false = false
+false and true = false
+true and false = false
+true and true = true
+```
+
+You can try how the `or` operator works by enter the following lines to the interpreter:
+
+```unlab
+println("false or false = ", false or false)
+println("false or true = ", false or true)
+println("true or false = ", true or false)
+println("true or true = ", true or true)
+```
+
+The output of the above lines is here:
+
+```
+false or false = false
+false or true = true
+true or false = true
+true or true = true
+```
+
+The boolean values can be used as conditional for the if statement or the loop. If the boolean value
+is `true`, the condition is fulfilled. You can try how the boolean values work as the condition for
+the if statement by enter the following lines to the interpreter:
+
+```unlab
+a = true
+if a
+    println("a is true")
+end
+b = false
+if not b
+    println("b is false")
+end
+```
+
+The output of the above lines is here:
+
+
+```
+a is true
+b is false
+```
+
+The logical operator can operates on other values and other objects. Also, these operators evaluate
+the second operand if it is necessary.
