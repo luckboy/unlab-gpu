@@ -515,7 +515,7 @@ The `or` operator performs the logical-OR operation. The result of this operator
 operand if the first operand is `true` after conversion to the boolean value,
 otherwise the second operand.
 
-These operators evaluate the second expression if it is necessary.
+These operators evaluate the second oerand if it is necessary.
 
 ### Expressions of field access
 
