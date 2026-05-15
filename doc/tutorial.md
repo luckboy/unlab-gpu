@@ -1251,17 +1251,17 @@ also is indexable. The sample structure is here:
 
 ```unlab
 {
-    num: 1.5
-    int: 2
-    name: "abc"
+    name: "john"
+    age: 20
+    height: 1.8
 }
 ```
 
 The structure can be written in one line. The samples structures in single lines are here:
 
 ```
-{ num: 1.5; int: 2; name: "abc" }
-{ int: 3; num: 4.5; name: "def" }
+{ name: "john"; age: 20; height: 1.8 }
+{ name: "alice"; age: 30; height: 1.7; is_worker: true }
 {}
 ```
 
@@ -1269,26 +1269,26 @@ You can use the `.` operator to have access to the structure fields. You can try
 works for the structure by enter the following lines to the interpreter:
 
 ```unlab
-s = { num: 1.5; int: 2; name: "abc" }
-println("s.num = ", s.num)
+s = { name: "john"; age: 20; height: 1.8 }
 println("s.name = ", s.name)
+println("s.age = ", s.age)
 ```
 
 The output of the above lines is here:
 
 ```
-s.num = 1.5000
-s.name = abc
+s.name = john
+s.age = 20
 ```
 
 You can assign any value to the structure field or create the structure field by the assignment statement with the `.` operator. You can try how the assignment statements with the `.` operators work
 for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
-s = { num: 1.5; int: 2; name: "abc" }
-s.num = 3.5
-s.name = "def"
-s.bool = true
+s = { name: "john"; age: 20; height: 1.8 }
+s.name = "alice"
+s.age = 30
+s.is_worker = true
 println("s = ", s)
 ```
 
@@ -1296,10 +1296,10 @@ The output of the above lines is here:
 
 ```
 s = {
-    bool: true
-    int: 2
-    name: def
-    num: 3.5000
+    age: 30
+    height: 1.8000
+    is_worker: true
+    name: alice
 }
 ```
 
@@ -1307,26 +1307,26 @@ The index operator also can be used for the structures. The indices for the stru
 can try how the index operator works for array by enter the following lines to the interpreter:
 
 ```unlab
-s = { num: 1.5; int: 2; name: "abc" }
-println("s[\"num\"] = ", s.num)
+s = { name: "john"; age: 20; height: 1.8 }
 println("s[\"name\"] = ", s.name)
+println("s[\"age\"] = ", s.age)
 ```
 
 The output of the above lines is here:
 
 ```
-s["num"] = 1.5000
-s["name"] = abc
+s["name"] = john
+s["age"] = 20
 ```
 
 The assignment statement with the index operator allows you to asign any values to the structure
 fields. You can try how the assignment statements with the index operators work for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
-s = { num: 1.5; int: 2; name: "abc" }
-s["num"] = 3.5
-s["name"] = "def"
-s["bool"] = true
+s = { name: "john"; age: 20; height: 1.8 }
+s["name"] = "alice"
+s["age"] = 30
+s["is_worker"] = true
 println("s = ", s)
 ```
 
@@ -1334,10 +1334,10 @@ The output of the above lines is here:
 
 ```
 s = {
-    bool: true
-    int: 2
-    name: def
-    num: 3.5000
+    age: 30
+    height: 1.8000
+    is_worker: true
+    name: alice
 }
 ```
 
@@ -1345,8 +1345,8 @@ You can add two structure by using the `+` addition operator. You can try how th
 addition operator works with the structures by enter the following lines to the interpreter:
 
 ```unlab
-s = { num: 1.5; name: "abc" }
-t = { num: 3.5; int: 2; bool: true }
+s = { name: "john"; height: 1.8 }
+t = { age: 30; height: 1.7; is_work: true }
 u = s + t
 println("s = ", s)
 println("t = ", t)
@@ -1357,19 +1357,19 @@ The output of the above lines is here:
 
 ```
 s = {
-    name: abc
-    num: 1.5000
+    height: 1.8000
+    name: john
 }
 t = {
-    bool: true
-    int: 2
-    num: 3.5000
+    age: 30
+    height: 1.7000
+    is_work: true
 }
 u = {
-    bool: true
-    int: 2
-    name: abc
-    num: 1.5000
+    age: 30
+    height: 1.8000
+    is_work: true
+    name: john
 }
 ```
 
