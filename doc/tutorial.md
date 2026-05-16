@@ -309,7 +309,7 @@ Strings are texts which can be shown by the `println` function. The sample strin
 
 ### Arithmentic operators
 
-Arithmentic operators allows you to execute the arithmetic operations on basic values. The arithmetic
+Arithmentic operators allow you to execute the arithmetic operations on basic values. The arithmetic
 operators are the `-` negation operator, the `+` addition operator, the `-` subtraction operator, the
 `*` multiplication operator, and the `/` division operator. You can try how these operators work on
 the integer numbers by enter the following lines to the interpreter:
@@ -476,7 +476,7 @@ A ./ B = [
 ```
 
 The arithmetic operators with the dot characters can operates the matrices and the numbers. You can
-try how these operators work on the matrices and the numbers by enter the following lines to the
+try how these operators work on the matrix and the numbers by enter the following lines to the
 interpreter:
 
 ```unlab
@@ -1158,7 +1158,7 @@ The array can be written in one line. The samples arrays in single lines are her
 ```
 
 The index operator allows you to access to an element in an indexable object as the array. An indexing 
-for numbers begins from one. You can try how the index operator works for the array by enter the 
+for numbers begins from one. You can try how the index operator works for the array by enter the
 following lines to the interpreter:
 
 ```unlab
@@ -1194,8 +1194,8 @@ xs = .[ 1 4 abc true .]
 xs = .[ 1 4 abc def .]
 ```
 
-The array can be used in the for loop. You can try how the for loops with the arrays by enter the
-following lines to the interpreter:
+The array can be used in the for loop. You can try how the for loops with the arrays works by enter
+the following lines to the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5, "abc" .]
@@ -1265,7 +1265,7 @@ The structure can be written in one line. The samples structures in single lines
 {}
 ```
 
-You can use the `.` operator to have access to the structure fields. You can try how the `.` operator
+You can use the dot operator to have access to the structure fields. You can try how the dot operator
 works for the structure by enter the following lines to the interpreter:
 
 ```unlab
@@ -1281,7 +1281,7 @@ s.name = john
 s.age = 20
 ```
 
-You can assign any value to the structure field or create the structure field by the assignment statement with the `.` operator. You can try how the assignment statements with the `.` operators work
+You can assign any value to the structure field or create the structure field by the assignment statement with the dot operator. You can try how the assignment statements with the dot operators work
 for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
@@ -1373,7 +1373,7 @@ u = {
 }
 ```
 
-### Matrix arrays and Matrix row slice
+### Matrix arrays and matrix row slice
 
 Matrix arrays are created from the matrices and allows you to access the elements by an indexing. The
 matrices can't be indexed and iterated because they are in the GPU memory. The `matrixarray` function
@@ -1430,4 +1430,199 @@ A[2]:
 a = 4 for A[2]
 a = 5 for A[2]
 a = 6 for A[2]
+```
+
+### Indexing and iterating for strings
+
+Also, the string is indexable and iterable. The string element is also the string with one character.
+You can try how the index operator works for the string by enter the following lines to the
+interpreter:
+
+```unlab
+s = "abcdef"
+println("s[1] = ", s[1])
+println("s[3] = ", s[3])
+println("s[5] = ", s[5])
+```
+
+The output of the above lines is here:
+
+```
+s[1] = a
+s[3] = c
+s[5] = e
+```
+
+You can try how the for loop with the strings works by enter the following lines to the interpreter:
+
+```unlab
+s = "abc"
+t = "def"
+println("s:")
+for c in s
+    println("c = ", c)
+end
+println("t:")
+for c in t
+    println("c = ", c)
+end
+```
+
+The output of the above lines is here:
+
+```
+s:
+c = a
+c = b
+c = c
+t:
+c = d
+c = e
+c = f
+```
+
+### Dot arithmentic operators
+
+Arithmentic operators with the dot characters can recursively operate on the array elements and the
+structure fields. You can try how these operators work on the arrays and the structures by enter the
+following lines to the interpreter:
+
+```unlab
+s = { W: [1, 2; 3, 4]; a: .[ 1.5, "abc" .]; N: 2 }
+t = { W: [5, 6; 7, 8]; a: .[ 2.5, "abc" .]; N: 2 }
+u = { W: [8, 7; 6, 5]; a: .[ 2.5, "abc" .]; N: 2 }
+println(".-s = ", .-s)
+println("s .+ t = ", s .+ t)
+println("u .- s = ", u .- s)
+println("s .* t = ", s .* t)
+println("s ./ t = ", s ./ t)
+```
+
+The output of the above lines is here:
+
+```
+.-s = {
+    N: 2
+    W: [
+                 -1          -2
+                 -3          -4
+    ]
+    a: .[ -1.5000 abc .]
+}
+s .+ t = {
+    N: 2
+    W: [
+                  6           8
+                 10          12
+    ]
+    a: .[ 4 abc .]
+}
+u .- s = {
+    N: 2
+    W: [
+                  7           5
+                  3           1
+    ]
+    a: .[ 1 abc .]
+}
+s .* t = {
+    N: 2
+    W: [
+                  5          12
+                 21          32
+    ]
+    a: .[ 3.7500 abc .]
+}
+s ./ t = {
+    N: 2
+    W: [
+             0.2000      0.3333
+             0.4286      0.5000
+    ]
+    a: .[ 0.6000 abc .]
+}
+```
+
+You can try how these operators work on the array, the structure, and the numbers by enter the
+following lines to the interpreter:
+
+```unlab
+s = { W: [1, 2; 3, 4]; a: .[ 1.5, "abc" .]; N: 2 }
+println("s .+ 2 = ", s .+ 2)
+println("s .- 2 = ", s .- 2)
+println("s .* 3 = ", s .* 3)
+println("s ./ 3 = ", s ./ 3)
+println("3 .+ s = ", 3 .+ s)
+println("3 .- s = ", 3 .- s)
+println("2 .* s = ", 2 .* s)
+println("2 ./ s = ", 2 ./ s)
+```
+
+The output of the above lines is here:
+
+```
+s .+ 2 = {
+    N: 2
+    W: [
+                  3           4
+                  5           6
+    ]
+    a: .[ 3.5000 abc .]
+}
+s .- 2 = {
+    N: 2
+    W: [
+                 -1           0
+                  1           2
+    ]
+    a: .[ -0.5000 abc .]
+}
+s .* 3 = {
+    N: 2
+    W: [
+                  3           6
+                  9          12
+    ]
+    a: .[ 4.5000 abc .]
+}
+s ./ 3 = {
+    N: 2
+    W: [
+             0.3333      0.6667
+                  1      1.3333
+    ]
+    a: .[ 0.5000 abc .]
+}
+3 .+ s = {
+    N: 2
+    W: [
+                  4           5
+                  6           7
+    ]
+    a: .[ 4.5000 abc .]
+}
+3 .- s = {
+    N: 2
+    W: [
+                  2           1
+                  0          -1
+    ]
+    a: .[ 1.5000 abc .]
+}
+2 .* s = {
+    N: 2
+    W: [
+                  2           4
+                  6           8
+    ]
+    a: .[ 3 abc .]
+}
+2 ./ s = {
+    N: 2
+    W: [
+                  2           1
+             0.6667      0.5000
+    ]
+    a: .[ 1.3333 abc .]
+}
 ```
