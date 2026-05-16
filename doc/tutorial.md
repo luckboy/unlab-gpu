@@ -447,7 +447,7 @@ println(".-A = ", .-A)
 println("A .+ B = ", A .+ B)
 println("C .- A = ", C .- A)
 println("A .* B = ", A .* B)
-println("A ./ B = ", A ./ B)
+println("B ./ A = ", B ./ A)
 ```
 
 The output of the above lines is here:
@@ -469,9 +469,9 @@ A .* B = [
               4          10          18
              28          40          54
 ]
-A ./ B = [
-         0.2500      0.4000      0.5000
-         0.5714      0.6250      0.6667
+B ./ A = [
+              4      2.5000           2
+         1.7500      1.6000      1.5000
 ]
 ```
 
@@ -1495,7 +1495,7 @@ println(".-s = ", .-s)
 println("s .+ t = ", s .+ t)
 println("u .- s = ", u .- s)
 println("s .* t = ", s .* t)
-println("s ./ t = ", s ./ t)
+println("t ./ s = ", t ./ s)
 ```
 
 The output of the above lines is here:
@@ -1533,13 +1533,13 @@ s .* t = {
     ]
     a: .[ 3.7500 abc .]
 }
-s ./ t = {
+t ./ s = {
     N: 2
     W: [
-             0.2000      0.3333
-             0.4286      0.5000
+                  5           3
+             2.3333           2
     ]
-    a: .[ 0.6000 abc .]
+    a: .[ 1.6667 abc .]
 }
 ```
 
