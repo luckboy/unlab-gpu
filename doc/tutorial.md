@@ -1671,3 +1671,69 @@ The output of the above lines is here:
 found index = 3 for xs
 found index = none for ys
 ```
+
+### Errors and none values
+
+An error is an object that informs about the function error. The errors are created by the `error`
+function that takes the error kind and the error message. If you apply some function that can return
+an error in other function, you can use the `?` operator of error proparagion that can leave from
+other function with the returned error by some function. You can try how the `?` operator of error 
+propagation works for the error by enter the following lines to the interpreter:
+
+```unlab
+function one_or_err(x)
+    if x == 1
+        x
+    else
+        error("one_or_err", "x isn't one")
+    end
+end
+function f(x, y)
+    x = one_or_err(x)?
+    x + y
+end
+println("f(1, 2) = ", f(1, 2))
+println("f(1, 3) = ", f(1, 3))
+println("f(2, 3) = ", f(2, 3))
+```
+
+The output of the above lines is here:
+
+```
+f(1, 2) = 3
+f(1, 3) = 4
+f(2, 3) = x isn't one
+```
+
+A none value is a value that can use to inform about for example missing element. The none value can
+be used in the functionsw which should return nothing. The `?` operator of error propagation also can 
+be used for the none values. You can try how the `?` operator of error propagation works for the error
+by enter the following lines to the interpreter:
+
+```unlab
+function one_or_none(x)
+    if x == 1
+        x
+    else
+        none
+    end
+end
+function f(x, y)
+    x = one_or_none(x)?
+    x + y
+end
+println("f(1, 2) = ", f(1, 2))
+println("f(1, 3) = ", f(1, 3))
+println("f(2, 3) = ", f(2, 3))
+```
+
+The output of the above lines is here:
+
+```
+f(1, 2) = 3
+f(1, 3) = 4
+f(2, 3) = none
+```
+
+If the `?` operator of error propagation is used outside the function and the operand of this operator 
+is an error, this operator prints the error.
