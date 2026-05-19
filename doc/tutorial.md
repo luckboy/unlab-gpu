@@ -1677,7 +1677,8 @@ found index = none for ys
 An error is an object that informs about the function error. The errors are created by the `error`
 function that takes the error kind and the error message. If you apply some function that can return
 an error in other function, you can use the `?` operator of error proparagion that can leave from
-other function with the returned error by some function. You can try how the `?` operator of error 
+other function with the returned error by some function. If the operand of this operator is an error,
+this operator leaves the function with the error. You can try how the `?` operator of error
 propagation works for the error by enter the following lines to the interpreter:
 
 ```unlab
@@ -1705,10 +1706,10 @@ f(1, 3) = 4
 f(2, 3) = x isn't one
 ```
 
-A none value is a value that can use to inform about for example missing element. The none value can
-be used in the functionsw which should return nothing. The `?` operator of error propagation also can 
-be used for the none values. You can try how the `?` operator of error propagation works for the error
-by enter the following lines to the interpreter:
+A none value is a value that can use to inform about for example no element. The none value can be
+used in the functionsw which should return nothing. The `?` operator of error propagation also can be
+used for the none values. You can try how the `?` operator of error propagation works for the error by
+enter the following lines to the interpreter:
 
 ```unlab
 function one_or_none(x)
