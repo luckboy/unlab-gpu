@@ -1626,3 +1626,48 @@ s ./ 3 = {
     a: .[ 1.3333 abc .]
 }
 ```
+
+### Functions
+
+A function also is an object that can be assigned to other variables and can be passed as argument to
+other function. You can try how the function is assigned to other variable by enter the following
+lines to the interpreter:
+
+
+```unlab
+function f(x, y)
+    x + y
+end
+g = f
+println("f(1, 2) = ", f(1, 2))
+println("g(1, 2) = ", g(1, 2))
+println("g(3, 4) = ", g(3, 4))
+```
+
+The output of the above lines is here:
+
+```
+f(1, 2) = 3
+g(1, 2) = 3
+g(3, 4) = 7
+```
+
+You can try how the function is passed to the `find` function by by enter the following lines to the
+interpreter:
+
+```unlab
+function f(d, x)
+    mod(x, d) == 0
+end
+xs = .[ 1, 2, 3, 5, 6 .]
+ys = .[ 1, 3, 6 .]
+println("found index = ", find(xs, 3, f), " for xs")
+println("found index = ", find(ys, 4, f), " for ys")
+```
+
+The output of the above lines is here:
+
+```
+found index = 3 for xs
+found index = none for ys
+```
