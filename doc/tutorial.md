@@ -1786,10 +1786,10 @@ t = {
 ```
 
 The interpreter counts the number of references for each mutable object. If the number of references
-for mutable object is equal to zero, mutable object is freed. If the cycle reference occurs, the
-number of references will never zero and the mutable object will never be freed. Therefore you should
-weak reference. The weak reference doesn't increase the number of reference for the mutable object.
-The function the `weak` function creates a weak reference. You can try how the weak reference works
+for mutable object is zero, mutable object is freed. If the cycle reference occurs, the number of
+references will never be zero and the mutable object will never be freed. Therefore you should weak
+reference. The weak reference doesn't increase the number of reference for the mutable object. The
+function the `weak` function creates a weak reference. You can try how the weak reference works
 by enter the following lines to the interpreter:
 
 ```unlab
