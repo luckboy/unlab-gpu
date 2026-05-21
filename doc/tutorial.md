@@ -1738,3 +1738,125 @@ f(2, 3) = none
 
 If the `?` operator of error propagation is used outside the function and the operand of this operator 
 is an error, this operator prints the error.
+
+### References
+
+Arrays and structures are mutable objects which are referred by the references in the values. The
+mutable object can be referred by many references. You can try how references works for the array by
+enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5, "abc" .]
+ys = xs
+ys[2] = 3
+println("xs = ", xs)
+println("ys = ", ys)
+```
+
+The output of the above lines is here:
+
+```
+xs = .[ 1 3 abc .]
+ys = .[ 1 3 abc .]
+```
+
+You can try how references works for the structure by enter the following lines to the interpreter:
+
+```unlab
+s = { name: "john"; age: 20; height: 1.8 }
+t = s
+t.age = 30
+println("s = ", s)
+println("t = ", t)
+```
+
+The output of the above lines is here:
+
+```
+s = {
+    age: 30
+    height: 1.8000
+    name: john
+}
+t = {
+    age: 30
+    height: 1.8000
+    name: john
+}
+```
+
+The interpreter counts the number of references for each mutable object. If the number of references
+for mutable object is equal to zero, mutable object is freed. If the cycle reference occurs, the
+number of references will never zero and the mutable object will never be freed. Therefore you should
+weak reference. The weak reference doesn't increase the number of reference for the mutable object.
+The function the `weak` function creates a weak reference. You can try how the weak reference works
+by enter the following lines to the interpreter:
+
+```unlab
+e1 = {
+    prev: none
+    next: none
+    x: 1
+}
+e2 = {
+    prev: none
+    next: none
+    x: 2
+}
+e1.next = e2
+e2.prev = weak(e1)
+println("e1 = ", e1)
+println("e2 = ", e2)
+```
+
+The output of the above lines is here:
+
+```
+e1 = {
+    next: {
+        next: none
+        prev: weak(...)
+        x: 2
+    }
+    prev: none
+    x: 1
+}
+e2 = {
+    next: none
+    prev: weak(...)
+    x: 2
+}
+```
+
+The weak reference can be converted to normal reference by the `strong` function. You can try how the
+`strong` function works by enter the following lines to the interpreter:
+
+```unlab
+e1 = {
+    prev: none
+    next: none
+    x: 1
+}
+e2 = {
+    prev: none
+    next: none
+    x: 2
+}
+e1.next = e2
+e2.prev = weak(e1)
+println("strong(e2.prev) = ", strong(e2.prev))
+```
+
+The output of the above lines is here:
+
+```
+strong(e2.prev) = {
+    next: {
+        next: none
+        prev: weak(...)
+        x: 2
+    }
+    prev: none
+    x: 1
+}
+```
