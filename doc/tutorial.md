@@ -1341,8 +1341,8 @@ s = {
 }
 ```
 
-You can add two structure by using the `+` addition operator. You can try how the `+`
-addition operator works with the structures by enter the following lines to the interpreter:
+You can add two structure by using the `+` addition operator. You can try how the `+` addition
+operator works with the structures by enter the following lines to the interpreter:
 
 ```unlab
 s = { name: "john"; height: 1.8 }
