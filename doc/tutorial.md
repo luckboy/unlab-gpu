@@ -248,7 +248,8 @@ The output of the above line is here:
 ```
 
 Some functions from the standard library can create some matrices. These functions are the `zeros`
-function, the `ones` function, and the `eye` function. These function takes the number of rows and the number of columns except the `eye` function. The `eye` function takes one number for the rows and
+function, the `ones` function, and the `eye` function. These function takes the number of rows and the
+number of columns except the `eye` function. The `eye` function takes one number for the rows and
 the columns. You can create a matrix with zeros and then show it by enter the following line to the
 interpreter:
 
@@ -332,7 +333,8 @@ The output of the above lines is here:
 5 / 2 = 2
 ```
 
-These operators also can operate on floating-point numbers. You can try how these operators work on the floating-point numbers by enter the following lines to the interpreter:
+These operators also can operate on floating-point numbers. You can try how these operators work on
+the floating-point numbers by enter the following lines to the interpreter:
 
 ```unlab
 println("-1.0 = ", -1.0)
@@ -528,7 +530,8 @@ A ./ 3 = [
 ]
 ```
 
-Two strings can be concatated by using the `+` addition operator. You can concatenate two strings by enter the following line to the interpreter:
+Two strings can be concatated by using the `+` addition operator. You can concatenate two strings by
+enter the following line to the interpreter:
 
 ```unlab
 println("abc" + "def")
@@ -607,7 +610,8 @@ The output of the above lines is here:
 2.0 <= 3.0 = true
 ```
 
-Also, two strings can be compared by these operators. You can try how these operators work on the strings by enter the following lines to the interpreter:
+Also, two strings can be compared by these operators. You can try how these operators work on the
+strings by enter the following lines to the interpreter:
 
 ```unlab
 println("abc == def = ", "abc" == "def")
@@ -661,7 +665,8 @@ conditions or loops in the Unlab scriting language.
 ### Assignment statement
 
 An assignment statement allows you to assign a value to a variable or other assignable expression by
-using the `=` character. You can try how the assignment statement works by enter the following lines to the interpreter:
+using the `=` character. You can try how the assignment statement works by enter the following lines
+to the interpreter:
 
 ```unlab
 x = 1234
@@ -866,7 +871,8 @@ i = 9
 ### Functions
 
 Functions allow you to uses same code in different places. The function can have the arguments which
-have different values for the different function application. Local variables can defined in the function body by the assignment statements. The local variable only is available in the function body.
+have different values for the different function applications. Local variables can defined in the
+function body by the assignment statements. The local variable only is available in the function body.
 Also, the function can return different values which are from the last statement. You can try how the
 function definition with applications works by enter the following lines to the interpreter:
 
@@ -1281,7 +1287,8 @@ s.name = John
 s.age = 20
 ```
 
-You can assign any value to the structure field or create the structure field by the assignment statement with the dot operator. You can try how the assignment statements with the dot operators work
+You can assign any value to the structure field or create the structure field by the assignment
+statement with the dot operator. You can try how the assignment statements with the dot operators work
 for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
@@ -1320,7 +1327,8 @@ s["age"] = 20
 ```
 
 The assignment statement with the index operator allows you to asign any values to the structure
-fields. You can try how the assignment statements with the index operators work for the structure fields by enter the following lines to the interpreter:
+fields. You can try how the assignment statements with the index operators work for the structure
+fields by enter the following lines to the interpreter:
 
 ```unlab
 s = { name: "John"; age: 20; height: 1.8 }
@@ -1863,10 +1871,10 @@ strong(e2.prev) = {
 
 ## Modules
 
-Modules allow you to arrange your code by devide code to the parts as the modules. Variables,
+Modules allow you to arrange your code by devide code to the parts as your modules. Variables,
 functions, and other modules can be in the module.
 
-### Module defintion
+### Module definition
 
 You can define the module with variables, functions, and other modules. The sample module definition
 is here:
@@ -1896,7 +1904,43 @@ module company
     name = "ProgComp"
 
     function work()
-            println("I work")
+        println("I work")
     end
 end
 ```
+
+### Access to variables and functions
+
+You can have access to the variables and the functions which are in your modules by using the `::`
+character sequence. The `::` character sequences join the identifiers to the name that can be
+relative or absolute. The names are like the paths to files and/or directories except the path
+separator. The relative name has the module identifiers and the last identifier that refers to the
+variable or the function. The sample relative names for the root module are here:
+
+```unlab
+company::work
+company::admins::employees
+company::programmers::work
+```
+
+The interpreter searches the module of variable or function from the current module and then
+searches the module of variable or function from the root module for the relative names. The sample
+relative names for the `company` module are here:
+
+```unlab
+work
+admins::employees
+programmers::work
+```
+If you want to have sure that the module of variable or function is searched from the root module, you
+use the absolute names. The absolute names start with the `root` keyword. The sample absolute names
+are here:
+
+```unlab
+root::company::work
+root::company::admins::employees
+root::company::programmers::work
+```
+
+If you want to access to variable with same identifier as the local variable in the function module, 
+you use the `::` character sequence before the variable identifier.
