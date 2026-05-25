@@ -1942,5 +1942,5 @@ root::company::admins::employees
 root::company::programmers::work
 ```
 
-If you want to access to variable with same identifier as the local variable in the function module, 
+If you want to access to variable with same identifier as the local variable in the function module,
 you use the `::` character sequence before the variable identifier.
