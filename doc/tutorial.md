@@ -1860,3 +1860,42 @@ strong(e2.prev) = {
     x: 1
 }
 ```
+
+## Modules
+
+Modules allow you to arrange your code by devide code. Variables, functions, and other modules can be
+in the module.
+
+### Module defintion
+
+You can define the module with variables, functions, and other modules. The sample module is here:
+
+```unlab
+module company
+    module programmers
+        function work()
+            println("I programme")
+        end
+
+        function employees()
+            .[ "jonh", "bob" .]
+        end
+    end
+
+    module admins
+        function work()
+            println("I administer")
+        end
+
+        function employees()
+            .[ "alice" .]
+        end
+    end
+
+    name = "ProgComp"
+
+    function work()
+            println("I work")
+    end
+end
+```
