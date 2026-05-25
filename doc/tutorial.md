@@ -1251,7 +1251,7 @@ also is indexable. The sample structure is here:
 
 ```unlab
 {
-    name: "john"
+    name: "John"
     age: 20
     height: 1.8
 }
@@ -1260,8 +1260,8 @@ also is indexable. The sample structure is here:
 The structure can be written in one line. The samples structures in single lines are here:
 
 ```
-{ name: "john"; age: 20; height: 1.8 }
-{ name: "alice"; age: 30; height: 1.7; is_worker: true }
+{ name: "John"; age: 20; height: 1.8 }
+{ name: "Alice"; age: 30; height: 1.7; is_worker: true }
 {}
 ```
 
@@ -1269,7 +1269,7 @@ You can use the dot operator to have access to the structure fields. You can try
 works for the structure by enter the following lines to the interpreter:
 
 ```unlab
-s = { name: "john"; age: 20; height: 1.8 }
+s = { name: "John"; age: 20; height: 1.8 }
 println("s.name = ", s.name)
 println("s.age = ", s.age)
 ```
@@ -1277,7 +1277,7 @@ println("s.age = ", s.age)
 The output of the above lines is here:
 
 ```
-s.name = john
+s.name = John
 s.age = 20
 ```
 
@@ -1285,8 +1285,8 @@ You can assign any value to the structure field or create the structure field by
 for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
-s = { name: "john"; age: 20; height: 1.8 }
-s.name = "alice"
+s = { name: "John"; age: 20; height: 1.8 }
+s.name = "Alice"
 s.age = 30
 s.is_worker = true
 println("s = ", s)
@@ -1299,7 +1299,7 @@ s = {
     age: 30
     height: 1.8000
     is_worker: true
-    name: alice
+    name: Alice
 }
 ```
 
@@ -1307,7 +1307,7 @@ The index operator also can be used for the structures. The indices for the stru
 can try how the index operator works for array by enter the following lines to the interpreter:
 
 ```unlab
-s = { name: "john"; age: 20; height: 1.8 }
+s = { name: "John"; age: 20; height: 1.8 }
 println("s[\"name\"] = ", s.name)
 println("s[\"age\"] = ", s.age)
 ```
@@ -1315,7 +1315,7 @@ println("s[\"age\"] = ", s.age)
 The output of the above lines is here:
 
 ```
-s["name"] = john
+s["name"] = John
 s["age"] = 20
 ```
 
@@ -1323,8 +1323,8 @@ The assignment statement with the index operator allows you to asign any values 
 fields. You can try how the assignment statements with the index operators work for the structure fields by enter the following lines to the interpreter:
 
 ```unlab
-s = { name: "john"; age: 20; height: 1.8 }
-s["name"] = "alice"
+s = { name: "John"; age: 20; height: 1.8 }
+s["name"] = "Alice"
 s["age"] = 30
 s["is_worker"] = true
 println("s = ", s)
@@ -1337,7 +1337,7 @@ s = {
     age: 30
     height: 1.8000
     is_worker: true
-    name: alice
+    name: Alice
 }
 ```
 
@@ -1345,7 +1345,7 @@ You can add two structure by using the `+` addition operator. You can try how th
 operator works with the structures by enter the following lines to the interpreter:
 
 ```unlab
-s = { name: "john"; height: 1.8 }
+s = { name: "John"; height: 1.8 }
 t = { age: 30; height: 1.7; is_work: true }
 u = s + t
 println("s = ", s)
@@ -1358,7 +1358,7 @@ The output of the above lines is here:
 ```
 s = {
     height: 1.8000
-    name: john
+    name: John
 }
 t = {
     age: 30
@@ -1369,7 +1369,7 @@ u = {
     age: 30
     height: 1.8000
     is_work: true
-    name: john
+    name: John
 }
 ```
 
@@ -1741,7 +1741,7 @@ is an error, this operator prints the error.
 
 ### References
 
-Arrays and structures are mutable objects which are referred by the references in the values. The
+Arrays and structures are mutable objects which are referred by the references as the values. The
 mutable object can be referred by many references. You can try how references works for the array by
 enter the following lines to the interpreter:
 
@@ -1763,7 +1763,7 @@ ys = .[ 1 3 abc .]
 You can try how references works for the structure by enter the following lines to the interpreter:
 
 ```unlab
-s = { name: "john"; age: 20; height: 1.8 }
+s = { name: "John"; age: 20; height: 1.8 }
 t = s
 t.age = 30
 println("s = ", s)
@@ -1776,12 +1776,12 @@ The output of the above lines is here:
 s = {
     age: 30
     height: 1.8000
-    name: john
+    name: John
 }
 t = {
     age: 30
     height: 1.8000
-    name: john
+    name: John
 }
 ```
 
@@ -1863,12 +1863,13 @@ strong(e2.prev) = {
 
 ## Modules
 
-Modules allow you to arrange your code by devide code. Variables, functions, and other modules can be
-in the module.
+Modules allow you to arrange your code by devide code to the parts as the modules. Variables,
+functions, and other modules can be in the module.
 
 ### Module defintion
 
-You can define the module with variables, functions, and other modules. The sample module is here:
+You can define the module with variables, functions, and other modules. The sample module definition
+is here:
 
 ```unlab
 module company
@@ -1878,7 +1879,7 @@ module company
         end
 
         function employees()
-            .[ "jonh", "bob" .]
+            .[ "John", "Bob" .]
         end
     end
 
@@ -1888,7 +1889,7 @@ module company
         end
 
         function employees()
-            .[ "alice" .]
+            .[ "Alice" .]
         end
     end
 
