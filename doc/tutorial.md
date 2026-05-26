@@ -1921,6 +1921,7 @@ variable or the function. The sample relative names for the root module are here
 company::work
 company::admins::employees
 company::programmers::work
+company::name
 ```
 
 The interpreter searches the module of variable or function from the current module and then
@@ -1931,7 +1932,9 @@ relative names for the `company` module are here:
 work
 admins::employees
 programmers::work
+name
 ```
+
 If you want to have sure that the module of variable or function is searched from the root module, you
 use the absolute names. The absolute names start with the `root` keyword. The sample absolute names
 are here:
@@ -1940,7 +1943,45 @@ are here:
 root::company::work
 root::company::admins::employees
 root::company::programmers::work
+root::company::name
 ```
 
 If you want to access to variable with same identifier as the local variable in the function module,
 you use the `::` character sequence before the variable identifier.
+
+### Imports
+
+Imports allows you access to variables, functions, and other module by same identifier. If you import
+variables, functions, or other modules; they will be available in the current module. You can import
+the variables and the functions by using the `usevar` function. This function takes the name for
+variable or function and can take a new identifier for variable or function. The sample variable
+imports are here:
+
+```unlab
+usevar("company::programmers::work")
+usevar("company::admin::employees", "admin_employees")
+usevar("company::name")
+```
+
+Also, you can import all variables and all functions from the specified module by using the `usevars`
+function. This function takes the name for the module. The sample import of all variables and all
+functions is here:
+
+```unlab
+usevars("company::programmers")
+```
+
+Also, you can import the modules by using the `usemod` function. This function takes the name for the
+module and can take a new identifier for the module. The sample module imports are here:
+
+```unlab
+usemod("company::programmers", "workers")
+usemod("company")
+```
+
+Also, you can import all modules from the specified module by using the `usemods` function. This
+function takes the name for the module. The sample import of all modules is here:
+
+```unlab
+usemods("company")
+```
