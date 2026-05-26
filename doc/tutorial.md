@@ -1954,7 +1954,8 @@ you use the `::` character sequence before the variable identifier.
 Imports allows you access to variables, functions, and other module by same identifier. If you import
 variables, functions, or other modules; they will be available in the current module. You can import
 the variables and the functions by using the `usevar` function. This function takes the name for
-variable or function and can take a new identifier for variable or function. The sample variable
+the variable or the function and can take a new identifier for variable or function. The variable or
+the function by using the new identifier if the new identifier is passed. The sample variable
 imports are here:
 
 ```unlab
@@ -1964,15 +1965,16 @@ usevar("company::name")
 ```
 
 Also, you can import all variables and all functions from the specified module by using the `usevars`
-function. This function takes the name for the module. The sample import of all variables and all
-functions is here:
+function. This function takes the name for the specified module. The sample import of all variables 
+and all functions is here:
 
 ```unlab
 usevars("company::programmers")
 ```
 
 Also, you can import the modules by using the `usemod` function. This function takes the name for the
-module and can take a new identifier for the module. The sample module imports are here:
+module and can take a new identifier for the module. The module by using the new identifier if the new
+identifier is passed. The sample module imports are here:
 
 ```unlab
 usemod("company::programmers", "workers")
@@ -1980,7 +1982,7 @@ usemod("company")
 ```
 
 Also, you can import all modules from the specified module by using the `usemods` function. This
-function takes the name for the module. The sample import of all modules is here:
+function takes the name for the specified module. The sample import of all modules is here:
 
 ```unlab
 usemods("company")
