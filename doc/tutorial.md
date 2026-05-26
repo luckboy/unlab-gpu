@@ -1250,6 +1250,66 @@ ys = .[ abc true .]
 zs = .[ 1 2.5000 abc true .]
 ```
 
+The standard library contains some functions which operates on arrays. These functions are the `push`
+function, the `pop` function, and the `append` function. You can try how the `push` function works by
+enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5 .]
+push(xs, "abc")
+println("xs = ", xs)
+push(xs, true)
+println("xs = ", xs)
+```
+
+The output of the above lines is here:
+
+```
+xs = .[ 1 2.5000 abc .]
+xs = .[ 1 2.5000 abc true .]
+```
+
+You can try how the `pop` function works by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5, "abc" .]
+println("pop(xs) = ", pop(xs))
+println("xs = ", xs)
+println("pop(xs) = ", pop(xs))
+println("xs = ", xs)
+println("pop(xs) = ", pop(xs))
+println("xs = ", xs)
+println("pop(xs) = ", pop(xs))
+println("xs = ", xs)
+```
+
+The output of the above lines is here:
+
+```
+pop(xs) = abc
+xs = .[ 1 2.5000 .]
+pop(xs) = 2.5000
+xs = .[ 1 .]
+pop(xs) = 1
+xs = .[.]
+pop(xs) = none
+xs = .[.]
+```
+
+You can try how the `append` function works by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2.5 .]
+append(xs, .[ "abc", true .])
+println("xs = ", xs)
+```
+
+The output of the above lines is here:
+
+```
+xs = .[ 1 2.5000 abc true .]
+```
+
 ### Structures
 
 Structures contain fields which are identified by identifiers and can have any values. The structure
@@ -1376,6 +1436,28 @@ t = {
 u = {
     age: 30
     height: 1.8000
+    is_work: true
+    name: John
+}
+```
+
+The standard library contains some functions which operates on structures. This function also is the
+`append` function. You can try how the `append` function works by enter the following lines to the
+interpreter:
+
+```unlab
+s = { name: "John"; height: 1.8 }
+t = { age: 30; height: 1.7; is_work: true }
+append(s, t)
+println("s = ", s)
+```
+
+The output of the above lines is here:
+
+```
+s = {
+    age: 30
+    height: 1.7000
     is_work: true
     name: John
 }
