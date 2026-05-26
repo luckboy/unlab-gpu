@@ -1250,7 +1250,7 @@ ys = .[ abc true .]
 zs = .[ 1 2.5000 abc true .]
 ```
 
-The standard library contains some functions which operates on arrays. These functions are the `push`
+The standard library contains some functions which operate on arrays. These functions are the `push`
 function, the `pop` function, and the `append` function. You can try how the `push` function works by
 enter the following lines to the interpreter:
 
@@ -1441,7 +1441,7 @@ u = {
 }
 ```
 
-The standard library contains some functions which operates on structures. This function also is the
+The standard library contains some functions which operate on structures. This function also is the
 `append` function. You can try how the `append` function works by enter the following lines to the
 interpreter:
 
@@ -2031,18 +2031,18 @@ root::company::name
 If you want to access to variable with same identifier as the local variable in the function module,
 you use the `::` character sequence before the variable identifier.
 
-### Imports
+### Import functions
 
-Imports allows you access to variables, functions, and other module by same identifier. If you import
-variables, functions, or other modules; they will be available in the current module. You can import
-the variables and the functions by using the `usevar` function. This function takes the name for
-the variable or the function and can take a new identifier for variable or function. The variable or
-the function by using the new identifier if the new identifier is passed. The sample variable
-imports are here:
+Import functions allow you access to variables, functions, and other module by same identifiers. If
+you import variables, functions, or other modules; they will be available in the current module. You
+can import the variables and the functions by using the `usevar` function. This function takes the
+name for the variable or the function and can take a new identifier for variable or function. The
+variable or the function is available in the current module by using the new identifier if the new
+identifier is passed. The sample variable imports are here:
 
 ```unlab
 usevar("company::programmers::work")
-usevar("company::admin::employees", "admin_employees")
+usevar("company::admins::employees", "admin_employees")
 usevar("company::name")
 ```
 
@@ -2055,12 +2055,12 @@ usevars("company::programmers")
 ```
 
 Also, you can import the modules by using the `usemod` function. This function takes the name for the
-module and can take a new identifier for the module. The module by using the new identifier if the new
-identifier is passed. The sample module imports are here:
+module and can take a new identifier for the module. The module is available in the current module by
+using the new identifier if the new identifier is passed. The sample module imports are here:
 
 ```unlab
 usemod("company::programmers", "workers")
-usemod("company")
+usemod("company::admins")
 ```
 
 Also, you can import all modules from the specified module by using the `usemods` function. This
