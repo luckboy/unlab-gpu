@@ -2071,3 +2071,43 @@ function takes the name for the specified module. The sample import of all modul
 ```unlab
 usemods("company")
 ```
+
+## Plotting
+
+The standard library contains the functions to plotting which draw charts and/or histograms. These
+functions allow draw charts on windows and/or save to the file.
+
+### 2D charts
+
+The `plot` function allows you to draw 2D charts. This function can take iterable objects or the
+iterable object with the function. You can try how the `plot` function draw chart the iterable object
+with the function by enter the following lines to the interpreter:
+
+```unlab
+chart = {
+    x: .[ -4.0, 4.0 .]
+    y: .[ -1.0, 1.0 .]
+}
+plot(chart, -4.0 to 4.0 by 0.1, sin, ",sin(x)")?
+```
+
+The result of the above lines is here:
+
+![chart](plotting-2d-chart-1.png)
+
+You can try how the `plot` function draw chart two iterable object by enter the following lines to the
+interpreter:
+
+```unlab
+chart = {
+    x: .[ -4.0, 4.0 .]
+    y: .[ -1.0, 1.0 .]
+}
+X = rowvector(-4.0 to 4.0 by 0.1)
+Y = cos(X)
+plot(chart, matrixarray(X)[1], matrixarray(Y)[1], ",Y")?
+```
+
+The result of the above lines is here:
+
+![chart](plotting-2d-chart-2.png)
