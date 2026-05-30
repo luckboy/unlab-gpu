@@ -2079,7 +2079,7 @@ functions allow draw charts on windows and/or save to the file.
 
 ### 2D charts
 
-The `plot` function allows you to draw 2D charts. This function can take iterable objects or the
+The `plot` function allows you to draw 2D charts. This function can take the iterable objects or the
 iterable object with the function. You can try how the `plot` function draw chart the iterable object
 with the function by enter the following lines to the interpreter:
 
@@ -2095,8 +2095,8 @@ The result of the above lines is here:
 
 ![chart](plotting-2d-chart-1.png)
 
-You can try how the `plot` function draw chart two iterable object by enter the following lines to the
-interpreter:
+You can try how the `plot` function draw chart two iterable objects by enter the following lines to 
+the interpreter:
 
 ```unlab
 chart = {
@@ -2111,3 +2111,88 @@ plot(chart, matrixarray(X)[1], matrixarray(Y)[1], ",Y")?
 The result of the above lines is here:
 
 ![chart](plotting-2d-chart-2.png)
+
+### 3D charts
+
+The 3D charts are drawn by the `plot3` function. This function can take the iterable objects or the
+iterable object with two functions for lines. You can try how the `plot3` function draw chart the
+iterable object with two functions for line by enter the following lines to the interpreter:
+
+```unlab
+chart = {
+    x: .[ -2.0, 2.0 .]
+    y: .[ -2.0, 2.0 .]
+    z: .[ -2.0, 2.0 .]
+}
+function sin10(x)
+    sin(x * 10)
+end
+function cos10(x)
+    cos(x * 10)
+end
+plot3(chart, sin10, -2.0 to 2.0 by 0.025, cos10, ",line")?
+```
+
+The result of the above lines is here:
+
+![chart](plotting-3d-chart-1.png)
+
+You can try how the `plot3` function draw chart two iterable objects for line by enter the following
+lines to the interpreter:
+
+```unlab
+chart = {
+    x: .[ -2.0, 2.0 .]
+    y: .[ -2.0, 2.0 .]
+    z: .[ -2.0, 2.0 .]
+}
+X = rowvector(-2.0 to 2.0 by 0.025)
+Y = cos(X * 10.0)
+Z = sin(X * 10.0)
+plot3(chart, matrixarray(X)[1], matrixarray(Y)[1], matrixarray(Z)[1], ",line")?
+```
+
+The result of the above lines is here:
+
+![chart](plotting-3d-chart-2.png)
+
+This function can take iterable objects or two iterable objects with the function for surfaces. You
+can try how the `plot3` function draw chart two iterable objects with the functions for surface by 
+enter the following lines to the interpreter:
+
+```unlab
+chart = {
+    x: .[ -3.0, 3.0 .]
+    y: .[ -3.0, 3.0 .]
+    z: .[ -3.0, 3.0 .]
+}
+function f(x, y)
+    cos(x * x + y * y)
+end
+plot3(chart, -3.0 to 3.0 by 0.1, f, -3.0 to 3.0 by 0.1, "sxz,surface")?
+```
+
+The result of the above lines is here:
+
+![chart](plotting-3d-chart-3.png)
+
+You can try how the `plot3` function draw chart two iterable objects for surface by enter the
+following lines to the interpreter:
+
+```unlab
+chart = {
+    x: .[ -3.0, 3.0 .]
+    y: .[ -3.0, 3.0 .]
+    z: .[ -3.0, 3.0 .]
+}
+X = rowvector(-3.0 to 3.0 by 0.1)
+Z = colvector(-3.0 to 3.0 by 0.1)
+X1 = repeat(X, columns(X))
+Z1 = repeat(Z, rows(Z))
+Y = sin(X1 .* X1 + Z1 .* Z1)
+plot3(chart, matrixarray(X)[1], matrixarray(Y), matrixarray(Z')[1], "sxz,surface")?
+```
+
+The result of the above lines is here:
+
+![chart](plotting-3d-chart-4.png)
