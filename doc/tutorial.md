@@ -1251,8 +1251,8 @@ zs = .[ 1 2.5000 abc true .]
 ```
 
 The standard library contains some functions which operate on arrays. These functions are the `push`
-function, the `pop` function, and the `append` function. You can try how the `push` function works by
-enter the following lines to the interpreter:
+function, the `pop` function, and the `append` function. You can try how the `push` function pushes
+the values to the array by enter the following lines to the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5 .]
@@ -1269,7 +1269,8 @@ xs = .[ 1 2.5000 abc .]
 xs = .[ 1 2.5000 abc true .]
 ```
 
-You can try how the `pop` function works by enter the following lines to the interpreter:
+You can try how the `pop` function removes the elements from the array by enter the following lines to 
+the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5, "abc" .]
@@ -1296,7 +1297,8 @@ pop(xs) = none
 xs = .[.]
 ```
 
-You can try how the `append` function works by enter the following lines to the interpreter:
+You can try how the `append` function appends the array to other array by enter the following lines to
+the interpreter:
 
 ```unlab
 xs = .[ 1, 2.5 .]
@@ -1442,8 +1444,8 @@ u = {
 ```
 
 The standard library contains some functions which operate on structures. This function also is the
-`append` function. You can try how the `append` function works by enter the following lines to the
-interpreter:
+`append` function. You can try how the `append` function appends the structure to other structure by
+enter the following lines to the interpreter:
 
 ```unlab
 s = { name: "John"; height: 1.8 }
