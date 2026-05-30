@@ -2093,7 +2093,7 @@ plot(chart, -4.0 to 4.0 by 0.1, sin, ",sin(x)")?
 
 The result of the above lines is here:
 
-![chart](plotting-2d-chart-1.png)
+![2D chart](plotting-2d-chart-1.png)
 
 You can try how the `plot` function draw chart two iterable objects by enter the following lines to 
 the interpreter:
@@ -2110,7 +2110,7 @@ plot(chart, matrixarray(X)[1], matrixarray(Y)[1], ",Y")?
 
 The result of the above lines is here:
 
-![chart](plotting-2d-chart-2.png)
+![2D chart](plotting-2d-chart-2.png)
 
 ### 3D charts
 
@@ -2135,7 +2135,7 @@ plot3(chart, sin10, -2.0 to 2.0 by 0.025, cos10, ",line")?
 
 The result of the above lines is here:
 
-![chart](plotting-3d-chart-1.png)
+![3D chart](plotting-3d-chart-1.png)
 
 You can try how the `plot3` function draw chart two iterable objects for line by enter the following
 lines to the interpreter:
@@ -2154,7 +2154,7 @@ plot3(chart, matrixarray(X)[1], matrixarray(Y)[1], matrixarray(Z)[1], ",line")?
 
 The result of the above lines is here:
 
-![chart](plotting-3d-chart-2.png)
+![3D chart](plotting-3d-chart-2.png)
 
 This function can take iterable objects or two iterable objects with the function for surfaces. You
 can try how the `plot3` function draw chart two iterable objects with the functions for surface by 
@@ -2174,7 +2174,7 @@ plot3(chart, -3.0 to 3.0 by 0.1, f, -3.0 to 3.0 by 0.1, "sxz,surface")?
 
 The result of the above lines is here:
 
-![chart](plotting-3d-chart-3.png)
+![3D chart](plotting-3d-chart-3.png)
 
 You can try how the `plot3` function draw chart two iterable objects for surface by enter the
 following lines to the interpreter:
@@ -2195,4 +2195,23 @@ plot3(chart, matrixarray(X)[1], matrixarray(Y), matrixarray(Z')[1], "sxz,surface
 
 The result of the above lines is here:
 
-![chart](plotting-3d-chart-4.png)
+![3D chart](plotting-3d-chart-4.png)
+
+### Histograms
+
+The `histogram` function or the `hist` function allows you to draw histogram. These functions can take
+the iterable object with data. You can try how the `histogram` function draw histogram the iterable
+object with data by enter the following lines to the interpreter:
+
+```unlab
+chart = {
+    x: 1 to 3
+    y: .[ 0, 9 .]
+}
+D = .[ 1, 1, 2, 2, 1, 3, 3, 2, 2, 1, 1, 2, 2, 2, 3, 3, 1, 2, 3 .]
+histogram(chart, D, "")?
+```
+
+The result of the above lines is here:
+
+![Histogram](plotting-histogram.png)
