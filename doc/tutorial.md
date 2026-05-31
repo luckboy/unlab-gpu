@@ -2049,7 +2049,7 @@ usevar("company::name")
 ```
 
 Also, you can import all variables and all functions from the specified module by using the `usevars`
-function. This function takes the name for the specified module. The sample import of all variables 
+function. This function takes the name for the specified module. The sample import of all variables
 and all functions is here:
 
 ```unlab
@@ -2074,14 +2074,14 @@ usemods("company")
 
 ## Plotting
 
-The standard library contains the functions to plotting which draw charts and/or histograms. These
-functions allow draw charts on windows and/or save to the file.
+The standard library contains the functions to plotting which draw charts and/or histograms. The
+charts and the histograms allow you to visualize data and operation results.
 
 ### 2D charts
 
 The `plot` function allows you to draw 2D charts. This function can take the iterable objects or the
-iterable object with the function. You can try how the `plot` function draw chart the iterable object
-with the function by enter the following lines to the interpreter:
+iterable object with the function. You can try how this function draw chart the iterable object with
+the function by enter the following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2095,8 +2095,8 @@ The result of the above lines is here:
 
 ![2D chart](plotting-2d-chart-1.png)
 
-You can try how the `plot` function draw chart two iterable objects by enter the following lines to 
-the interpreter:
+You can try how this function draw chart two iterable objects by enter the following lines to the
+interpreter:
 
 ```unlab
 chart = {
@@ -2115,8 +2115,8 @@ The result of the above lines is here:
 ### 3D charts
 
 The 3D charts are drawn by the `plot3` function. This function can take the iterable objects or the
-iterable object with two functions for lines. You can try how the `plot3` function draw chart the
-iterable object with two functions for line by enter the following lines to the interpreter:
+iterable object with two functions for lines. You can try how this function draw chart the iterable
+object with two functions for line by enter the following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2137,8 +2137,8 @@ The result of the above lines is here:
 
 ![3D chart](plotting-3d-chart-1.png)
 
-You can try how the `plot3` function draw chart two iterable objects for line by enter the following
-lines to the interpreter:
+You can try how this function draw chart two iterable objects for line by enter the following lines to
+the interpreter:
 
 ```unlab
 chart = {
@@ -2157,8 +2157,8 @@ The result of the above lines is here:
 ![3D chart](plotting-3d-chart-2.png)
 
 This function can take iterable objects or two iterable objects with the function for surfaces. You
-can try how the `plot3` function draw chart two iterable objects with the functions for surface by 
-enter the following lines to the interpreter:
+can try how this function draw chart two iterable objects with the functions for surface by enter the
+following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2176,8 +2176,8 @@ The result of the above lines is here:
 
 ![3D chart](plotting-3d-chart-3.png)
 
-You can try how the `plot3` function draw chart two iterable objects for surface by enter the
-following lines to the interpreter:
+You can try how this function draw chart two iterable objects for surface by enter the following lines
+to the interpreter:
 
 ```unlab
 chart = {
