@@ -894,6 +894,14 @@ f(4, 2) = 10
 f(6, 3) = 20
 ```
 
+If you want to redefine function, you can use the `removevar` function to remove the function. You
+can try how the `removevar` function removes the `f` function by enter the following lines to the
+interpreter:
+
+```unlab
+removevar("f")
+```
+
 The sample function with the loop in the body and the sample applications are here:
 
 ```unlab
@@ -2077,6 +2085,13 @@ usemods("company")
 The standard library contains the functions to plotting which draw charts and/or histograms. The
 charts and the histograms allow you to visualize data and operation results.
 
+If you enter examples for the plotting functions to script file, you should adds the following lines to the end of the script file:
+
+```unlab
+println("Press enter:")
+readline()?
+```
+
 ### 2D charts
 
 The `plot` function allows you to draw 2D charts. This function can take the iterable objects or the
@@ -2215,3 +2230,96 @@ histogram(chart, D, "")?
 The result of the above lines is here:
 
 ![Histogram](plotting-histogram.png)
+
+## Neural networks
+
+This scripting language is created for neural networks. We will create and train neural netoworks to
+generate and recognize the trigonometric functions.
+
+### Library installation
+
+We will use the `github.com/luckboy/unn` library that allows you to create and train neural netowrk.
+You can install this library by invoke the following command:
+
+```
+unlab-pkg install github.com/luckboy/unn
+```
+
+### Library usage
+
+You can load the `github.com/luckboy/unn` library by enter the following line to the interpreter:
+
+```unlab
+uselib("pl.luckboy/unn")
+```
+
+Also, you can import modules and functions for this library by enter the following lines to the
+interpreter:
+
+```unlab
+usemods("pl_luckboy_unn")
+usevars("pl_luckboy_unn")
+```
+
+### Generate training data
+
+Neural networks need the training data to learning. The following lines generate the training data for
+our neural network:
+
+```unlab
+X = eye(2)
+r = -3.0 to 3.0 by 0.1
+YA = .[.]
+push(YA, matrixarray(sin(rowvector(r)))[1])
+push(YA, matrixarray(cos(rowvector(r)))[1])
+YT = matrix(YA)
+Y = YT'
+```
+
+### Creation of neural networks
+
+The `github.com/luckboy/unn` library allows you to create neural networks by using the `mlpwb` function that create Multilayer Perceptron with biases. This function takes the sizes of layers and
+the activation functions for hidden layers. Other arguments of this function are a loss function and
+initialization function. We create the neural network for generation of trigonometric functions by
+enter the following line to the interpreter:
+
+```unlab
+tfg_net = mlpwb(.[ rows(X), 100, rows(Y) .], .[ tanh .], se, xavier_init)
+```
+
+We create the neural network for recognition of trigonometric functions by enter the following line to 
+the interpreter:
+
+```unlab
+tfr_net = mlpwb(.[ rows(Y), 100, rows(X) .], .[ tanh .], cel, xavier_init)
+```
+
+### Training of neural networks
+
+Neural network can be trained by using the `etrain` function that is in the `github.com/luckboy/unn`
+library. This function takes the training data as the input data and the output data. Also, the number
+of epaches and the neural network are passed to this function. This function allows you to specify
+the algorithm and its parameters. If you want to save the neural network, you can specify the
+diractory with the saved neural network. We will use gradient descent algorithm. We train the neural
+network for generation of trigonometric functions by enter the following lines to the interpreter:
+
+```unlab
+mkdir("tfgen")
+tfg_net2 = etrain(50, tfg_net, X, Y, { eta: 0.1 }, alg::gd, "tfgen", true, true)?
+```
+
+The chart of loss function of neural network for generation of trigonometric functions:
+
+![Chart of loss function](training-loss-1.png)
+
+We train the neural network for recognition of trigonometric functions by enter the following lines to
+the interpreter:
+
+```unlab
+mkdir("tfrec")
+tfr_net2 = etrain(50, tfr_net, Y, X, { eta: 0.1 }, alg::gd, "tfrec", true, true)?
+```
+
+The chart of loss function of neural network for recognition of trigonometric functions:
+
+![Chart of loss function](training-loss-2.png)
