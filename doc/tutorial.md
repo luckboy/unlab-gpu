@@ -2085,13 +2085,16 @@ usemods("company")
 The standard library contains the functions to plotting which draw charts and/or histograms. The
 charts and the histograms allow you to visualize data and operation results.
 
-If you enter the plotting function to script file, you should adds the following lines after the
-plotting function:
+If you enter the application of plotting function to script file, you should adds the following lines
+after the application of plotting function:
 
 ```unlab
 println("Press enter:")
 readline()?
 ```
+
+The `readline` function reads line from the standard input. If the `readline` function isn't used, the
+script automatically closes a window with the chart or the histogram while exit.
 
 ### 2D charts
 
@@ -2248,6 +2251,7 @@ unlab-pkg install github.com/luckboy/unn
 
 ### Library usage
 
+Libraries can be loaded by the `uselib` function that loads the library if the library isn't loaded.
 You can load the `github.com/luckboy/unn` library by enter the following line to the interpreter:
 
 ```unlab
@@ -2327,8 +2331,8 @@ The chart of loss function of neural network is here for recognition of trigonom
 
 ### Loading of neural networks
 
-You can load the neural network generation of trigonometric functions by the following line to the
-interpreter:
+The neural networks can be loaded by the `load` function that loads variables. You can load the neural
+network generation of trigonometric functions by the following line to the interpreter:
 
 ```unlab
 tfg_net2 = (load("tfgen" + pathsep + "net.bin")?)[1]
