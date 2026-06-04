@@ -2281,15 +2281,14 @@ Y = YT'
 
 The `github.com/luckboy/unn` library allows you to create neural networks by using the `mlpwb` function that create Multilayer Perceptron with biases. This function takes the sizes of layers and
 the activation functions for hidden layers. Other arguments of this function are a loss function and
-initialization function. We create the neural network for generation of trigonometric functions by
-enter the following line to the interpreter:
+initialization function. The following line creates the neural network for generation of trigonometric
+functions:
 
 ```unlab
 tfg_net = mlpwb(.[ rows(X), 100, rows(Y) .], .[ tanh .], se, xavier_init)
 ```
 
-We create the neural network for recognition of trigonometric functions by enter the following line to 
-the interpreter:
+The following line creates the neural network for recognition of trigonometric functions:
 
 ```unlab
 tfr_net = mlpwb(.[ rows(Y), 100, rows(X) .], .[ tanh .], cel, xavier_init)
@@ -2302,8 +2301,8 @@ library. This function takes the training data as the input data and the output 
 of epaches and the neural network are passed to this function. This function allows you to specify
 the algorithm and its parameters. If you want to save the neural network, you can specify the
 diractory with the saved neural network. We will use the gradient descent algorithm. Also, we will use
-the `tfgen` directory for generation of trigonometric functions. We train the neural network with the
-plotting for generation of trigonometric functions by enter the following lines to the interpreter:
+the `tfgen` directory for generation of trigonometric functions. The following lines train the neural
+network for generation of trigonometric functions:
 
 ```unlab
 mkdir("tfgen")
@@ -2314,9 +2313,8 @@ The chart of loss function of neural network is here for generation of trigonome
 
 ![Chart of loss function](training-loss-1.png)
 
-Also, we will use the `tfgen` directory for recognition of trigonometric functions. We train the
-neural network with the plotting for recognition of trigonometric functions by enter the following
-lines to the interpreter:
+Also, we will use the `tfgen` directory for recognition of trigonometric functions. The following
+lines train the neural network for recognition of trigonometric functions:
 
 ```unlab
 mkdir("tfrec")
