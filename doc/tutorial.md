@@ -2085,7 +2085,8 @@ usemods("company")
 The standard library contains the functions to plotting which draw charts and/or histograms. The
 charts and the histograms allow you to visualize data and operation results.
 
-If you enter examples for the plotting functions to script file, you should adds the following lines to the end of the script file:
+If you enter the plotting function to script file, you should adds the following lines after the
+plotting function:
 
 ```unlab
 println("Press enter:")
@@ -2300,26 +2301,152 @@ Neural network can be trained by using the `etrain` function that is in the `git
 library. This function takes the training data as the input data and the output data. Also, the number
 of epaches and the neural network are passed to this function. This function allows you to specify
 the algorithm and its parameters. If you want to save the neural network, you can specify the
-diractory with the saved neural network. We will use gradient descent algorithm. We train the neural
-network for generation of trigonometric functions by enter the following lines to the interpreter:
+diractory with the saved neural network. We will use the gradient descent algorithm. Also, we will use
+the `tfgen` directory for generation of trigonometric functions. We train the neural network with the
+plotting for generation of trigonometric functions by enter the following lines to the interpreter:
 
 ```unlab
 mkdir("tfgen")
 tfg_net2 = etrain(50, tfg_net, X, Y, { eta: 0.1 }, alg::gd, "tfgen", true, true)?
 ```
 
-The chart of loss function of neural network for generation of trigonometric functions:
+The chart of loss function of neural network is here for generation of trigonometric functions:
 
 ![Chart of loss function](training-loss-1.png)
 
-We train the neural network for recognition of trigonometric functions by enter the following lines to
-the interpreter:
+Also, we will use the `tfgen` directory for recognition of trigonometric functions. We train the
+neural network with the plotting for recognition of trigonometric functions by enter the following
+lines to the interpreter:
 
 ```unlab
 mkdir("tfrec")
 tfr_net2 = etrain(50, tfr_net, Y, X, { eta: 0.1 }, alg::gd, "tfrec", true, true)?
 ```
 
-The chart of loss function of neural network for recognition of trigonometric functions:
+The chart of loss function of neural network is here for recognition of trigonometric functions:
 
 ![Chart of loss function](training-loss-2.png)
+
+### Loading of neural networks
+
+You can load the neural network generation of trigonometric functions by the following line to the
+interpreter:
+
+```unlab
+tfg_net2 = (load("tfgen" + pathsep + "net.bin")?)[1]
+```
+
+You can load the neural network recognition of trigonometric functions by the following line to the
+interpreter:
+
+```unlab
+tfr_net2 = (load("tfrec" + pathsep + "net.bin")?)[1]
+```
+
+### Computation of neural networks
+
+The `compute` function computes the result of neural network. You can compute and show the result of
+neural network for generation of the sine function by enter the following lines to the interpreter:
+
+```unlab
+x = [1; 0]
+o = compute(tfg_net2, x, false)
+chart = {
+    x: .[ -3.0, 3.0 .]
+    y: .[ -1.0, 1.0 .]
+}
+plot(chart, r, sin, ",sin(x)", r, matrixarray(o')[1], ",o")?
+```
+
+The result of the above lines is here:
+
+![Computation chart](computation-1-1.png)
+
+You can compute and show the result of neural network for generation of the cosine function by enter
+the following lines to the interpreter:
+
+```unlab
+x = [0; 1]
+o = compute(tfg_net2, x, false)
+chart = {
+    x: .[ -3.0, 3.0 .]
+    y: .[ -1.0, 1.0 .]
+}
+plot(chart, r, cos, ",cos(x)", r, matrixarray(o')[1], ",o")?
+```
+
+The result of the above lines is here:
+
+![Computation chart](computation-1-2.png)
+
+You can compute the result of neural network for recognition of the sine function by enter the
+following lines to the interpreter:
+
+```unlab
+y = sin(colvector(r))
+o = compute(tfr_net2, y, false)
+println("o = ", o)
+```
+
+The output of the above lines is here:
+
+```
+o = [
+         2.6327
+        -3.2580
+]
+```
+
+You can compute the result of neural network for recognition of the cosine function by enter the
+following lines to the interpreter:
+
+```unlab
+y = cos(colvector(r))
+o = compute(tfr_net2, y, false)
+println("o = ", o)
+```
+
+The output of the above lines is here:
+
+```
+o = [
+        -2.7726
+         2.9751
+]
+```
+
+You can compute the result of neural network for recognition of the sine function with shift by enter
+the following lines to the interpreter:
+
+```unlab
+y = sin(colvector(r) + 0.1)
+o = compute(tfr_net2, y, false)
+println("o = ", o)
+```
+
+The output of the above lines is here:
+
+```
+o = [
+         2.3066
+        -2.9232
+]
+```
+
+You can compute the result of neural network for recognition of the cosine function with shift by
+enter the following lines to the interpreter:
+
+```unlab
+y = cos(colvector(r) + 0.1)
+o = compute(tfr_net2, y, false)
+println("o = ", o)
+```
+
+The output of the above lines is here:
+
+```
+o = [
+        -2.9002
+         3.1871
+]
+```
