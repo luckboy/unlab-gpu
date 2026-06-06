@@ -39,8 +39,14 @@ clap_lex = ">=1.0.0,<=1.0.1"
 deflate64 = ">=0.1.9,<=0.1.10"
 dlopen2_derive = ">=0.4.0,<=0.4.1"
 indexmap = ">=2.0.0,<=2.11.4"
+openssl-sys = ">=0.9.64,<=0.9.114"
 time = ">=0.3.37,<=0.3.41"
 unicode-segmentation = ">=1.0.0,<=1.12.0"
+# Holded versions for plot.
+pathfinder_simd = { version = ">=0.5.3,<=0.5.5", optional = true }
+plotters-backend = { version = ">=0.3.3,<=0.3.6", optional = true }
+plotters-bitmap = { version = ">=0.3.3,<=0.3.6", optional = true }
+plotters-svg = { version = ">=0.3.3,<=0.3.6", optional = true }
 
 [dev-dependencies]
 sealed_test = "1.1.0"
@@ -66,4 +72,4 @@ cuda-11070 = ["cuda", "unmtx-gpu/cuda-11070"]
 cuda-11060 = ["cuda", "unmtx-gpu/cuda-11060"]
 cuda-11050 = ["cuda", "unmtx-gpu/cuda-11050"]
 cuda-11040 = ["cuda", "unmtx-gpu/cuda-11040"]
-plot = ["dep:image", "dep:plotters", "dep:softbuffer", "dep:winit"]
+plot = ["dep:image", "dep:plotters", "dep:softbuffer", "dep:winit", "dep:pathfinder_simd", "dep:plotters-backend", "dep:plotters-bitmap", "dep:plotters-svg"]
