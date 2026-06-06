@@ -2283,7 +2283,8 @@ Y = YT'
 
 ### Creation of neural networks
 
-The `github.com/luckboy/unn` library allows you to create neural networks by using the `mlpwb` function that create Multilayer Perceptron with biases. This function takes the sizes of layers and
+The `github.com/luckboy/unn` library allows you to create neural networks by using the `mlpwb`
+function that create Multilayer Perceptron with biases. This function takes the sizes of layers and
 the activation functions for hidden layers. Other arguments of this function are a loss function and
 initialization function. The following line creates the neural network for generation of trigonometric
 functions:
