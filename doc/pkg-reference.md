@@ -18,6 +18,7 @@ some configuration files for this package manager.
 
 The package structure is:
 
+- `bin` - directory with binaries
 - `lib` - directory with libraries
 - `tests` - directory with tests for libraries
 - `work` - working directory
@@ -26,8 +27,8 @@ The package structure is:
 
 ## Manifest format
 
-A manifest format is based on [TOML](https://en.wikipedia.org/wiki/TOML) format. The manfest format
-structure is:
+A manifest format is based on the [TOML](https://en.wikipedia.org/wiki/TOML) format. The structure of
+manifest format is:
 
 - `[package]` - package section
     - `name` - package name
