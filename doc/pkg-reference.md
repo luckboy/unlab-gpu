@@ -11,8 +11,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ## Introduction
 
 This document is the reference for the Unlab-pkg package manager. The Unlab-pkg package manager is a
-package manager for the Unlab scripting language. This reference describes the structure of package and
-some configuration files for this package manager.
+package manager for the Unlab scripting language. This reference describes the structure of package
+and some configuration files for this package manager.
 
 ## Package structure
 
