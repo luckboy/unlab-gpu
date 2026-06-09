@@ -287,7 +287,7 @@ fn test_version_fmt_formats_versions_with_pre_releases_and_builds()
 }
 
 #[test]
-fn test_version_req_parse_parses_version_requiremets()
+fn test_version_req_parse_parses_version_requirements()
 {
     match VersionReq::parse("*") {
         Ok(version_req) => {
@@ -392,7 +392,7 @@ fn test_version_req_parse_parses_version_requiremets()
 }
 
 #[test]
-fn test_version_req_parse_parses_version_requiremet_with_many_single_version_requirements()
+fn test_version_req_parse_parses_version_requirement_with_many_single_version_requirements()
 {
     match VersionReq::parse(">=1.2.3,!=2.3.4,<=3.4.5") {
         Ok(version_req) => {
@@ -415,7 +415,7 @@ fn test_version_req_parse_parses_version_requiremet_with_many_single_version_req
 }
 
 #[test]
-fn test_version_req_parse_parses_version_requiremets_with_many_single_version_requirements_and_spaces()
+fn test_version_req_parse_parses_version_requirements_with_many_single_version_requirements_and_spaces()
 {
     match VersionReq::parse(" >= 1.2.3 ,  !=  2.3.4  ,   <=   3.4.5   ") {
         Ok(version_req) => {
@@ -447,7 +447,7 @@ fn test_version_req_parse_complains_on_invalid_version()
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_wildcard()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_wildcard()
 {
     let version_req = VersionReq::parse("*").unwrap();
     assert_eq!(true, version_req.matches(&Version::parse("1.2.3").unwrap()));
@@ -456,7 +456,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_wildcard(
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_eq_operator()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_eq_operator()
 {
     let version_req = VersionReq::parse("=1.2.3").unwrap();
     assert_eq!(true, version_req.matches(&Version::parse("1.2.3").unwrap()));
@@ -465,7 +465,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_eq_operat
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_ne_operator()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_ne_operator()
 {
     let version_req = VersionReq::parse("!=1.2.3").unwrap();
     assert_eq!(false, version_req.matches(&Version::parse("1.2.3").unwrap()));
@@ -474,7 +474,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_ne_operat
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_lt_operator()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_lt_operator()
 {
     let version_req = VersionReq::parse("<1.2.3").unwrap();
     assert_eq!(true, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -483,7 +483,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_lt_operat
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_ge_operator()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_ge_operator()
 {
     let version_req = VersionReq::parse(">=1.2.3").unwrap();
     assert_eq!(false, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -492,7 +492,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_ge_operat
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_gt_operator()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_gt_operator()
 {
     let version_req = VersionReq::parse(">1.2.3").unwrap();
     assert_eq!(false, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -501,7 +501,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_gt_operat
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremet_for_le_operator()
+fn test_version_req_matches_matches_versions_to_version_requirement_for_le_operator()
 {
     let version_req = VersionReq::parse("<=1.2.3").unwrap();
     assert_eq!(true, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -510,7 +510,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremet_for_le_operat
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremets_for_default_operator()
+fn test_version_req_matches_matches_versions_to_version_requirements_for_default_operator()
 {
     let version_req = VersionReq::parse("1.2.3").unwrap();
     assert_eq!(false, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -561,7 +561,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremets_for_default_
 }
 
 #[test]
-fn test_version_req_matches_matches_versions_to_version_requiremets_for_tilde_operator()
+fn test_version_req_matches_matches_versions_to_version_requirements_for_tilde_operator()
 {
     let version_req = VersionReq::parse("~1.2.3").unwrap();
     assert_eq!(false, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -582,7 +582,7 @@ fn test_version_req_matches_matches_versions_to_version_requiremets_for_tilde_op
 }
 
 #[test]
-fn test_version_req_matche_matches_versions_to_version_requiremet_with_many_single_version_requirements()
+fn test_version_req_matche_matches_versions_to_version_requirement_with_many_single_version_requirements()
 {
     let version_req = VersionReq::parse(">=1.2.3,!=2.3.4,<=3.4.5").unwrap();
     assert_eq!(false, version_req.matches(&Version::parse("1.2.2").unwrap()));
@@ -595,7 +595,7 @@ fn test_version_req_matche_matches_versions_to_version_requiremet_with_many_sing
 }
 
 #[test]
-fn test_version_req_fmt_formats_version_requiremets()
+fn test_version_req_fmt_formats_version_requirements()
 {
     assert_eq!(String::from("*"), format!("{}", VersionReq::parse("*").unwrap()));
     assert_eq!(String::from("=1.2.3"), format!("{}", VersionReq::parse("=1.2.3").unwrap()));
@@ -609,5 +609,5 @@ fn test_version_req_fmt_formats_version_requiremets()
 }
 
 #[test]
-fn test_version_req_fmt_formats_version_requiremet_with_many_single_version_requirements()
+fn test_version_req_fmt_formats_version_requirement_with_many_single_version_requirements()
 { assert_eq!(String::from(">=1.2.3,!=2.3.4,<=3.4.5"), format!("{}", VersionReq::parse(">=1.2.3,!=2.3.4,<=3.4.5").unwrap())); }
