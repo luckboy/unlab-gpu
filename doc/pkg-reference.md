@@ -47,7 +47,9 @@ package name and the value are a version requirement for the package.
 
 The packages of section of depedencies are depedents with version requirements.
 
-The version requirements of section of constraints can only limit the versions of packages. The packages of section of constraints aren't depedents. The constraints are only used in current package.
+The version requirements of section of constraints can only limit the versions of packages. The
+packages of section of constraints aren't depedents. The constraints are only used in the current
+package.
 
 ## Sources
 
@@ -63,6 +65,41 @@ The fields of version union are:
 - `file` - package archive
 - `url` - URL to package archive
 
-The section of sources can refer the package directories and/or the package archives for package versions. The field of section of sources can is used to rename package where the `renamed` field is
-old package name and key of this section is new package name. Also, the sources are only used in
-current package.
+The section of sources contain the custom sources. The custom sources can refer the package
+directories and/or the package archives for package versions. The field of section of sources can be
+used to rename package where the `renamed` field is old package name and the key of this section is
+new package name. Also, the sources are only used in the current package.
+
+## Versions
+
+Versions are compatible with the [SemVer](https://semver.org) format. The version also can have less
+or more numeric identifiers than in the [SemVer](https://semver.org) format.
+
+## Version requirements
+
+A single version requirement can have the operator with the version, the version or the `*` character.
+The operators of single version requirement are:
+
+- `=` - is equal to requirement version
+- `!=` - isn't equal to requirement version
+- `<` - is less than requirement version
+- `>=` - is greater than or equal to requirement version
+- `>` - is greater than requirement version
+- `<=` - is less than or equal to requirement version
+- `^` - default operator
+- `~` - tilde operator
+
+The default operator compares with the requirement version. If the version is greater than or equal to
+the requirement version and the zero numeric identifiers or the zero numeric identifiers with the
+first non-zero numeric identifier are equal, the version is matched.
+
+The tilde operator compares with the requirement version. If the version is greater than or equal to
+the requirement version and the tilde numeric identifiers are equal, the version is matched. The
+number of tilde numeric identifiers is two if the number of numeric identifier is greater than or
+equal to two, otherwise the number of numeric identifiers.
+
+If single version requirement hasn't operator, the default operator is used. Any version is matched if
+the single version requirement is the `*` character.
+
+The version requirement can have many single version requirements which are separeted the comma
+character.
