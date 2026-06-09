@@ -39,3 +39,30 @@ manifest format is:
 - `[dependencies]` - section of dependencies (optional)
 - `[constraints]` - section of constraints (optional)
 - `[sources]` - seciton of sources (optional)
+
+## Dependencies and constraints
+
+The section of depedencies and the section of constraints can contain keys and values. The key is the
+package name and the value are a version requirement for the package.
+
+The packages of section of depedencies are depedents with version requirements.
+
+The version requirements of section of constraints can only limit the versions of packages. The packages of section of constraints aren't depedents. The constraints are only used in current package.
+
+## Sources
+
+The section of sources contain fields with keys which are package names. The value of this field is
+an union. These fields of the union are:
+
+- `versions` - keys are package version and values are version unions
+- `renamed` - old package name
+
+The fields of version union are:
+
+- `dir` - packge directory
+- `file` - package archive
+- `url` - URL to package archive
+
+The section of sources can refer the package directories and/or the package archives for package versions. The field of section of sources can is used to rename package where the `renamed` field is
+old package name and key of this section is new package name. Also, the sources are only used in
+current package.
