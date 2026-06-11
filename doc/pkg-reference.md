@@ -67,7 +67,8 @@ package.
 The section of sources contain fields with keys which are package names. The value of this field is
 a structure with one field of many fields. These fields of the union are:
 
-- `versions` - keys are package version and values are version structure with one field of many field
+- `versions` - keys are package version and values are version structures with one field of many
+  fields
 - `renamed` - old package name
 
 The fields of version structure are:
@@ -89,9 +90,9 @@ allows to download the package from the repository. The first component specifie
 service. The second component is an user name. The third component is a repository name. The first
 components for the git hosting services are:
 
-- `github.com` - [GitHub](https://github.com)
-- with `gitlab.` prefix - [GitLab](https://about.gitlab.com)
-- `bitbucket.org` - [Bitbucket](https://bitbucket.org)
+- `github.com` - [GitHub](https://github.com) source
+- with `gitlab.` prefix - [GitLab](https://about.gitlab.com) source
+- `bitbucket.org` - [Bitbucket](https://bitbucket.org) source
 
 ## Versions
 
