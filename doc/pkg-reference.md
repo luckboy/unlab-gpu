@@ -131,3 +131,28 @@ the single version requirement is the `*` character.
 
 The version requirement can have many single version requirements which are separeted the comma
 character.
+
+## Tags
+
+The default source downloads package versions from the tags of repository. The tag name should have
+the prefix that is the `v` character. The version in the [SemVer](https://semver.org) format should
+occur after the `v` character.
+
+## Configuration files
+
+Configuration files are in the `.unlab-gpu` directory that is in the home directory. The configuration 
+files are:
+
+- `config.toml` - general configuration file
+- `constraints.toml` - file with constraints
+- `sources.toml` - file with sources
+
+The general configuration file format is based on the [TOML](https://en.wikipedia.org/wiki/TOML)
+format. The structure of the general configuration file format is:
+
+- `account` - account in the git hosting service.
+- `domain` - domain name for libraries
+
+The format of file with constraints is the format of section of constraints from the manifest format.
+
+Also, the format of file with sources is the format of section of sources from the manifest format.
