@@ -143,12 +143,12 @@ occur after the `v` character.
 Configuration files are in the `.unlab-gpu` directory that is in the home directory. The configuration 
 files are:
 
-- `config.toml` - general configuration file
+- `config.toml` - main configuration file
 - `constraints.toml` - file with constraints
 - `sources.toml` - file with sources
 
-The general configuration file format is based on the [TOML](https://en.wikipedia.org/wiki/TOML)
-format. The structure of the general configuration file format is:
+The main configuration file format is based on the [TOML](https://en.wikipedia.org/wiki/TOML)
+format. The structure of the main configuration file format is:
 
 - `account` - account in the git hosting service.
 - `domain` - domain name for libraries
