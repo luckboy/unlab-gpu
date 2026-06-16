@@ -2601,7 +2601,7 @@ The above command runs the interpreter with the dependencies for the sample pack
 
 ### Testing
 
-The package manager allows you to test the library for the package. Yot can test the library of sample
+The package manager allows you to test the library for the package. You can test the library of sample
 package by invoke the following command in the directory of sample package:
 
 ```
@@ -2615,6 +2615,47 @@ Loading tests ... done
 Test pl_luckboy_example_tests::test_add_adds ... ok
 
 Test result: ok. 1 passed; 0 failed
+```
+
+The standard library has some assertion functions which can be used to testing. These function are
+here:
+
+- `assert` - an assertion error if the first argument is `false`
+- `asserteq` - an assertion error if the first argument isn't equal to the second argument
+- `assertne` - an assertion error if the first argument is equal to the second argument
+- `assertnearlyeq` - an assertion error if the first argument isn't nearly equal to the second
+  argument
+- `assertnearlyne` - an assertion error if the first argument is nearly equal to the second argument
+
+The sample application of `assert` function is here:
+
+```unlab
+assert(true)
+```
+
+The sample application of `asserteq` function is here:
+
+```unlab
+asserteq(4, 2 + 2)
+```
+
+
+The sample application of `assertne` function is here:
+
+```unlab
+assertne(5, 2 + 2)
+```
+
+The sample application of `assertnearlyeq` function is here:
+
+```unlab
+assertnearlyeq(pi/2, asin(0.999), 0.1)
+```
+
+The sample application of `assertnearlyne` function is here:
+
+```unlab
+assertnearlyne(pi/2, acos(0.999), 0.1)
 ```
 
 ### Package publication
