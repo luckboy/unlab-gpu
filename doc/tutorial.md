@@ -2585,8 +2585,8 @@ You can install this depedency to the working directory by invoke the following 
 unlab-pkg install-deps
 ```
 
-The working directory contain depedencies with the documentation that is the `work` directory in the
-directory of sample package.
+The working directory contain depedencies with the documentation. This directory is the `work`
+directory that is in the package directory.
 
 ### Console
 
@@ -2617,8 +2617,8 @@ Test pl_luckboy_example_tests::test_add_adds ... ok
 Test result: ok. 1 passed; 0 failed
 ```
 
-The standard library has some assertion functions which can be used to testing. These function are
-here:
+The standard library has some assertion functions which can be used in the test functions to testing.
+These function are here:
 
 - `assert` - an assertion error if the first argument is `false`
 - `asserteq` - an assertion error if the first argument isn't equal to the second argument
