@@ -2617,7 +2617,7 @@ Test pl_luckboy_example_tests::test_add_adds ... ok
 Test result: ok. 1 passed; 0 failed
 ```
 
-### Publication
+### Package publication
 
 You should create the remote repository and pushed the local repository to the remote repository
 before the package publication. The package publication is the tag addition and the tag pushing to the
