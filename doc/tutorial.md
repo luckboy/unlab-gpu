@@ -41,7 +41,7 @@ language. The interpreter can work in an interactive mode or a non-interactive m
 
 The interactive mode allows you to enter and edit lines which are interpreted. Also, the interactive
 mode allows you to access to the command history by press the up key or the down key. The interpreter
-can be runned by invoke the following command in the interactive mode:
+can be ran by invoke the following command in the interactive mode:
 
 ```
 unlab-gpu
@@ -67,7 +67,7 @@ documentation.
 ### Non-interactive mode
 
 The non-interactive mode allows you execute scripts in the Unlab scritping language. The interpreter
-can be runned by invoke the following command in the non-interactive mode for the `script.un` file:
+can be ran by invoke the following command in the non-interactive mode for the `script.un` file:
 
 ```
 unlab-gpu script.un
@@ -2452,4 +2452,86 @@ o = [
         -2.9002
          3.1871
 ]
+```
+
+## Sample package
+
+The package manager for this language can create package from templates. We will create sample package
+with the package manager.
+
+### Configuration
+
+You should set the configuration of package manager for package creation. The configuration of
+package manager can be set for the `github.com/luckboy` account and the `pl.luckboy` domain by invoke
+the following command:
+
+```
+unlab-pkg config -a github.com/luckboy -d pl.luckboy
+```
+
+You can use your account and your domain.
+
+### Package creation
+
+You can create sample package by invoke the following command:
+
+```
+unlab-pkg new -t example
+```
+
+The directory tree for this package is here for the `github.com/luckboy` account and the `pl.luckboy`
+domain:
+
+```
+example
+├── .gitignore
+├── lib
+│   └── pl.luckboy
+│       └── example
+│           └── lib.un
+├── tests
+│   └── pl.luckboy
+│       └── example
+│           └── tests.un
+└── Unlab.toml
+```
+
+The content of `.gitignore` file is here:
+
+```
+/work
+```
+
+The content of `lib/pl.luckboy/example/lib.un` file is here:
+
+```unlab
+module pl_luckboy_example
+    function add(x, y)
+        x + y
+    end
+end
+```
+
+The content of `tests/pl.luckboy/example/tests.un` file is here:
+
+```unlab
+uselib("example")
+
+module pl_luckboy_example_tests
+    tests()
+    usevars("pl_luckboy_example")
+
+    function test_add_adds()
+        asserteq(4, add(2, 2))
+    end
+end
+```
+
+The content of `Unlab.toml` file is here:
+
+```toml
+[package]
+name = "github.com/luckboy/example"
+
+[dependencies]
 ```
