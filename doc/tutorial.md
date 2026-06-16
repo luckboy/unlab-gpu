@@ -2639,7 +2639,6 @@ The sample application of `asserteq` function is here:
 asserteq(4, 2 + 2)
 ```
 
-
 The sample application of `assertne` function is here:
 
 ```unlab
