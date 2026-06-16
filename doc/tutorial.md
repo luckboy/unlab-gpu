@@ -2456,8 +2456,8 @@ o = [
 
 ## Sample package
 
-The package manager for this language can create package from templates. We will create sample package
-with the package manager.
+The package manager of this language can create package from templates. We will create sample package
+with the package manager. The package manager of this language is the `unlab-pkg` program.
 
 ### Configuration
 
@@ -2469,11 +2469,17 @@ the following command:
 unlab-pkg config -a github.com/luckboy -d pl.luckboy
 ```
 
-You can use your account and your domain.
+You can use your account and your domain. The account should have the git hosting service and the user
+name which are separated by the `/` character. The supported git hosting service are here:
+
+- `github.com` - [GitHub](https://github.com)
+- `gitlab.com` - [GitLab](https://about.gitlab.com)
+- `bitbucket.org` - [Bitbucket](https://bitbucket.org)
 
 ### Package creation
 
-You can create sample package by invoke the following command:
+We will create the sample package with default template with tests by using the `unlab-pkg` package.
+The sample package can be created by invoke the following command:
 
 ```
 unlab-pkg new -t example
@@ -2495,6 +2501,16 @@ example
 │           └── tests.un
 └── Unlab.toml
 ```
+
+The `lib/pl.luckboy/example` directory contains the `lib.un` file. The `lib.un` file is main script of
+library. Also, this diectory can contain the script files which can be ran by the `run` function from
+the `lib.un` file.
+
+The `tests/pl.luckboy/example` directory contains the `tests.un` file. The `tests.un` file is main
+script of tests for this library. Also, this diectory can contain the script files which can be ran by
+the `run` function from the `lib.un` file.
+
+The `Unlab.toml` is a manifest that contain information about the sample package.
 
 The content of `.gitignore` file is here:
 
@@ -2534,4 +2550,81 @@ The content of `Unlab.toml` file is here:
 name = "github.com/luckboy/example"
 
 [dependencies]
+```
+
+### Git repository initialization
+
+The sample package is the git repository that should be initialized. The git repository of sample
+package can be initialized by invoke the following command in the directory of sample package:
+
+```
+git init
+```
+
+Also, you can create the first commit by invoke the following commands in the directory of sample
+package:
+
+```
+git add -A
+git commit -m "First commit."
+```
+
+### Depedencies
+
+The dependencies are the packages which are required by other package. You can added dependecies by
+add the following lines to the `Unlab.toml` file:
+
+```toml
+[dependencies]
+"github.com/luckboy/unn" = "0.1.1"
+```
+
+You can install this depedency to the working directory by invoke the following command:
+
+```
+unlab-pkg install-deps
+```
+
+The working directory contain depedencies with the documentation that is the `work` directory in the
+directory of sample package.
+
+### Console
+
+The package manager allows yoy to run the interpreter for the package. You can run the interpreter for
+sample package by invoke the following command in the directory of sample package:
+
+```
+unlab-pkg console
+```
+
+The above command runs the interpreter with the dependencies for the sample package.
+
+### Testing
+
+The package manager allows you to test the library for the package. Yot can test the library of sample
+package by invoke the following command in the directory of sample package:
+
+```
+unlab-pkg test
+```
+
+The output of above command is here:
+
+```
+Loading tests ... done
+Test pl_luckboy_example_tests::test_add_adds ... ok
+
+Test result: ok. 1 passed; 0 failed
+```
+
+### Publication
+
+You should create the remote repository and pushed the local repository to the remote repository
+before the package publication. The package publication is the tag addition and the tag pushing to the
+remote repository. The tag represents the version of package. You can publish the sample package by
+invoke the following command in the directory of sample package:
+
+```
+git tag -a v0.1.0 -m "version 0.1.0"
+git push -u origin v0.1.0
 ```
