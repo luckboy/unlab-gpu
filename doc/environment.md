@@ -20,3 +20,5 @@ The environment variables are:
 - `UNLAB_GPU_WORK_LIB_PATH` - the library paths for the current package
 - `UNLAB_GPU_WORK_DOC_PATH` - the documentation paths for the current package
 - `BROWSER` - the browser for the documentation
+
+By default, the Unlab-gpu home directory is the `.unlab-gpu` directory that is in the home directory.
