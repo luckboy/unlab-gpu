@@ -240,12 +240,12 @@ pre code {
     overflow-wrap: normal;
 }
 
-p code {
+p code, li code, th code, td code {
     -moz-border-radius: 0.2rem;
     -webkit-border-radius: 0.2rem;
     border-radius: 0.2rem;
     display: inline;
-    padding: 0.2rem;
+    padding: 0;
 }
 
 table {
