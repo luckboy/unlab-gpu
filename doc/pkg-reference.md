@@ -140,8 +140,8 @@ occur after the `v` character.
 
 ## Configuration files
 
-Configuration files are in the `.unlab-gpu` directory that is in the home directory. The configuration 
-files are:
+Configuration files are in the Unlab-gpu home directory that is in the home directory. The
+configuration files are:
 
 - `config.toml` - main configuration file
 - `constraints.toml` - file with constraints
@@ -152,6 +152,9 @@ format. The structure of the main configuration file format is:
 
 - `account` - account in the git hosting service.
 - `domain` - domain name for libraries
+
+The account should have the git hosting service and the user name which are separated the `/`
+character.
 
 The format of file with constraints is the format of section of constraints from the manifest format.
 
