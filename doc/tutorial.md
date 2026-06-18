@@ -2663,8 +2663,9 @@ The package manager allows you to generate a documentation for the package. The 
 generated from the `%%` comments or the `##` comments. These comment should be above the documented
 variables, the documented functions, or the documented module. The contents of these comments is in
 [Markdown](https://en.wikipedia.org/wiki/Markdown) with supported
-[LaTeX](https://pl.wikipedia.org/wiki/LaTeX). The content of `lib/pl.luckboy/example/lib.un` file
-with documentation comments is here:
+[LaTeX](https://pl.wikipedia.org/wiki/LaTeX). If you want to generate documentation for other library
+scripts, you can use the `runwithdoc` function instead the `run` function. The content of
+`lib/pl.luckboy/example/lib.un` file with documentation comments is here:
 
 ```unlab
 %% A library is an example library.
