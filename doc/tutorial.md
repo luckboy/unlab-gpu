@@ -2657,6 +2657,38 @@ The sample application of `assertnearlyne` function is here:
 assertnearlyne(pi/2, acos(0.999), 0.1)
 ```
 
+### Documentation
+
+The package manager allows you to generate a documentation for the package. The documentation is
+generated from the `%%` comments or the `##` comments. These comment should be above the documented
+variables, the documented functions, or the documented module. The contents of these comments is in
+[Markdown](https://en.wikipedia.org/wiki/Markdown) with supported
+[LaTeX](https://pl.wikipedia.org/wiki/LaTeX). The content of `lib/pl.luckboy/example/lib.un` file
+with documentation comments is here:
+
+```unlab
+%% A library is an example library.
+module pl_luckboy_example
+    %% Adds numbers ($x + y$).
+    function add(x, y)
+        x + y
+    end
+end
+```
+
+You can generate documentation for the current package by invoke the following command:
+
+```
+unlab-pkg doc
+```
+
+A generated documentation can be browse by you with browser. The documentation of sample package can
+be open by enter the following line to the interpreter:
+
+```unlab
+doc("pl.luckboy/example")
+```
+
 ### Package publication
 
 You should create the remote repository and pushed the local repository to the remote repository
