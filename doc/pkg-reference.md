@@ -26,14 +26,14 @@ The package structure is:
 - `Unlab.lock` - files with locked package versions
 
 The directory with the binaries can contain scripts in the Unlab scripting language which can be
-ran by Unix shell.
+ran by Unix.
 
 The directory with the libraries can contain the domain directories which can contain the library
-directories. The library directory contains the `lib.un` file and the script files which are used in
-the `lib.un` file.
+directories. The library directory contains the `lib.un` file and the script files which can be used
+in the `lib.un` file.
 
-Also, the directory with the tests for libraries can contain the domain directory which can contain
-the library directory. The library directory contains the `tests.un` file instead of the `lib.un`
+Also, the directory with the tests for libraries can contain the domain directories which can contain
+the library directories. The library directory contains the `tests.un` file instead of the `lib.un`
 file.
 
 ## Manifest format
