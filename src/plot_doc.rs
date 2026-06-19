@@ -5,9 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of plotting documentation.
 use crate::doc::*;
 use crate::mod_node::*;
 
+/// Adds the plotting documentation to the root module of signature and the root module of
+/// documentation.
 pub fn add_plot_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"

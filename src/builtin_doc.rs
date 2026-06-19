@@ -5,12 +5,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A module of documentation of built-in functions.
 use crate::doc::*;
 use crate::getopts_doc::*;
 use crate::mod_node::*;
 #[cfg(feature = "plot")]
 use crate::plot_doc::*;
 
+/// Adds the documentation of built-in functions to the root module of signature and the root
+/// module of documentation.
 pub fn add_std_builtin_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut ModNode<String, Option<String>>)
 {
     let doc = r#"
