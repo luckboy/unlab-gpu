@@ -79,8 +79,8 @@ The fields of version structure are:
 
 The section of sources contain the custom sources. The custom sources can refer the package
 directories and/or the package archives for package versions. The field of section of sources can be
-used to rename package where the `renamed` field is old package name and the key of this section is
-new package name. Also, the sources are only used in the current package.
+used to rename the package where the `renamed` field is old package name and the key of this section
+is new package name. Also, the sources are only used in the current package.
 
 ## Package names
 
@@ -153,7 +153,7 @@ format. The structure of the main configuration file format is:
 - `account` - account in the git hosting service.
 - `domain` - domain name for libraries
 
-The account should have the git hosting service and the user name which are separated the `/`
+The `account` field should have the git hosting service and the user name which are separated the `/`
 character.
 
 The format of file with constraints is the format of section of constraints from the manifest format.
