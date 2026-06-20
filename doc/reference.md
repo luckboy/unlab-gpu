@@ -364,9 +364,9 @@ The syntax of return statement is:
 
 The return statement leaves from a function and then the function returns a value of expression or the
 `None` value if the expression isn't passed. If the return statement is used outside a function, the
-error occurs. If the return statement is the last interpred stetement in the function, the return
+error occurs. If the return statement is the last interpreted stetement in the function, the return
 statement can be replaced by the expression. If the last interpreted statement in the function is the
-assignment statement, the return statement  without the expression can be omitted.
+assignment statement, the return statement without the expression can be omitted.
 
 ### Quit statements
 
