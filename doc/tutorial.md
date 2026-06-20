@@ -2266,6 +2266,12 @@ usemods("pl_luckboy_unn")
 usevars("pl_luckboy_unn")
 ```
 
+Also, you can open the documentation of this library by enter the following line to the interpreter:
+
+```unlab
+doc("pl.luckboy/unn")
+```
+
 ### Generate training data
 
 Neural networks need the training data to learning. The following lines generate the training data for
@@ -2684,7 +2690,7 @@ unlab-pkg doc
 ```
 
 A generated documentation can be browse by you with browser. The documentation of sample package can
-be open by enter the following line to the interpreter:
+be open by enter the following line to the interpreter in the package manager:
 
 ```unlab
 doc("pl.luckboy/example")
