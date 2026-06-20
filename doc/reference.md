@@ -482,7 +482,7 @@ numbers and/or the matrices. Two elements or two fields are compares with types 
 floating-point numbers, matrices, arrays, or a structures and two operands are arrays or structures.
 If two elements or two fields aren't equal, an error occurs. One element or one field is ignored if it
 isn't a floating-point number, a matrix, an array, or a structure; one operand is an array or a
-structure; and other operand is a number. The operand can be a number, a matrix, an array or a
+structure and other operand is a number. The operand can be a number, a matrix, an array or a
 structure. Two operands can't be a matrix and an array or a structure. If the operand is an integer
 number, the operand is converted to a floating-point number and then there performs the
 operation.
