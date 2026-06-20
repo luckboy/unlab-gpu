@@ -1776,7 +1776,7 @@ found index = none for ys
 
 An error is an object that informs about the function error. The errors are created by the `error`
 function that takes the error kind and the error message. If you apply some function that can return
-an error in other function, you can use the `?` operator of error proparagion that can leave from
+an error in other function, you can use the `?` operator of error propagation that can leave from
 other function with the returned error by some function. If the operand of this operator is an error,
 this operator leaves the function with the error. You can try how the `?` operator of error
 propagation works for the error by enter the following lines to the interpreter:
