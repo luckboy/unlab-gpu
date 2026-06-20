@@ -709,9 +709,9 @@ The syntax of relative name is:
 The identifiers of relative name except the last identifier refer to the descendant modules from the
 current module if all these modules from the current module exist, otherwise the descendant modules
 from the root module. The last identifier refers to the variable that is in the last referred module
-of the current module. The first identifier for the current module can refer to an imported module or
-an imported variable in the current module if the variable or the module with the first identifier
-isn't efined.
+from the current module or the root module. The first identifier for the current module can refer to
+an imported module or an imported variable in the current module if the variable or the module with
+the first identifier isn't defined.
 
 ### Variable names
 
