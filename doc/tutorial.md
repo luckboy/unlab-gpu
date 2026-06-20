@@ -91,12 +91,12 @@ one line:
 println("Hello world!!!"); x = 1 + 2; println("x = ", x)
 ```
 
-This scripting language has comments which can be used to describe the code. The comments starts with
+This scripting language has comments which can be used to describe the code. The comments start with
 the `#` character or the `%` character. The sample comments are here:
 
 ```unlab
 # First comment.
-% second comment.
+% Second comment.
 x = 1 + 2 # Adds one to two.
 println(x) % Prints the x value.
 ```
