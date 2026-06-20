@@ -546,7 +546,7 @@ abcdef
 ### Comparison operators
 
 Comparison operators are used to compare two numbers. The integer numbers and the floating-point
-numbers can be compared. The boolean values are returned by the comparison operators. The compareson
+numbers can be compared. The boolean values are returned by the comparison operators. The comparison
 operators are:
 
 - `==` - equal
