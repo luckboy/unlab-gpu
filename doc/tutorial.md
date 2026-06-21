@@ -2134,8 +2134,8 @@ script automatically closes a window with the chart or the histogram while exit.
 ### 2D charts
 
 The `plot` function allows you to draw 2D charts. This function can take the iterable objects or the
-iterable object with the function. You can try how this function draw chart the iterable object with
-the function by enter the following lines to the interpreter:
+iterable object with the function. You can try how this function draws chart with the iterable object
+and the function by enter the following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2149,7 +2149,7 @@ The result of the above lines is here:
 
 ![2D chart](plotting-2d-chart-1.png)
 
-You can try how this function draw chart two iterable objects by enter the following lines to the
+You can try how this function draws chart the iterable objects by enter the following lines to the
 interpreter:
 
 ```unlab
@@ -2169,8 +2169,8 @@ The result of the above lines is here:
 ### 3D charts
 
 The 3D charts are drawn by the `plot3` function. This function can take the iterable objects or the
-iterable object with two functions for line. You can try how this function draw chart the iterable
-object with two functions for line by enter the following lines to the interpreter:
+iterable object with two functions for line. You can try how this function draws chart with the
+iterable object and two functions for line by enter the following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2191,8 +2191,8 @@ The result of the above lines is here:
 
 ![3D chart](plotting-3d-chart-1.png)
 
-You can try how this function draw chart two iterable objects for line by enter the following lines to
-the interpreter:
+You can try how this function draws chart with the iterable objects for line by enter the following
+lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2211,8 +2211,8 @@ The result of the above lines is here:
 ![3D chart](plotting-3d-chart-2.png)
 
 This function can take iterable objects or two iterable objects with the function for surface. You
-can try how this function draw chart two iterable objects with the functions for surface by enter the
-following lines to the interpreter:
+can try how this function draws chart with two iterable objects and the function for surface by enter
+the following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2230,8 +2230,8 @@ The result of the above lines is here:
 
 ![3D chart](plotting-3d-chart-3.png)
 
-You can try how this function draw chart two iterable objects for surface by enter the following lines
-to the interpreter:
+You can try how this function draws chart with the iterable objects for surface by enter the following
+lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2254,8 +2254,8 @@ The result of the above lines is here:
 ### Histograms
 
 The `histogram` function or the `hist` function allows you to draw histogram. These functions can take
-the iterable object with data. You can try how the `histogram` function draw histogram the iterable
-object with data by enter the following lines to the interpreter:
+the iterable object with data. You can try how the `histogram` function draws histogram with the
+iterable object with data by enter the following lines to the interpreter:
 
 ```unlab
 chart = {
@@ -2344,7 +2344,7 @@ tfr_net = mlpwb(.[ rows(Y), 100, rows(X) .], .[ tanh .], cel, xavier_init)
 
 Neural network can be trained by using the `etrain` function that is in the `github.com/luckboy/unn`
 library. This function takes the training data as the input data and the output data. Also, the number
-of epaches and the neural network are passed to this function. This function allows you to specify
+of epoches and the neural network are passed to this function. This function allows you to specify
 the algorithm and its parameters. If you want to save the neural network, you can specify the
 diractory with the saved neural network. We will use the gradient descent algorithm. Also, we will use
 the `tfgen` directory for generation of trigonometric functions. The following lines train the neural
