@@ -2255,7 +2255,7 @@ The result of the above lines is here:
 
 The `histogram` function or the `hist` function allows you to draw histogram. These functions can take
 the iterable object with data. You can try how the `histogram` function draws histogram with the
-iterable object with data by enter the following lines to the interpreter:
+iterable object by enter the following lines to the interpreter:
 
 ```unlab
 chart = {
