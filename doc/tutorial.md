@@ -160,7 +160,7 @@ The matrix also can be written in one line. The sample matrices in single lines 
 
 The matrices can have the filled rows with the filling floating-point numbers and be filled with the
 filling rows by using the `fill` keyword. You can try how the matrix rows are filled with the filling
-floating-point number by enter the following lines to the interpreter:
+floating-point numbers by enter the following lines to the interpreter:
 
 ```unlab
 A = [
@@ -195,7 +195,7 @@ C = [
 ]
 ```
 
-You can try how the filled matrices are filled with the filling row by enter the following lines to
+You can try how the filled matrices are filled with the filling rows by enter the following lines to
 the interpreter:
 
 ```unlab
@@ -1165,10 +1165,43 @@ array is here:
 
 The array can be written in one line. The samples arrays in single lines are here:
 
-```
+```unlab
 .[ 1, 2.5, "abc" .]
 .[ 3.5, 4, "def", true .]
 .[.]
+```
+
+The arrays can be filled with the filling values by uing the `fill` keyword. You can try how the
+filled arrays are filled with the filling values by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1 fill 3 .]
+ys = .[ 2.5 fill 4 .]
+zs = .[ "abc" fill 5 .]
+println("xs = ", xs)
+println("ys = ", ys)
+println("zs = ", zs)
+```
+
+The output of the above lines is here:
+
+```
+xs = .[ 1 1 1 .]
+ys = .[ 2.5000 2.5000 2.5000 2.5000 .]
+zs = .[ abc abc abc abc abc .]
+```
+
+The filling expression is separately evaluated for each element. You can use it for example generation
+of random array by enter the following line to the interpreter:
+
+```unlab
+println(.[ rand() fill 3 .])
+```
+
+The output of the above line is here:
+
+```
+.[ 0.6378 0.8682 0.0893 .]
 ```
 
 The index operator allows you to access to an element in an indexable object as the array. An indexing 
