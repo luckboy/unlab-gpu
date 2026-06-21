@@ -2134,7 +2134,7 @@ The result of the above lines is here:
 ### 3D charts
 
 The 3D charts are drawn by the `plot3` function. This function can take the iterable objects or the
-iterable object with two functions for lines. You can try how this function draw chart the iterable
+iterable object with two functions for line. You can try how this function draw chart the iterable
 object with two functions for line by enter the following lines to the interpreter:
 
 ```unlab
@@ -2175,7 +2175,7 @@ The result of the above lines is here:
 
 ![3D chart](plotting-3d-chart-2.png)
 
-This function can take iterable objects or two iterable objects with the function for surfaces. You
+This function can take iterable objects or two iterable objects with the function for surface. You
 can try how this function draw chart two iterable objects with the functions for surface by enter the
 following lines to the interpreter:
 
