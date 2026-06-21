@@ -1175,7 +1175,9 @@ The arrays can be filled with the filling values by uing the `fill` keyword. You
 filled arrays are filled with the filling values by enter the following lines to the interpreter:
 
 ```unlab
-xs = .[ 1 fill 3 .]
+xs = .[
+    1 fill 3
+.]
 ys = .[ 2.5 fill 4 .]
 zs = .[ "abc" fill 5 .]
 println("xs = ", xs)
