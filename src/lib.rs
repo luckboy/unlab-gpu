@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-//! Micro neural scripting language for GPU is simple scripting langauge that operates on matrices.
+//! Micro neural scripting language for GPU is simple scripting language that operates on matrices.
 //!
 //! This scripting language is implemented in the Unlab-gpu library that uses the Unmtx-gpu library
 //! to operate on matrices. Also, the Unlab-gpu library implements a package manager that can be
