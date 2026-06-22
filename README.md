@@ -68,8 +68,8 @@ unlab-pkg install github.com/luckboy/unn
 The following example presents multiplication of matrices:
 
 ```
-A = [ 1, 2; 3, 4; 5, 6 ]
-B = [ 1, 2, 3; 4, 5, 6 ]
+A = [1, 2; 3, 4; 5, 6]
+B = [1, 2, 3; 4, 5, 6]
 println("A * B = ", A * B)
 ```
 
