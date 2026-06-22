@@ -20,6 +20,13 @@ You can install the programs of this crate by invoke the following command:
 cargo install unlab-gpu
 ```
 
+You also can install the programs of this crate for example with support for CUDA v11.5 by invoke the
+following command:
+
+```
+cargo install --features cuda-11050 unlab-gpu
+```
+
 Then you can generate the documentation of standard library by invoke the following command:
 
 ```
