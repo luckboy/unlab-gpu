@@ -10,7 +10,7 @@ scripting language. This crate also provides a library of this scripting languag
 This crate contains the following programs:
 
 - `unlab-gpu` - the interpreter of this scripting language
-- `unlba-pkg` - the package manager for this scripting language
+- `unlab-pkg` - the package manager for this scripting language
 
 ## Installation
 
