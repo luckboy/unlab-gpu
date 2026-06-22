@@ -102,8 +102,9 @@ The above example requires the `github.com/luckboy/unn" library.
 
 ## Documentation
 
-The documentation files in the `doc` directory are a documentation for this scipting language and the
-package manager:
+If you want to learn this scripting language, you should read the
+[Unlab tutorial](https://github.com/luckboy/unlab-gpu/blob/master/doc/tutorial.md). The documentation
+files in the `doc` directory are a documentation for this scipting language and the package manager:
 
 - [`tutorial.md`](https://github.com/luckboy/unlab-gpu/blob/master/doc/tutorial.md) - the Unlab
   tutorial
@@ -120,7 +121,7 @@ If you want to browse the documentation of standard library, you can open this d
 the following command to the interpreter:
 
 ```
-doc("pl.luckboy/unn")
+doc()
 ```
 
 ## License
