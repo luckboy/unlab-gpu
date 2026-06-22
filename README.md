@@ -3,7 +3,7 @@
 Micro neural scripting language for GPU is simple scripting language that operates on matrices. This
 scripting language is created to create and train neural networks by operate on the matrices. The
 Unlab-gpu crate contains an interpreter of this scripting language and a package manager for this
-scripting language. This crate also provides a library for this scripting language.
+scripting language. This crate also provides a library of this scripting language.
 
 ## Programs
 
@@ -14,7 +14,7 @@ This crate contains the following programs:
 
 ## Installation
 
-You can install this crate by invoke the following command:
+You can install the programs of this crate by invoke the following command:
 
 ```
 cargo install unlab-gpu
@@ -36,8 +36,7 @@ export UNLAB_GPU_DOC_PATH=$HOME/unlab-gpu-doc
 
 ## Usage
 
-You can use the library of this crate in your project by add the following lines in the `Cargo.toml`
-file:
+You can use the library of this crate by add the following lines in the `Cargo.toml` file:
 
 ```toml
 [dependencies]
