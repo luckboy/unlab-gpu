@@ -20,7 +20,7 @@ You can install the programs of this crate by invoke the following command:
 cargo install unlab-gpu
 ```
 
-Then you can install the documentation of standard library by invoke the following command:
+Then you can generate the documentation of standard library by invoke the following command:
 
 ```
 unlab-pkg std-doc
