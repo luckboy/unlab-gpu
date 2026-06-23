@@ -62,9 +62,9 @@ wayland-client = { version = ">=0.31.1,<=0.31.14", optional = true }
 wayland-csd-frame = { version = "=0.3.0", optional = true }
 wayland-cursor = { version = ">=0.31.0,<=0.31.14", optional = true }
 wayland-protocols = { version = ">=0.32.1,<=0.32.12", optional = true, features = ["client", "staging", "unstable"] }
-wayland-protocols-plasma = { version = ">=0.3.1,<=0.3.12", optional = true, features = ["client"] }
+wayland-protocols-plasma = { version = ">=0.3.0,<=0.3.12", optional = true, features = ["client"] }
 wayland-protocols-wlr = { version = ">=0.3.1,<=0.3.12", optional = true, features = ["client"] }
-wayland-scanner = { version = ">=0.31.1,<=0.31.10", optional = true }
+wayland-scanner = { version = ">=0.31.0,<=0.31.10", optional = true }
 
 [features]
 default = ["opencl", "plot"]
