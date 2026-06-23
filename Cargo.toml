@@ -49,7 +49,14 @@ pathfinder_simd = { version = ">=0.5.3,<=0.5.5", optional = true }
 plotters-backend = { version = ">=0.3.3,<=0.3.6", optional = true }
 plotters-bitmap = { version = ">=0.3.3,<=0.3.6", optional = true }
 plotters-svg = { version = ">=0.3.3,<=0.3.6", optional = true }
+wayland-backend = { version = ">=0.3.0,<=0.3.15", optional = true }
+wayland-client = { version = ">=0.31.1,<=0.31.14", optional = true }
+wayland-csd-frame = { version = "=0.3.0", optional = true }
+wayland-cursor = { version = ">=0.31.0,<=0.31.14", optional = true }
 wayland-protocols = { version = ">=0.32.1,<=0.32.12", optional = true, features = ["client", "staging", "unstable"] }
+wayland-protocols-plasma = { version = ">=0.3.1,<=0.3.12", optional = true, features = ["client"] }
+wayland-protocols-wlr = { version = ">=0.3.1,<=0.3.12", optional = true, features = ["client"] }
+wayland-scanner = { version = ">=0.31.1,<=0.31.10", optional = true }
 
 [dev-dependencies]
 sealed_test = "1.1.0"
@@ -75,4 +82,4 @@ cuda-11070 = ["cuda", "unmtx-gpu/cuda-11070"]
 cuda-11060 = ["cuda", "unmtx-gpu/cuda-11060"]
 cuda-11050 = ["cuda", "unmtx-gpu/cuda-11050"]
 cuda-11040 = ["cuda", "unmtx-gpu/cuda-11040"]
-plot = ["dep:image", "dep:plotters", "dep:softbuffer", "dep:winit", "dep:pathfinder_simd", "dep:plotters-backend", "dep:plotters-bitmap", "dep:plotters-svg", "dep:wayland-protocols"]
+plot = ["dep:image", "dep:plotters", "dep:softbuffer", "dep:winit", "dep:pathfinder_simd", "dep:plotters-backend", "dep:plotters-bitmap", "dep:plotters-svg", "dep:wayland-backend", "dep:wayland-client", "dep:wayland-csd-frame", "dep:wayland-cursor", "dep:wayland-protocols", "dep:wayland-protocols-plasma", "dep:wayland-protocols-wlr", "dep:wayland-scanner"]
