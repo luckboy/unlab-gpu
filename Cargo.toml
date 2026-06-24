@@ -3,8 +3,17 @@ name = "unlab-gpu"
 version = "0.1.0"
 authors = ["Łukasz Szpakowski <luckboy@vp.pl>"]
 edition = "2018"
+license = "MPL-2.0"
+description = "Micro scripting language for neural networks that uses unmtx-gpu."
+repository = "https://github.com/luckboy/unlab-gpu"
+documentation = "https://docs.rs/unlab-gpu"
+categories = ["mathematics", "science"]
+keywords = ["language", "scripting-language", "matrix", "gpu", "neural-network"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package.metadata.docs.rs]
+features = ["opencl", "cuda", "cuda-12060"]
 
 [dependencies]
 clap = { version = ">=4.5.0,<=4.5.61", default-features = false, features = ["std", "help", "usage", "error-context", "derive"] }
