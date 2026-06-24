@@ -104,7 +104,7 @@ Y = [rand() fill 100; fill 15]
 net2 = etrain(100, net, X, Y, { eta: 0.1 }, alg::gd, none, true, true)?
 ```
 
-The above example requires the `github.com/luckboy/unn" library.
+The above example requires the `github.com/luckboy/unn` library.
 
 ## Documentation
 
