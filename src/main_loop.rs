@@ -6,6 +6,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 //! A module of main loop.
+use std::env::current_dir;
 use std::ffi::OsString;
 use std::fs::create_dir_all;
 use std::io::Cursor;
@@ -178,7 +179,15 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
                     return Some(1);
                 },
             };
-            let _res = editor.load_history(history_file.as_path());
+            let mut real_history_file = match current_dir() {
+                Ok(dir) => dir,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return Some(1);
+                },
+            };
+            real_history_file.push(history_file.as_path());
+            let _res = editor.load_history(real_history_file.as_path());
             let mut line_num = 1u64;
             let mut res: Option<i32> = None;
             loop {
@@ -265,10 +274,10 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
                 }
             }
             interp.clear_stack_trace();
-            let mut history_dir = history_file.clone();
-            history_dir.pop();
-            if history_dir != PathBuf::from("") {
-                match create_dir_all(history_dir.as_path()) {
+            let mut real_history_dir = real_history_file.clone();
+            real_history_dir.pop();
+            if real_history_dir != PathBuf::from("") {
+                match create_dir_all(real_history_dir.as_path()) {
                     Ok(()) => (),
                     Err(err) => {
                         eprintln!("{}", err);
@@ -276,7 +285,7 @@ fn interactive_main_loop(args: Vec<String>, history_file: PathBuf, root_mod: Arc
                     },
                 }
             }
-            match editor.save_history(history_file.as_path()) {
+            match editor.save_history(real_history_file.as_path()) {
                 Ok(()) => (),
                 Err(err) => {
                     eprintln!("{}", err);

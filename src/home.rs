@@ -95,7 +95,11 @@ impl Home
         };
         let mut backend_config_file = home_dir.clone();
         backend_config_file.push("backend.toml");
-        let mut history_file = home_dir.clone();
+        let mut history_file = if !is_work_dir {
+            home_dir.clone()
+        } else {
+            PathBuf::from("work")
+        };
         history_file.push("history.txt");
         let mut pkg_config_file = home_dir.clone();
         pkg_config_file.push("pkg.toml");
