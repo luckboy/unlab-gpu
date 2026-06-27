@@ -73,6 +73,15 @@ can be ran by invoke the following command in the non-interactive mode for the `
 unlab-gpu script.un
 ```
 
+### Help
+
+The interpreter allows you to prints its help. If you want to see the interpreter help, you can print
+the interpreter help by invoke the following command:
+
+```
+unlab-gpu --help
+```
+
 ## Lines and comments
 
 A code in the Unlab scripting language is divided to lines. The sample lines in this scriping language
@@ -2282,6 +2291,22 @@ You can install this library by invoke the following command:
 
 ```
 unlab-pkg install github.com/luckboy/unn
+```
+
+### Help of package manager
+
+The package manager also contains its help. If you want to see the help of package manager, you can
+print the help of package manager by invoke the following command:
+
+```
+unlab-pkg --help
+```
+
+If you want to see the help package manager for example for the `install` command, you can print the
+help of package manager for the `install` command by invoke the following command:
+
+```
+unlab-pkg install --help
 ```
 
 ### Library usage
