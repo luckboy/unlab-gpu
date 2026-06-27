@@ -2620,14 +2620,14 @@ add the following lines to the `Unlab.toml` file:
 "github.com/luckboy/unn" = "0.1.1"
 ```
 
-You can install this depedency to the working directory by invoke the following command:
+You can install this depedency to the work directory by invoke the following command:
 
 ```
 unlab-pkg install-deps
 ```
 
-The working directory contain depedencies with the documentation. This directory is the `work`
-directory that is in the package directory.
+The work directory contain depedencies with the documentation. This directory is the `work` directory
+that is in the package directory.
 
 ### Console
 
