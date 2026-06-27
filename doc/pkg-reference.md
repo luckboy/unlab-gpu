@@ -21,7 +21,7 @@ The package structure is:
 - `bin` - directory with binaries
 - `lib` - directory with libraries
 - `tests` - directory with tests for libraries
-- `work` - working directory
+- `work` - work directory
 - `Unlab.toml` - package manifest
 - `Unlab.lock` - files with locked package versions
 
