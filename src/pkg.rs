@@ -2151,7 +2151,12 @@ impl PkgManager
     
     /// Loads the manifest of current package.
     pub fn manifest() -> Result<Manifest>
-    { Manifest::load("Unlab.toml") }
+    {
+        match Manifest::load_opt("Unlab.toml")? {
+            Some(manifest) => Ok(manifest),
+            None => Err(Error::Pkg(String::from("no manifest in current package"))), 
+        }
+    }
 
     /// Saves the manifest of current package.
     pub fn save_manifest(manifest: &Manifest) -> Result<()>
