@@ -62,6 +62,8 @@ pub struct BackendConfig
     pub cublas: Option<bool>,
     /// If this field is `true`, the CUDA backend uses the mma instruction.
     pub mma: Option<bool>,
+    /// If this field is `true`, the CUDA backend uses the mudule in PTX.
+    pub ptx: Option<bool>,
 }
 
 impl BackendConfig
@@ -141,9 +143,9 @@ fn initialize_opencl_backend(_platform_idx: usize, _device_idx: usize) -> Result
 { Err(Error::NoOpenClBackend) }
 
 #[cfg(feature = "cuda")]
-fn initialize_cuda_backend(ordinal: usize, is_cublas: bool, is_mma: bool) -> Result<()>
+fn initialize_cuda_backend(ordinal: usize, is_cublas: bool, is_ptx: bool) -> Result<()>
 {
-    match CudaBackend::new_with_ordinal_and_flags(ordinal, is_cublas, is_mma) {
+    match CudaBackend::new_with_ordinal_and_cublas_flag_and_ptx_flag(ordinal, is_cublas, is_ptx) {
         Ok(backend) => {
             match set_default_backend(Arc::new(backend)) {
                 Ok(()) => Ok(()),
@@ -172,7 +174,7 @@ pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<
     let mut platform_idx = 0usize;
     let mut device_idx = 0usize;
     let mut is_cublas = true;
-    let mut is_mma = false;
+    let mut is_ptx = false;
     match config {
         Some(config) => {
             backend = config.backend.unwrap_or(backend);
@@ -180,13 +182,13 @@ pub fn initialize_backend_with_config(config: &Option<BackendConfig>) -> Result<
             platform_idx = config.platform.unwrap_or(platform_idx);
             device_idx = config.device.unwrap_or(device_idx);
             is_cublas = config.cublas.unwrap_or(is_cublas);
-            is_mma = config.mma.unwrap_or(is_mma);
+            is_ptx = config.ptx.unwrap_or(is_ptx);
         },
         None => (),
     }
     match backend {
         Backend::OpenCl => initialize_opencl_backend(platform_idx, device_idx),
-        Backend::Cuda => initialize_cuda_backend(ordinal, is_cublas, is_mma),
+        Backend::Cuda => initialize_cuda_backend(ordinal, is_cublas, is_ptx),
     }
 }
 
