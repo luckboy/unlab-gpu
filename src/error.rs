@@ -116,6 +116,10 @@ pub enum Error
     Recv,
     /// A module node is already added.
     AlreadyAddedModNode,
+    /// No a root module.
+    NoRootMod,
+    /// No an identifier of module node.
+    NoModNodeIdent,
     /// No a function module.
     NoFunMod,
     /// No a documentation module.
@@ -208,6 +212,8 @@ impl fmt::Display for Error
             Error::RwLockWrite => write!(f, "can't write rw lock"),
             Error::Recv => write!(f, "can't receive object"),
             Error::AlreadyAddedModNode => write!(f, "already added module node"),
+            Error::NoRootMod => write!(f, "no root module"),
+            Error::NoModNodeIdent => write!(f, "no identifier of module node"),
             Error::NoFunMod => write!(f, "no function module"),
             Error::NoDocMod => write!(f, "no documentation module"),
             Error::Io(err) => write!(f, "i/o error: {}", err),

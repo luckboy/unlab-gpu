@@ -73,6 +73,7 @@ impl<T, U> UsedVar<T, U>
 #[derive(Clone, Debug)]
 pub struct ModNode<T, U>
 {
+    ident: Option<String>,
     used_mods: HashMap<String, ModNodeRef<T, U>>,
     used_vars: HashMap<String, UsedVar<T, U>>,
     mods: HashMap<String, Arc<RwLock<ModNode<T, U>>>>,
@@ -87,12 +88,21 @@ impl<T, U> ModNode<T, U>
     pub fn new(value: U) -> Self
     {
         ModNode {
+            ident: None,
             used_mods: HashMap::new(),
             used_vars: HashMap::new(),
             mods: HashMap::new(),
             vars: HashMap::new(),
             parent: None,
             value,
+        }
+    }
+    
+    pub fn ident(&self) -> Option<&str>
+    {
+        match &self.ident {
+            Some(ident) => Some(ident.as_str()),
+            None => None,
         }
     }
     
@@ -186,6 +196,7 @@ impl<T, U> ModNode<T, U>
     {
         {
             let mut child_g = rw_lock_write(&*child)?;
+            child_g.ident = Some(ident.clone());
             if child_g.parent.is_some() {
                 return Err(Error::AlreadyAddedModNode);
             }
@@ -204,6 +215,7 @@ impl<T, U> ModNode<T, U>
             Some(child) => {
                 {
                     let mut child_g = rw_lock_write(&*child)?;
+                    child_g.ident = None;
                     child_g.parent = None;
                 }
                 self.mods.remove(ident);
@@ -285,6 +297,41 @@ impl<T, U> ModNode<T, U>
             is_first = false;
         }
         Ok(Some(node))
+    }
+    
+    pub fn idents(mod1: &Arc<RwLock<ModNode<T, U>>>, root: &Arc<RwLock<ModNode<T, U>>>) -> Result<Vec<String>>
+    {
+        let mut node = mod1.clone();
+        let mut idents: Vec<String> = Vec::new();
+        loop {
+            let parent: Arc<RwLock<ModNode<T, U>>>;
+            {
+                let node_g = rw_lock_read(&*node)?;
+                match &node_g.ident {
+                    Some(ident) => {
+                        idents.push(ident.clone());
+                        match node_g.parent() {
+                            Some(tmp_parent) => parent = tmp_parent,
+                            None => return Err(Error::NoRootMod),
+                        }
+                    }
+                    None => {
+                        if node_g.parent().is_none() {
+                            break;
+                        } else {
+                            return Err(Error::NoModNodeIdent);
+                        }
+                    }
+                }
+            }
+            node = parent;
+        }
+        if Arc::ptr_eq(&node, root) {
+            idents.reverse();
+            Ok(idents)
+        } else {
+            Err(Error::NoRootMod)
+        }
     }
 }
 
