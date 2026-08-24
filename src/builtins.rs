@@ -170,7 +170,7 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                 Object::IntRange(_, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("intrange"))))),
                 Object::FloatRange(_, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("floatrange"))))),
                 Object::Matrix(_) => Ok(Value::Object(Arc::new(Object::String(String::from("matrix"))))),
-                Object::Fun(_, _, _) | Object::BuiltinFun(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("function"))))),
+                Object::Fun(_, _, _) | Object::BuiltinFun(_, _) | Object::UnnamedFun(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("function"))))),
                 Object::MatrixArray(_, _, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixarray"))))),
                 Object::MatrixRowSlice(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixrowslice"))))),
                 Object::Error(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("error"))))),

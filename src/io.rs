@@ -465,6 +465,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
             write_u8(w, OBJECT_BUILTIN_FUN)?;
             write_str(w, ident.as_str())?;
         },
+        Object::UnnamedFun(_, _) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write unnamed function"))),
         Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
             write_u8(w, OBJECT_MATRIX_ARRAY)?;
             write_usize(w, *row_count)?;

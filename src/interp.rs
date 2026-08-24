@@ -80,7 +80,12 @@ impl Interp
         match fun_value {
             Value::Object(fun_object) => {
                 match &**fun_object {
-                    Object::Fun(fun_mod_idents, _, fun) => {
+                    Object::Fun(_, _, _) | Object::UnnamedFun(_, _) => {
+                        let (fun_mod_idents, fun) = match &**fun_object {
+                            Object::Fun(fun_mod_idents, _, fun) => (fun_mod_idents, fun),
+                            Object::UnnamedFun(fun_mod_idents, fun) => (fun_mod_idents, fun),
+                            _ => return Err(Error::Interp(String::from("value isn't named function or unnamed function"))),
+                        };
                         match &**fun {
                             Fun(args, stats) => {
                                 match env.push_fun_mod_and_local_vars(fun_mod_idents.as_slice(), args, arg_values) {
@@ -697,10 +702,7 @@ impl Interp
                 }
                 Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields)))))
             },
-            Lit::Lambda(_) => {
-                // TODO
-                Ok(Value::None)
-            },
+            Lit::Lambda(fun) => env.create_unnamed_fun(fun.clone()),
         }
     }
 }

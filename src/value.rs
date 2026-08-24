@@ -1114,6 +1114,12 @@ impl Value
                         write!(f, "{}", ident)?;
                     },
                     Object::BuiltinFun(ident, _) => write!(f, "{}", ident)?,
+                    Object::UnnamedFun(idents, _) => {
+                        for ident in idents {
+                            write!(f, "{}::", ident)?;
+                        }
+                        write!(f, "@")?;
+                    },
                     Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
                         if *row_count > 0 && *col_count > 0 { 
                             let new_indent = indent + 4;
@@ -1583,6 +1589,8 @@ pub enum Object
     Fun(Vec<String>, String, Arc<Fun>),
     /// A built-in function.
     BuiltinFun(String, fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>),
+    /// An unnamed function.
+    UnnamedFun(Vec<String>, Arc<Fun>),
     /// A matrix array.
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
     /// A matrix row slice.
@@ -1603,6 +1611,7 @@ impl Object
             (Object::FloatRange(a, b, c), Object::FloatRange(d, e, f)) => Ok(a == d && b == e && c == f),
             (Object::Fun(idents, ident, fun), Object::Fun(idents2, ident2, fun2)) => Ok(idents == idents2 && ident == ident2 && Arc::ptr_eq(fun, fun2)),
             (Object::BuiltinFun(ident, f), Object::BuiltinFun(ident2, g)) => Ok(ident == ident2 && fn_addr_eq(*f, *g)),
+            (Object::UnnamedFun(idents, fun), Object::UnnamedFun(idents2, fun2)) => Ok(idents == idents2 && Arc::ptr_eq(fun, fun2)),
             (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
                 if a_row_count != b_row_count || a_col_count != b_col_count {
                     return Ok(false);

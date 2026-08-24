@@ -353,6 +353,16 @@ impl Env
         Ok(true)
     }
 
+    pub fn create_unnamed_fun(&self, fun: Arc<Fun>) -> Result<Value>
+    {
+        let mod1 = match self.stack.last() {
+            Some((fun_mod, _)) => fun_mod.clone(),
+            None => self.current_mod.clone(),
+        };
+        let idents = ModNode::idents(&mod1, &self.root_mod)?;
+        Ok(Value::Object(Arc::new(Object::UnnamedFun(idents, fun))))
+    }
+    
     /// Pushes the function module and a local variables to the stack for applies the function.
     ///
     /// This method pushes the function module and the local variables and returns `true` if all
