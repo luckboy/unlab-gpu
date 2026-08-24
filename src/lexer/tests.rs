@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -735,7 +735,7 @@ fn test_lexer_take_doc_does_not_return_second_documentation()
 #[test]
 fn test_lexer_next_complains_on_unexpected_character()
 {
-    let s = "@";
+    let s = "~";
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     match lexer.next() {

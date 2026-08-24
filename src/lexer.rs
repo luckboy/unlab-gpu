@@ -75,6 +75,8 @@ pub enum Token
     ColonColon,
     /// A `,` token.
     Comma,
+    /// A `@` token.
+    At,
     /// A newline token or a `;` token.
     Newline,
     /// An `and` keyword.
@@ -679,6 +681,7 @@ impl<'a> Lexer<'a>
                 }
             },
             Some((',', pos)) => self.line_tokens.push(Ok((Token::Comma, pos))),
+            Some(('@', pos)) => self.line_tokens.push(Ok((Token::At, pos))),
             Some((';', pos)) => self.line_tokens.push(Ok((Token::Newline, pos))),
             Some((c @ '"', pos)) => {
                 cs.undo((c, pos));
