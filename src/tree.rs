@@ -227,6 +227,8 @@ pub enum Lit
     FilledArray(Box<Expr>, Box<Expr>),
     /// A structure literal.
     Struct(Vec<FieldPair>),
+    /// A lambda expression literal.
+    Lambda(Arc<Fun>),
 }
 
 /// An enumeration of matrix row.

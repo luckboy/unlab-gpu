@@ -697,6 +697,10 @@ impl Interp
                 }
                 Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields)))))
             },
+            Lit::Lambda(_) => {
+                // TODO
+                Ok(Value::None)
+            },
         }
     }
 }
