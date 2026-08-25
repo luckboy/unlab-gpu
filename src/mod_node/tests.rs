@@ -747,7 +747,7 @@ fn test_mod_node_idents_complains_on_no_root_module()
 }
 
 #[test]
-fn test_mod_node_idents_complains_on_no_root_module_after_module_node_removal()
+fn test_mod_node_idents_complains_on_no_root_module_after_module_node_removal_with_droppings()
 {
     let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
     let mod4: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(4)));
