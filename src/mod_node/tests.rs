@@ -652,7 +652,7 @@ fn test_mod_node_mod_from_does_not_return_module_in_used_module_for_identifiers_
 }
 
 #[test]
-fn test_mod_node_ident_returns_identifier_after_module_node_addition()
+fn test_mod_node_ident_returns_identifier_after_module_node_additions()
 {
     let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
     let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
