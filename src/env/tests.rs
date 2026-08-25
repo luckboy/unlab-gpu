@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -209,6 +209,153 @@ fn test_env_add_fun_does_not_add_function()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+}
+
+#[test]
+fn test_env_create_unnamed_fun_creates_unnamed_functions()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let mut env = Env::new(root_mod.clone());
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun3 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun4 = Arc::new(Fun(Vec::new(), Vec::new()));
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.create_unnamed_fun(fun.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(vec![String::from("a")], *idents);
+                    assert!(Arc::ptr_eq(&fun, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.create_unnamed_fun(fun2.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(vec![String::from("a"), String::from("b")], *idents);
+                    assert!(Arc::ptr_eq(&fun2, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.create_unnamed_fun(fun3.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(vec![String::from("a")], *idents);
+                    assert!(Arc::ptr_eq(&fun3, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.create_unnamed_fun(fun4.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(true, idents.is_empty());
+                    assert!(Arc::ptr_eq(&fun4, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_env_create_unnamed_fun_creates_unnamed_functions_for_function_modules()
+{
+    let root_mod: Arc<RwLock<ModNode<Value, ()>>> = Arc::new(RwLock::new(ModNode::new(())));
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun3 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let mut env = Env::new(root_mod.clone());
+    match env.add_and_push_mod(String::from("a")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.add_and_push_mod(String::from("b")) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.pop_mod() {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.push_fun_mod_and_local_vars(&[String::from("a"), String::from("b")], &[], &[]) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.create_unnamed_fun(fun.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(vec![String::from("a"), String::from("b")], *idents);
+                    assert!(Arc::ptr_eq(&fun, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    match env.push_fun_mod_and_local_vars(&[String::from("a")], &[], &[]) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    match env.create_unnamed_fun(fun2.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(vec![String::from("a")], *idents);
+                    assert!(Arc::ptr_eq(&fun2, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
+    match env.create_unnamed_fun(fun3.clone()) {
+        Ok(Value::Object(object)) => {
+            match &*object {
+                Object::UnnamedFun(idents, actual_fun) => {
+                    assert_eq!(vec![String::from("a"), String::from("b")], *idents);
+                    assert!(Arc::ptr_eq(&fun3, actual_fun));
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+    env.pop_fun_mod_and_local_vars();
 }
 
 #[test]
