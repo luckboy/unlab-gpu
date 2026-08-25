@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -350,7 +350,7 @@ fn test_mod_node_add_mod_replaces_module_node()
 }
 
 #[test]
-fn test_mod_node_add_mod_complains_on_already_module_node()
+fn test_mod_node_add_mod_complains_on_already_added_module_node()
 {
     let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
     let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
@@ -647,6 +647,133 @@ fn test_mod_node_mod_from_does_not_return_module_in_used_module_for_identifiers_
     }
     match ModNode::mod_from(&mod1, &[String::from("a"), String::from("c")], false) {
         Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_ident_returns_identifier_after_module_node_addition()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_mod(&mod2, String::from("b"), mod3.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mod3_g = mod3.read().unwrap();
+    assert_eq!(Some("b"), mod3_g.ident());
+}
+
+#[test]
+fn test_mod_node_ident_does_not_return_identifier_after_module_node_removel()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_mod(&mod2, String::from("b"), mod3.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mut mod2_g = mod2.write().unwrap();
+    match mod2_g.remove_mod(&String::from("b")) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    let mod3_g = mod3.read().unwrap();
+    assert_eq!(None, mod3_g.ident());
+}
+
+#[test]
+fn test_mod_node_ident_does_not_return_identifier()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod1_g = mod1.read().unwrap();
+    assert_eq!(None, mod1_g.ident());
+}
+
+#[test]
+fn test_mod_node_idents_returns_identifiers()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+    let mod4: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(4)));
+    match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_mod(&mod2, String::from("b"), mod3.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_mod(&mod3, String::from("c"), mod4.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::idents(&mod4, &mod1) {
+        Ok(idents) => assert_eq!(vec![String::from("a"), String::from("b"), String::from("c")], idents),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_idents_complains_on_no_root_module()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+    let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+    let mod4: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(4)));
+    match ModNode::add_mod(&mod2, String::from("b"), mod3.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::add_mod(&mod3, String::from("c"), mod4.clone()) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match ModNode::idents(&mod4, &mod1) {
+        Err(Error::NoRootMod) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_mod_node_idents_complains_on_no_root_module_after_module_node_removal()
+{
+    let mod1: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(1)));
+    let mod4: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(4)));
+    {
+        let mod2: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(2)));
+        let mod3: Arc<RwLock<ModNode<i32, i32>>> = Arc::new(RwLock::new(ModNode::new(3)));
+        match ModNode::add_mod(&mod1, String::from("a"), mod2.clone()) {
+            Ok(()) => assert!(true),
+            Err(_) => assert!(false),
+        }
+        match ModNode::add_mod(&mod2, String::from("b"), mod3.clone()) {
+            Ok(()) => assert!(true),
+            Err(_) => assert!(false),
+        }
+        match ModNode::add_mod(&mod3, String::from("c"), mod4.clone()) {
+            Ok(()) => assert!(true),
+            Err(_) => assert!(false),
+        }
+        let mut mod1_g = mod1.write().unwrap();
+        match mod1_g.remove_mod(&String::from("a")) {
+            Ok(()) => assert!(true),
+            Err(_) => assert!(false),
+        }
+    }
+    match ModNode::idents(&mod4, &mod1) {
+        Err(Error::NoRootMod) => assert!(true),
         _ => assert!(false),
     }
 }
