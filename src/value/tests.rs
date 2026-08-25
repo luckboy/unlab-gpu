@@ -75,6 +75,13 @@ fn test_value_eq_with_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun)));
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -281,6 +288,20 @@ fn test_value_eq_with_types_returns_false()
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("c")], fun.clone())));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun2)));
     match value.eq_with_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -541,6 +562,13 @@ fn test_value_eq_without_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun)));
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -755,6 +783,20 @@ fn test_value_eq_without_types_returns_false()
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("c")], fun.clone())));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun2)));
     match value.eq_without_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -1011,6 +1053,13 @@ fn test_value_nearly_eq_with_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun)));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -1230,6 +1279,20 @@ fn test_value_nearly_eq_with_types_returns_false()
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("c")], fun.clone())));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun2)));
     match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -1502,6 +1565,13 @@ fn test_value_nearly_eq_without_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun)));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -1729,6 +1799,20 @@ fn test_value_nearly_eq_without_types_returns_false()
     }
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     let value2 = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), g)));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    let fun2 = Arc::new(Fun(Vec::new(), Vec::new()));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("c")], fun.clone())));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    let value2 = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun2)));
     match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -4518,6 +4602,8 @@ fn test_value_fmt_formats_values()
     assert_eq!(String::from("a::b::f"), format!("{}", value));
     let value = Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)));
     assert_eq!(String::from("f"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+    assert_eq!(String::from("a::b::@"), format!("{}", value));
     let s = "
 [
               1           2

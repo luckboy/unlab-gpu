@@ -106,6 +106,12 @@ fn test_type_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("function")))), value),
                 Err(_) => assert!(false),
             }
+            let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+            let arg_value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("function")))), value),
+                Err(_) => assert!(false),
+            }
             let a = vec![
                 1.0, 2.0,
                 3.0, 4.0,
