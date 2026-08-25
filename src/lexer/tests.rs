@@ -93,9 +93,9 @@ fn test_lexer_next_returns_newline_token_for_semicolon()
 }
 
 #[test]
-fn test_lexer_next_returns_interpuction_tokens()
+fn test_lexer_next_returns_interpunction_tokens()
 {
-    let s = "()[]{}.[.]?*/+-.*./.+.-<>=><== ==!='.: ::";
+    let s = "()[]{}.[.]?*/+-.*./.+.-<>=><== ==!='.: ::,@";
     let mut cursor = Cursor::new(s.as_bytes());
     let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
     match lexer.next() {
@@ -211,7 +211,15 @@ fn test_lexer_next_returns_interpuction_tokens()
         _ => assert!(false),
     }
     match lexer.next() {
-        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 42), pos),
+        Some(Ok((Token::Comma, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 42), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::At, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 43), pos),
+        _ => assert!(false),
+    }
+    match lexer.next() {
+        Some(Ok((Token::Newline, pos))) => assert_eq!(Pos::new(Arc::new(String::from("test.un")), 1, 44), pos),
         _ => assert!(false),
     }
     match lexer.next() {
