@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -933,6 +933,42 @@ X = { a: 1; b: 2.5; c: false; }
                     assert_eq!(expected_value, *value);
                 },
                 None => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_interprets_lambda_expression_literal()
+{
+    let s = "
+F = @(X, Y) X + Y
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("F")) {
+                Some(Value::Object(object)) => {
+                    match &**object {
+                        Object::UnnamedFun(idents, _) => assert_eq!(true, idents.is_empty()),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
             }
         },
         Err(_) => assert!(false),
@@ -2469,6 +2505,51 @@ X = [
                     let matrix_array = Arc::new(Object::MatrixArray(3, 3, TransposeFlag::NoTranspose, a.clone()));
                     assert_eq!(Value::Object(matrix_array), value.to_matrix_array().unwrap());
                 },
+                _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_interprets_application_expressions_with_unnamed_functions()
+{
+    let s = "
+X = (@() 1)()
+Y = (@(X) X + 1)(2)
+Z = (@(X, Y, Z) {
+    W = X + Y
+    W = W + Z
+    W
+})(1, 2, 3)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(Value::Int(1)) => assert!(true),
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Y")) {
+                Some(Value::Int(3)) => assert!(true),
+                _ => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Z")) {
+                Some(Value::Int(6)) => assert!(true),
                 _ => assert!(false),
             }
         },
