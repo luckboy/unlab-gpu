@@ -353,6 +353,7 @@ impl Env
         Ok(true)
     }
 
+    /// Creates an unnamed function.
     pub fn create_unnamed_fun(&self, fun: Arc<Fun>) -> Result<Value>
     {
         let mod1 = match self.stack.last() {

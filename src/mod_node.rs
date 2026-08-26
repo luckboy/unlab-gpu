@@ -16,7 +16,7 @@ use crate::utils::*;
 /// An enumeration of reference to module node.
 ///
 /// The reference of module node can be a strong reference to module or a weak reference to
-/// module. If the reference of module node refers to ascestor, the reference of module node
+/// module. If the reference of module node refers to ancestor, the reference of module node
 /// should be the weak reference because it is reference cycle.
 #[derive(Clone, Debug)]
 pub enum ModNodeRef<T, U>
@@ -98,6 +98,7 @@ impl<T, U> ModNode<T, U>
         }
     }
     
+    /// Returns the identifier.
     pub fn ident(&self) -> Option<&str>
     {
         match &self.ident {
@@ -299,6 +300,10 @@ impl<T, U> ModNode<T, U>
         Ok(Some(node))
     }
     
+    /// Returns the identifiers of module.
+    ///
+    /// If the oldest ancendor of module isn't the root module or any module with the parent
+    /// hasn't the identifier, this method returns an error.
     pub fn idents(mod1: &Arc<RwLock<ModNode<T, U>>>, root: &Arc<RwLock<ModNode<T, U>>>) -> Result<Vec<String>>
     {
         let mut node = mod1.clone();
