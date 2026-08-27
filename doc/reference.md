@@ -478,7 +478,7 @@ The arithmetic binary operator without dot converts one value to a floating-poin
 performs operation if one value is an integer number.
 
 The arithmetic binary operator with dot recursively performs an operation on the floating-point
-numbers and/or the matrices. Two elements or two fields are compares with types if they aren't
+numbers and/or the matrices. Two elements or two fields are compared with types if they aren't
 floating-point numbers, matrices, arrays, or a structures and two operands are arrays or structures.
 If two elements or two fields aren't equal, an error occurs. One element or one field is ignored if it
 isn't a floating-point number, a matrix, an array, or a structure; one operand is an array or a
