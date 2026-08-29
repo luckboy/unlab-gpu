@@ -727,3 +727,6 @@ The identifier can refer to:
 - the variable that is imported in the current module if the variable is imported in the current
   module
 - the variable that is defined in the root module if the variable exists in the root module
+
+If the variable doens't exist in the current module and isn't imported in the current module, the
+variable can be written in the current module.
