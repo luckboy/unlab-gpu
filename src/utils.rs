@@ -7,8 +7,6 @@
 //
 //! A module of utilities.
 use std::sync::mpsc::Receiver;
-use std::sync::mpsc::RecvTimeoutError;
-use std::sync::mpsc::Sender;
 use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -114,25 +112,6 @@ pub fn receiver_recv<T>(receiver: &Receiver<T>) -> Result<T>
     match receiver.recv() {
         Ok(object) => Ok(object),
         Err(_) => Err(Error::Recv),
-    }
-}
-
-/// Receives an object from the receiver until timeout.
-pub fn receiver_recv_timeout<T>(receiver: &Receiver<T>, duration: Duration) -> Result<Option<T>>
-{
-    match receiver.recv_timeout(duration) {
-        Ok(object) => Ok(Some(object)),
-        Err(RecvTimeoutError::Timeout) => Ok(None),
-        Err(RecvTimeoutError::Disconnected) => Err(Error::Recv),
-    }
-}
-
-/// Sends an object to the sender.
-pub fn sender_send<T>(sender: &Sender<T>, object: T) -> Result<()>
-{
-    match sender.send(object) {
-        Ok(()) => Ok(()),
-        Err(_) => Err(Error::Send),
     }
 }
 

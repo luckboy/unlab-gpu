@@ -5,8 +5,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::Sender;
 use std::sync::Barrier;
 use std::sync::Condvar;
 use std::sync::Mutex;
@@ -23,8 +21,6 @@ pub enum SyncObject
     Mutex(Mutex<Value>),
     Monitor(Mutex<Value>, Condvar),
     RwLock(RwLock<Value>),
-    Receiver(Receiver<Value>),
-    Sender(Sender<Value>),
 }
 
 impl SyncObject
@@ -154,30 +150,6 @@ impl SyncObject
                 Ok(())
             },
             _ => Err(Error::Interp(String::from("value isn't rw lock"))),
-        }
-    }
-    
-    pub fn recv(&self) -> Result<Value>
-    {
-        match self {
-            SyncObject::Receiver(receiver) => receiver_recv(receiver),
-            _ => Err(Error::Interp(String::from("value isn't receiver"))),
-        }
-    }
-
-    pub fn recv_timeout(&self, duration: Duration) -> Result<Option<Value>>
-    {
-        match self {
-            SyncObject::Receiver(receiver) => receiver_recv_timeout(receiver, duration),
-            _ => Err(Error::Interp(String::from("value isn't receiver"))),
-        }
-    }
-
-    pub fn send(&self, value: Value) -> Result<()>
-    {
-        match self {
-            SyncObject::Sender(sender) => sender_send(sender, value),
-            _ => Err(Error::Interp(String::from("value isn't sender"))),
         }
     }
 }
