@@ -103,6 +103,34 @@ impl SyncObject
         }
     }
 
+    pub fn lock_and_notify_one<F>(&self, f: F) -> Result<()>
+        where F: FnOnce(&mut Value) -> Result<()>
+    {
+        match self {
+            SyncObject::Monitor(mutex, condvar) => {
+                let mut guard = mutex_lock(mutex)?;
+                f(&mut *guard)?;
+                condvar.notify_one();
+                Ok(())
+            },
+            _ => Err(Error::Interp(String::from("value isn't monitor"))),
+        }
+    }
+
+    pub fn lock_and_notify_all<F>(&self, f: F) -> Result<()>
+        where F: FnOnce(&mut Value) -> Result<()>
+    {
+        match self {
+            SyncObject::Monitor(mutex, condvar) => {
+                let mut guard = mutex_lock(mutex)?;
+                f(&mut *guard)?;
+                condvar.notify_all();
+                Ok(())
+            },
+            _ => Err(Error::Interp(String::from("value isn't monitor"))),
+        }
+    }    
+    
     pub fn read<F>(&self, f: F) -> Result<()>
         where F: FnOnce(&Value) -> Result<()>
     {
