@@ -89,8 +89,9 @@ impl SyncObject
                 if f(&mut *guard)? {
                     loop {
                         let pair = condvar_wait_timeout(condvar, guard, duration)?;
+                        let wait_timeout_res = pair.1;
                         guard = pair.0;
-                        if !g(&mut *guard, pair.1.timed_out())? {
+                        if !g(&mut *guard, wait_timeout_res.timed_out())? {
                             break;
                         }
                     }
