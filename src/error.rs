@@ -114,6 +114,10 @@ pub enum Error
     RwLockWrite,
     /// An object can't be received.
     Recv,
+    /// An object can't be sent.
+    Send,
+    /// A current thread can't wait for a notification.
+    Wait,
     /// A module node is already added.
     AlreadyAddedModNode,
     /// No a root module.
@@ -211,6 +215,8 @@ impl fmt::Display for Error
             Error::RwLockRead => write!(f, "can't read rw lock"),
             Error::RwLockWrite => write!(f, "can't write rw lock"),
             Error::Recv => write!(f, "can't receive object"),
+            Error::Send => write!(f, "can't send object"),
+            Error::Wait => write!(f, "can't wait for notification"),
             Error::AlreadyAddedModNode => write!(f, "already added module node"),
             Error::NoRootMod => write!(f, "no root module"),
             Error::NoModNodeIdent => write!(f, "no identifier of module node"),

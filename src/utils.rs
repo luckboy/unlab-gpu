@@ -7,11 +7,16 @@
 //
 //! A module of utilities.
 use std::sync::mpsc::Receiver;
+use std::sync::mpsc::RecvTimeoutError;
+use std::sync::mpsc::Sender;
+use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 use std::sync::RwLock;
 use std::sync::RwLockReadGuard;
 use std::sync::RwLockWriteGuard;
+use std::sync::WaitTimeoutResult;
+use std::time::Duration;
 use crate::matrix;
 use crate::matrix::Frontend;
 use crate::matrix::Matrix;
@@ -99,7 +104,7 @@ pub fn rw_lock_write<T>(rw_lock: &RwLock<T>) -> Result<RwLockWriteGuard<'_, T>>
 {
     match rw_lock.write() {
         Ok(guard) => Ok(guard),
-        Err(_) => Err(Error::RwLockRead),
+        Err(_) => Err(Error::RwLockWrite),
     }
 }
 
@@ -109,6 +114,43 @@ pub fn receiver_recv<T>(receiver: &Receiver<T>) -> Result<T>
     match receiver.recv() {
         Ok(object) => Ok(object),
         Err(_) => Err(Error::Recv),
+    }
+}
+
+/// Receives an object from the receiver until timeout.
+pub fn receiver_recv_timeout<T>(receiver: &Receiver<T>, duration: Duration) -> Result<Option<T>>
+{
+    match receiver.recv_timeout(duration) {
+        Ok(object) => Ok(Some(object)),
+        Err(RecvTimeoutError::Timeout) => Ok(None),
+        Err(RecvTimeoutError::Disconnected) => Err(Error::Recv),
+    }
+}
+
+/// Sends an object to the sender.
+pub fn sender_send<T>(sender: &Sender<T>, object: T) -> Result<()>
+{
+    match sender.send(object) {
+        Ok(()) => Ok(()),
+        Err(_) => Err(Error::Send),
+    }
+}
+
+/// Waits for a notification.
+pub fn condvar_wait<'a, T>(condvar: &Condvar, guard: MutexGuard<'a, T>) -> Result<MutexGuard<'a, T>>
+{
+    match condvar.wait(guard) {
+        Ok(new_guard) => Ok(new_guard),
+        Err(_) => Err(Error::Wait),
+    }
+}
+
+/// Waits for a notification utnil timout.
+pub fn condvar_wait_timeout<'a, T>(condvar: &Condvar, guard: MutexGuard<'a, T>, duration: Duration) -> Result<(MutexGuard<'a, T>, WaitTimeoutResult)>
+{
+    match condvar.wait_timeout(guard, duration) {
+        Ok(pair) => Ok(pair),
+        Err(_) => Err(Error::Wait),
     }
 }
 
