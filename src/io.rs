@@ -499,6 +499,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
             // TODO
             return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write synchronizatio object")))
         },
+        Object::JoinHandle(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write window identifier"))),
     }
     if !object_tab.add_object(object.clone()) {
         return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "too large index")));

@@ -184,6 +184,7 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                         SyncObject::RwLock(_) => Ok(Value::Object(Arc::new(Object::String(String::from("rwlock"))))),
                     }
                 },
+                Object::JoinHandle(_) => Ok(Value::Object(Arc::new(Object::String(String::from("joinhandle"))))),
             }
         },
         Some(Value::Ref(object)) => {

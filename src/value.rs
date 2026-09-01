@@ -24,8 +24,10 @@ use std::ptr::fn_addr_eq;
 use std::result;
 use std::str::Chars;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::sync::RwLock;
 use std::sync::Weak;
+use std::thread::JoinHandle;
 use crate::serde::de;
 use crate::serde::de::MapAccess;
 use crate::serde::de::SeqAccess;
@@ -1073,10 +1075,34 @@ impl Value
             Value::Object(object) => {
                 match &**object {
                     Object::Sync(sync_object) => Ok(sync_object),
-                    _ => Err(Error::Interp(String::from("unsupported type for synchronization")))
+                    _ => Err(Error::Interp(String::from("unsupported type for synchronization"))),
                 }
             },
-            _ => Err(Error::Interp(String::from("unsupported type for synchronization")))
+            _ => Err(Error::Interp(String::from("unsupported type for synchronization"))),
+        }
+    }
+    
+    pub fn join(&self) -> Result<Value>
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::JoinHandle(join_handle) => {
+                        let mut join_handle_g = mutex_lock(join_handle)?;
+                        match join_handle_g.take() {
+                            Some(tmp_join_handle) => {
+                                match tmp_join_handle.join() {
+                                    Ok(value) => Ok(value),
+                                    Err(_) => Err(Error::Join),
+                                }
+                            },
+                            _ => Ok(Value::None),
+                        }
+                    },
+                    _ => Err(Error::Interp(String::from("unsupported type for join"))),
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported type for join"))),
         }
     }
     
@@ -1207,6 +1233,7 @@ impl Value
                             },
                         }
                     },
+                    Object::JoinHandle(_) => write!(f, "thread(...)")?,
                 }
             },
             Value::Ref(object) => {
@@ -1641,6 +1668,8 @@ pub enum Object
     WindowId(WindowId),
     /// A synchronization object.
     Sync(SyncObject),
+    /// A join handle.
+    JoinHandle(Mutex<Option<JoinHandle<Value>>>),
 }
 
 impl Object
