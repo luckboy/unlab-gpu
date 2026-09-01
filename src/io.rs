@@ -18,23 +18,29 @@ use std::io::Write;
 use std::mem::size_of;
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::Condvar;
+use std::sync::Mutex;
 use std::sync::RwLock;
 use std::sync::Weak;
 use crate::env::*;
 use crate::error::*;
+use crate::sync::*;
 use crate::tree::*;
 use crate::utils::*;
 use crate::value::*;
 
-fn read_magic(r: &mut dyn Read) -> Result<()>
+fn read_magic(r: &mut dyn Read) -> Result<u32>
 {
     let mut buf = [0u8; 6];
     match r.read_exact(&mut buf) {
         Ok(()) => {
-            if &buf != b"unlab1" {
+            if &buf == b"unlab1" {
+                Ok(1)
+            } else if &buf == b"unlab2" {
+                Ok(2)
+            } else {
                 return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid data format")));
             }
-            Ok(())
         },
         Err(err) => Err(Error::Io(err)),
     }
@@ -109,11 +115,22 @@ fn read_string(r: &mut dyn Read) -> Result<String>
     }
 }
 
-fn write_magic(w: &mut dyn Write) -> Result<()>
+fn write_magic(w: &mut dyn Write, version: u32) -> Result<()>
 {
-    match w.write_all(b"unlab1") {
-        Ok(()) => Ok(()),
-        Err(err) => Err(Error::Io(err)),
+    match version {
+        1 => {
+            match w.write_all(b"unlab1") {
+                Ok(()) => Ok(()),
+                Err(err) => Err(Error::Io(err)),
+            }
+        },
+        2 => {
+            match w.write_all(b"unlab2") {
+                Ok(()) => Ok(()),
+                Err(err) => Err(Error::Io(err)),
+            }
+        },
+        _ => Err(Error::Io(io::Error::new(ErrorKind::InvalidData, String::from("invalid format version")))),
     }
 }
 
@@ -189,6 +206,9 @@ const OBJECT_BUILTIN_FUN: u8 = 5;
 const OBJECT_MATRIX_ARRAY: u8 = 6;
 const OBJECT_MATRIX_ROW_SLICE: u8 = 7;
 const OBJECT_ERROR: u8 = 8;
+const OBJECT_MUTEX: u8 = 9;
+const OBJECT_MONITOR: u8 = 10;
+const OBJECT_RW_LOCK: u8 = 11;
 
 const MUT_OBJECT_ARRAY: u8 = 0;
 const MUT_OBJECT_STRUCT: u8 = 1;
@@ -250,7 +270,7 @@ fn checked_mul_row_count_and_col_count(row_count: usize, col_count: usize) -> Re
     }
 }
 
-fn read_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>) -> Result<Arc<Object>>
+fn read_object(r: &mut dyn Read, env: &Env, version: u32, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Arc<Object>>
 {
     let object = match read_u8(r)? {
         OBJECT_STRING => Arc::new(Object::String(read_string(r)?)),
@@ -321,7 +341,7 @@ fn read_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>) 
         },
         OBJECT_MATRIX_ROW_SLICE => {
             let matrix_array = match read_u8(r)? {
-                MATRIX_ARRAY_OBJECT => read_object(r, env, object_tab)?,
+                MATRIX_ARRAY_OBJECT => read_object(r, env, version, object_tab, mut_object_tab)?,
                 MATRIX_ARRAY_INDEX => {
                     match object_tab.object(read_usize(r)?) {
                         Some(tmp_matrix_array) => tmp_matrix_array.clone(),
@@ -338,7 +358,27 @@ fn read_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>) 
             let msg = read_string(r)?;
             Arc::new(Object::Error(kind, msg))
         },
-        _ => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid object type"))),
+        object_type => {
+            if version >= 2 {
+                match object_type {
+                    OBJECT_MUTEX => {
+                        let value = read_value(r, env, version, object_tab, mut_object_tab)?;
+                        Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(value))))
+                    },
+                    OBJECT_MONITOR => {
+                        let value = read_value(r, env, version, object_tab, mut_object_tab)?;
+                        Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(value), Condvar::new())))
+                    },
+                    OBJECT_RW_LOCK => {
+                        let value = read_value(r, env, version, object_tab, mut_object_tab)?;
+                        Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(value))))
+                    },
+                    _ => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid object type"))),
+                }
+            } else {
+                return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid object type")));
+            }
+        },
     };
     if !object_tab.add_object(object.clone()) {
         return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "too large index")));
@@ -346,7 +386,7 @@ fn read_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>) 
     Ok(object)
 }
 
-fn read_mut_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Arc<RwLock<MutObject>>>
+fn read_mut_object(r: &mut dyn Read, env: &Env, version: u32, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Arc<RwLock<MutObject>>>
 {
     let object = match read_u8(r)? {
         MUT_OBJECT_ARRAY => Arc::new(RwLock::new(MutObject::Array(Vec::new()))),
@@ -362,13 +402,13 @@ fn read_mut_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Objec
         match &mut *object_g {
             MutObject::Array(elems) => {
                 for _ in 0..len {
-                    elems.push(read_value(r, env, object_tab, mut_object_tab)?);
+                    elems.push(read_value(r, env, version, object_tab, mut_object_tab)?);
                 }
             },
             MutObject::Struct(fields) => {
                 for _ in 0..len {
                     let ident = read_string(r)?;
-                    let field = read_value(r, env, object_tab, mut_object_tab)?;
+                    let field = read_value(r, env, version, object_tab, mut_object_tab)?;
                     fields.insert(ident, field);
                 }
             },
@@ -377,16 +417,16 @@ fn read_mut_object(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Objec
     Ok(object)
 }
 
-fn read_value(r: &mut dyn Read, env: &Env, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Value>
+fn read_value(r: &mut dyn Read, env: &Env, version: u32, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<Value>
 {
     match read_u8(r)? {
         VALUE_NONE => Ok(Value::None),
         VALUE_BOOL => Ok(Value::Bool(read_bool(r)?)),
         VALUE_INT => Ok(Value::Int(read_i64(r)?)),
         VALUE_FLOAT => Ok(Value::Float(read_f32(r)?)),
-        VALUE_OBJECT => Ok(Value::Object(read_object(r, env, object_tab)?)),
-        VALUE_REF => Ok(Value::Ref(read_mut_object(r, env, object_tab, mut_object_tab)?)),
-        VALUE_WEAK => Ok(Value::Weak(Arc::downgrade(&read_mut_object(r, env, object_tab, mut_object_tab)?))),
+        VALUE_OBJECT => Ok(Value::Object(read_object(r, env, version, object_tab, mut_object_tab)?)),
+        VALUE_REF => Ok(Value::Ref(read_mut_object(r, env, version, object_tab, mut_object_tab)?)),
+        VALUE_WEAK => Ok(Value::Weak(Arc::downgrade(&read_mut_object(r, env, version, object_tab, mut_object_tab)?))),
         VALUE_WEAK_NONE => Ok(Value::Weak(Weak::new())),
         VALUE_OBJECT_INDEX => {
             match object_tab.object(read_usize(r)?) {
@@ -415,16 +455,16 @@ pub fn read_values(r: &mut dyn Read, env: &Env) -> Result<Vec<Value>>
 { 
     let mut object_tab: ObjectTab<Object> = ObjectTab::new();
     let mut mut_object_tab: ObjectTab<RwLock<MutObject>> = ObjectTab::new();
-    read_magic(r)?;
+    let version = read_magic(r)?;
     let count = read_usize(r)?;
     let mut values: Vec<Value> = Vec::new();
     for _ in 0..count {
-        values.push(read_value(r, env, &mut object_tab, &mut mut_object_tab)?);
+        values.push(read_value(r, env, version, &mut object_tab, &mut mut_object_tab)?);
     }
     Ok(values)
 }
 
-fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut ObjectTab<Object>) -> Result<()>
+fn write_object(w: &mut dyn Write, object: &Arc<Object>, version: u32, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
 {
     match &**object {
         Object::String(s) => {
@@ -484,7 +524,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
                 },
                 None => {
                     write_u8(w, MATRIX_ARRAY_OBJECT)?;
-                    write_object(w, matrix_array, object_tab)?;
+                    write_object(w, matrix_array, version, object_tab, mut_object_tab)?;
                 },
             }
             write_usize(w, *i)?;
@@ -495,9 +535,29 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
             write_str(w, msg.as_str())?;
         },
         Object::WindowId(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write window identifier"))),
-        Object::Sync(_) => {
-            // TODO
-            return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write synchronizatio object")))
+        Object::Sync(sync_object) => {
+            if version >= 2 {
+                match sync_object {
+                    SyncObject::Barrier(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write barrier"))),
+                    SyncObject::Mutex(mutex) => {
+                        write_u8(w, OBJECT_MUTEX)?;
+                        let guard = mutex_lock(mutex)?;
+                        write_value(w, &*guard, version, object_tab, mut_object_tab)?;                       
+                    },
+                    SyncObject::Monitor(mutex, _) => {
+                        write_u8(w, OBJECT_MONITOR)?;
+                        let guard = mutex_lock(mutex)?;
+                        write_value(w, &*guard, version, object_tab, mut_object_tab)?;                       
+                    },
+                    SyncObject::RwLock(rw_lock) => {
+                        write_u8(w, OBJECT_RW_LOCK)?;
+                        let guard = rw_lock_read(rw_lock)?;
+                        write_value(w, &*guard, version, object_tab, mut_object_tab)?;                       
+                    },
+                }
+            } else {
+                return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write synchronization object")));
+            }
         },
         Object::JoinHandle(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write window identifier"))),
     }
@@ -507,7 +567,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
     Ok(())
 }
 
-fn write_mut_object(w: &mut dyn Write, object: &Arc<RwLock<MutObject>>, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
+fn write_mut_object(w: &mut dyn Write, object: &Arc<RwLock<MutObject>>, version: u32, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
 {
     if !mut_object_tab.add_object(object.clone()) {
         return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "too large index")));
@@ -518,7 +578,7 @@ fn write_mut_object(w: &mut dyn Write, object: &Arc<RwLock<MutObject>>, object_t
             write_u8(w, MUT_OBJECT_ARRAY)?;
             write_usize(w, elems.len())?;
             for elem in elems {
-                write_value(w, elem, object_tab, mut_object_tab)?;
+                write_value(w, elem, version, object_tab, mut_object_tab)?;
             }
         },
         MutObject::Struct(fields) => {
@@ -526,14 +586,14 @@ fn write_mut_object(w: &mut dyn Write, object: &Arc<RwLock<MutObject>>, object_t
             write_usize(w, fields.len())?;
             for (ident, field) in fields {
                 write_str(w, ident.as_str())?;
-                write_value(w, field, object_tab, mut_object_tab)?;
+                write_value(w, field, version, object_tab, mut_object_tab)?;
             }
         },
     }
     Ok(())
 }
 
-fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
+fn write_value(w: &mut dyn Write, value: &Value, version: u32, object_tab: &mut ObjectTab<Object>, mut_object_tab: &mut ObjectTab<RwLock<MutObject>>) -> Result<()>
 {
     match value {
         Value::None => write_u8(w, VALUE_NONE)?,
@@ -557,7 +617,7 @@ fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Obje
                 },
                 None => {
                     write_u8(w, VALUE_OBJECT)?;
-                    write_object(w, object, object_tab)?;
+                    write_object(w, object, version, object_tab, mut_object_tab)?;
                 },
             }
         },
@@ -569,7 +629,7 @@ fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Obje
                 },
                 None => {
                     write_u8(w, VALUE_REF)?;
-                    write_mut_object(w, object, object_tab, mut_object_tab)?;
+                    write_mut_object(w, object, version, object_tab, mut_object_tab)?;
                 },
             }
         },
@@ -583,7 +643,7 @@ fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Obje
                         },
                         None => {
                             write_u8(w, VALUE_WEAK)?;
-                            write_mut_object(w, &object, object_tab, mut_object_tab)?;
+                            write_mut_object(w, &object, version, object_tab, mut_object_tab)?;
                         },
                     }
                 },
@@ -596,13 +656,16 @@ fn write_value(w: &mut dyn Write, value: &Value, object_tab: &mut ObjectTab<Obje
 
 /// Writes the values to the writer.
 pub fn write_values(w: &mut dyn Write, values: &[Value]) -> Result<()>
+{ write_values_with_version(w, values, 2) }
+
+pub fn write_values_with_version(w: &mut dyn Write, values: &[Value], version: u32) -> Result<()>
 { 
     let mut object_tab: ObjectTab<Object> = ObjectTab::new();
     let mut mut_object_tab: ObjectTab<RwLock<MutObject>> = ObjectTab::new();
-    write_magic(w)?;
+    write_magic(w, version)?;
     write_usize(w, values.len())?;
     for value in values {
-        write_value(w, value, &mut object_tab, &mut mut_object_tab)?;
+        write_value(w, value, version, &mut object_tab, &mut mut_object_tab)?;
     }
     Ok(())
 }
@@ -626,6 +689,17 @@ pub fn save_values<P: AsRef<Path>>(path: P, values: &[Value]) -> Result<()>
         Ok(file) => {
             let mut w = BufWriter::new(file);
             write_values(&mut w, values)
+        },
+        Err(err) => Err(Error::Io(err)),
+    }
+}
+
+pub fn save_values_with_version<P: AsRef<Path>>(path: P, values: &[Value], version: u32) -> Result<()>
+{
+    match File::create(path) {
+        Ok(file) => {
+            let mut w = BufWriter::new(file);
+            write_values_with_version(&mut w, values, version)
         },
         Err(err) => Err(Error::Io(err)),
     }

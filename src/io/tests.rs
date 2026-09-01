@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,7 @@ fn f(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Valu
 { Ok(Value::None) }
 
 #[test]
-fn test_write_values_and_read_values_writes_values_and_reads_values()
+fn test_write_values_with_version_and_read_values_writes_values_and_reads_values()
 {
     let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
     env.add_and_push_mod(String::from("a")).unwrap();
@@ -75,7 +75,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values()
     values.push(Value::Weak(Arc::downgrade(&object)));
     values.push(Value::Ref(object.clone()));
     values.push(Value::Weak(Weak::new()));
-    match write_values(&mut cursor, values.as_slice()) {
+    match write_values_with_version(&mut cursor, values.as_slice(), 1) {
         Ok(()) => {
             cursor.set_position(0);
             match read_values(&mut cursor, &mut env) {
@@ -108,7 +108,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values()
 }
 
 #[test]
-fn test_write_values_and_read_values_writes_values_and_reads_values_for_object_indices()
+fn test_write_values_with_version_and_read_values_writes_values_and_reads_values_for_object_indices()
 {
     let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
     let mut cursor = Cursor::new(Vec::<u8>::new());
@@ -120,7 +120,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_object_i
     values.push(Value::Object(object.clone()));
     values.push(Value::Object(object));
     values.push(Value::Object(object2));
-    match write_values(&mut cursor, values.as_slice()) {
+    match write_values_with_version(&mut cursor, values.as_slice(), 1) {
         Ok(()) => {
             cursor.set_position(0);
             match read_values(&mut cursor, &mut env) {
@@ -149,7 +149,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_object_i
 }
 
 #[test]
-fn test_write_values_and_read_values_writes_values_and_reads_values_for_object_index_and_matrix_row_slice()
+fn test_write_values_with_version_and_read_values_writes_values_and_reads_values_for_object_index_and_matrix_row_slice()
 {
     let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
     let mut cursor = Cursor::new(Vec::<u8>::new());
@@ -162,7 +162,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_object_i
     let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a));
     values.push(Value::Object(matrix_array.clone()));
     values.push(Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1))));
-    match write_values(&mut cursor, values.as_slice()) {
+    match write_values_with_version(&mut cursor, values.as_slice(), 1) {
         Ok(()) => {
             cursor.set_position(0);
             match read_values(&mut cursor, &mut env) {
@@ -187,7 +187,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_object_i
 }
 
 #[test]
-fn test_write_values_and_read_values_writes_values_and_reads_values_for_mutable_object_indices()
+fn test_write_values_with_version_and_read_values_writes_values_and_reads_values_for_mutable_object_indices()
 {
     let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
     let mut cursor = Cursor::new(Vec::<u8>::new());
@@ -199,7 +199,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_mutable_
     values.push(Value::Ref(object.clone()));
     values.push(Value::Ref(object));
     values.push(Value::Ref(object2));
-    match write_values(&mut cursor, values.as_slice()) {
+    match write_values_with_version(&mut cursor, values.as_slice(), 1) {
         Ok(()) => {
             cursor.set_position(0);
             match read_values(&mut cursor, &mut env) {
@@ -228,7 +228,7 @@ fn test_write_values_and_read_values_writes_values_and_reads_values_for_mutable_
 }
 
 #[test]
-fn test_write_values_and_read_values_writes_value_and_reads_value_for_reference_cycle()
+fn test_write_values_with_version_and_read_values_writes_value_and_reads_value_for_reference_cycle()
 {
     let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
     let mut cursor = Cursor::new(Vec::<u8>::new());
@@ -243,7 +243,7 @@ fn test_write_values_and_read_values_writes_value_and_reads_value_for_reference_
         }
     }
     values.push(Value::Ref(object2));
-    match write_values(&mut cursor, values.as_slice()) {
+    match write_values_with_version(&mut cursor, values.as_slice(), 1) {
         Ok(()) => {
             cursor.set_position(0);
             match read_values(&mut cursor, &mut env) {
