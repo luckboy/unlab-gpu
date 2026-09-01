@@ -1233,7 +1233,7 @@ impl Value
                             },
                         }
                     },
-                    Object::JoinHandle(_) => write!(f, "thread(...)")?,
+                    Object::JoinHandle(_) => write!(f, "joinhandle(...)")?,
                 }
             },
             Value::Ref(object) => {
