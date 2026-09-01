@@ -43,6 +43,7 @@ use crate::winit;
 use crate::env::*;
 use crate::error::*;
 use crate::interp::*;
+use crate::sync::*;
 use crate::tree::*;
 use crate::utils::*;
 
@@ -220,7 +221,7 @@ impl Value
                 if Arc::ptr_eq(object, object2) {
                     return Ok(true);
                 }
-                object.priv_eq(&**object2)
+                object.priv_eq(&**object2, Self::eq_with_types)
             },
             (Value::Ref(object), Value::Ref(object2)) => {
                 if Arc::ptr_eq(object, object2) {
@@ -258,7 +259,7 @@ impl Value
                 if Arc::ptr_eq(object, object2) {
                     return Ok(true);
                 }
-                object.priv_eq(&**object2)
+                object.priv_eq(&**object2, Self::eq_without_types)
             },
             (Value::Ref(object), Value::Ref(object2)) => {
                 if Arc::ptr_eq(object, object2) {
@@ -292,7 +293,7 @@ impl Value
                 if Arc::ptr_eq(object, object2) {
                     return Ok(true);
                 }
-                object.priv_nearly_eq(&**object2, eps)
+                object.priv_nearly_eq(&**object2, eps, Self::nearly_eq_with_types)
             },
             (Value::Ref(object), Value::Ref(object2)) => {
                 if Arc::ptr_eq(object, object2) {
@@ -327,7 +328,7 @@ impl Value
                 if Arc::ptr_eq(object, object2) {
                     return Ok(true);
                 }
-                object.priv_nearly_eq(&**object2, eps)
+                object.priv_nearly_eq(&**object2, eps, Self::nearly_eq_without_types)
             },
             (Value::Ref(object), Value::Ref(object2)) => {
                 if Arc::ptr_eq(object, object2) {
@@ -1066,6 +1067,19 @@ impl Value
         }
     }
 
+    pub fn sync(&self) -> Result<&SyncObject>
+    {
+        match self {
+            Value::Object(object) => {
+                match &**object {
+                    Object::Sync(sync_object) => Ok(sync_object),
+                    _ => Err(Error::Interp(String::from("unsupported type for synchronization")))
+                }
+            },
+            _ => Err(Error::Interp(String::from("unsupported type for synchronization")))
+        }
+    }
+    
     fn fmt_with_indent(&self, f: &mut fmt::Formatter<'_>, indent: usize, is_width: bool) -> fmt::Result
     {
         let width = if is_width { 11 } else { 0 };
@@ -1167,6 +1181,32 @@ impl Value
                     },
                     Object::Error(_, msg) => write!(f, "{}", msg)?,
                     Object::WindowId(_) => write!(f, "windowid(...)")?,
+                    Object::Sync(sync_object) => {
+                        match sync_object {
+                            SyncObject::Barrier(_) => write!(f, "barrier(...)")?,
+                            SyncObject::Mutex(mutex) => {
+                                write!(f, "mutex(")?;
+                                let new_indent = indent + 4;
+                                let guard = mutex_lock(&*mutex).unwrap();
+                                guard.fmt_with_indent(f, new_indent, is_width)?;
+                                write!(f, ")")?;
+                            },
+                            SyncObject::Monitor(mutex, _) => {
+                                write!(f, "monitor(")?;
+                                let new_indent = indent + 4;
+                                let guard = mutex_lock(&*mutex).unwrap();
+                                guard.fmt_with_indent(f, new_indent, is_width)?;
+                                write!(f, ")")?;
+                            },
+                            SyncObject::RwLock(rw_lock) => {
+                                write!(f, "rwlock(")?;
+                                let new_indent = indent + 4;
+                                let guard = rw_lock_read(&*rw_lock).unwrap();
+                                guard.fmt_with_indent(f, new_indent, is_width)?;
+                                write!(f, ")")?;
+                            },
+                        }
+                    },
                 }
             },
             Value::Ref(object) => {
@@ -1574,7 +1614,7 @@ impl<'de> Deserialize<'de> for Value
 }
 
 /// An enumeration of immutable object.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Object
 {
     /// A string.
@@ -1599,11 +1639,14 @@ pub enum Object
     Error(String, String),
     /// A window identifier.
     WindowId(WindowId),
+    /// A synchronization object.
+    Sync(SyncObject),
 }
 
 impl Object
 {
-    fn priv_eq(&self, object: &Object) -> Result<bool>
+    fn priv_eq<F>(&self, object: &Object, f: F) -> Result<bool>
+        where F: FnOnce(&Value, &Value) -> Result<bool>
     {
         match (self, object) {
             (Object::String(s), Object::String(t)) => Ok(s == t),
@@ -1669,11 +1712,32 @@ impl Object
             },
             (Object::Error(kind, msg), Object::Error(kind2, msg2)) => Ok(kind == kind2 && msg == msg2),
             (Object::WindowId(window_id), Object::WindowId(window_id2)) => Ok(window_id == window_id2),
+            (Object::Sync(sync_object), Object::Sync(sync_object2)) => {
+                match (sync_object, sync_object2) {
+                    (SyncObject::Mutex(mutex), SyncObject::Mutex(mutex2)) => {
+                        let guard = mutex_lock(mutex)?;
+                        let guard2 = mutex_lock(mutex2)?;
+                        f(&*guard, &*guard2)
+                    },
+                    (SyncObject::Monitor(mutex, _), SyncObject::Monitor(mutex2, _)) => {
+                        let guard = mutex_lock(mutex)?;
+                        let guard2 = mutex_lock(mutex2)?;
+                        f(&*guard, &*guard2)
+                    },
+                    (SyncObject::RwLock(rw_lock), SyncObject::RwLock(rw_lock2)) => {
+                        let guard = rw_lock_read(rw_lock)?;
+                        let guard2 = rw_lock_read(rw_lock2)?;
+                        f(&*guard, &*guard2)
+                    },
+                    _ => Ok(false)
+                }
+            },
             (_, _) => Ok(false),
         }
     }
 
-    fn priv_nearly_eq(&self, object: &Object, eps: f32) -> Result<bool>
+    fn priv_nearly_eq<F>(&self, object: &Object, eps: f32, f: F) -> Result<bool>
+        where F: FnOnce(&Value, &Value, f32) -> Result<bool>
     {
         match (self, object) {
             (Object::MatrixArray(a_row_count, a_col_count, a_transpose_flag, xs), Object::MatrixArray(b_row_count, b_col_count, b_transpose_flag, ys)) => {
@@ -1731,7 +1795,7 @@ impl Object
                     (_, _) => return Err(Error::Interp(String::from("invalid matrix array type")))
                 }
             },
-            (_, _) => self.priv_eq(object),
+            (_, _) => self.priv_eq(object, |v, v2| f(v, v2, eps)),
         }
     }
 }

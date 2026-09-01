@@ -495,6 +495,10 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, object_tab: &mut Object
             write_str(w, msg.as_str())?;
         },
         Object::WindowId(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write window identifier"))),
+        Object::Sync(_) => {
+            // TODO
+            return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write synchronizatio object")))
+        },
     }
     if !object_tab.add_object(object.clone()) {
         return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "too large index")));

@@ -44,6 +44,7 @@ use crate::mod_node::*;
 use crate::parser::*;
 #[cfg(feature = "plot")]
 use crate::plot::*;
+use crate::sync::*;
 use crate::utils::*;
 use crate::value::*;
 use crate::version::*;
@@ -175,6 +176,14 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                 Object::MatrixRowSlice(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("matrixrowslice"))))),
                 Object::Error(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("error"))))),
                 Object::WindowId(_) => Ok(Value::Object(Arc::new(Object::String(String::from("windowid"))))),
+                Object::Sync(sync_object) => {
+                    match sync_object {
+                        SyncObject::Barrier(_) => Ok(Value::Object(Arc::new(Object::String(String::from("barrier"))))),
+                        SyncObject::Mutex(_) => Ok(Value::Object(Arc::new(Object::String(String::from("mutex"))))),
+                        SyncObject::Monitor(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("monitor"))))),
+                        SyncObject::RwLock(_) => Ok(Value::Object(Arc::new(Object::String(String::from("rwlock"))))),
+                    }
+                },
             }
         },
         Some(Value::Ref(object)) => {
