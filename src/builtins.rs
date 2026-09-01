@@ -27,8 +27,12 @@ use std::path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
+use std::sync::Barrier;
+use std::sync::Condvar;
+use std::sync::Mutex;
 use std::sync::RwLock;
 use std::sync::Weak;
+use std::time::Duration;
 use opener::open_browser;
 use rand::random;
 use rand::random_range;
@@ -3313,6 +3317,317 @@ pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     Ok(Value::None)
 }
 
+pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(n_value @ (Value::Int(_) | Value::Float(_))) => {
+            let n = n_value.to_i64();
+            if n < 0 {
+                return Err(Error::Interp(String::from("number of threads is negative")));
+            }
+            if n > (isize::MAX as i64) {
+                return Err(Error::Interp(String::from("too large number of threads")));
+            }
+            Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(n as usize))))))
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for fuction barrier"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn mutex(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(value.clone())))))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn monitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(value.clone()), Condvar::new()))))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn rwlock(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => Ok(Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(value.clone())))))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+fn set_value(ret_value: Value, value: &mut Value) -> Result<()>
+{
+    match ret_value {
+        Value::Ref(object) => {
+            let object_g = rw_lock_read(&*object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    if elems.len() != 1 {
+                        return Err(Error::Interp(String::from("invalid return value")));
+                    }
+                    match elems.get(0) {
+                        Some(new_value) => *value = new_value.clone(),
+                        None => return Err(Error::Interp(String::from("invalid return value"))),
+                    }
+                },
+                _ => return Err(Error::Interp(String::from("invalid return value"))),
+            }
+        },
+        _ => (),
+    }
+    Ok(())
+}
+
+fn set_value_and_return_bool(ret_value: Value, value: &mut Value) -> Result<bool>
+{
+    match ret_value {
+        Value::Ref(object) => {
+            let object_g = rw_lock_read(&*object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    if elems.len() != 2 {
+                        return Err(Error::Interp(String::from("invalid return value")));
+                    }
+                    match elems.get(0) {
+                        Some(new_value) => *value = new_value.clone(),
+                        None => return Err(Error::Interp(String::from("invalid return value"))),
+                    }
+                    match elems.get(1) {
+                        Some(b_value) => Ok(b_value.to_bool()),
+                        None => Err(Error::Interp(String::from("invalid return value"))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("invalid return value"))),
+            }
+        },
+        _ => Ok(ret_value.to_bool()),
+    }
+}
+
+pub fn wait(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(sync_value) => Ok(Value::Bool(sync_value.sync()?.wait()?)),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn lock(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(sync_value), Some(data_value), Some(fun_value)) => {
+            sync_value.sync()?.lock(|value| {
+                    set_value(fun_value.apply(interp, env, &[data_value.clone(), value.clone()])?, value)
+            })?;
+            Ok(Value::None)
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn lockwait(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 5 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2), arg_values.get(3), arg_values.get(4)) {
+        (Some(sync_value), Some(data_value), Some(fun_value), Some(fun_value2), Some(fun_value3)) => {
+            sync_value.sync()?.lock_and_wait(&mut (interp, env), |pair, value| {
+                    set_value_and_return_bool(fun_value.apply(pair.0, pair.1, &[data_value.clone(), value.clone()])?, value)
+            }, |pair, value| {
+                    set_value_and_return_bool(fun_value2.apply(pair.0, pair.1, &[data_value.clone(), value.clone()])?, value)
+            }, |pair, value| {
+                    set_value(fun_value3.apply(pair.0, pair.1, &[data_value.clone(), value.clone()])?, value)
+            })?;
+            Ok(Value::None)
+        },
+        (_, _, _, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn lockwaittimeout(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 6 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2), arg_values.get(3), arg_values.get(4), arg_values.get(5)) {
+        (Some(sync_value), Some(millis_value @ (Value::Int(_) | Value::Float(_))), Some(data_value), Some(fun_value), Some(fun_value2), Some(fun_value3)) => {
+            let millis = millis_value.to_i64();
+            if millis < 0 {
+                return Err(Error::Interp(String::from("millis is negative")));
+            }
+            sync_value.sync()?.lock_and_wait_timeout(Duration::from_millis(millis as u64), &mut (interp, env), |pair, value| {
+                    set_value_and_return_bool(fun_value.apply(pair.0, pair.1, &[data_value.clone(), value.clone()])?, value)
+            }, |pair, value, is_timeout| {
+                    set_value_and_return_bool(fun_value2.apply(pair.0, pair.1, &[data_value.clone(), value.clone(), Value::Bool(is_timeout)])?, value)
+            }, |pair, value| {
+                    set_value(fun_value3.apply(pair.0, pair.1, &[data_value.clone(), value.clone()])?, value)
+            })?;
+            Ok(Value::None)
+        },
+        (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for fuction lockandwaittimeout"))),
+        (_, _, _, _, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn locknotifyone(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(sync_value), Some(data_value), Some(fun_value)) => {
+            sync_value.sync()?.lock_and_notify_one(|value| {
+                    set_value(fun_value.apply(interp, env, &[data_value.clone(), value.clone()])?, value)
+            })?;
+            Ok(Value::None)
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn locknotifyall(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(sync_value), Some(data_value), Some(fun_value)) => {
+            sync_value.sync()?.lock_and_notify_all(|value| {
+                    set_value(fun_value.apply(interp, env, &[data_value.clone(), value.clone()])?, value)
+            })?;
+            Ok(Value::None)
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn read(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(sync_value), Some(data_value), Some(fun_value)) => {
+            sync_value.sync()?.read(|value| {
+                    fun_value.apply(interp, env, &[data_value.clone(), value.clone()])?;
+                    Ok(())
+            })?;
+            Ok(Value::None)
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn write(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(sync_value), Some(data_value), Some(fun_value)) => {
+            sync_value.sync()?.write(|value| {
+                    set_value(fun_value.apply(interp, env, &[data_value.clone(), value.clone()])?, value)
+            })?;
+            Ok(Value::None)
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn thread(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(data_value), Some(fun_value)) => {
+            let data_value2 = data_value.clone();
+            let fun_value2 = fun_value.clone();
+            let mut new_env = env.clone_without_stack();
+            let mut new_interp = Interp::new();
+            let res = std::thread::Builder::new().spawn(move || {
+                    match fun_value2.apply(&mut new_interp, &mut new_env, &[data_value2.clone()]) {
+                        Ok(ret_value) => ret_value,
+                        Err(Error::Stop(Stop::ErrorPropagation)) => new_interp.ret_value().clone(),
+                        Err(Error::Stop(Stop::Quit)) => Value::Object(Arc::new(Object::Error(String::from("io"), String::from("main thread can only leave by command quit")))),
+                        Err(Error::Stop(Stop::Exit(_))) => Value::Object(Arc::new(Object::Error(String::from("io"), String::from("main thread can only leave by function exit")))),
+                        Err(err @ Error::Intr) => {
+                            eprint_error(&err);
+                            Value::Object(Arc::new(Object::Error(String::from("thread"), format!("{}", err))))
+                        },
+                        Err(err) => {
+                            eprint_error_with_stack_trace(&err, new_interp.stack_trace());
+                            Value::Object(Arc::new(Object::Error(String::from("thread"), format!("{}", err))))
+                        },
+                    }
+            });
+            match res {
+                Ok(join_handle) => Ok(Value::Object(Arc::new(Object::JoinHandle(Mutex::new(Some(join_handle)))))),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn join(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => {
+            match value.join() {
+                Ok(value) => Ok(value),
+                Err(err @ Error::Join) => Ok(Value::Object(Arc::new(Object::Error(String::from("join"), format!("{}", err))))),
+                Err(err) => Err(err),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+   match arg_values.get(0) {
+        Some(millis_value @ (Value::Int(_) | Value::Float(_))) => {
+            let millis = millis_value.to_i64();
+            if millis < 0 {
+                return Err(Error::Interp(String::from("millis is negative")));
+            }
+            std::thread::sleep(Duration::from_millis(millis as u64));
+            Ok(Value::None)
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for fuction sleep"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }}
+
 /// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
@@ -3492,6 +3807,21 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("assertnearlyeq"), assertnearlyeq);
     add_builtin_fun(root_mod, String::from("assertnearlyne"), assertnearlyne);
     add_builtin_fun(root_mod, String::from("tests"), tests);
+    add_builtin_fun(root_mod, String::from("barrier"), barrier);
+    add_builtin_fun(root_mod, String::from("mutex"), mutex);
+    add_builtin_fun(root_mod, String::from("monitor"), monitor);
+    add_builtin_fun(root_mod, String::from("rwlock"), rwlock);
+    add_builtin_fun(root_mod, String::from("wait"), wait);
+    add_builtin_fun(root_mod, String::from("lock"), lock);
+    add_builtin_fun(root_mod, String::from("lockwait"), lockwait);
+    add_builtin_fun(root_mod, String::from("lockwaittimeout"), lockwaittimeout);
+    add_builtin_fun(root_mod, String::from("locknotifyone"), locknotifyone);
+    add_builtin_fun(root_mod, String::from("locknotifyall"), locknotifyall);
+    add_builtin_fun(root_mod, String::from("read"), read);
+    add_builtin_fun(root_mod, String::from("write"), write);
+    add_builtin_fun(root_mod, String::from("thread"), thread);
+    add_builtin_fun(root_mod, String::from("join"), join);
+    add_builtin_fun(root_mod, String::from("sleep"), sleep);
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
     #[cfg(feature = "plot")]

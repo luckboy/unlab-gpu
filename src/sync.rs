@@ -51,48 +51,48 @@ impl SyncObject
         }
     }
 
-    pub fn lock_and_wait<F, G, H>(&self, f: F, mut g: G, h: H) -> Result<()>
-        where F: FnOnce(&mut Value) -> Result<bool>,
-            G: FnMut(&mut Value) -> Result<bool>,
-            H: FnOnce(&mut Value) -> Result<()>
+    pub fn lock_and_wait<T, F, G, H>(&self, data: &mut T, f: F, mut g: G, h: H) -> Result<()>
+        where F: FnOnce(&mut T, &mut Value) -> Result<bool>,
+            G: FnMut(&mut T, &mut Value) -> Result<bool>,
+            H: FnOnce(&mut T, &mut Value) -> Result<()>
     {
         match self {
             SyncObject::Monitor(mutex, condvar) => {
                 let mut guard = mutex_lock(mutex)?;
-                if f(&mut *guard)? {
+                if f(data, &mut *guard)? {
                     loop {
                         guard = condvar_wait(condvar, guard)?;
-                        if !g(&mut *guard)? {
+                        if !g(data, &mut *guard)? {
                             break;
                         }
                     }
                 }
-                h(&mut *guard)?;
+                h(data, &mut *guard)?;
                 Ok(())
             },
             _ => Err(Error::Interp(String::from("value isn't monitor"))),
         }
     }
 
-    pub fn lock_and_wait_timeout<F, G, H>(&self, duration: Duration, f: F, mut g: G, h: H) -> Result<()>
-        where F: FnOnce(&mut Value) -> Result<bool>,
-            G: FnMut(&mut Value, bool) -> Result<bool>,
-            H: FnOnce(&mut Value) -> Result<()>
+    pub fn lock_and_wait_timeout<T, F, G, H>(&self, duration: Duration, data: &mut T, f: F, mut g: G, h: H) -> Result<()>
+        where F: FnOnce(&mut T, &mut Value) -> Result<bool>,
+            G: FnMut(&mut T, &mut Value, bool) -> Result<bool>,
+            H: FnOnce(&mut T, &mut Value) -> Result<()>
     {
         match self {
             SyncObject::Monitor(mutex, condvar) => {
                 let mut guard = mutex_lock(mutex)?;
-                if f(&mut *guard)? {
+                if f(data, &mut *guard)? {
                     loop {
                         let pair = condvar_wait_timeout(condvar, guard, duration)?;
                         let wait_timeout_res = pair.1;
                         guard = pair.0;
-                        if !g(&mut *guard, wait_timeout_res.timed_out())? {
+                        if !g(data, &mut *guard, wait_timeout_res.timed_out())? {
                             break;
                         }
                     }
                 }
-                h(&mut *guard)?;
+                h(data, &mut *guard)?;
                 Ok(())
             },
             _ => Err(Error::Interp(String::from("value isn't monitor"))),
