@@ -168,6 +168,8 @@ pub enum Error
     Intr,
     /// An assertion error.
     Assert(Option<String>, Option<(Value, Value)>),
+    /// A error of backend finalization.
+    BackendFinalization,
 }
 
 impl error::Error for Error
@@ -262,6 +264,7 @@ impl fmt::Display for Error
                 }
                 Ok(())
             },
+            Error::BackendFinalization => write!(f, "backend is finalized"),
         }
     }
 }

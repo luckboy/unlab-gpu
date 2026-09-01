@@ -982,6 +982,7 @@ fn run_with_opt_name<F, G>(name: Option<&str>, args: Vec<String>, is_ctrl_c_intr
         let root_mod_arc = Arc::new(RwLock::new(root_mod));
         main_loop(script_file, args, PathBuf::from(home.history_file()), root_mod_arc, OsString::from(home.lib_path()), OsString::from(home.doc_path()), is_ctrl_c_intr_checker, are_plotter_windows)
     };
+    set_backend_finalization();
     match finalize_backend() {
         Ok(()) => (),
         Err(err) => {

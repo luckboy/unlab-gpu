@@ -6,6 +6,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 //! A module of utilities.
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::mpsc::Receiver;
 use std::sync::Condvar;
 use std::sync::Mutex;
@@ -133,6 +135,21 @@ pub fn condvar_wait_timeout<'a, T>(condvar: &Condvar, guard: MutexGuard<'a, T>, 
     }
 }
 
+static BACKEND_FINALIZATION_FLAG: AtomicBool = AtomicBool::new(false);
+
+/// Sets the flag of backend finalization.
+pub fn set_backend_finalization()
+{ BACKEND_FINALIZATION_FLAG.store(true, Ordering::SeqCst); }
+
+fn check_backend_finalization() -> Result<()>
+{
+    if !BACKEND_FINALIZATION_FLAG.load(Ordering::SeqCst) {
+        Ok(())
+    } else {
+        Err(Error::BackendFinalization)
+    }
+}
+
 fn matrix_res_backend_name() -> matrix::Result<&'static str>
 {
     let frontend = Frontend::new()?;
@@ -157,6 +174,7 @@ fn matrix_res_create_and_set_zeros(row_count: usize, col_count: usize) -> matrix
 /// Creates a matrix and sets the matrix elements on zeros.
 pub fn matrix_create_and_set_zeros(row_count: usize, col_count: usize) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_create_and_set_zeros(row_count, col_count) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -172,6 +190,7 @@ fn matrix_res_create_and_set_elems(row_count: usize, col_count: usize, elems: &[
 /// Creates a matrix and sets the matrix elements.
 pub fn matrix_create_and_set_elems(row_count: usize, col_count: usize, elems: &[f32]) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_create_and_set_elems(row_count, col_count, elems) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -187,6 +206,7 @@ fn matrix_res_elems_and_transpose_flag(a: &Matrix) -> matrix::Result<(Vec<f32>, 
 /// Returns the elements and the transpose flag of matrix.
 pub fn matrix_elems_and_transpose_flag(a: &Matrix) -> Result<(Vec<f32>, bool)>
 {
+    check_backend_finalization()?;
     match matrix_res_elems_and_transpose_flag(a) {
         Ok(pair) => Ok(pair),
         Err(err) => Err(Error::Matrix(err)),
@@ -204,6 +224,7 @@ fn matrix_res_add(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Adds the `b` matrix to the `a` matrix.
 pub fn matrix_add(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_add(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -221,6 +242,7 @@ fn matrix_res_sub(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Subtracts the `b` matrix from the `a` matrix.
 pub fn matrix_sub(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_sub(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -242,6 +264,7 @@ fn matrix_res_mul(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Multiplies the `a` matrix by the `b` matrix.
 pub fn matrix_mul(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_mul(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -259,6 +282,7 @@ fn matrix_res_mul_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Multiplies the `a` matrix elements by the `b` matrix.
 pub fn matrix_mul_elems(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_mul_elems(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -276,6 +300,7 @@ fn matrix_res_div_elems(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Divides the `a` matrix elements by the `b` matrix.
 pub fn matrix_div_elems(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_div_elems(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -293,6 +318,7 @@ fn matrix_res_add_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Adds the `b` scalar to the `a` matrix.
 pub fn matrix_add_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_add_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -310,6 +336,7 @@ fn matrix_res_sub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Subtracts the `b` scalar from the `a` matrix.
 pub fn matrix_sub_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_sub_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -327,6 +354,7 @@ fn matrix_res_rsub_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Subtracts the `a` matrix from the `b` scalar.
 pub fn matrix_rsub_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_rsub_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -344,6 +372,7 @@ fn matrix_res_mul_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Multiplies the `a` matrix by the `b` scalar.
 pub fn matrix_mul_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_mul_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -361,6 +390,7 @@ fn matrix_res_div_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Divides the `a` matrix by the `b` scalar.
 pub fn matrix_div_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_div_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -378,6 +408,7 @@ fn matrix_res_rdiv_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Divides the `b` scalar by the `a` matrix elements.
 pub fn matrix_rdiv_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_rdiv_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -395,6 +426,7 @@ fn matrix_res_sigmoid(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates sigmoid function for the `a` matrix.
 pub fn matrix_sigmoid(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_sigmoid(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -412,6 +444,7 @@ fn matrix_res_tanh(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates hyperbolic tangent function for the `a` matrix.
 pub fn matrix_tanh(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_tanh(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -429,6 +462,7 @@ fn matrix_res_swish(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates swish function for the `a` matrix.
 pub fn matrix_swish(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_swish(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -446,6 +480,7 @@ fn matrix_res_softmax(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates softmax function for the `a` matrix.
 pub fn matrix_softmax(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_softmax(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -463,6 +498,7 @@ fn matrix_res_sqrt(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates square roots of the `a` matrix elements.
 pub fn matrix_sqrt(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_sqrt(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -480,6 +516,7 @@ fn matrix_res_really_transpose(a: &Matrix) -> matrix::Result<Matrix>
 /// Indeed transposes the `a` matrix.
 pub fn matrix_really_transpose(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_really_transpose(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -504,6 +541,7 @@ fn matrix_res_repeat(a: &Matrix, n: usize) -> matrix::Result<Option<Matrix>>
 /// Repeats the `a` vector as column or a row.
 pub fn matrix_repeat(a: &Matrix, n: usize) -> Result<Option<Matrix>>
 {
+    check_backend_finalization()?;
     match matrix_res_repeat(a, n) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -525,6 +563,7 @@ fn matrix_res_to_matrix_array(a: &Matrix) -> matrix::Result<Object>
 /// Converts the `a` matrix to the matrix array.
 pub fn matrix_to_matrix_array(a: &Matrix) -> Result<Object>
 {
+    check_backend_finalization()?;
     match matrix_res_to_matrix_array(a) {
         Ok(object) => Ok(object),
         Err(err) => Err(Error::Matrix(err)),
@@ -542,6 +581,7 @@ fn matrix_res_abs(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates absolute values of the `a` matrix elements.
 pub fn matrix_abs(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_abs(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -559,6 +599,7 @@ fn matrix_res_pow(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Raises the `a` matrix elements to the power of the `b` matrix elements.
 pub fn matrix_pow(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_pow(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -576,6 +617,7 @@ fn matrix_res_pow_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Raises the `a` matrix elements to the power of the `b` scalar.
 pub fn matrix_pow_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_pow_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -593,6 +635,7 @@ fn matrix_res_rpow_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Raises the `b` scalar to the power of the `a` matrix elements.
 pub fn matrix_rpow_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_rpow_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -610,6 +653,7 @@ fn matrix_res_exp(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates exponential function for the `a` matrix elements.
 pub fn matrix_exp(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_exp(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -627,6 +671,7 @@ fn matrix_res_ln(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates natural logarithm of the `a` matrix elements.
 pub fn matrix_ln(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_ln(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -644,6 +689,7 @@ fn matrix_res_log2(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates base 2 logarithm of the `a` matrix elements.
 pub fn matrix_log2(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_log2(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -661,6 +707,7 @@ fn matrix_res_log10(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates base 10 logarithm of the `a` matrix elements.
 pub fn matrix_log10(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_log10(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -678,6 +725,7 @@ fn matrix_res_sin(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates sine function for the `a` matrix.
 pub fn matrix_sin(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_sin(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -695,6 +743,7 @@ fn matrix_res_cos(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates cosine function for the `a` matrix.
 pub fn matrix_cos(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_cos(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -712,6 +761,7 @@ fn matrix_res_tan(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates tangent function for the `a` matrix.
 pub fn matrix_tan(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_tan(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -729,6 +779,7 @@ fn matrix_res_asin(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates arcsine function for the `a` matrix.
 pub fn matrix_asin(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_asin(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -746,6 +797,7 @@ fn matrix_res_acos(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates arccosine function for the `a` matrix.
 pub fn matrix_acos(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_acos(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -763,6 +815,7 @@ fn matrix_res_atan(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates arctangent function for the `a` matrix.
 pub fn matrix_atan(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_atan(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -780,6 +833,7 @@ fn matrix_res_atan2(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Calculates arctangent function for the `a` matrix elements and the `b` matrix elements.
 pub fn matrix_atan2(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_atan2(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -797,6 +851,7 @@ fn matrix_res_atan2_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Calculates arctangent function for the `a` matrix elements and the `b` scalar.
 pub fn matrix_atan2_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_atan2_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -814,6 +869,7 @@ fn matrix_res_ratan2_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Calculates arctangent function for the `b` scalar and the `a` matrix elements.
 pub fn matrix_ratan2_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_ratan2_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -831,6 +887,7 @@ fn matrix_res_sinh(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates hyperbolic sine function for the `a` matrix.
 pub fn matrix_sinh(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_sinh(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -848,6 +905,7 @@ fn matrix_res_cosh(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates hyperbolic cosine function for the `a` matrix.
 pub fn matrix_cosh(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_cosh(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -865,6 +923,7 @@ fn matrix_res_asinh(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates inverse hyperbolic sine function for the `a` matrix.
 pub fn matrix_asinh(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_asinh(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -882,6 +941,7 @@ fn matrix_res_acosh(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates inverse hyperbolic cosine function for the `a` matrix.
 pub fn matrix_acosh(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_acosh(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -899,6 +959,7 @@ fn matrix_res_atanh(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates inverse hyperbolic tangent function for the `a` matrix.
 pub fn matrix_atanh(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_atanh(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -916,6 +977,7 @@ fn matrix_res_signum(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates signum function for the `a` matrix.
 pub fn matrix_signum(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_signum(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -933,6 +995,7 @@ fn matrix_res_ceil(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates ceil function for the `a` matrix.
 pub fn matrix_ceil(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_ceil(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -950,6 +1013,7 @@ fn matrix_res_floor(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates floor function for the `a` matrix.
 pub fn matrix_floor(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_floor(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -967,6 +1031,7 @@ fn matrix_res_round(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates round function for the `a` matrix.
 pub fn matrix_round(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_round(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -984,6 +1049,7 @@ fn matrix_res_trunc(a: &Matrix) -> matrix::Result<Matrix>
 /// Calculates trunc function for the `a` matrix.
 pub fn matrix_trunc(a: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_trunc(a) {
         Ok(b) => Ok(b),
         Err(err) => Err(Error::Matrix(err)),
@@ -1001,6 +1067,7 @@ fn matrix_res_max(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Finds maximum values between the `a` matrix elements and the `b` matrix elements.
 pub fn matrix_max(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_max(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -1018,6 +1085,7 @@ fn matrix_res_max_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Finds maximum values between the `a` matrix elements and the `b` scalar.
 pub fn matrix_max_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_max_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -1035,6 +1103,7 @@ fn matrix_res_min(a: &Matrix, b: &Matrix) -> matrix::Result<Matrix>
 /// Finds minimum values between the `a` matrix elements and the `b` matrix elements.
 pub fn matrix_min(a: &Matrix, b: &Matrix) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_min(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),
@@ -1052,6 +1121,7 @@ fn matrix_res_min_for_scalar(a: &Matrix, b: f32) -> matrix::Result<Matrix>
 /// Finds minimum values between the `a` matrix elements and the `b` scalar.
 pub fn matrix_min_for_scalar(a: &Matrix, b: f32) -> Result<Matrix>
 {
+    check_backend_finalization()?;
     match matrix_res_min_for_scalar(a, b) {
         Ok(c) => Ok(c),
         Err(err) => Err(Error::Matrix(err)),

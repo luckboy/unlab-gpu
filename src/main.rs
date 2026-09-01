@@ -18,6 +18,7 @@ use unlab_gpu::add_std_builtin_funs;
 use unlab_gpu::finalize_backend;
 use unlab_gpu::initialize_backend;
 use unlab_gpu::main_loop;
+use unlab_gpu::set_backend_finalization;
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -100,6 +101,7 @@ fn main()
         let root_mod_arc = Arc::new(RwLock::new(root_mod));
         main_loop(args.script_file.clone(), args.args.clone(), PathBuf::from(home.history_file()), root_mod_arc, OsString::from(home.lib_path()), OsString::from(home.doc_path()), !args.no_ctrl_c, !args.no_plotter_windows)
     };
+    set_backend_finalization();
     match finalize_backend() {
         Ok(()) => (),
         Err(err) => {

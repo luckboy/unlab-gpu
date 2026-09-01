@@ -81,6 +81,7 @@ pub use parser::parse;
 pub use parser::parse_with_doc_root_mod;
 pub use parser::parse_with_doc_root_mod_and_doc_current_mod;
 pub use tree::Tree;
+pub use utils::set_backend_finalization;
 pub use value::Value;
 
 #[cfg(test)]
