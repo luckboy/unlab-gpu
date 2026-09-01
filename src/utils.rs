@@ -141,7 +141,15 @@ static BACKEND_FINALIZATION_FLAG: AtomicBool = AtomicBool::new(false);
 pub fn set_backend_finalization()
 { BACKEND_FINALIZATION_FLAG.store(true, Ordering::SeqCst); }
 
-fn check_backend_finalization() -> Result<()>
+/// Resets the flag of backend finalization.
+pub fn reset_backend_finalization()
+{ BACKEND_FINALIZATION_FLAG.store(false, Ordering::SeqCst); }
+
+/// Checks the flag of backend finalization.
+///
+/// This function returns an error of backend finalization if the flag of backend finalization
+/// is set.
+pub fn check_backend_finalization() -> Result<()>
 {
     if !BACKEND_FINALIZATION_FLAG.load(Ordering::SeqCst) {
         Ok(())
