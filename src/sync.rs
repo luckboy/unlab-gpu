@@ -153,3 +153,6 @@ impl SyncObject
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
