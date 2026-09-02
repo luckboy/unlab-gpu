@@ -3622,7 +3622,7 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-   match arg_values.get(0) {
+    match arg_values.get(0) {
         Some(millis_value @ (Value::Int(_) | Value::Float(_))) => {
             let millis = millis_value.to_i64();
             if millis < 0 {
@@ -3633,7 +3633,8 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
         },
         Some(_) => Err(Error::Interp(String::from("unsupported types for fuction sleep"))),
         None => Err(Error::Interp(String::from("no argument"))),
-    }}
+    }
+}
 
 /// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
