@@ -29,7 +29,7 @@ impl SyncObject
     {
         match self {
             SyncObject::Barrier(barrier) => Ok(barrier.wait().is_leader()),
-            _ => Err(Error::Interp(String::from("value isn't barrier"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't barrier"))),
         }
     }
     
@@ -47,7 +47,7 @@ impl SyncObject
                 f(&mut *guard)?;
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't mutex and monitor"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't mutex and monitor"))),
         }
     }
 
@@ -70,7 +70,7 @@ impl SyncObject
                 h(data, &mut *guard)?;
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't monitor"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't monitor"))),
         }
     }
 
@@ -95,7 +95,7 @@ impl SyncObject
                 h(data, &mut *guard)?;
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't monitor"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't monitor"))),
         }
     }
 
@@ -109,7 +109,7 @@ impl SyncObject
                 condvar.notify_one();
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't monitor"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't monitor"))),
         }
     }
 
@@ -123,7 +123,7 @@ impl SyncObject
                 condvar.notify_all();
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't monitor"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't monitor"))),
         }
     }    
     
@@ -136,7 +136,7 @@ impl SyncObject
                 f(&*guard)?;
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't rw lock"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't rw lock"))),
         }
     }
 
@@ -149,7 +149,7 @@ impl SyncObject
                 f(&mut *guard)?;
                 Ok(())
             },
-            _ => Err(Error::Interp(String::from("value isn't rw lock"))),
+            _ => Err(Error::Interp(String::from("synchronization object isn't rw lock"))),
         }
     }
 }
