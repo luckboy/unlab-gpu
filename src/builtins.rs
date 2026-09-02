@@ -3571,9 +3571,16 @@ pub fn thread(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
             let res = std::thread::Builder::new().spawn(move || {
                     match fun_value2.apply(&mut new_interp, &mut new_env, &[data_value2.clone()]) {
                         Ok(ret_value) => ret_value,
-                        Err(Error::Stop(Stop::ErrorPropagation)) => new_interp.ret_value().clone(),
-                        Err(Error::Stop(Stop::Quit)) => Value::Object(Arc::new(Object::Error(String::from("io"), String::from("main thread can only leave by command quit")))),
-                        Err(Error::Stop(Stop::Exit(_))) => Value::Object(Arc::new(Object::Error(String::from("io"), String::from("main thread can only leave by function exit")))),
+                        Err(Error::Stop(Stop::Quit)) => {
+                            let msg = "main interpreter thread can only leave by command quit";
+                            eprintln!("{}", msg);
+                            Value::Object(Arc::new(Object::Error(String::from("thread"), String::from(msg))))
+                        },
+                        Err(Error::Stop(Stop::Exit(_))) => {
+                            let msg = "main interpreter thread can only leave by function exit";
+                            eprintln!("{}", msg);
+                            Value::Object(Arc::new(Object::Error(String::from("thread"), String::from(msg))))
+                        },
                         Err(err @ Error::Intr) => {
                             eprint_error(&err);
                             Value::Object(Arc::new(Object::Error(String::from("thread"), format!("{}", err))))
