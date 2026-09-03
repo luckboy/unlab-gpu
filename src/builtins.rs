@@ -3420,7 +3420,7 @@ fn set_value_and_return_bool(ret_value: Value, value: &mut Value) -> Result<bool
     }
 }
 
-pub fn wait(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn barrierwait(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3524,7 +3524,7 @@ pub fn locknotifyall(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -
     }
 }
 
-pub fn read(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn rwlockread(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3541,7 +3541,7 @@ pub fn read(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     }
 }
 
-pub fn write(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn rwlockwrite(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3600,7 +3600,7 @@ pub fn thread(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
-pub fn join(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn threadjoin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3819,16 +3819,16 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
     add_builtin_fun(root_mod, String::from("rwlock"), rwlock);
-    add_builtin_fun(root_mod, String::from("wait"), wait);
+    add_builtin_fun(root_mod, String::from("barrierwait"), barrierwait);
     add_builtin_fun(root_mod, String::from("lock"), lock);
     add_builtin_fun(root_mod, String::from("lockwait"), lockwait);
     add_builtin_fun(root_mod, String::from("lockwaittimeout"), lockwaittimeout);
     add_builtin_fun(root_mod, String::from("locknotifyone"), locknotifyone);
     add_builtin_fun(root_mod, String::from("locknotifyall"), locknotifyall);
-    add_builtin_fun(root_mod, String::from("read"), read);
-    add_builtin_fun(root_mod, String::from("write"), write);
+    add_builtin_fun(root_mod, String::from("rwlockread"), rwlockread);
+    add_builtin_fun(root_mod, String::from("rwlockwrite"), rwlockwrite);
     add_builtin_fun(root_mod, String::from("thread"), thread);
-    add_builtin_fun(root_mod, String::from("join"), join);
+    add_builtin_fun(root_mod, String::from("threadjoin"), threadjoin);
     add_builtin_fun(root_mod, String::from("sleep"), sleep);
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
