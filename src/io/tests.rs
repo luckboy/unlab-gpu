@@ -286,3 +286,154 @@ fn test_write_values_with_version_and_read_values_writes_value_and_reads_value_f
         Err(_) => assert!(false),
     }
 }
+
+#[test]
+fn test_write_values_with_version_and_read_values_writes_values_and_reads_values_for_version_2()
+{
+    let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+    env.add_and_push_mod(String::from("a")).unwrap();
+    let fun = Arc::new(Fun(Vec::new(), Vec::new()));
+    env.add_fun(String::from("f"), fun.clone()).unwrap();
+    env.pop_mod().unwrap();
+    env.set_var(&Name::Var(String::from("f")), Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f)))).unwrap();
+    let mut cursor = Cursor::new(Vec::<u8>::new());
+    let mut values: Vec<Value> = Vec::new();
+    values.push(Value::None);
+    values.push(Value::Bool(true));
+    values.push(Value::Bool(false));
+    values.push(Value::Int(1234));
+    values.push(Value::Float(12.34));
+    values.push(Value::Object(Arc::new(Object::String(String::from("abc")))));
+    values.push(Value::Object(Arc::new(Object::IntRange(2, 4, 1))));
+    values.push(Value::Object(Arc::new(Object::FloatRange(2.0, 4.5, 1.5))));
+    let a = matrix![
+        [1.0, 2.0],
+        [3.0, 4.0],
+        [5.0, 6.0]
+    ];
+    values.push(Value::Object(Arc::new(Object::Matrix(a))));
+    let a = matrix![
+        [1.0, 3.0, 5.0],
+        [2.0, 4.0, 6.0]
+    ];
+    values.push(Value::Object(Arc::new(Object::Matrix(a.transpose()))));
+    values.push(Value::Object(Arc::new(Object::Fun(vec![String::from("a")], String::from("f"), fun))));
+    values.push(Value::Object(Arc::new(Object::BuiltinFun(String::from("f"), f))));
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    values.push(Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a))));
+    let at = vec![
+        1.0, 3.0, 5.0,
+        2.0, 4.0, 6.0
+    ];
+    values.push(Value::Object(Arc::new(Object::MatrixArray(2, 3, TransposeFlag::Transpose, at))));
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_array = Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a));
+    values.push(Value::Object(Arc::new(Object::MatrixRowSlice(matrix_array, 1))));
+    values.push(Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def")))));
+    values.push(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])))));
+    let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+    fields.insert(String::from("a"), Value::Int(1));
+    fields.insert(String::from("b"), Value::Float(2.0));
+    fields.insert(String::from("c"), Value::Bool(false));
+    values.push(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields)))));
+    let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
+    values.push(Value::Weak(Arc::downgrade(&object)));
+    values.push(Value::Ref(object.clone()));
+    values.push(Value::Weak(Weak::new()));
+    match write_values_with_version(&mut cursor, values.as_slice(), 2) {
+        Ok(()) => {
+            cursor.set_position(0);
+            match read_values(&mut cursor, &mut env) {
+                Ok(values2) => {
+                    assert_eq!(values.len(), values2.len());
+                    for (value, value2) in values.iter().zip(values2.iter()) {
+                        match (value, value2) {
+                            (Value::Object(object), Value::Object(object2)) => {
+                                match (&**object, &**object2) {
+                                    (Object::Matrix(_), Object::Matrix(_)) => assert!(value.to_matrix_array().unwrap().eq_with_types(&value2.to_matrix_array().unwrap()).unwrap()),
+                                    (_, _) => assert!(value.eq_with_types(&value2).unwrap()), 
+                                }
+                            },
+                            (Value::Weak(object), Value::Weak(object2)) => {
+                                match (object.upgrade(), object2.upgrade()) {
+                                    (Some(object), Some(object2)) => assert!(Value::Ref(object).eq_with_types(&Value::Ref(object2)).unwrap()),
+                                    (None, None) => assert!(true),
+                                    (_, _) => assert!(false),
+                                }
+                            },
+                            (_, _) => assert!(value.eq_with_types(&value2).unwrap()), 
+                        }
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_write_values_with_version_and_read_values_writes_values_and_reads_values_for_synchronization_objects()
+{
+    let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+    let mut cursor = Cursor::new(Vec::<u8>::new());
+    let mut values: Vec<Value> = Vec::new();
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1)))))));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new())))));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1)))))));
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(matrix_value))))));
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(matrix_value), Condvar::new())))));
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a)));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(matrix_value))))));
+    let array_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(array_value))))));
+    let array_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(array_value), Condvar::new())))));
+    let array_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
+    values.push(Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(array_value))))));
+    match write_values_with_version(&mut cursor, values.as_slice(), 2) {
+        Ok(()) => {
+            cursor.set_position(0);
+            match read_values(&mut cursor, &mut env) {
+                Ok(values2) => {
+                    assert_eq!(values.len(), values2.len());
+                    for (value, value2) in values.iter().zip(values2.iter()) {
+                        match (value, value2) {
+                            (Value::Object(object), Value::Object(object2)) => {
+                                match (&**object, &**object2) {
+                                    (Object::Matrix(_), Object::Matrix(_)) => assert!(value.to_matrix_array().unwrap().eq_with_types(&value2.to_matrix_array().unwrap()).unwrap()),
+                                    (_, _) => assert!(value.eq_with_types(&value2).unwrap()), 
+                                }
+                            },
+                            (Value::Weak(object), Value::Weak(object2)) => {
+                                match (object.upgrade(), object2.upgrade()) {
+                                    (Some(object), Some(object2)) => assert!(Value::Ref(object).eq_with_types(&Value::Ref(object2)).unwrap()),
+                                    (None, None) => assert!(true),
+                                    (_, _) => assert!(false),
+                                }
+                            },
+                            (_, _) => assert!(value.eq_with_types(&value2).unwrap()), 
+                        }
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
