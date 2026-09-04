@@ -5,6 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::sync::Barrier;
+use std::sync::Condvar;
+use std::thread;
 use crate::matrix::matrix;
 use crate::serde_json;
 use crate::toml;
@@ -154,6 +157,24 @@ fn test_value_eq_with_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
     match value.eq_with_types(&value2) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -421,6 +442,36 @@ fn test_value_eq_with_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(2))))));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(2)), Condvar::new()))));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(2))))));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    let value2 = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Int(3)]))));
     match value.eq_with_types(&value2) {
@@ -641,6 +692,24 @@ fn test_value_eq_without_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
     match value.eq_without_types(&value2) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -916,6 +985,36 @@ fn test_value_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(2))))));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(2)), Condvar::new()))));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(2))))));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    let value2 = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Int(3)]))));
     match value.eq_without_types(&value2) {
@@ -1141,6 +1240,24 @@ fn test_value_nearly_eq_with_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
     match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -1412,6 +1529,36 @@ fn test_value_nearly_eq_with_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(2))))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(2)), Condvar::new()))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(2))))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    let value2 = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Int(3)]))));
     match value.nearly_eq_with_types(&value2, 0.1) {
@@ -1653,6 +1800,24 @@ fn test_value_nearly_eq_without_types_returns_true()
     }
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     let value2 = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
     match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -1932,6 +2097,36 @@ fn test_value_nearly_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(2))))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(2)), Condvar::new()))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    let value2 = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(2))))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    let value2 = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
     let value2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false), Value::Int(3)]))));
     match value.nearly_eq_without_types(&value2, 0.1) {
@@ -2148,6 +2343,96 @@ fn test_value_to_matrix_array_complains_on_unsupported_type_for_conversion_to_ma
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     match value.to_matrix_array() {
         Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for conversion to matrix array"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_sync_returns_synchronization_objects()
+{
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    match value.sync() {
+        Ok(SyncObject::Barrier(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    match value.sync() {
+        Ok(SyncObject::Mutex(_)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    match value.sync() {
+        Ok(SyncObject::Monitor(_, _)) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    match value.sync() {
+        Ok(SyncObject::RwLock(_)) => assert!(true),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_sync_complains_on_unsupported_type_for_synchronization()
+{
+    match Value::Int(1).sync() {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for synchronization"), msg),
+        _ => assert!(false),
+    }
+    let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
+    match value.sync() {
+        Err(Error::Interp(msg)) => assert_eq!(String::from("unsupported type for synchronization"), msg),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_join_joins_thread()
+{
+    let join_handle = thread::spawn(move || Value::Int(1));
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(Some(join_handle)))));
+    match value.join() {
+        Ok(Value::Int(1)) => assert!(true),
+        _ => assert!(false),
+    }
+    match &value {
+        Value::Object(object) => {
+            match &**object {
+                Object::JoinHandle(join_handle) => {
+                    let join_handle_g = join_handle.lock().unwrap();
+                    match &*join_handle_g {
+                        None => assert!(true),
+                        Some(_) => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_value_join_does_not_join_thread_for_join_handle_that_is_none()
+{
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    match value.join() {
+        Ok(Value::None) => assert!(true),
+        _ => assert!(false),
+    }
+    match &value {
+        Value::Object(object) => {
+            match &**object {
+                Object::JoinHandle(join_handle) => {
+                    let join_handle_g = join_handle.lock().unwrap();
+                    match &*join_handle_g {
+                        None => assert!(true),
+                        Some(_) => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
         _ => assert!(false),
     }
 }
@@ -4647,6 +4932,16 @@ fn test_value_fmt_formats_values()
     assert_eq!(String::from("[]"), format!("{}", value));
     let value = Value::Object(Arc::new(Object::Error(String::from("abc"), String::from("def"))));
     assert_eq!(String::from("def"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    assert_eq!(String::from("barrier(...)"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+    assert_eq!(String::from("mutex(1)"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+    assert_eq!(String::from("monitor(1)"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+    assert_eq!(String::from("rwlock(1)"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+    assert_eq!(String::from("joinhandle(...)"), format!("{}", value));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)]))));
     assert_eq!(String::from(".[ 1 2.5000 false .]"), format!("{}", value));
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
@@ -4705,6 +5000,66 @@ fn test_value_fmt_formats_values_for_indent()
     fields.insert(String::from("a"), matrix_value);
     fields.insert(String::from("b"), struct_value);
     let value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields.clone()))));
+    assert_eq!(String::from(s2), format!("{}", value));
+}
+
+#[test]
+fn test_value_fmt_formats_mutex_for_indent()
+{
+    let s = "
+mutex([
+                  1           2
+                  3           4
+                  5           6
+    ])";
+    let s2 = &s[1..];
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(matrix_value)))));
+    assert_eq!(String::from(s2), format!("{}", value));
+}
+
+#[test]
+fn test_value_fmt_formats_monitor_for_indent()
+{
+    let s = "
+monitor([
+                  1           2
+                  3           4
+                  5           6
+    ])";
+    let s2 = &s[1..];
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(matrix_value), Condvar::new()))));
+    assert_eq!(String::from(s2), format!("{}", value));
+}
+
+#[test]
+fn test_value_fmt_formats_rw_lock_for_indent()
+{
+    let s = "
+rwlock([
+                  1           2
+                  3           4
+                  5           6
+    ])";
+    let s2 = &s[1..];
+    let a = vec![
+        1.0, 2.0,
+        3.0, 4.0,
+        5.0, 6.0
+    ];
+    let matrix_value = Value::Object(Arc::new(Object::MatrixArray(3, 2, TransposeFlag::NoTranspose, a.clone())));
+    let value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(matrix_value)))));
     assert_eq!(String::from(s2), format!("{}", value));
 }
 
