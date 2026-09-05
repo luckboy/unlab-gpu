@@ -47,6 +47,7 @@ use crate::error::*;
 use crate::interp::*;
 use crate::sync::*;
 use crate::tree::*;
+use crate::user::*;
 use crate::utils::*;
 
 /// A type of window identifier.
@@ -87,6 +88,10 @@ pub enum Value
     Ref(Arc<RwLock<MutObject>>),
     /// A weak reference to a mutable object.
     Weak(Weak<RwLock<MutObject>>),
+    /// An immutable user object.
+    UserObject(UserObject),
+    /// A mutable user object.
+    MutUserObject(MutUserObject),
 }
 
 impl Value
@@ -1160,6 +1165,7 @@ impl Value
                         }
                         write!(f, "@")?;
                     },
+                    Object::UserFun(_) => write!(f, "userfunction(...)")?,
                     Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
                         if *row_count > 0 && *col_count > 0 { 
                             let new_indent = indent + 4;
@@ -1274,6 +1280,8 @@ impl Value
                     None => write!(f, "weak()")?,
                 }
             },
+            Value::UserObject(_) => write!(f, "userobject(...)")?,
+            Value::MutUserObject(_) => write!(f, "mutuserobject(...)")?,
         }
         Ok(())
     }
@@ -1658,6 +1666,8 @@ pub enum Object
     BuiltinFun(String, fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>),
     /// An unnamed function.
     UnnamedFun(Vec<String>, Arc<Fun>),
+    /// An user function.
+    UserFun(UserFun),
     /// A matrix array.
     MatrixArray(usize, usize, TransposeFlag, Vec<f32>),
     /// A matrix row slice.

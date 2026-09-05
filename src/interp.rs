@@ -13,6 +13,7 @@ use std::sync::RwLock;
 use crate::env::*;
 use crate::error::*;
 use crate::tree::*;
+use crate::user::*;
 use crate::utils::*;
 use crate::value::*;
 
@@ -120,6 +121,7 @@ impl Interp
                         }
                     },
                     Object::BuiltinFun(_, f) => f(self, env, arg_values),
+                    Object::UserFun(UserFun(f)) => f(self, env, arg_values),
                     _ => {
                         self.ret_value = Value::None;
                         Err(Error::Interp(format!("value isn't function")))

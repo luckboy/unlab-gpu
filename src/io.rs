@@ -506,6 +506,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, version: u32, object_ta
             write_str(w, ident.as_str())?;
         },
         Object::UnnamedFun(_, _) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write unnamed function"))),
+        Object::UserFun(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write user function"))),
         Object::MatrixArray(row_count, col_count, transpose_flag, xs) => {
             write_u8(w, OBJECT_MATRIX_ARRAY)?;
             write_usize(w, *row_count)?;
@@ -650,6 +651,8 @@ fn write_value(w: &mut dyn Write, value: &Value, version: u32, object_tab: &mut 
                 None => write_u8(w, VALUE_WEAK_NONE)?,
             }
         },
+        Value::UserObject(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write immutable user object"))),
+        Value::MutUserObject(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write mutable user object"))),
     }
     Ok(())
 }

@@ -63,6 +63,7 @@ pub mod plot_doc;
 pub mod sync;
 pub mod tester;
 pub mod tree;
+pub mod user;
 pub mod utils;
 pub mod value;
 pub mod version;
