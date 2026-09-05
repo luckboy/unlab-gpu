@@ -7701,8 +7701,8 @@ fn test_thread_is_applied_with_success()
             match res {
                 Ok(join_handle_value) => {
                     match join_handle_value.join() {
-                        Ok(ret_value) => assert_eq!(Value::Int(1), ret_value),
-                        Err(_) => assert!(false),
+                        Ok(Some(ret_value)) => assert_eq!(Value::Int(1), ret_value),
+                        _ => assert!(false),
                     }
                 },
                 Err(_) => assert!(false),
@@ -7731,7 +7731,7 @@ fn test_threadjoin_is_applied_with_success()
             }
             let join_handle_value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
             match fun_value.apply(&mut interp, &mut env, &[join_handle_value]) {
-                Ok(value) => assert_eq!(Value::None, value),
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::Error(String::from("threadjoin"), String::from("already thread is joint")))), value),
                 Err(_) => assert!(false),
             }
         },

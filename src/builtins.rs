@@ -3614,8 +3614,9 @@ pub fn threadjoin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) ->
     match arg_values.get(0) {
         Some(value) => {
             match value.join() {
-                Ok(value) => Ok(value),
-                Err(err @ Error::Join) => Ok(Value::Object(Arc::new(Object::Error(String::from("join"), format!("{}", err))))),
+                Ok(Some(value)) => Ok(value),
+                Ok(None) => Ok(Value::Object(Arc::new(Object::Error(String::from("threadjoin"), String::from("already thread is joint"))))),
+                Err(err @ Error::Join) => Ok(Value::Object(Arc::new(Object::Error(String::from("threadjoin"), format!("{}", err))))),
                 Err(err) => Err(err),
             }
         },

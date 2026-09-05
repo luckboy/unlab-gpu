@@ -2464,7 +2464,7 @@ fn test_value_join_joins_thread()
     let join_handle = thread::spawn(move || Value::Int(1));
     let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(Some(join_handle)))));
     match value.join() {
-        Ok(Value::Int(1)) => assert!(true),
+        Ok(Some(Value::Int(1))) => assert!(true),
         _ => assert!(false),
     }
     match &value {
@@ -2489,7 +2489,7 @@ fn test_value_join_does_not_join_thread_for_join_handle_that_is_none()
 {
     let value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
     match value.join() {
-        Ok(Value::None) => assert!(true),
+        Ok(None) => assert!(true),
         _ => assert!(false),
     }
     match &value {

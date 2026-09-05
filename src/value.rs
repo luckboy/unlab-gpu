@@ -1087,7 +1087,7 @@ impl Value
         }
     }
     
-    pub fn join(&self) -> Result<Value>
+    pub fn join(&self) -> Result<Option<Value>>
     {
         match self {
             Value::Object(object) => {
@@ -1097,11 +1097,11 @@ impl Value
                         match join_handle_g.take() {
                             Some(tmp_join_handle) => {
                                 match tmp_join_handle.join() {
-                                    Ok(value) => Ok(value),
+                                    Ok(value) => Ok(Some(value)),
                                     Err(_) => Err(Error::Join),
                                 }
                             },
-                            _ => Ok(Value::None),
+                            _ => Ok(None),
                         }
                     },
                     _ => Err(Error::Interp(String::from("unsupported type for join"))),
