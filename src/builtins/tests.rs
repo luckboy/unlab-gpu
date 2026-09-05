@@ -6,9 +6,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 use std::collections::BTreeMap;
+use std::thread::JoinHandle;
 use sealed_test::prelude::*;
 use crate::matrix::matrix;
 use crate::tree::*;
+use crate::user::*;
 use super::*;
 
 fn f(_interp: &mut Interp, _env: &mut Env, _arg_values: &[Value]) -> Result<Value>
@@ -112,6 +114,11 @@ fn test_type_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("function")))), value),
                 Err(_) => assert!(false),
             }
+            let arg_value = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("function")))), value),
+                Err(_) => assert!(false),
+            }
             let a = vec![
                 1.0, 2.0,
                 3.0, 4.0,
@@ -138,6 +145,31 @@ fn test_type_is_applied_with_success()
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("error")))), value),
                 Err(_) => assert!(false),
             }
+            let arg_value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("barrier")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("mutex")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("monitor")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("rwlock")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("joinhandle")))), value),
+                Err(_) => assert!(false),
+            }
             let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)]))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("array")))), value),
@@ -156,6 +188,16 @@ fn test_type_is_applied_with_success()
             let arg_value = Value::Weak(Arc::downgrade(&object));
             match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
                 Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("weak")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::UserObject(UserObject::new(String::from("abc")));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("userobject")))), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("mutuserobject")))), value),
                 Err(_) => assert!(false),
             }
         },
@@ -6508,4 +6550,1211 @@ fn test_tests_is_applied_with_success()
     }
     env.pop_mod().unwrap();
     env.pop_mod().unwrap();
+}
+
+//
+// Tests of Built-in functions for version 0.2.x.
+//
+
+#[test]
+fn test_barrier_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("barrier")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(5)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Sync(SyncObject::Barrier(_)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_mutex_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("mutex")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Sync(SyncObject::Mutex(_)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_monitor_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("monitor")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Sync(SyncObject::Monitor(_, _)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_rwlock_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rwlock")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1)]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Sync(SyncObject::RwLock(_)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_barrierwait_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    let fun_value = match root_mod_g.var(&String::from("barrierwait")) {
+        Some(fun_value) => fun_value.clone(),
+        None => {
+            assert!(false);
+            return;
+        },
+    };
+    let barrier_value = Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(5)))));
+    let mut join_handles: Vec<Option<JoinHandle<()>>> = Vec::new();
+    for _ in 0..5 {
+        let fun_value2 = fun_value.clone();
+        let barrier_value2 = barrier_value.clone();
+        let mut interp2 = interp.clone();
+        let mut env2 = env.clone();
+        let join_handle = std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_millis(100));
+                fun_value2.apply(&mut interp2, &mut env2, &[barrier_value2]).unwrap();
+        });
+        join_handles.push(Some(join_handle));
+    }
+    for i in 0..5 {
+        join_handles[i].take().unwrap().join().unwrap();
+    }
+}
+
+#[test]
+fn test_lock_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("lock")) {
+        Some(fun_value) => {
+            let mutex_value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[mutex_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &mutex_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Mutex(mutex)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(2), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let mutex_value = Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(Value::Int(1))))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[mutex_value.clone(), data_value.clone(), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &mutex_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Mutex(mutex)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(1), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_lockwait_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("lockwait")) {
+        Some(fun_value) => {
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2), Value::Bool(false)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Bool(false)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(4)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(4), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    std::thread::sleep(Duration::from_millis(100));
+                                    sync_object.lock_and_notify_one(|value| {
+                                            *value = Value::Int(5);
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2), Value::Bool(true)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Bool(false)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(4)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(5), Value::Int(3)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(4), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    std::thread::sleep(Duration::from_millis(100));
+                                    sync_object.lock_and_notify_one(|value| {
+                                            *value = Value::Int(2);
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Bool(true))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Bool(false))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(2)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(2), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_lockwaittimeout_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("lockwaittimeout")) {
+        Some(fun_value) => {
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), Value::Int(200), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2), Value::Bool(false)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => {
+                                        elems.push(arg_values[1].clone());
+                                        elems.push(arg_values[2].clone());
+                                    },
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Bool(false)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(4)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(4), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    std::thread::sleep(Duration::from_millis(100));
+                                    sync_object.lock_and_notify_one(|value| {
+                                            *value = Value::Int(5);
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), Value::Int(200), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2), Value::Bool(true)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => {
+                                        elems.push(arg_values[1].clone());
+                                        elems.push(arg_values[2].clone());
+                                    },
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Bool(false)])))))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(4)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(5), Value::Bool(false), Value::Int(3)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(4), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    std::thread::sleep(Duration::from_millis(100));
+                                    sync_object.lock_and_notify_one(|value| {
+                                            *value = Value::Int(2);
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), Value::Int(200), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Bool(true))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => {
+                                        elems.push(arg_values[1].clone());
+                                        elems.push(arg_values[2].clone());
+                                    },
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Bool(false))
+                })))),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Bool(false), Value::Int(2)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(2), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_locknotifyone_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("locknotifyone")) {
+        Some(fun_value) => {
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    sync_object.lock_and_wait(&mut (), |_, _| {
+                                            Ok(true)
+                                    }, |_, _| {
+                                            Ok(false)
+                                    }, |_, _| {
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            std::thread::sleep(Duration::from_millis(100));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(2), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    sync_object.lock_and_wait(&mut (), |_, _| {
+                                            Ok(true)
+                                    }, |_, _| {
+                                            Ok(false)
+                                    }, |_, _| {
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            std::thread::sleep(Duration::from_millis(100));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(1), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_locknotifyall_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("locknotifyall")) {
+        Some(fun_value) => {
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    sync_object.lock_and_wait(&mut (), |_, _| {
+                                            Ok(true)
+                                    }, |_, _| {
+                                            Ok(false)
+                                    }, |_, _| {
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            let monitor_value3 = monitor_value.clone();
+            let join_handle2 = std::thread::spawn(move || {
+                    match &monitor_value3 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    sync_object.lock_and_wait(&mut (), |_, _| {
+                                            Ok(true)
+                                    }, |_, _| {
+                                            Ok(false)
+                                    }, |_, _| {
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            std::thread::sleep(Duration::from_millis(100));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(2), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+            join_handle2.join().unwrap();
+            let monitor_value = Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(Value::Int(1)), Condvar::new()))));
+            let monitor_value2 = monitor_value.clone();
+            let join_handle = std::thread::spawn(move || {
+                    match &monitor_value2 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    sync_object.lock_and_wait(&mut (), |_, _| {
+                                            Ok(true)
+                                    }, |_, _| {
+                                            Ok(false)
+                                    }, |_, _| {
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            let monitor_value3 = monitor_value.clone();
+            let join_handle2 = std::thread::spawn(move || {
+                    match &monitor_value3 {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(sync_object) => {
+                                    sync_object.lock_and_wait(&mut (), |_, _| {
+                                            Ok(true)
+                                    }, |_, _| {
+                                            Ok(false)
+                                    }, |_, _| {
+                                            Ok(())
+                                    }).unwrap();
+                                },
+                                _ => (),
+                            }
+                        },
+                        _ => (),
+                    }
+            });
+            std::thread::sleep(Duration::from_millis(100));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[monitor_value.clone(), data_value.clone(), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &monitor_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::Monitor(mutex, _)) => {
+                                    let guard = mutex.lock().unwrap();
+                                    assert_eq!(Value::Int(1), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            join_handle.join().unwrap();
+            join_handle2.join().unwrap();
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_rwlockread_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rwlockread")) {
+        Some(fun_value) => {
+            let rw_lock_value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[rw_lock_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &rw_lock_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::RwLock(rw_lock)) => {
+                                    let guard = rw_lock.read().unwrap();
+                                    assert_eq!(Value::Int(1), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_rwlockwrite_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("rwlockwrite")) {
+        Some(fun_value) => {
+            let rw_lock_value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[rw_lock_value.clone(), data_value.clone(),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2)])))))
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &rw_lock_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::RwLock(rw_lock)) => {
+                                    let guard = rw_lock.read().unwrap();
+                                    assert_eq!(Value::Int(2), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            let rw_lock_value = Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(Value::Int(1))))));
+            let data_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[rw_lock_value.clone(), data_value.clone(), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        match &arg_values[0] {
+                            Value::Ref(object) => {
+                                let mut object_g = object.write().unwrap();
+                                match &mut *object_g {
+                                    MutObject::Array(elems) => elems.push(arg_values[1].clone()),
+                                    _ => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                        Ok(Value::None)
+                }))))]);
+            match res {
+                Ok(Value::None) => {
+                    assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), data_value);
+                    match &rw_lock_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::Sync(SyncObject::RwLock(rw_lock)) => {
+                                    let guard = rw_lock.read().unwrap();
+                                    assert_eq!(Value::Int(1), *guard);
+                                },
+                                _ => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_thread_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("thread")) {
+        Some(fun_value) => {
+            let res = fun_value.apply(&mut interp, &mut env, &[Value::Int(1),
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| {
+                        Ok(arg_values[0].clone())
+                }))))]);
+            match res {
+                Ok(join_handle_value) => {
+                    match join_handle_value.join() {
+                        Ok(ret_value) => assert_eq!(Value::Int(1), ret_value),
+                        Err(_) => assert!(false),
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_threadjoin_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("threadjoin")) {
+        Some(fun_value) => {
+            let join_handle = std::thread::spawn(move || Value::Int(1));
+            let join_handle_value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(Some(join_handle)))));
+            match fun_value.apply(&mut interp, &mut env, &[join_handle_value]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+            let join_handle_value = Value::Object(Arc::new(Object::JoinHandle(Mutex::new(None))));
+            match fun_value.apply(&mut interp, &mut env, &[join_handle_value]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_sleep_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("sleep")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(100)]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
 }
