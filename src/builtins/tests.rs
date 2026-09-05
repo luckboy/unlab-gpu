@@ -6553,7 +6553,7 @@ fn test_tests_is_applied_with_success()
 }
 
 //
-// Tests of Built-in functions for version 0.2.x.
+// Tests of Built-in functions since version 0.2.0.
 //
 
 #[test]

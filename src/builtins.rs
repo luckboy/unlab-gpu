@@ -3320,7 +3320,7 @@ pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
 }
 
 //
-// Built-in functions for version 0.2.x.
+// Built-in functions since version 0.2.0.
 //
 
 pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
@@ -3821,7 +3821,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("assertnearlyeq"), assertnearlyeq);
     add_builtin_fun(root_mod, String::from("assertnearlyne"), assertnearlyne);
     add_builtin_fun(root_mod, String::from("tests"), tests);
-    // Built-in functions for version 0.2.x.
+    // Built-in functions since version 0.2.0.
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
