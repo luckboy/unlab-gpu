@@ -2513,7 +2513,7 @@ X = [
 }
 
 #[test]
-fn test_interp_interpret_interprets_application_expressions_with_unnamed_functions()
+fn test_interp_interpret_interprets_application_expressions_for_unnamed_functions()
 {
     let s = "
 X = (@() 1)()
@@ -2551,6 +2551,60 @@ Z = (@(X, Y, Z) {
             match root_mod_g.var(&String::from("Z")) {
                 Some(Value::Int(6)) => assert!(true),
                 _ => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_interp_interpret_interprets_application_expressions_for_user_function()
+{
+    let s = "
+X = f()
+Y = f(2)
+Z = f(1, 2.5, false)
+";
+    let s2 = &s[1..];
+    let mut cursor = Cursor::new(s2.as_bytes());
+    let mut lexer = Lexer::new(Arc::new(String::from("test.un")), &mut cursor);
+    let path = lexer.path().clone();
+    let tokens: &mut dyn DocIterator<Item = Result<(Token, Pos)>> = &mut lexer;
+    let mut parser = Parser::new(path, tokens);
+    match parser.parse() {
+        Ok(tree) => {
+            let mut root_mod = ModNode::new(());
+            root_mod.add_var(String::from("f"), Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, arg_values| {
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(arg_values.to_vec())))))
+            })))));
+            let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+            let mut interp = Interp::new();
+            match interp.interpret(&mut env, &tree) {
+                Ok(()) => assert!(true),
+                Err(_) => assert!(false),
+            }
+            assert_eq!(true, interp.stack_trace().is_empty());
+            let root_mod_g = env.root_mod().read().unwrap();
+            match root_mod_g.var(&String::from("X")) {
+                Some(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+                    assert_eq!(expected_value, *value);
+                },
+                None => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Y")) {
+                Some(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(2)]))));
+                    assert_eq!(expected_value, *value);
+                },
+                None => assert!(false),
+            }
+            match root_mod_g.var(&String::from("Z")) {
+                Some(value) => {
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.5), Value::Bool(false)]))));
+                    assert_eq!(expected_value, *value);
+                },
+                None => assert!(false),
             }
         },
         Err(_) => assert!(false),

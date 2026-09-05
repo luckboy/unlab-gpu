@@ -327,6 +327,12 @@ fn test_value_eq_with_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    let value2 = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -517,6 +523,18 @@ fn test_value_eq_with_types_returns_false()
     let value = Value::Weak(Arc::downgrade(&object));
     let object2 = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value2 = Value::Weak(Arc::downgrade(&object2));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = Value::UserObject(UserObject::new(String::from("abc")));
+    match value.eq_with_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = Value::MutUserObject(MutUserObject::new(String::from("abc")));
     match value.eq_with_types(&value2) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -870,6 +888,12 @@ fn test_value_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    let value2 = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -1064,12 +1088,24 @@ fn test_value_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = Value::UserObject(UserObject::new(String::from("abc")));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    match value.eq_without_types(&value2) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
 }
 
 #[test]
 fn test_value_eq_without_types_returns_false_for_different_types()
 {
-    match Value::Int(1234).eq_with_types(&Value::Bool(false)) {
+    match Value::Int(1234).eq_without_types(&Value::Bool(false)) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -1414,6 +1450,12 @@ fn test_value_nearly_eq_with_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    let value2 = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -1604,6 +1646,18 @@ fn test_value_nearly_eq_with_types_returns_false()
     let value = Value::Weak(Arc::downgrade(&object));
     let object2 = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value2 = Value::Weak(Arc::downgrade(&object2));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = Value::UserObject(UserObject::new(String::from("abc")));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = Value::MutUserObject(MutUserObject::new(String::from("abc")));
     match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
@@ -1982,6 +2036,12 @@ fn test_value_nearly_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    let value2 = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
     let a = vec![
         1.0, 2.0,
         3.0, 4.0,
@@ -2176,12 +2236,24 @@ fn test_value_nearly_eq_without_types_returns_false()
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = Value::UserObject(UserObject::new(String::from("abc")));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(false) => assert!(true),
+        _ => assert!(false),
+    }
 }
 
 #[test]
 fn test_value_nearly_eq_without_types_returns_false_for_different_types()
 {
-    match Value::Int(1234).nearly_eq_with_types(&Value::Bool(false), 0.1) {
+    match Value::Int(1234).nearly_eq_without_types(&Value::Bool(false), 0.1) {
         Ok(false) => assert!(true),
         _ => assert!(false),
     }
@@ -4889,6 +4961,8 @@ fn test_value_fmt_formats_values()
     assert_eq!(String::from("f"), format!("{}", value));
     let value = Value::Object(Arc::new(Object::UnnamedFun(vec![String::from("a"), String::from("b")], fun.clone())));
     assert_eq!(String::from("a::b::@"), format!("{}", value));
+    let value = Value::Object(Arc::new(Object::UserFun(UserFun::new(|_, _, _| Ok(Value::None)))));
+    assert_eq!(String::from("userfunction(...)"), format!("{}", value));
     let s = "
 [
               1           2
@@ -4966,6 +5040,10 @@ fn test_value_fmt_formats_values()
     assert_eq!(String::from("weak(...)"), format!("{}", value));
     let value = Value::Weak(Weak::new());
     assert_eq!(String::from("weak()"), format!("{}", value));
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    assert_eq!(String::from("userobject(...)"), format!("{}", value));
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    assert_eq!(String::from("mutuserobject(...)"), format!("{}", value));
 }
 
 #[test]
