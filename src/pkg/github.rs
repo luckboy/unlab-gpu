@@ -109,7 +109,7 @@ impl GitHubSrc
                 let mut http_headers = List::new();
                 http_headers.append(USER_AGENT_HTTP_HEADER)?;
                 http_headers.append("Accept: application/vnd.github+json")?;
-                http_headers.append("X-GitHub-Api-Version: 2022-11-28")?;
+                http_headers.append("X-GitHub-Api-Version: 2026-03-10")?;
                 easy.http_headers(http_headers)?;
                 easy.follow_location(true)?;
                 Ok(easy)
