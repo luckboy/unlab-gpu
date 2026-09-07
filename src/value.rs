@@ -245,6 +245,8 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
+            (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => Ok(false),
         }
     }
@@ -283,6 +285,8 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
+            (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => Ok(false),
         }
     }
@@ -317,6 +321,8 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
+            (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => self.eq_with_types(value),
         }
     }
@@ -352,6 +358,8 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
+            (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => self.eq_without_types(value),
         }
     }    
