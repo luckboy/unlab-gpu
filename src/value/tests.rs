@@ -209,6 +209,18 @@ fn test_value_eq_with_types_returns_true()
         Ok(true) => assert!(true),
         _ => assert!(false),
     }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = value.clone();
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = value.clone();
+    match value.eq_with_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
 }
 
 #[test]
@@ -758,6 +770,18 @@ fn test_value_eq_without_types_returns_true()
     let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Weak(Arc::downgrade(&object));
     let value2 = Value::Weak(Arc::downgrade(&object));
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = value.clone();
+    match value.eq_without_types(&value2) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = value.clone();
     match value.eq_without_types(&value2) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -1328,6 +1352,18 @@ fn test_value_nearly_eq_with_types_returns_true()
     let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Weak(Arc::downgrade(&object));
     let value2 = Value::Weak(Arc::downgrade(&object));
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = value.clone();
+    match value.nearly_eq_with_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = value.clone();
     match value.nearly_eq_with_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
@@ -1906,6 +1942,18 @@ fn test_value_nearly_eq_without_types_returns_true()
     let object = Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Float(2.0), Value::Bool(false)])));
     let value = Value::Weak(Arc::downgrade(&object));
     let value2 = Value::Weak(Arc::downgrade(&object));
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::UserObject(UserObject::new(String::from("abc")));
+    let value2 = value.clone();
+    match value.nearly_eq_without_types(&value2, 0.1) {
+        Ok(true) => assert!(true),
+        _ => assert!(false),
+    }
+    let value = Value::MutUserObject(MutUserObject::new(String::from("abc")));
+    let value2 = value.clone();
     match value.nearly_eq_without_types(&value2, 0.1) {
         Ok(true) => assert!(true),
         _ => assert!(false),
