@@ -22,6 +22,13 @@ struct Ref
     ref1: String,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct GitHubConfig
+{
+    #[serde(rename = "api-version")]
+    api_version: Option<String>,
+}
+
 /// A structure of [GitHub](https://github.com) source.
 #[derive(Clone)]
 pub struct GitHubSrc
@@ -31,6 +38,7 @@ pub struct GitHubSrc
     home_dir: PathBuf,
     work_dir: PathBuf,
     printer: Arc<dyn Print + Send + Sync>,
+    api_version: Option<String>,
     versions: Option<BTreeSet<Version>>,
     current_version: Option<Version>,
     dir: Option<PathBuf>,
@@ -53,6 +61,7 @@ impl GitHubSrc
                         home_dir,
                         work_dir,
                         printer,
+                        api_version: None,
                         versions: None,
                         current_version: None,
                         dir: None,
@@ -96,8 +105,35 @@ impl GitHubSrc
         }
     }
 
-    fn update_versions(&self, is_update: bool) -> Result<BTreeSet<Version>>
+    fn update_versions(&mut self, is_update: bool) -> Result<BTreeSet<Version>>
     {
+        let api_version = match &self.api_version {
+            Some(tmp_api_version) => tmp_api_version.clone(),
+            None => {
+                let mut path_buf = self.home_dir.clone();
+                path_buf.push("github.toml");
+                self.api_version = match File::open(path_buf) {
+                    Ok(mut file) => {
+                        let mut s = String::new();
+                        match file.read_to_string(&mut s) {
+                            Ok(_) => {
+                                match toml::from_str::<GitHubConfig>(s.as_str()) {
+                                    Ok(github_config) => github_config.api_version,
+                                    Err(err) => return Err(Error::TomlDe(err)),
+                                }
+                            },
+                            Err(err) => return Err(Error::Io(err)),
+                        }                        
+                    },
+                    Err(err) if err.kind() == ErrorKind::NotFound => None, 
+                    Err(err) => return Err(Error::Io(err)), 
+                };
+                if self.api_version.is_none() {
+                    self.api_version = Some(String::from("2026-03-10"));
+                }
+                self.api_version.as_ref().unwrap().clone()
+            },
+        };
         let original_name = self.old_name.as_ref().unwrap_or(&self.name);
         let repo_path = match original_name.name().split_once('/') {
             Some((_, tmp_repo_path)) => tmp_repo_path,
@@ -109,7 +145,7 @@ impl GitHubSrc
                 let mut http_headers = List::new();
                 http_headers.append(USER_AGENT_HTTP_HEADER)?;
                 http_headers.append("Accept: application/vnd.github+json")?;
-                http_headers.append("X-GitHub-Api-Version: 2026-03-10")?;
+                http_headers.append(format!("X-GitHub-Api-Version: {}", api_version).as_str())?;
                 easy.http_headers(http_headers)?;
                 easy.follow_location(true)?;
                 Ok(easy)
