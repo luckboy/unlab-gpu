@@ -330,7 +330,7 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
-            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(a == b),
+            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(nearly_eq(*a, *b, eps)),
             (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => self.eq_with_types(value),
@@ -368,7 +368,7 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
-            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(a == b),
+            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(nearly_eq(*a, *b, eps)),
             (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => self.eq_without_types(value),
