@@ -196,6 +196,7 @@ const VALUE_WEAK_NONE: u8 = 7;
 const VALUE_OBJECT_INDEX: u8 = 8;
 const VALUE_REF_INDEX: u8 = 9;
 const VALUE_WEAK_INDEX: u8 = 10;
+const VALUE_FLOAT_BOX: u8 = 11;
 
 const OBJECT_STRING: u8 = 0;
 const OBJECT_INT_RANGE: u8 = 1;
@@ -446,7 +447,16 @@ fn read_value(r: &mut dyn Read, env: &Env, version: u32, object_tab: &mut Object
                 None => Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid mutable object index"))),
             }
         },
-        _ => Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid value type"))),
+        value_type => {
+            if version >= 2 {
+                match value_type {
+                    VALUE_FLOAT_BOX => Ok(Value::Float(read_f32(r)?)),
+                    _ => Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid value type"))),
+                }
+            } else {
+                Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid value type")))
+            }
+        },
     }
 }
 
@@ -649,6 +659,14 @@ fn write_value(w: &mut dyn Write, value: &Value, version: u32, object_tab: &mut 
                     }
                 },
                 None => write_u8(w, VALUE_WEAK_NONE)?,
+            }
+        },
+        Value::FloatBox(n) => {
+            if version >= 2 {
+                write_u8(w, VALUE_FLOAT_BOX)?;
+                write_f32(w, *n)?;
+            } else {
+                return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write float box")));
             }
         },
         Value::UserObject(_) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write immutable user object"))),

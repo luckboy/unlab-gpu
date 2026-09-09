@@ -88,6 +88,8 @@ pub enum Value
     Ref(Arc<RwLock<MutObject>>),
     /// A weak reference to a mutable object.
     Weak(Weak<RwLock<MutObject>>),
+    /// A box of floating-point number.
+    FloatBox(f32),
     /// An immutable user object.
     UserObject(UserObject),
     /// A mutable user object.
@@ -110,6 +112,7 @@ impl Value
                     _ => true,
                 }
             },
+            Value::FloatBox(a) => *a != 0.0,
             _ => true,
         }
     }
@@ -128,6 +131,7 @@ impl Value
                     _ => 1,
                 }
             },
+            Value::FloatBox(a) => *a as i64,
             _ => 1,
         }
     }
@@ -146,6 +150,7 @@ impl Value
                     _ => 1.0,
                 }
             },
+            Value::FloatBox(a) => *a,
             _ => 1.0,
         }
     }
@@ -167,6 +172,7 @@ impl Value
         match self {
             Value::Int(a) => Some(*a),
             Value::Float(a) => Some(*a as i64),
+            Value::FloatBox(a) => Some(*a as i64),
             _ => None,
         }
     }
@@ -178,6 +184,7 @@ impl Value
         match self {
             Value::Int(a) => Some(*a as f32),
             Value::Float(a) => Some(*a),
+            Value::FloatBox(a) => Some(*a),
             _ => None,
         }
     }
@@ -245,6 +252,7 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(a == b),
             (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => Ok(false),
@@ -285,6 +293,7 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(a == b),
             (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => Ok(false),
@@ -321,6 +330,7 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(a == b),
             (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => self.eq_with_types(value),
@@ -358,6 +368,7 @@ impl Value
                     (_, _) => Ok(false),
                 }
             },
+            (Value::FloatBox(a), Value::FloatBox(b)) => Ok(a == b),
             (Value::UserObject(UserObject(user_object)), Value::UserObject(UserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (Value::MutUserObject(MutUserObject(user_object)), Value::MutUserObject(MutUserObject(user_object2))) => Ok(Arc::ptr_eq(user_object, user_object2)),
             (_, _) => self.eq_without_types(value),
@@ -1288,6 +1299,11 @@ impl Value
                     None => write!(f, "weak()")?,
                 }
             },
+            Value::FloatBox(a) => {
+                write!(f, "floatbox(")?;
+                Value::Float(*a).fmt_with_indent(f, indent, is_width)?;
+                write!(f, ")")?;
+            }
             Value::UserObject(_) => write!(f, "userobject(...)")?,
             Value::MutUserObject(_) => write!(f, "mutuserobject(...)")?,
         }

@@ -199,6 +199,7 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
             }
         },
         Some(Value::Weak(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("weak"))))),
+        Some(Value::FloatBox(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("floatbox"))))),
         Some(Value::UserObject(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("userobject"))))),
         Some(Value::MutUserObject(_)) => Ok(Value::Object(Arc::new(Object::String(String::from("mutuserobject"))))),
         None => Err(Error::Interp(String::from("no argument"))),
