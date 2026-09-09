@@ -1157,10 +1157,10 @@ Converts the `s` string to a floating-point number.
 If the `s` string can be converted to the floating-point number, this function returns an error
 with the `"parsefloat"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("str2int"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("str2float"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
-    doc_root_mod.add_var(String::from("str2int"), String::from(&doc[1..]));    
+    doc_root_mod.add_var(String::from("str2float"), String::from(&doc[1..]));    
     
     let doc = r#"
 Converts the hexadecimal number as the `s` string to a decimal integer number.
