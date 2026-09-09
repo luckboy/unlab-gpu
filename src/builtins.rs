@@ -26,6 +26,7 @@ use std::mem::size_of;
 use std::path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::process::Stdio;
 use std::sync::Arc;
 use std::sync::Barrier;
 use std::sync::Condvar;
@@ -148,6 +149,19 @@ fn fun2_for_f32_and_matrix<F, G, RG, H>(arg_values: &[Value], err_msg: &str, mut
 fn get_first_arg_string(arg_values: &[Value], err_msg: &str) -> Result<String>
 {
     match arg_values.get(0) {
+        Some(arg_value) => {
+            match arg_value.to_opt_string() {
+                Some(s) => Ok(s),
+                None => Err(Error::Interp(String::from(err_msg))),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+fn get_second_arg_string(arg_values: &[Value], err_msg: &str) -> Result<String>
+{
+    match arg_values.get(1) {
         Some(arg_value) => {
             match arg_value.to_opt_string() {
                 Some(s) => Ok(s),
@@ -3644,6 +3658,92 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+pub fn pipelyspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let stdin_value = match arg_values.get(0) {
+        Some(tmp_stdin_value) => tmp_stdin_value.clone(),
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    let cmd_name = get_second_arg_string(arg_values, "unsupported type for function pipelyspawn")?;
+    let mut cmd_args: Vec<String> = Vec::new();
+    for arg_value in &arg_values[2..] {
+        cmd_args.push(format!("{}", arg_value));
+    }
+    match Command::new(cmd_name).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).args(cmd_args).spawn() {
+        Ok(mut child) => {
+            let stdin_join_handle_res = match child.stdin.take() {
+                Some(stdin) => {
+                    let is_empty = match &stdin_value {
+                        Value::Object(object) => {
+                            match &**object {
+                                Object::String(s) => s.is_empty(),
+                                _ => false,
+                            }
+                        },
+                        _ => false,
+                    };
+                    if !is_empty {
+                        let join_handle_res = std::thread::Builder::new().spawn(move || {
+                                let mut buf_stdin = BufWriter::new(stdin);
+                                write!(buf_stdin, "{}", stdin_value)
+                        });
+                        match join_handle_res {
+                            Ok(join_handle) => Ok(Some(join_handle)),
+                            Err(err) => Err(err),
+                        }
+                    } else {
+                        Ok(None)
+                    }
+                },
+                None => Ok(None),
+            };
+            let mut stdout_s = String::new();
+            let stdout_res = match &mut child.stdout {
+                Some(stdout) => stdout.read_to_string(&mut stdout_s).map(|_| ()),
+                None => Ok(()),
+            };
+            let mut stderr_s = String::new();
+            let stderr_res = match &mut child.stderr {
+                Some(stderr) => stderr.read_to_string(&mut stderr_s).map(|_| ()),
+                None => Ok(()),
+            };
+            let stdin_res_res = match stdin_join_handle_res {
+                Ok(Some(stdin_join_handle)) => {
+                    match stdin_join_handle.join() {
+                        Ok(tmp_stdin_res) => Ok(tmp_stdin_res),
+                        Err(_) => Err(Error::Join),
+                    }
+                },
+                Ok(None) => Ok(Ok(())),
+                Err(err) => Ok(Err(err)),
+            };
+            match child.wait() {
+                Ok(exit_status) => {
+                    match exit_status.code() {
+                        Some(code) => {
+                            match stdin_res_res {
+                                Ok(stdin_res) => {
+                                    match stdin_res.or(stdout_res).or(stderr_res) {
+                                        Ok(()) => Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(code as i64), Value::Object(Arc::new(Object::String(stdout_s))), Value::Object(Arc::new(Object::String(stderr_s)))]))))),
+                                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                                    }
+                                },
+                                Err(join_err) => Ok(Value::Object(Arc::new(Object::Error(String::from("threadjoin"), format!("{}", join_err))))),
+                            }
+                        },
+                        None => Ok(Value::Object(Arc::new(Object::Error(String::from("exitstatus"), String::from("process terminated by signal"))))),
+                    }
+                },
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 /// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
@@ -3839,6 +3939,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("thread"), thread);
     add_builtin_fun(root_mod, String::from("threadjoin"), threadjoin);
     add_builtin_fun(root_mod, String::from("sleep"), sleep);
+    add_builtin_fun(root_mod, String::from("pipelyspawn"), pipelyspawn);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
