@@ -5290,10 +5290,7 @@ g = [1, 2.5, false]
             let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
             assert_eq!(expected_value, value);
         },
-        Err(err) => {
-            println!("{}", err);
-            assert!(false)
-        },
+        Err(_) => assert!(false),
     }
 }
 
