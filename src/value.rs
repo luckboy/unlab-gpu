@@ -210,7 +210,7 @@ impl Value
         match self {
             Value::Object(object) => {
                 match &**object {
-                    Object::Fun(_, _, _) | Object::BuiltinFun(_, _) | Object::UnnamedFun(_, _) => true,
+                    Object::Fun(_, _, _) | Object::BuiltinFun(_, _) | Object::UnnamedFun(_, _) | Object::UserFun(_) => true,
                     _ => false,
                 }
             },
