@@ -3393,7 +3393,7 @@ pub fn map(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
-pub fn toml2val(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn str2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3407,15 +3407,15 @@ pub fn toml2val(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("toml"), format!("{}", err))))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function val2toml"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function str2toml"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function val2toml"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function str2toml"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
-pub fn val2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn toml2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3431,7 +3431,7 @@ pub fn val2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
-pub fn json2val(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn str2json(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3445,15 +3445,15 @@ pub fn json2val(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("json"), format!("{}", err))))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function val2json"))),
+                _ => Err(Error::Interp(String::from("unsupported type for function str2json"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function val2json"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function str2json"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
-pub fn val2json(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn json2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -4058,10 +4058,10 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("floatbox"), floatbox);
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
-    add_builtin_fun(root_mod, String::from("toml2val"), toml2val);
-    add_builtin_fun(root_mod, String::from("val2toml"), val2toml);
-    add_builtin_fun(root_mod, String::from("json2val"), json2val);
-    add_builtin_fun(root_mod, String::from("val2json"), val2json);
+    add_builtin_fun(root_mod, String::from("str2toml"), str2toml);
+    add_builtin_fun(root_mod, String::from("toml2str"), toml2str);
+    add_builtin_fun(root_mod, String::from("str2json"), str2json);
+    add_builtin_fun(root_mod, String::from("json2str"), json2str);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
