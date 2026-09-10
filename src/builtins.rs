@@ -3338,6 +3338,137 @@ pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
 // Built-in functions since version 0.2.0.
 //
 
+pub fn floatbox(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{ fun1(arg_values, |a| Ok(Value::FloatBox(a.to_f32()))) }
+
+pub fn fold(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 4 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2), arg_values.get(3)) {
+        (Some(a_value), Some(z_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
+                Some(mut iter) => {
+                    let mut x_value = z_value.clone();
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => x_value = fun_value.apply(interp, env, &[data_value.clone(), x_value, elem])?,
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(x_value)
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn map(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(a_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
+                Some(mut iter) => {
+                    let mut new_elems: Vec<Value> = Vec::new();
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => new_elems.push(fun_value.apply(interp, env, &[data_value.clone(), elem])?),
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(new_elems)))))
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn toml2val(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    match toml::from_str(s.as_str()) {
+                        Ok(value) => Ok(value),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("toml"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function val2toml"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function val2toml"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn val2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => {
+            match toml::to_string(&value) {
+                Ok(s) => Ok(Value::Object(Arc::new(Object::String(s)))),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("toml"), format!("{}", err))))),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn json2val(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    match serde_json::from_str(s.as_str()) {
+                        Ok(value) => Ok(value),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("json"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function val2json"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function val2json"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn val2json(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(value) => {
+            match serde_json::to_string(&value) {
+                Ok(s) => Ok(Value::Object(Arc::new(Object::String(s)))),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("json"), format!("{}", err))))),
+            }
+        },
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3924,6 +4055,13 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("assertnearlyne"), assertnearlyne);
     add_builtin_fun(root_mod, String::from("tests"), tests);
     // Built-in functions since version 0.2.0.
+    add_builtin_fun(root_mod, String::from("floatbox"), floatbox);
+    add_builtin_fun(root_mod, String::from("fold"), fold);
+    add_builtin_fun(root_mod, String::from("map"), map);
+    add_builtin_fun(root_mod, String::from("toml2val"), toml2val);
+    add_builtin_fun(root_mod, String::from("val2toml"), val2toml);
+    add_builtin_fun(root_mod, String::from("json2val"), json2val);
+    add_builtin_fun(root_mod, String::from("val2json"), val2json);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
