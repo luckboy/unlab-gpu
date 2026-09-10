@@ -5,10 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::collections::VecDeque;
 use std::sync::Barrier;
 use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::RwLock;
+use std::time::Instant;
 use std::time::Duration;
 use crate::error::*;
 use crate::utils::*;
@@ -21,6 +23,7 @@ pub enum SyncObject
     Mutex(Mutex<Value>),
     Monitor(Mutex<Value>, Condvar),
     RwLock(RwLock<Value>),
+    Channel(Mutex<VecDeque<Value>>, Condvar),
 }
 
 impl SyncObject
@@ -150,6 +153,67 @@ impl SyncObject
                 Ok(())
             },
             _ => Err(Error::Interp(String::from("synchronization object isn't rw lock"))),
+        }
+    }
+    
+    pub fn recv(&self) -> Result<Value>
+    {
+        match self {
+            SyncObject::Channel(queue, condvar) => {
+                let mut queue_g = mutex_lock(queue)?;
+                let value = loop {
+                    match queue_g.pop_front() {
+                        Some(tmp_value) => break tmp_value.clone(),
+                        None => (),
+                    }
+                    queue_g = condvar_wait(condvar, queue_g)?;
+                };
+                Ok(value)
+            },
+            _ => Err(Error::Interp(String::from("synchronization object isn't channel"))),
+        }
+    }
+
+    pub fn recv_timeout(&self, duration: Duration) -> Result<Option<Value>>
+    {
+        match self {
+            SyncObject::Channel(queue, condvar) => {
+                let mut instant = Instant::now();
+                let mut waiting_duration = duration;
+                let mut queue_g = mutex_lock(queue)?;
+                let value = loop {
+                    match queue_g.pop_front() {
+                        Some(tmp_value) => break Some(tmp_value.clone()),
+                        None => (),
+                    }
+                    waiting_duration = match waiting_duration.checked_sub(instant.elapsed()) {
+                        Some(tmp_waiting_duration) => tmp_waiting_duration,
+                        None => break None,
+                    };
+                    instant = Instant::now();
+                    let pair = condvar_wait_timeout(condvar, queue_g, waiting_duration)?;
+                    let wait_timeout_res = pair.1;
+                    queue_g = pair.0;
+                    if wait_timeout_res.timed_out() {
+                        break None;
+                    }
+                };
+                Ok(value)
+            },
+            _ => Err(Error::Interp(String::from("synchronization object isn't channel"))),
+        }
+    }
+
+    pub fn send(&self, value: Value) -> Result<()>
+    {
+        match self {
+            SyncObject::Channel(queue, condvar) => {
+                let mut queue_g = mutex_lock(queue)?;
+                queue_g.push_back(value);                
+                condvar.notify_one();
+                Ok(())
+            },
+            _ => Err(Error::Interp(String::from("synchronization object isn't channel"))),
         }
     }
 }

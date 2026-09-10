@@ -1256,6 +1256,7 @@ impl Value
                                 guard.fmt_with_indent(f, new_indent, is_width)?;
                                 write!(f, ")")?;
                             },
+                            SyncObject::Channel(_, _) => write!(f, "channel(...)")?,
                         }
                     },
                     Object::JoinHandle(_) => write!(f, "joinhandle(...)")?,

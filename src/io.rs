@@ -565,6 +565,7 @@ fn write_object(w: &mut dyn Write, object: &Arc<Object>, version: u32, object_ta
                         let guard = rw_lock_read(rw_lock)?;
                         write_value(w, &*guard, version, object_tab, mut_object_tab)?;                       
                     },
+                    SyncObject::Channel(_, _) => return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write channel"))),
                 }
             } else {
                 return Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "can't write synchronization object")));

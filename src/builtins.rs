@@ -200,6 +200,7 @@ pub fn typ(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result
                         SyncObject::Mutex(_) => Ok(Value::Object(Arc::new(Object::String(String::from("mutex"))))),
                         SyncObject::Monitor(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("monitor"))))),
                         SyncObject::RwLock(_) => Ok(Value::Object(Arc::new(Object::String(String::from("rwlock"))))),
+                        SyncObject::Channel(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("channel"))))),
                     }
                 },
                 Object::JoinHandle(_) => Ok(Value::Object(Arc::new(Object::String(String::from("joinhandle"))))),
