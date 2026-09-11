@@ -5,7 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+use std::fs;
 use std::fs::File;
+use std::fs::remove_file;
+use std::io::Read;
+use std::io::Seek;
+use std::io::SeekFrom;
 use std::io::Write;
 use std::io::stdout;
 use std::result;
@@ -34,7 +39,8 @@ struct CurlOptions
     fail_on_error: Option<bool>,
     follow_location: Option<bool>,
     custom_request: Option<String>,
-    file: Option<String>,
+    upload_file: Option<String>,
+    download_file: Option<String>,
 }
 
 fn create_curl_options(value: &Value) -> Result<CurlOptions>
@@ -150,7 +156,16 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         },
                         None => None,
                     };
-                    let file = match fields.get(&String::from("file")) {
+                    let upload_file = match fields.get(&String::from("uploadfile")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let download_file = match fields.get(&String::from("downloadfile")) {
                         Some(field) => {
                             match field {
                                 Value::None => None,
@@ -171,7 +186,8 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                             fail_on_error,
                             follow_location,
                             custom_request,
-                            file,
+                            upload_file,
+                            download_file,
                     })
                 },
                 _ => Err(Error::Interp(String::from("unsupported type for curl function"))),
@@ -207,40 +223,40 @@ fn print_progress(uploading_byte_count: f64, total_uploading_byte_count: f64, do
     Ok(())
 }
 
-fn curl_res_curl_fun(url: &str, options: &Option<CurlOptions>) -> result::Result<(Arc<Mutex<Option<Vec<u8>>>>, Arc<Mutex<Option<Vec<u8>>>>, Arc<Mutex<(f64, f64)>>), curl::Error>
+fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(Arc<Mutex<Option<Vec<u8>>>>, Arc<Mutex<Option<Vec<u8>>>>, Arc<Mutex<(f64, f64)>>), curl::Error>
 {
     let mut easy = curl::easy::Easy::new();
     easy.url(url)?;
     let byte_counts = Arc::new(Mutex::new((0.0, 0.0)));
     let mut is_writing = false;
     let header: Arc<Mutex<Option<Vec<u8>>>> = Arc::new(Mutex::new(None));
-    match &options {
-        Some(options) => {
-            match options.get {
+    match &opts {
+        Some(opts) => {
+            match opts.get {
                 Some(get) => easy.get(get)?,
                 None => (),
             }
-            match options.post {
+            match opts.post {
                 Some(post) => easy.post(post)?,
                 None => (),
             }
-            match options.put {
+            match opts.put {
                 Some(put) => easy.put(put)?,
                 None => (),
             }
-            match options.fail_on_error {
+            match opts.fail_on_error {
                 Some(fail_on_error) => easy.fail_on_error(fail_on_error)?,
                 None => (),
             }
-            match options.follow_location {
+            match opts.follow_location {
                 Some(follow_location) => easy.follow_location(follow_location)?,
                 None => (),
             }
-            match &options.custom_request {
+            match &opts.custom_request {
                 Some(custom_request) => easy.custom_request(custom_request.as_str())?,
                 None => (),
             }
-            match &options.http_headers {
+            match &opts.http_headers {
                 Some(http_headers) => {
                     let mut http_headers2 = List::new();
                     for http_header in http_headers {
@@ -250,7 +266,7 @@ fn curl_res_curl_fun(url: &str, options: &Option<CurlOptions>) -> result::Result
                 },
                 None => (),
             }
-            match options.progress {
+            match opts.progress {
                 Some(true) => {
                     let byte_counts2 = byte_counts.clone();
                     easy.progress(true)?;
@@ -267,7 +283,7 @@ fn curl_res_curl_fun(url: &str, options: &Option<CurlOptions>) -> result::Result
                 Some(false) => easy.progress(false)?,
                 None => (),
             }
-            match &options.read {
+            match &opts.read {
                 Some(s) => {
                     let mut i = 0usize;
                     let s2 = s.clone();
@@ -287,7 +303,48 @@ fn curl_res_curl_fun(url: &str, options: &Option<CurlOptions>) -> result::Result
                 },
                 None => (),
             }
-            match options.header {
+            match &opts.upload_file {
+                Some(path) => {
+                    let path2 = path.clone();
+                    let mut off = 0u64;
+                    easy.read_function(move |buf| {
+                            let file_len = match fs::metadata(path2.as_str()) {
+                                Ok(metadata) => metadata.len(),
+                                Err(err) => {
+                                    eprint_error(&Error::Io(err));
+                                    return Ok(0);
+                                },
+                            };
+                            match File::open(path2.as_str()) {
+                                Ok(mut file) => {
+                                    match file.seek(SeekFrom::Start(off)) {
+                                        Ok(_) => (),
+                                        Err(err) => eprint_error(&Error::Io(err)),
+                                    }
+                                    let data_len = file_len - off;
+                                    let len = if (buf.len() as u64) < data_len {
+                                        buf.len()
+                                    } else {
+                                        data_len as usize
+                                    };
+                                    let (dst, _) = buf.split_at_mut(len);
+                                    match file.read_exact(dst) {
+                                        Ok(()) => (),
+                                        Err(err) => eprint_error(&Error::Io(err)),
+                                    }
+                                    off += len as u64;
+                                    Ok(len)
+                                },
+                                Err(err) => {
+                                    eprint_error(&Error::Io(err));
+                                    Ok(0)
+                                },
+                            }
+                    })?;
+                },
+                None => (),
+            }
+            match opts.header {
                 Some(true) => {
                     let header2 = header.clone();
                     easy.header_function(move |buf| {
@@ -300,15 +357,15 @@ fn curl_res_curl_fun(url: &str, options: &Option<CurlOptions>) -> result::Result
                 },
                 _ => (),
             }
-            match options.write {
+            match opts.write {
                 Some(true) => is_writing = true,
                 _ => (),
             }
-            match &options.file {
-                Some(file) => {
-                    let file2 = file.clone();
+            match &opts.download_file {
+                Some(path) => {
+                    let path2 = path.clone();
                     easy.write_function(move |buf| {
-                            match File::options().create(true).append(true).open(file2.as_str()) {
+                            match File::options().create(true).append(true).open(path2.as_str()) {
                                 Ok(mut file) => {
                                     match file.write_all(buf) {
                                         Ok(()) => (),
@@ -319,6 +376,7 @@ fn curl_res_curl_fun(url: &str, options: &Option<CurlOptions>) -> result::Result
                             }
                             Ok(buf.len())
                     })?;
+                    is_writing = false;
                 },
                 None => (),
             }
@@ -355,6 +413,29 @@ pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
         (Some(url_value), None) => (format!("{}", url_value), None),
         (_, _) => return Err(Error::Interp(String::from("no argument"))),
     };
+    match &opts {
+        Some(opts) => {
+            match &opts.upload_file {
+                Some(path) => {
+                    match fs::metadata(path.as_str()) {
+                        Ok(_) => (),
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                     }
+                },
+                None => (),
+            }
+            match &opts.download_file {
+                Some(path) => {
+                    match remove_file(path.as_str()) {
+                        Ok(()) => (),
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                     }
+                },
+                None => (),
+            }
+        },
+        None => (),
+    }
     if opts.as_ref().map(|os| os.progress.unwrap_or(false)).unwrap_or(false) {
         print_progress(0.0, 0.0, 0.0, 0.0, false)?;
     }
