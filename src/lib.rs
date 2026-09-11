@@ -39,6 +39,7 @@ pub use winit;
 pub mod backend;
 pub mod builtin_doc;
 pub mod builtins;
+pub mod curl_fun;
 pub mod dfs;
 pub mod doc;
 pub mod env;

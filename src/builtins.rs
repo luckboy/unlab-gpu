@@ -41,6 +41,7 @@ use rand::random_range;
 use crate::matrix::Matrix;
 use crate::serde_json;
 use crate::toml;
+use crate::curl_fun::*;
 use crate::env::*;
 use crate::error::*;
 use crate::getopts::*;
@@ -4149,6 +4150,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("histogram"), histogram);
     #[cfg(feature = "plot")]
     add_alias(root_mod, String::from("hist"), &String::from("histogram"));
+    add_builtin_fun(root_mod, String::from("curl"), curl_fun);
 }
 
 #[cfg(test)]
