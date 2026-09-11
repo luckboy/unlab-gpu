@@ -8,6 +8,7 @@
 use std::fs;
 use std::fs::File;
 use std::fs::remove_file;
+use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Seek;
 use std::io::SeekFrom;
@@ -428,6 +429,7 @@ pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                 Some(path) => {
                     match remove_file(path.as_str()) {
                         Ok(()) => (),
+                        Err(err) if err.kind() == ErrorKind::NotFound => (),
                         Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
                      }
                 },
