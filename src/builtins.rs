@@ -7,6 +7,7 @@
 //
 //! A module of built-in functions.
 use std::cmp;
+use std::collections::VecDeque;
 use std::f32;
 use std::ffi::OsString;
 use std::fs;
@@ -3524,6 +3525,14 @@ pub fn rwlock(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+pub fn channel(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new())))))
+}
+
 fn set_value(ret_value: Value, value: &mut Value) -> Result<()>
 {
     match ret_value {
@@ -3707,6 +3716,52 @@ pub fn rwlockwrite(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> 
             Ok(Value::None)
         },
         (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn recv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(sync_value) => sync_value.sync()?.recv(),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn recvtimeout(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(sync_value), Some(millis_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let millis = millis_value.to_i64();
+            if millis < 0 {
+                return Err(Error::Interp(String::from("millis is negative")));
+            }
+            match sync_value.sync()?.recv_timeout(Duration::from_millis(millis as u64))? {
+                Some(value) => Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![value]))))),
+                None => Ok(Value::None),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function recvtimeout"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn send(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(sync_value), Some(value)) => {
+            sync_value.sync()?.send(value.clone())?;
+            Ok(Value::None)
+        },
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
@@ -4067,6 +4122,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
     add_builtin_fun(root_mod, String::from("rwlock"), rwlock);
+    add_builtin_fun(root_mod, String::from("channel"), channel);
     add_builtin_fun(root_mod, String::from("barrierwait"), barrierwait);
     add_builtin_fun(root_mod, String::from("lock"), lock);
     add_builtin_fun(root_mod, String::from("lockwait"), lockwait);
@@ -4075,6 +4131,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("locknotifyall"), locknotifyall);
     add_builtin_fun(root_mod, String::from("rwlockread"), rwlockread);
     add_builtin_fun(root_mod, String::from("rwlockwrite"), rwlockwrite);
+    add_builtin_fun(root_mod, String::from("recv"), recv);
+    add_builtin_fun(root_mod, String::from("recvtimeout"), recvtimeout);
+    add_builtin_fun(root_mod, String::from("send"), send);
     add_builtin_fun(root_mod, String::from("thread"), thread);
     add_builtin_fun(root_mod, String::from("threadjoin"), threadjoin);
     add_builtin_fun(root_mod, String::from("sleep"), sleep);
