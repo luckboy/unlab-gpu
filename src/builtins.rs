@@ -2459,7 +2459,7 @@ pub fn exit(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
     match arg_values.get(0) {
         Some(value @ (Value::Int(_) | Value::Float(_))) => Err(Error::Stop(Stop::Exit(value.to_i64() as i32))),
-        Some(_) => Err(Error::Interp(String::from("unsupported type for fuction exit"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function exit"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -3264,7 +3264,7 @@ pub fn assert(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
     match arg_values.get(0) {
         Some(Value::Bool(b)) => assert_op(&arg_values[1..], None, None, || Ok(*b)),
-        Some(_) => Err(Error::Interp(String::from("unsupported type for fuction assert"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function assert"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }                                    
 }
@@ -3304,7 +3304,7 @@ pub fn assertnearlyeq(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]
             let eps = eps_value.to_f32();
             assert_op(&arg_values[3..], Some("left isn't nearly equal to right"), Some((value.clone(), value2.clone())), || value.nearly_eq_without_types(&value2, eps))
         },
-        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for fuction assertnearlyeq"))),
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function assertnearlyeq"))),
         _ => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -3320,7 +3320,7 @@ pub fn assertnearlyne(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]
             let eps = eps_value.to_f32();
             assert_op(&arg_values[3..], Some("left is nearly equal to right"), Some((value.clone(), value2.clone())), || Ok(!value.nearly_eq_without_types(&value2, eps)?))
         },
-        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for fuction assertnearlyne"))),
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function assertnearlyne"))),
         _ => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -3487,7 +3487,7 @@ pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
             }
             Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Barrier(Barrier::new(n as usize))))))
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported types for fuction barrier"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function barrier"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -3649,7 +3649,7 @@ pub fn lockwaittimeout(interp: &mut Interp, env: &mut Env, arg_values: &[Value])
             })?;
             Ok(Value::None)
         },
-        (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for fuction lockandwaittimeout"))),
+        (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function lockwaittimeout"))),
         (_, _, _, _, _, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -3840,7 +3840,7 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
             std::thread::sleep(Duration::from_millis(millis as u64));
             Ok(Value::None)
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported types for fuction sleep"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function sleep"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
