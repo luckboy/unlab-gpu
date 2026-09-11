@@ -18,6 +18,7 @@ features = ["opencl", "cuda", "cuda-12060"]
 [dependencies]
 clap = { version = "4.6", default-features = false, features = ["std", "help", "usage", "error-context", "derive"] }
 ctrlc = "3.5"
+curl = "0.4"
 getopts = "0.2"
 home = "0.5"
 rand = "0.10"
@@ -28,7 +29,6 @@ toml = "1.1"
 unmtx-gpu = { version = "0.2.0", default-features = false }
 # pkg
 bzip2 = "0.6.1"
-curl = "0.4"
 flate2 = "1.1.9"
 jammdb = "0.11"
 liblzma = "0.4.1"
