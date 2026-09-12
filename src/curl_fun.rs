@@ -204,13 +204,21 @@ fn print_progress(uploading_byte_count: f64, total_uploading_byte_count: f64, do
     let uploading_perc = if total_uploading_byte_count != 0.0 {
         Some(((uploading_byte_count * 100.0) / total_uploading_byte_count).floor())
     } else {
-        None
+        if uploading_byte_count == 0.0 {
+            Some(0.0)
+        } else {
+            None
+        }
     };
     let downloading_kib = (downloading_byte_count / 1024.0).ceil();
     let downloading_perc = if total_downloading_byte_count != 0.0 {
         Some(((downloading_byte_count * 100.0) / total_downloading_byte_count).floor())
     } else {
-        None
+        if downloading_byte_count == 0.0 {
+            Some(0.0)
+        } else {
+            None
+        }
     };
     if is_done {
         println!("cURL progress: {}KiB ({}%), {}KiB ({}%)", uploading_kib, uploading_perc.map(|n| format!("{}", n)).unwrap_or(String::from("?")), downloading_kib, downloading_perc.map(|n| format!("{}", n)).unwrap_or(String::from("?")));
@@ -445,13 +453,21 @@ pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
         None => (),
     }
     if opts.as_ref().map(|os| os.progress.unwrap_or(false)).unwrap_or(false) {
-        print_progress(0.0, 0.0, 0.0, 0.0, false)?;
+        match print_progress(0.0, 0.0, 0.0, 0.0, false) {
+            Ok(()) => (),
+            Err(Error::Io(err)) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            Err(err) => return Err(err),
+        }
     }
     match curl_res_curl_fun(url.as_str(), &opts) {
         Ok((header, content, byte_counts)) => {
             if opts.as_ref().map(|os| os.progress.unwrap_or(false)).unwrap_or(false) {
                 let byte_counts_g = mutex_lock(&byte_counts)?;
-                print_progress(byte_counts_g.0, byte_counts_g.0, byte_counts_g.1, byte_counts_g.1, true)?;
+                match print_progress(byte_counts_g.0, byte_counts_g.0, byte_counts_g.1, byte_counts_g.1, true) {
+                    Ok(()) => (),
+                    Err(Error::Io(err)) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                    Err(err) => return Err(err),
+                }
             }
             let mut elems: Vec<Value> = Vec::new();
             let mut header_g = mutex_lock(&*header)?;
