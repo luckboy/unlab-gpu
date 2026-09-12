@@ -320,7 +320,10 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
                                 Ok(mut file) => {
                                     match file.seek(SeekFrom::Start(off)) {
                                         Ok(_) => (),
-                                        Err(err) => eprint_error(&Error::Io(err)),
+                                        Err(err) => {
+                                            eprint_error(&Error::Io(err));
+                                            return Ok(0);
+                                        },
                                     }
                                     let data_len = file_len - off;
                                     let len = if (buf.len() as u64) < data_len {
@@ -331,7 +334,10 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
                                     let (dst, _) = buf.split_at_mut(len);
                                     match file.read_exact(dst) {
                                         Ok(()) => (),
-                                        Err(err) => eprint_error(&Error::Io(err)),
+                                        Err(err) => {
+                                            eprint_error(&Error::Io(err));
+                                            return Ok(0);
+                                        },
                                     }
                                     off += len as u64;
                                     Ok(len)
