@@ -6557,6 +6557,183 @@ fn test_tests_is_applied_with_success()
 //
 
 #[test]
+fn test_fold_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("fold")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3), Value::Int(4)]))));
+            let res = fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(0), Value::Int(2), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| Ok(&arg_values[1] + &arg_values[2] * &arg_values[0])))))]);
+            match res {
+                Ok(value) => assert_eq!(Value::Int(20), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_map_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("map")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3), Value::Int(4)]))));
+            let res = fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(2), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| Ok(&arg_values[1] + &arg_values[0])))))]);
+            match res {
+                Ok(value) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(3), Value::Int(4), Value::Int(5), Value::Int(6)])))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_str2toml_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("str2toml")) {
+        Some(fun_value) => {
+            let s = "
+a = 1
+b = 2.0
+c = false
+";
+            let s2 = &s[1..];
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_toml2str_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("toml2str")) {
+        Some(fun_value) => {
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let expected_s = "
+a = 1
+b = 2.0
+c = false
+";
+                    let expected_s2 = &expected_s[1..];
+                    assert_eq!(Value::Object(Arc::new(Object::String(String::from(expected_s2)))), value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_str2json_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("str2json")) {
+        Some(fun_value) => {
+            let s = "
+{
+    \"a\": 1,
+    \"b\": 2.0,
+    \"c\": false
+}
+";
+            let s2 = &s[1..];
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let mut expected_fields: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields.insert(String::from("a"), Value::Int(1));
+                    expected_fields.insert(String::from("b"), Value::Float(2.0));
+                    expected_fields.insert(String::from("c"), Value::Bool(false));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_json2str_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("json2str")) {
+        Some(fun_value) => {
+            let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+            fields.insert(String::from("a"), Value::Int(1));
+            fields.insert(String::from("b"), Value::Float(2.0));
+            fields.insert(String::from("c"), Value::Bool(false));
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let expected_s = "{\"a\":1,\"b\":2.0,\"c\":false}";
+                    assert_eq!(Value::Object(Arc::new(Object::String(String::from(expected_s)))), value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_barrier_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -6646,6 +6823,31 @@ fn test_rwlock_is_applied_with_success()
                 Ok(Value::Object(object)) => {
                     match &*object {
                         Object::Sync(SyncObject::RwLock(_)) => assert!(true),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_channel_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("channel")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Sync(SyncObject::Channel(_, _)) => assert!(true),
                         _ => assert!(false),
                     }
                 },
@@ -7684,6 +7886,116 @@ fn test_rwlockwrite_is_applied_with_success()
 }
 
 #[test]
+fn test_recv_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("recv")) {
+        Some(fun_value) => {
+            let channel_value = Value::Object(Arc::new(Object::Sync(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()))));
+            match &channel_value {
+                Value::Object(object) => {
+                    match &**object {
+                        Object::Sync(sync_object) => {
+                            match sync_object.send(Value::Int(1)) {
+                                Ok(()) => assert!(true),
+                                Err(_) => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[channel_value.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_recvtimeout_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("recvtimeout")) {
+        Some(fun_value) => {
+            let channel_value = Value::Object(Arc::new(Object::Sync(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()))));
+            match &channel_value {
+                Value::Object(object) => {
+                    match &**object {
+                        Object::Sync(sync_object) => {
+                            match sync_object.send(Value::Int(1)) {
+                                Ok(()) => assert!(true),
+                                Err(_) => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[channel_value.clone(), Value::Int(200)]) {
+                Ok(value) => assert_eq!(Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1)])))), value),
+                Err(_) => assert!(false),
+            }
+            let channel_value = Value::Object(Arc::new(Object::Sync(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[channel_value.clone(), Value::Int(200)]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_send_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("send")) {
+        Some(fun_value) => {
+            let channel_value = Value::Object(Arc::new(Object::Sync(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()))));
+            match fun_value.apply(&mut interp, &mut env, &[channel_value.clone(), Value::Int(1)]) {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+            match &channel_value {
+                Value::Object(object) => {
+                    match &**object {
+                        Object::Sync(sync_object) => {
+                            match sync_object.recv() {
+                                Ok(value) => assert_eq!(Value::Int(1), value),
+                                Err(_) => assert!(false),
+                            }
+                        },
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_thread_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -7758,3 +8070,7 @@ fn test_sleep_is_applied_with_success()
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_pipelyspawn_is_existent()
+{ shared_test_fun_is_existent("pipelyspawn", pipelyspawn); }
