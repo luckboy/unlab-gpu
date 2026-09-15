@@ -8072,5 +8072,5 @@ fn test_sleep_is_applied_with_success()
 }
 
 #[test]
-fn test_pipelyspawn_is_existent()
-{ shared_test_fun_is_existent("pipelyspawn", pipelyspawn); }
+fn test_pspawn_is_existent()
+{ shared_test_fun_is_existent("pspawn", pspawn); }

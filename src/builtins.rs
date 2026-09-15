@@ -3846,7 +3846,7 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
-pub fn pipelyspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -4138,7 +4138,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("thread"), thread);
     add_builtin_fun(root_mod, String::from("threadjoin"), threadjoin);
     add_builtin_fun(root_mod, String::from("sleep"), sleep);
-    add_builtin_fun(root_mod, String::from("pipelyspawn"), pipelyspawn);
+    add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
