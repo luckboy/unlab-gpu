@@ -182,6 +182,9 @@ impl SyncObject
                 let mut waiting_duration = duration;
                 let mut queue_g = mutex_lock(queue)?;
                 let value = loop {
+                    if waiting_duration < instant.elapsed() {
+                        break None;
+                    }
                     match queue_g.pop_front() {
                         Some(tmp_value) => break Some(tmp_value.clone()),
                         None => (),
