@@ -3783,20 +3783,20 @@ pub fn thread(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
                         Err(Error::Stop(Stop::Quit)) => {
                             let msg = "main interpreter thread can only leave by command quit";
                             eprintln!("{}", msg);
-                            Value::Object(Arc::new(Object::Error(String::from("threadfun"), String::from(msg))))
+                            Value::Object(Arc::new(Object::Error(String::from("threadfunction"), String::from(msg))))
                         },
                         Err(Error::Stop(Stop::Exit(_))) => {
                             let msg = "main interpreter thread can only leave by function exit";
                             eprintln!("{}", msg);
-                            Value::Object(Arc::new(Object::Error(String::from("threadfun"), String::from(msg))))
+                            Value::Object(Arc::new(Object::Error(String::from("threadfunction"), String::from(msg))))
                         },
                         Err(err @ Error::Intr) => {
                             eprint_error(&err);
-                            Value::Object(Arc::new(Object::Error(String::from("threadfun"), format!("{}", err))))
+                            Value::Object(Arc::new(Object::Error(String::from("threadfunction"), format!("{}", err))))
                         },
                         Err(err) => {
                             eprint_error_with_stack_trace(&err, new_interp.stack_trace());
-                            Value::Object(Arc::new(Object::Error(String::from("threadfun"), format!("{}", err))))
+                            Value::Object(Arc::new(Object::Error(String::from("threadfunction"), format!("{}", err))))
                         },
                     }
             });
