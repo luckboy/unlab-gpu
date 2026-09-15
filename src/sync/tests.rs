@@ -516,3 +516,210 @@ fn test_sync_object_write_writes_rw_lock()
         _ => assert!(false),
     }
 }
+
+#[test]
+fn test_sync_object_send_sends_value_and_sync_object_recv_receives_value()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    match sync_object.send(Value::Int(1)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(1), value),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_values_and_sync_object_recv_receives_values()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    match sync_object.send(Value::Int(1)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.send(Value::Int(2)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.send(Value::Int(3)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(1), value),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(2), value),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(3), value),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_value_in_other_thread_and_sync_object_recv_receives_value()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    let sync_object2 = sync_object.clone();
+    let join_handle = thread::spawn(move || {
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(1)).unwrap();
+    });
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(1), value),
+        Err(_) => assert!(false),
+    }
+    match join_handle.join() {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_values_in_other_thread_and_sync_object_recv_receives_values()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    let sync_object2 = sync_object.clone();
+    let join_handle = thread::spawn(move || {
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(1)).unwrap();
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(2)).unwrap();
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(3)).unwrap();
+    });
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(1), value),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(2), value),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv() {
+        Ok(value) => assert_eq!(Value::Int(3), value),
+        Err(_) => assert!(false),
+    }
+    match join_handle.join() {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_value_and_sync_object_recv_timeout_receives_value()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    match sync_object.send(Value::Int(1)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(1), value),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_values_and_sync_object_recv_timeout_receives_values()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    match sync_object.send(Value::Int(1)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.send(Value::Int(2)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.send(Value::Int(3)) {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(1), value),
+        _ => assert!(false),
+    }
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(2), value),
+        _ => assert!(false),
+    }
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(3), value),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_value_in_other_thread_and_sync_object_recv_timeout_receives_value()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    let sync_object2 = sync_object.clone();
+    let join_handle = thread::spawn(move || {
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(1)).unwrap();
+    });
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(1), value),
+        _ => assert!(false),
+    }
+    match join_handle.join() {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_send_sends_values_in_other_thread_and_sync_object_recv_timeout_receives_values()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    let sync_object2 = sync_object.clone();
+    let join_handle = thread::spawn(move || {
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(1)).unwrap();
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(2)).unwrap();
+            sleep(Duration::from_millis(100));
+            sync_object2.send(Value::Int(3)).unwrap();
+    });
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(1), value),
+        _ => assert!(false),
+    }
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(2), value),
+        _ => assert!(false),
+    }
+    match sync_object.recv_timeout(Duration::from_millis(200)) {
+        Ok(Some(value)) => assert_eq!(Value::Int(3), value),
+        _ => assert!(false),
+    }
+    match join_handle.join() {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+}
+
+#[test]
+fn test_sync_object_recv_timeout_interrupts_receiving()
+{
+    let sync_object = Arc::new(SyncObject::Channel(Mutex::new(VecDeque::new()), Condvar::new()));
+    let sync_object2 = sync_object.clone();
+    let join_handle = thread::spawn(move || {
+            sleep(Duration::from_millis(200));
+            sync_object2.send(Value::Int(1)).unwrap();
+    });
+    match sync_object.recv_timeout(Duration::from_millis(100)) {
+        Ok(None) => assert!(true),
+        _ => assert!(false),
+    }
+    match join_handle.join() {
+        Ok(()) => assert!(true),
+        Err(_) => assert!(false),
+    }
+}
