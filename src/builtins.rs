@@ -3865,6 +3865,7 @@ pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
             let stdin_join_handle_res = match child.stdin.take() {
                 Some(stdin) => {
                     let is_empty = match &stdin_value {
+                        Value::None => true,
                         Value::Object(object) => {
                             match &**object {
                                 Object::String(s) => s.is_empty(),
