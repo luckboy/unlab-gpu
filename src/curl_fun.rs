@@ -490,7 +490,14 @@ pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                 },
                 None => (),
             }
-            Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+            if elems.len() > 1 {
+                Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+            } else {
+                match elems.first() {
+                    Some(value) => Ok(value.clone()),
+                    None => Ok(Value::Bool(true)),
+                }
+            }
         },
         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("curl"), format!("{}", err))))),
     }
