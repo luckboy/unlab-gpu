@@ -469,9 +469,14 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
                     let header2 = header.clone();
                     easy.header_function(move |buf| {
                             let mut header2_g = header2.lock().unwrap();
-                            let mut data: Vec<u8> = Vec::new();
-                            data.extend_from_slice(buf);
-                            *header2_g = Some(data);
+                            match &mut *header2_g {
+                                Some(data) => data.extend_from_slice(buf),
+                                None => {
+                                    let mut data: Vec<u8> = Vec::new();
+                                    data.extend_from_slice(buf);
+                                    *header2_g = Some(data);
+                                },
+                            }
                             true
                     })?;
                 },
