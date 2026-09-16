@@ -33,13 +33,20 @@ struct CurlOptions
     write: Option<bool>,
     header: Option<bool>,
     progress: Option<bool>,
+    username: Option<String>,
+    password: Option<String>,
     http_headers: Option<Vec<String>>,
     get: Option<bool>,
     post: Option<bool>,
     put: Option<bool>,
+    post_field_size: Option<u64>,
     fail_on_error: Option<bool>,
     follow_location: Option<bool>,
     custom_request: Option<String>,
+    ssl_key_type: Option<String>,
+    ssl_key: Option<String>,
+    key_password: Option<String>,
+    pinned_public_key: Option<String>,
     upload_file: Option<String>,
     download_file: Option<String>,
 }
@@ -87,6 +94,24 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         },
                         None => None,
                     };
+                    let username = match fields.get(&String::from("username")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let password = match fields.get(&String::from("password")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
                     let http_headers = match fields.get(&String::from("httpheaders")) {
                         Some(field) => {
                             match field {
@@ -130,6 +155,15 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         },
                         None => None,
                     };
+                    let post_field_size = match fields.get(&String::from("postfieldsize")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(field.to_i64() as u64),
+                            }
+                        },
+                        None => None,
+                    };
                     let fail_on_error = match fields.get(&String::from("failonerror")) {
                         Some(field) => {
                             match field {
@@ -149,6 +183,42 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         None => None,
                     };
                     let custom_request = match fields.get(&String::from("customrequest")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let ssl_key_type = match fields.get(&String::from("sslkeytype")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let ssl_key = match fields.get(&String::from("sslkey")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let key_password = match fields.get(&String::from("keypassword")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let pinned_public_key = match fields.get(&String::from("pinnedpublickey")) {
                         Some(field) => {
                             match field {
                                 Value::None => None,
@@ -180,13 +250,20 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                             write,
                             header,
                             progress,
+                            username,
+                            password,
                             http_headers,
                             get,
                             post,
                             put,
+                            post_field_size,
                             fail_on_error,
                             follow_location,
                             custom_request,
+                            ssl_key_type,
+                            ssl_key,
+                            key_password,
+                            pinned_public_key,
                             upload_file,
                             download_file,
                     })
@@ -253,6 +330,18 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
                 Some(put) => easy.put(put)?,
                 None => (),
             }
+            match opts.post_field_size {
+                Some(post_field_size) => easy.post_field_size(post_field_size)?,
+                None => (),
+            }
+            match &opts.username {
+                Some(username) => easy.username(username.as_str())?,
+                None => (),
+            }
+            match &opts.password {
+                Some(password) => easy.password(password.as_str())?,
+                None => (),
+            }
             match opts.fail_on_error {
                 Some(fail_on_error) => easy.fail_on_error(fail_on_error)?,
                 None => (),
@@ -263,6 +352,22 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
             }
             match &opts.custom_request {
                 Some(custom_request) => easy.custom_request(custom_request.as_str())?,
+                None => (),
+            }
+            match &opts.ssl_key_type {
+                Some(ssl_key_type) => easy.ssl_key_type(ssl_key_type.as_str())?,
+                None => (),
+            }
+            match &opts.ssl_key {
+                Some(ssl_key) => easy.ssl_key(ssl_key.as_str())?,
+                None => (),
+            }
+            match &opts.key_password {
+                Some(key_password) => easy.key_password(key_password.as_str())?,
+                None => (),
+            }
+            match &opts.pinned_public_key {
+                Some(pinned_public_key) => easy.pinned_public_key(pinned_public_key.as_str())?,
                 None => (),
             }
             match &opts.http_headers {
