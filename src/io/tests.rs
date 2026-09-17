@@ -437,3 +437,42 @@ fn test_write_values_with_version_and_read_values_writes_values_and_reads_values
         Err(_) => assert!(false),
     }
 }
+
+#[test]
+fn test_write_values_with_version_and_read_values_writes_value_and_reads_value_for_box_of_floating_point_number()
+{
+    let mut env = Env::new(Arc::new(RwLock::new(ModNode::new(()))));
+    let mut cursor = Cursor::new(Vec::<u8>::new());
+    let mut values: Vec<Value> = Vec::new();
+    values.push(Value::FloatBox(1.5));
+    match write_values_with_version(&mut cursor, values.as_slice(), 2) {
+        Ok(()) => {
+            cursor.set_position(0);
+            match read_values(&mut cursor, &mut env) {
+                Ok(values2) => {
+                    assert_eq!(values.len(), values2.len());
+                    for (value, value2) in values.iter().zip(values2.iter()) {
+                        match (value, value2) {
+                            (Value::Object(object), Value::Object(object2)) => {
+                                match (&**object, &**object2) {
+                                    (Object::Matrix(_), Object::Matrix(_)) => assert!(value.to_matrix_array().unwrap().eq_with_types(&value2.to_matrix_array().unwrap()).unwrap()),
+                                    (_, _) => assert!(value.eq_with_types(&value2).unwrap()), 
+                                }
+                            },
+                            (Value::Weak(object), Value::Weak(object2)) => {
+                                match (object.upgrade(), object2.upgrade()) {
+                                    (Some(object), Some(object2)) => assert!(Value::Ref(object).eq_with_types(&Value::Ref(object2)).unwrap()),
+                                    (None, None) => assert!(true),
+                                    (_, _) => assert!(false),
+                                }
+                            },
+                            (_, _) => assert!(value.eq_with_types(&value2).unwrap()), 
+                        }
+                    }
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
+}

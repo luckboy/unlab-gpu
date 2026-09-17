@@ -450,7 +450,7 @@ fn read_value(r: &mut dyn Read, env: &Env, version: u32, object_tab: &mut Object
         value_type => {
             if version >= 2 {
                 match value_type {
-                    VALUE_FLOAT_BOX => Ok(Value::Float(read_f32(r)?)),
+                    VALUE_FLOAT_BOX => Ok(Value::FloatBox(read_f32(r)?)),
                     _ => Err(Error::Io(io::Error::new(ErrorKind::InvalidData, "invalid value type"))),
                 }
             } else {
