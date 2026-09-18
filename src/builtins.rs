@@ -16,6 +16,7 @@ use std::fs::create_dir;
 use std::fs::read_dir;
 use std::fs::remove_dir;
 use std::fs::remove_file;
+use std::fs::set_permissions;
 use std::io::BufWriter;
 use std::io::ErrorKind;
 use std::io::Read;
@@ -3341,8 +3342,45 @@ pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
 // Built-in functions since version 0.2.0.
 //
 
+pub fn functionkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::Fun(_, _, _) => Ok(Value::Object(Arc::new(Object::String(String::from("named"))))),
+                Object::BuiltinFun(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("builtin"))))),
+                Object::UnnamedFun(_, _) => Ok(Value::Object(Arc::new(Object::String(String::from("unnamed"))))),
+                Object::UserFun(_) => Ok(Value::Object(Arc::new(Object::String(String::from("user"))))),
+                _ => Ok(Value::None),
+            }
+        },
+        Some(_) => Ok(Value::None),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn floatbox(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::FloatBox(a.to_f32()))) }
+
+pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => Ok(Value::Int(s.len() as i64)),
+                _ => Err(Error::Interp(String::from("unsupported type for function bytes"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function bytes"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
 
 pub fn fold(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -3846,6 +3884,54 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+pub fn filebytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function filebytes")?;
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => Ok(Value::Int(metadata.len() as i64)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn readonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function readonly")?;
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => Ok(Value::Bool(metadata.permissions().readonly())),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn setreadonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function setreadonly")?;
+    let is_read_only = match arg_values.get(1) {
+        Some(value @ Value::Bool(_)) => value.to_bool(),
+        Some(_) => return Err(Error::Interp(String::from("unsupported types for function setreadonly"))),
+        None => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => {
+            let mut perms = metadata.permissions();
+            perms.set_readonly(is_read_only);
+            match set_permissions(file_name.as_str(), perms) {
+                Ok(()) => Ok(Value::Bool(true)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 {
@@ -4113,7 +4199,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("assertnearlyne"), assertnearlyne);
     add_builtin_fun(root_mod, String::from("tests"), tests);
     // Built-in functions since version 0.2.0.
+    add_builtin_fun(root_mod, String::from("functionkind"), functionkind);
     add_builtin_fun(root_mod, String::from("floatbox"), floatbox);
+    add_builtin_fun(root_mod, String::from("bytes"), bytes);
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
     add_builtin_fun(root_mod, String::from("str2toml"), str2toml);
@@ -4139,6 +4227,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("thread"), thread);
     add_builtin_fun(root_mod, String::from("threadjoin"), threadjoin);
     add_builtin_fun(root_mod, String::from("sleep"), sleep);
+    add_builtin_fun(root_mod, String::from("filebytes"), filebytes);
+    add_builtin_fun(root_mod, String::from("readonly"), readonly);
+    add_builtin_fun(root_mod, String::from("setreadonly"), setreadonly);
     add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
