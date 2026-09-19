@@ -4206,10 +4206,10 @@ pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = get_first_arg_string(arg_values, "unsupported types for function loadcsv")?;
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function loadcsvwithouthdr")?;
     let is_semicolon = match arg_values.get(1) {
         Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
-        Some(_) => return Err(Error::Interp(String::from("unsupported types for function loadcsv"))),
+        Some(_) => return Err(Error::Interp(String::from("unsupported types for function loadcsvwithouthdr"))),
         None => false,
     };
     match File::open(file_name.as_str()) {
