@@ -6854,6 +6854,48 @@ fn test_json2str_is_applied_with_success()
 }
 
 #[test]
+fn test_str2csv_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("str2csv")) {
+        Some(fun_value) => {
+            let s = "
+a,b,c,d
+true,1,2.0,abc
+false,2,3.0,def
+";
+            let s2 = &s[1..];
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let mut expected_fields1: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields1.insert(String::from("a"), Value::Bool(true));
+                    expected_fields1.insert(String::from("b"), Value::Int(1));
+                    expected_fields1.insert(String::from("c"), Value::Float(2.0));
+                    expected_fields1.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("abc")))));
+                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields1))));
+                    let mut expected_fields2: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields2.insert(String::from("a"), Value::Bool(false));
+                    expected_fields2.insert(String::from("b"), Value::Int(2));
+                    expected_fields2.insert(String::from("c"), Value::Float(3.0));
+                    expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
+                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_barrier_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -8283,3 +8325,56 @@ fn test_setreadonly_is_applied_with_success()
 #[test]
 fn test_pspawn_is_existent()
 { shared_test_fun_is_existent("pspawn", pspawn); }
+
+#[sealed_test]
+fn test_loadcsv_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("loadcsv")) {
+        Some(fun_value) => {
+            let s = "
+a,b,c,d
+true,1,2.0,abc
+false,2,3.0,def
+";
+            let s2 = &s[1..];
+            fs::write("test.csv", s2).unwrap();
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test.csv"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(value) => {
+                    let mut expected_fields1: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields1.insert(String::from("a"), Value::Bool(true));
+                    expected_fields1.insert(String::from("b"), Value::Int(1));
+                    expected_fields1.insert(String::from("c"), Value::Float(2.0));
+                    expected_fields1.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("abc")))));
+                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields1))));
+                    let mut expected_fields2: BTreeMap<String, Value> = BTreeMap::new();
+                    expected_fields2.insert(String::from("a"), Value::Bool(false));
+                    expected_fields2.insert(String::from("b"), Value::Int(2));
+                    expected_fields2.insert(String::from("c"), Value::Float(3.0));
+                    expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
+                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("test2.csv"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
+                Ok(Value::Object(object)) => {
+                    match &*object {
+                        Object::Error(err_kind, _) => assert_eq!(String::from("io"), *err_kind),
+                        _ => assert!(false),
+                    }
+                },
+                _ => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}

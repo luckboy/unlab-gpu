@@ -7,9 +7,11 @@
 //
 //! A module of built-in functions.
 use std::cmp;
+use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::f32;
 use std::ffi::OsString;
+use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::fs::create_dir;
@@ -31,6 +33,7 @@ use std::path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
+use std::result;
 use std::sync::Arc;
 use std::sync::Barrier;
 use std::sync::Condvar;
@@ -42,6 +45,10 @@ use opener::open_browser;
 use rand::random;
 use rand::random_range;
 use crate::matrix::Matrix;
+use crate::serde::de::MapAccess;
+use crate::serde::de::Visitor;
+use crate::serde::Deserialize;
+use crate::serde::Deserializer;
 use crate::serde_json;
 use crate::toml;
 use crate::curl_fun::*;
@@ -58,6 +65,40 @@ use crate::sync::*;
 use crate::utils::*;
 use crate::value::*;
 use crate::version::*;
+
+struct ValueMap(Value);
+
+struct ValueMapVisitor;
+
+impl<'de> Visitor<'de> for ValueMapVisitor
+{
+    type Value = ValueMap;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
+    { write!(formatter, "a value map") }
+    
+    fn visit_map<A>(self, mut map: A) -> result::Result<Self::Value, A::Error>
+        where A: MapAccess<'de>
+    {
+        let mut fields: BTreeMap<String, Value> = BTreeMap::new();
+        loop {
+            match map.next_key()? {
+                Some(ident) => {
+                    fields.insert(ident, map.next_value()?);
+                },
+                None => break,
+            }
+        }
+        Ok(ValueMap(Value::Ref(Arc::new(RwLock::new(MutObject::Struct(fields))))))
+    }
+}
+
+impl<'de> Deserialize<'de> for ValueMap
+{
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>
+    { deserializer.deserialize_map(ValueMapVisitor) }
+}
 
 fn fun1<F>(arg_values: &[Value], f: F) -> Result<Value>
     where F: FnOnce(&Value) -> Result<Value>
@@ -3526,7 +3567,7 @@ pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
                     let mut elems: Vec<Value> = Vec::new();
                     for res in reader.deserialize() {
                         match res {
-                            Ok(elem) => elems.push(elem),
+                            Ok(ValueMap(elem)) => elems.push(elem),
                             Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
                         }
                     }
@@ -4062,7 +4103,7 @@ pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
             let mut elems: Vec<Value> = Vec::new();
             for res in reader.deserialize() {
                 match res {
-                    Ok(elem) => elems.push(elem),
+                    Ok(ValueMap(elem)) => elems.push(elem),
                     Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
                 }
             }
