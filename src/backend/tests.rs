@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2025 Łukasz Szpakowski
+// Copyright (c) 2025-2026 Łukasz Szpakowski
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,6 +26,7 @@ device = 4567
             assert_eq!(Some(4567), config.device);
             assert_eq!(None, config.cublas);
             assert_eq!(None, config.mma);
+            assert_eq!(None, config.ptx);
         },
         Err(_) => assert!(false), 
     }
@@ -39,6 +40,7 @@ backend = \"CUDA\"
 ordinal = 1234
 cublas = false
 mma = true
+ptx = true
 ";
     let s2 = &s[1..];
     let mut cursor = Cursor::new(s2.as_bytes());
@@ -50,6 +52,7 @@ mma = true
             assert_eq!(None, config.device);
             assert_eq!(Some(false), config.cublas);
             assert_eq!(Some(true), config.mma);
+            assert_eq!(Some(true), config.ptx);
         },
         Err(_) => assert!(false), 
     }
