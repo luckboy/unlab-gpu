@@ -17,7 +17,9 @@ use std::fs::read_dir;
 use std::fs::remove_dir;
 use std::fs::remove_file;
 use std::fs::set_permissions;
+use std::io::BufReader;
 use std::io::BufWriter;
+use std::io::Cursor;
 use std::io::ErrorKind;
 use std::io::Read;
 use std::io::Write;
@@ -3510,6 +3512,34 @@ pub fn json2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    let cursor = Cursor::new(s.as_bytes());
+                    let mut reader = csv::Reader::from_reader(cursor);
+                    let mut elems: Vec<Value> = Vec::new();
+                    for res in reader.deserialize() {
+                        match res {
+                            Ok(elem) => elems.push(elem),
+                            Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                        }
+                    }
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                },
+                _ => Err(Error::Interp(String::from("unsupported type for function str2csv"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function str2csv"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4019,6 +4049,29 @@ pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function loadcsv")?;
+    match File::open(file_name.as_str()) {
+        Ok(file) => {
+            let r = BufReader::new(file);
+            let mut reader = csv::Reader::from_reader(r);
+            let mut elems: Vec<Value> = Vec::new();
+            for res in reader.deserialize() {
+                match res {
+                    Ok(elem) => elems.push(elem),
+                    Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                }
+            }
+            Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 /// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
@@ -4208,6 +4261,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("toml2str"), toml2str);
     add_builtin_fun(root_mod, String::from("str2json"), str2json);
     add_builtin_fun(root_mod, String::from("json2str"), json2str);
+    add_builtin_fun(root_mod, String::from("str2csv"), str2csv);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
@@ -4231,6 +4285,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("readonly"), readonly);
     add_builtin_fun(root_mod, String::from("setreadonly"), setreadonly);
     add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
+    add_builtin_fun(root_mod, String::from("loadcsv"), loadcsv);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
