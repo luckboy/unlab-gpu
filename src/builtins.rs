@@ -46,6 +46,7 @@ use rand::random;
 use rand::random_range;
 use crate::matrix::Matrix;
 use crate::serde::de::MapAccess;
+use crate::serde::de::SeqAccess;
 use crate::serde::de::Visitor;
 use crate::serde::Deserialize;
 use crate::serde::Deserializer;
@@ -65,6 +66,38 @@ use crate::sync::*;
 use crate::utils::*;
 use crate::value::*;
 use crate::version::*;
+
+struct ValueSeq(Value);
+
+struct ValueSeqVisitor;
+
+impl<'de> Visitor<'de> for ValueSeqVisitor
+{
+    type Value = ValueSeq;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
+    { write!(formatter, "a value") }
+
+    fn visit_seq<A>(self, mut seq: A) -> result::Result<Self::Value, A::Error>
+        where A: SeqAccess<'de>
+    {
+        let mut elems: Vec<Value> = Vec::new();
+        loop {
+            match seq.next_element()? {
+                Some(elem) => elems.push(elem),
+                None => break,
+            }
+        }
+        Ok(ValueSeq(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems))))))
+    }
+}
+
+impl<'de> Deserialize<'de> for ValueSeq
+{
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>
+    { deserializer.deserialize_seq(ValueSeqVisitor) }
+}
 
 struct ValueMap(Value);
 
@@ -3555,15 +3588,24 @@ pub fn json2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
 
 pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    if arg_values.len() != 1 {
+    if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match arg_values.get(0) {
         Some(Value::Object(object)) => {
             match &**object {
                 Object::String(s) => {
+                    let is_semicolon = match arg_values.get(1) {
+                        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function str2csv"))),
+                        None => false,
+                    };
                     let cursor = Cursor::new(s.as_bytes());
-                    let mut reader = csv::Reader::from_reader(cursor);
+                    let mut reader = if is_semicolon {
+                        csv::ReaderBuilder::new().delimiter(b';').from_reader(cursor)
+                    } else {
+                        csv::ReaderBuilder::new().from_reader(cursor)
+                    };
                     let mut elems: Vec<Value> = Vec::new();
                     for res in reader.deserialize() {
                         match res {
@@ -3573,10 +3615,47 @@ pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
                     }
                     Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
                 },
-                _ => Err(Error::Interp(String::from("unsupported type for function str2csv"))),
+                _ => Err(Error::Interp(String::from("unsupported types for function str2csv"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported type for function str2csv"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function str2csv"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Object(object)) => {
+            match &**object {
+                Object::String(s) => {
+                    let is_semicolon = match arg_values.get(1) {
+                        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function str2csvwithouthdr"))),
+                        None => false,
+                    };
+                    let cursor = Cursor::new(s.as_bytes());
+                    let mut reader = if is_semicolon {
+                        csv::ReaderBuilder::new().has_headers(false).delimiter(b';').from_reader(cursor)
+                    } else {
+                        csv::ReaderBuilder::new().has_headers(false).from_reader(cursor)
+                    };
+                    let mut elems: Vec<Value> = Vec::new();
+                    for res in reader.deserialize() {
+                        match res {
+                            Ok(ValueSeq(elem)) => elems.push(elem),
+                            Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                        }
+                    }
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function str2csvwithouthdr"))),
+            }
+        },
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function str2csvwithouthdr"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -4092,18 +4171,59 @@ pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
 
 pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    if arg_values.len() != 1 {
+    if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = get_first_arg_string(arg_values, "unsupported type for function loadcsv")?;
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function loadcsv")?;
+    let is_semicolon = match arg_values.get(1) {
+        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+        Some(_) => return Err(Error::Interp(String::from("unsupported types for function loadcsv"))),
+        None => false,
+    };
     match File::open(file_name.as_str()) {
         Ok(file) => {
             let r = BufReader::new(file);
-            let mut reader = csv::Reader::from_reader(r);
+            let mut reader = if is_semicolon {
+                csv::ReaderBuilder::new().delimiter(b';').from_reader(r)
+            } else {
+                csv::ReaderBuilder::new().from_reader(r)
+            };
             let mut elems: Vec<Value> = Vec::new();
             for res in reader.deserialize() {
                 match res {
                     Ok(ValueMap(elem)) => elems.push(elem),
+                    Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                }
+            }
+            Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function loadcsv")?;
+    let is_semicolon = match arg_values.get(1) {
+        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+        Some(_) => return Err(Error::Interp(String::from("unsupported types for function loadcsv"))),
+        None => false,
+    };
+    match File::open(file_name.as_str()) {
+        Ok(file) => {
+            let r = BufReader::new(file);
+            let mut reader = if is_semicolon {
+                csv::ReaderBuilder::new().has_headers(false).delimiter(b';').from_reader(r)
+            } else {
+                csv::ReaderBuilder::new().has_headers(false).from_reader(r)
+            };
+            let mut elems: Vec<Value> = Vec::new();
+            for res in reader.deserialize() {
+                match res {
+                    Ok(ValueSeq(elem)) => elems.push(elem),
                     Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
                 }
             }
@@ -4303,6 +4423,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("str2json"), str2json);
     add_builtin_fun(root_mod, String::from("json2str"), json2str);
     add_builtin_fun(root_mod, String::from("str2csv"), str2csv);
+    add_builtin_fun(root_mod, String::from("str2csvwithouthdr"), str2csvwithouthdr);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
@@ -4327,6 +4448,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("setreadonly"), setreadonly);
     add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
     add_builtin_fun(root_mod, String::from("loadcsv"), loadcsv);
+    add_builtin_fun(root_mod, String::from("loadcsvwithouthdr"), loadcsvwithouthdr);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
