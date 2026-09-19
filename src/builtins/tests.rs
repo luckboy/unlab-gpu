@@ -6866,8 +6866,8 @@ fn test_str2csv_is_applied_with_success()
         Some(fun_value) => {
             let s = "
 a,b,c,d
-true,1,2.0,abc
-false,2,3.0,def
+true,1,2.5,abc
+false,2,3.5,def
 ";
             let s2 = &s[1..];
             let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
@@ -6876,13 +6876,13 @@ false,2,3.0,def
                     let mut expected_fields1: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields1.insert(String::from("a"), Value::Bool(true));
                     expected_fields1.insert(String::from("b"), Value::Int(1));
-                    expected_fields1.insert(String::from("c"), Value::Float(2.0));
+                    expected_fields1.insert(String::from("c"), Value::Float(2.5));
                     expected_fields1.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("abc")))));
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields1))));
                     let mut expected_fields2: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields2.insert(String::from("a"), Value::Bool(false));
                     expected_fields2.insert(String::from("b"), Value::Int(2));
-                    expected_fields2.insert(String::from("c"), Value::Float(3.0));
+                    expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
@@ -6892,8 +6892,8 @@ false,2,3.0,def
             }
             let s = "
 a;b;c;d
-true;1;2.0;abc
-false;2;3.0;def
+true;1;2.5;abc
+false;2;3.5;def
 ";
             let s2 = &s[1..];
             let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
@@ -6902,13 +6902,13 @@ false;2;3.0;def
                     let mut expected_fields1: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields1.insert(String::from("a"), Value::Bool(true));
                     expected_fields1.insert(String::from("b"), Value::Int(1));
-                    expected_fields1.insert(String::from("c"), Value::Float(2.0));
+                    expected_fields1.insert(String::from("c"), Value::Float(2.5));
                     expected_fields1.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("abc")))));
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields1))));
                     let mut expected_fields2: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields2.insert(String::from("a"), Value::Bool(false));
                     expected_fields2.insert(String::from("b"), Value::Int(2));
-                    expected_fields2.insert(String::from("c"), Value::Float(3.0));
+                    expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
@@ -6933,30 +6933,30 @@ fn test_str2csvwithouthdr_is_applied_with_success()
     match root_mod_g.var(&String::from("str2csvwithouthdr")) {
         Some(fun_value) => {
             let s = "
-true,1,2.0,abc
-false,2,3.0,def
+true,1,2.5,abc
+false,2,3.5,def
 ";
             let s2 = &s[1..];
             let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
                 Ok(value) => {
-                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.0), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
-                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.0), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
+                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
+                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
             }
             let s = "
-true;1;2.0;abc
-false;2;3.0;def
+true;1;2.5;abc
+false;2;3.5;def
 ";
             let s2 = &s[1..];
             let arg_value = Value::Object(Arc::new(Object::String(String::from(s2))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Bool(true)]) {
                 Ok(value) => {
-                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.0), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
-                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.0), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
+                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
+                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
                     assert_eq!(expected_value, value);
                 },
@@ -8411,8 +8411,8 @@ fn test_loadcsv_is_applied_with_success()
         Some(fun_value) => {
             let s = "
 a,b,c,d
-true,1,2.0,abc
-false,2,3.0,def
+true,1,2.5,abc
+false,2,3.5,def
 ";
             let s2 = &s[1..];
             fs::write("test.csv", s2).unwrap();
@@ -8422,13 +8422,13 @@ false,2,3.0,def
                     let mut expected_fields1: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields1.insert(String::from("a"), Value::Bool(true));
                     expected_fields1.insert(String::from("b"), Value::Int(1));
-                    expected_fields1.insert(String::from("c"), Value::Float(2.0));
+                    expected_fields1.insert(String::from("c"), Value::Float(2.5));
                     expected_fields1.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("abc")))));
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields1))));
                     let mut expected_fields2: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields2.insert(String::from("a"), Value::Bool(false));
                     expected_fields2.insert(String::from("b"), Value::Int(2));
-                    expected_fields2.insert(String::from("c"), Value::Float(3.0));
+                    expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
@@ -8438,8 +8438,8 @@ false,2,3.0,def
             }
             let s = "
 a;b;c;d
-true;1;2.0;abc
-false;2;3.0;def
+true;1;2.5;abc
+false;2;3.5;def
 ";
             let s2 = &s[1..];
             fs::write("test2.csv", s2).unwrap();
@@ -8449,13 +8449,13 @@ false;2;3.0;def
                     let mut expected_fields1: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields1.insert(String::from("a"), Value::Bool(true));
                     expected_fields1.insert(String::from("b"), Value::Int(1));
-                    expected_fields1.insert(String::from("c"), Value::Float(2.0));
+                    expected_fields1.insert(String::from("c"), Value::Float(2.5));
                     expected_fields1.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("abc")))));
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields1))));
                     let mut expected_fields2: BTreeMap<String, Value> = BTreeMap::new();
                     expected_fields2.insert(String::from("a"), Value::Bool(false));
                     expected_fields2.insert(String::from("b"), Value::Int(2));
-                    expected_fields2.insert(String::from("c"), Value::Float(3.0));
+                    expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
@@ -8490,32 +8490,32 @@ fn test_loadcsvwithouthdr_is_applied_with_success()
     match root_mod_g.var(&String::from("loadcsvwithouthdr")) {
         Some(fun_value) => {
             let s = "
-true,1,2.0,abc
-false,2,3.0,def
+true,1,2.5,abc
+false,2,3.5,def
 ";
             let s2 = &s[1..];
             fs::write("test.csv", s2).unwrap();
             let arg_value = Value::Object(Arc::new(Object::String(String::from("test.csv"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value]) {
                 Ok(value) => {
-                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.0), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
-                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.0), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
+                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
+                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
             }
             let s = "
-true;1;2.0;abc
-false;2;3.0;def
+true;1;2.5;abc
+false;2;3.5;def
 ";
             let s2 = &s[1..];
             fs::write("test2.csv", s2).unwrap();
             let arg_value = Value::Object(Arc::new(Object::String(String::from("test2.csv"))));
             match fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Bool(true)]) {
                 Ok(value) => {
-                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.0), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
-                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.0), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
+                    let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
+                    let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
                     let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
                     assert_eq!(expected_value, value);
                 },
