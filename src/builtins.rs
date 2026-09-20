@@ -3601,13 +3601,13 @@ pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
                         None => false,
                     };
                     let cursor = Cursor::new(s.as_bytes());
-                    let mut reader = if is_semicolon {
+                    let mut csvr = if is_semicolon {
                         csv::ReaderBuilder::new().delimiter(b';').from_reader(cursor)
                     } else {
                         csv::ReaderBuilder::new().from_reader(cursor)
                     };
                     let mut elems: Vec<Value> = Vec::new();
-                    for res in reader.deserialize() {
+                    for res in csvr.deserialize() {
                         match res {
                             Ok(ValueMap(elem)) => elems.push(elem),
                             Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
@@ -3638,13 +3638,13 @@ pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                         None => false,
                     };
                     let cursor = Cursor::new(s.as_bytes());
-                    let mut reader = if is_semicolon {
+                    let mut csvr = if is_semicolon {
                         csv::ReaderBuilder::new().has_headers(false).delimiter(b';').from_reader(cursor)
                     } else {
                         csv::ReaderBuilder::new().has_headers(false).from_reader(cursor)
                     };
                     let mut elems: Vec<Value> = Vec::new();
-                    for res in reader.deserialize() {
+                    for res in csvr.deserialize() {
                         match res {
                             Ok(ValueSeq(elem)) => elems.push(elem),
                             Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
@@ -4183,13 +4183,13 @@ pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     match File::open(file_name.as_str()) {
         Ok(file) => {
             let r = BufReader::new(file);
-            let mut reader = if is_semicolon {
+            let mut csvr = if is_semicolon {
                 csv::ReaderBuilder::new().delimiter(b';').from_reader(r)
             } else {
                 csv::ReaderBuilder::new().from_reader(r)
             };
             let mut elems: Vec<Value> = Vec::new();
-            for res in reader.deserialize() {
+            for res in csvr.deserialize() {
                 match res {
                     Ok(ValueMap(elem)) => elems.push(elem),
                     Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
@@ -4215,13 +4215,13 @@ pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     match File::open(file_name.as_str()) {
         Ok(file) => {
             let r = BufReader::new(file);
-            let mut reader = if is_semicolon {
+            let mut csvr = if is_semicolon {
                 csv::ReaderBuilder::new().has_headers(false).delimiter(b';').from_reader(r)
             } else {
                 csv::ReaderBuilder::new().has_headers(false).from_reader(r)
             };
             let mut elems: Vec<Value> = Vec::new();
-            for res in reader.deserialize() {
+            for res in csvr.deserialize() {
                 match res {
                     Ok(ValueSeq(elem)) => elems.push(elem),
                     Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
