@@ -632,7 +632,7 @@ pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                 Some(header2) => {
                     match String::from_utf8(header2) {
                         Ok(s) => elems.push(Value::Object(Arc::new(Object::String(s)))),
-                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("curlutf8"), format!("{}", err))))),
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("utf8"), format!("{}", err))))),
                     }
                 },
                 None => (),
@@ -641,7 +641,7 @@ pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                 Some(content2) => {
                     match String::from_utf8(content2) {
                         Ok(s) => elems.push(Value::Object(Arc::new(Object::String(s)))),
-                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("curlutf8"), format!("{}", err))))),
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("utf8"), format!("{}", err))))),
                     }
                 },
                 None => (),
