@@ -18,6 +18,7 @@ use std::result;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::RwLock;
+use std::time::Duration;
 use crate::curl;
 use crate::curl::easy::List;
 use crate::env::*;
@@ -46,6 +47,9 @@ struct CurlOptions
     ssl_key_type: Option<String>,
     ssl_key: Option<String>,
     key_password: Option<String>,
+    connect_timeout: Option<Duration>,
+    dns_cache_timeout: Option<Duration>,
+    timeout: Option<Duration>,
     pinned_public_key: Option<String>,
     upload_file: Option<String>,
     download_file: Option<String>,
@@ -227,6 +231,33 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         },
                         None => None,
                     };
+                    let connect_timeout = match fields.get(&String::from("connecttimeout")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(Duration::from_millis(field.to_i64() as u64)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let dns_cache_timeout = match fields.get(&String::from("dnscachetimeout")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(Duration::from_millis(field.to_i64() as u64)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let timeout = match fields.get(&String::from("timeout")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(Duration::from_millis(field.to_i64() as u64)),
+                            }
+                        },
+                        None => None,
+                    };
                     let upload_file = match fields.get(&String::from("uploadfile")) {
                         Some(field) => {
                             match field {
@@ -264,6 +295,9 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                             ssl_key,
                             key_password,
                             pinned_public_key,
+                            connect_timeout,
+                            dns_cache_timeout,
+                            timeout,
                             upload_file,
                             download_file,
                     })
@@ -378,6 +412,18 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
                     }
                     easy.http_headers(http_headers2)?;
                 },
+                None => (),
+            }
+            match opts.connect_timeout {
+                Some(connect_timeout) => easy.connect_timeout(connect_timeout)?,
+                None => (),
+            }
+            match opts.dns_cache_timeout {
+                Some(dns_cache_timeout) => easy.dns_cache_timeout(dns_cache_timeout)?,
+                None => (),
+            }
+            match opts.timeout {
+                Some(timeout) => easy.timeout(timeout)?,
                 None => (),
             }
             match opts.progress {
