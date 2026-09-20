@@ -47,10 +47,10 @@ struct CurlOptions
     ssl_key_type: Option<String>,
     ssl_key: Option<String>,
     key_password: Option<String>,
+    pinned_public_key: Option<String>,
     connect_timeout: Option<Duration>,
     dns_cache_timeout: Option<Duration>,
     timeout: Option<Duration>,
-    pinned_public_key: Option<String>,
     upload_file: Option<String>,
     download_file: Option<String>,
 }
