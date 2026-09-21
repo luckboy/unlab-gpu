@@ -3833,9 +3833,9 @@ pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                     let mut cursor = Cursor::new(Vec::<u8>::new());
                     {
                         let mut csvw = if is_semicolon {
-                            csv::WriterBuilder::new().delimiter(b';').from_writer(&mut cursor)
+                            csv::WriterBuilder::new().has_headers(false).delimiter(b';').from_writer(&mut cursor)
                         } else {
-                            csv::WriterBuilder::new().from_writer(&mut cursor)
+                            csv::WriterBuilder::new().has_headers(false).from_writer(&mut cursor)
                         };
                         for elem in elems {
                             match csv_res_write_record_without_header(&mut csvw, elem, field_count) {
@@ -4505,9 +4505,9 @@ pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                         Ok(file) => {
                             let w = BufWriter::new(file);
                             let mut csvw = if is_semicolon {
-                                csv::WriterBuilder::new().delimiter(b';').from_writer(w)
+                                csv::WriterBuilder::new().has_headers(false).delimiter(b';').from_writer(w)
                             } else {
-                                csv::WriterBuilder::new().from_writer(w)
+                                csv::WriterBuilder::new().has_headers(false).from_writer(w)
                             };
                             for elem in elems {
                                 match csv_res_write_record_without_header(&mut csvw, elem, field_count) {
