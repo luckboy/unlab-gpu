@@ -3548,7 +3548,7 @@ pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
 
 pub fn splitre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
-    if arg_values.len() < 1 || arg_values.len() > 2 {
+    if arg_values.len() != 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1)) {
@@ -3566,7 +3566,6 @@ pub fn splitre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
                 (_, _) => Err(Error::Interp(String::from("unsupported types for function splitre"))),
             }
         },
-        (Some(_), None) => Err(Error::Interp(String::from("unsupported type for function splitre"))),
         (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function splitre"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
