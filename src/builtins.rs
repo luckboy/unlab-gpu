@@ -4786,7 +4786,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("bytes"), bytes);
     add_builtin_fun(root_mod, String::from("splitre"), splitre);
     add_builtin_fun(root_mod, String::from("containsre"), containsre);
-    add_builtin_fun(root_mod, String::from("replacere"), splitre);
+    add_builtin_fun(root_mod, String::from("replacere"), replacere);
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
     add_builtin_fun(root_mod, String::from("str2toml"), str2toml);

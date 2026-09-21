@@ -6677,6 +6677,87 @@ fn test_bytes_is_applied_with_success()
 }
 
 #[test]
+fn test_splitre_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("splitre")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("abc, def;  ghi"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("[,;] +"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => {
+                    let elems = vec![
+                        Value::Object(Arc::new(Object::String(String::from("abc")))),
+                        Value::Object(Arc::new(Object::String(String::from("def")))),
+                        Value::Object(Arc::new(Object::String(String::from("ghi"))))
+                    ];
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_containsre_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("containsre")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(" abc  def ghi "))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("[a-z]+"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(" abc  def ghi "))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("[A-Z]+"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_replacere_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("replacere")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(" abc DEF ghi "))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("[a-z]+"))));
+            let arg_value3 = Value::Object(Arc::new(Object::String(String::from("jkl"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2, arg_value3]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from(" jkl DEF jkl ")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_fold_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
