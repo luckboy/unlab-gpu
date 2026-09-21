@@ -48,7 +48,7 @@ use crate::matrix::Matrix;
 use crate::serde::de::MapAccess;
 use crate::serde::de::SeqAccess;
 use crate::serde::de::Visitor;
-use crate::serde::ser::Error as SerError;
+use crate::serde::ser;
 use crate::serde::Deserialize;
 use crate::serde::Deserializer;
 use crate::serde_json;
@@ -89,10 +89,10 @@ fn csv_res_write_field<W: Write>(w: &mut csv::Writer<W>, value: &Value) -> resul
         Value::Object(object) => {
             match &**object {
                 Object::String(s) => w.write_field(s),
-                _ => Err(csv::Error::custom("unsupported type for serialization")),
+                _ => Err(ser::Error::custom("unsupported type for serialization")),
             }
         },
-        _ => Err(csv::Error::custom("unsupported type for serialization")),
+        _ => Err(ser::Error::custom("unsupported type for serialization")),
     }
 }
 
@@ -110,7 +110,7 @@ fn csv_res_write_record<W: Write>(w: &mut csv::Writer<W>, value: &Value, idents:
         Value::Ref(object) => {
             let object_g = match rw_lock_read(&**object) {
                 Ok(tmp_object_g) => tmp_object_g,
-                Err(err) => return Err(csv::Error::custom(format!("{}", err))),
+                Err(err) => return Err(ser::Error::custom(format!("{}", err))),
             };
             match &*object_g {
                 MutObject::Struct(fields) => {
@@ -122,10 +122,10 @@ fn csv_res_write_record<W: Write>(w: &mut csv::Writer<W>, value: &Value, idents:
                     }
                     w.write_record(None::<&[u8]>)
                 },
-                _ => Err(csv::Error::custom("unsupported type for serialization")),
+                _ => Err(ser::Error::custom("unsupported type for serialization")),
             }
         },
-        _ => Err(csv::Error::custom("unsupported type for serialization")),
+        _ => Err(ser::Error::custom("unsupported type for serialization")),
     }
 }
 
@@ -135,7 +135,7 @@ fn csv_res_write_record_without_header<W: Write>(w: &mut csv::Writer<W>, value: 
         Value::Ref(object) => {
             let object_g = match rw_lock_read(&**object) {
                 Ok(tmp_object_g) => tmp_object_g,
-                Err(err) => return Err(csv::Error::custom(format!("{}", err))),
+                Err(err) => return Err(ser::Error::custom(format!("{}", err))),
             };
             match &*object_g {
                 MutObject::Array(elems) => {
@@ -147,10 +147,10 @@ fn csv_res_write_record_without_header<W: Write>(w: &mut csv::Writer<W>, value: 
                     }
                     w.write_record(None::<&[u8]>)
                 },
-                _ => Err(csv::Error::custom("unsupported type for serialization")),
+                _ => Err(ser::Error::custom("unsupported type for serialization")),
             }
         },
-        _ => Err(csv::Error::custom("unsupported type for serialization")),
+        _ => Err(ser::Error::custom("unsupported type for serialization")),
     }
 }
 
