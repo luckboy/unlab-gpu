@@ -44,6 +44,7 @@ use std::time::Duration;
 use opener::open_browser;
 use rand::random;
 use rand::random_range;
+use regex::Regex;
 use crate::matrix::Matrix;
 use crate::serde::de::MapAccess;
 use crate::serde::de::SeqAccess;
@@ -3545,6 +3546,79 @@ pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+pub fn splitre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => {
+                    let re = match Regex::new(t.as_str()) {
+                        Ok(tmp_re) => tmp_re,
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("regex"), format!("{}", err))))),
+                    };
+                    let ss = re.split(s.as_str());
+                    let elems: Vec<Value> = ss.map(|u| Value::Object(Arc::new(Object::String(String::from(u))))).collect();
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                },
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function splitre"))),
+            }
+        },
+        (Some(_), None) => Err(Error::Interp(String::from("unsupported type for function splitre"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function splitre"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+
+pub fn containsre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => {
+                    let re = match Regex::new(t.as_str()) {
+                        Ok(tmp_re) => tmp_re,
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("regex"), format!("{}", err))))),
+                    };
+                    Ok(Value::Bool(re.is_match(s.as_str())))
+                },
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function containsre"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function containsre"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn replacere(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2)), Some(Value::Object(object3))) => {
+            match (&**object, &**object2, &**object3) {
+                (Object::String(s), Object::String(t), Object::String(u)) => {
+                    let re = match Regex::new(t.as_str()) {
+                        Ok(tmp_re) => tmp_re,
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("regex"), format!("{}", err))))),
+                    };
+                    Ok(Value::Object(Arc::new(Object::String(re.replace(s.as_str(), u.as_str()).into_owned()))))
+                },
+                (_, _, _) => Err(Error::Interp(String::from("unsupported types for function replacere"))),
+            }
+        },
+        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function replacere"))),
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn fold(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 4 {
@@ -4711,6 +4785,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("functionkind"), functionkind);
     add_builtin_fun(root_mod, String::from("floatbox"), floatbox);
     add_builtin_fun(root_mod, String::from("bytes"), bytes);
+    add_builtin_fun(root_mod, String::from("splitre"), splitre);
+    add_builtin_fun(root_mod, String::from("containsre"), containsre);
+    add_builtin_fun(root_mod, String::from("replacere"), splitre);
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
     add_builtin_fun(root_mod, String::from("str2toml"), str2toml);
