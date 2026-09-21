@@ -3609,7 +3609,7 @@ pub fn replacere(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
                         Ok(tmp_re) => tmp_re,
                         Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("regex"), format!("{}", err))))),
                     };
-                    Ok(Value::Object(Arc::new(Object::String(re.replace(s.as_str(), u.as_str()).into_owned()))))
+                    Ok(Value::Object(Arc::new(Object::String(re.replace_all(s.as_str(), u.as_str()).into_owned()))))
                 },
                 (_, _, _) => Err(Error::Interp(String::from("unsupported types for function replacere"))),
             }
