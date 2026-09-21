@@ -48,6 +48,7 @@ use crate::matrix::Matrix;
 use crate::serde::de::MapAccess;
 use crate::serde::de::SeqAccess;
 use crate::serde::de::Visitor;
+use crate::serde::ser::Error as SerError;
 use crate::serde::Deserialize;
 use crate::serde::Deserializer;
 use crate::serde_json;
@@ -66,6 +67,92 @@ use crate::sync::*;
 use crate::utils::*;
 use crate::value::*;
 use crate::version::*;
+
+fn csv_res_write_field<W: Write>(w: &mut csv::Writer<W>, value: &Value) -> result::Result<(), csv::Error>
+{
+    match value {
+        Value::Bool(a) => {
+            if *a {
+                w.write_field("true")
+            } else {
+                w.write_field("false")
+            }
+        },
+        Value::Int(a) => {
+            let mut buffer = itoa::Buffer::new();
+            w.write_field(buffer.format(*a))
+        },
+        Value::Float(a) => {
+            let mut buffer = ryu::Buffer::new();
+            w.write_field(buffer.format(*a))
+        },
+        Value::Object(object) => {
+            match &**object {
+                Object::String(s) => w.write_field(s),
+                _ => Err(csv::Error::custom("unsupported type for serialization")),
+            }
+        },
+        _ => Err(csv::Error::custom("unsupported type for serialization")),
+    }
+}
+
+fn csv_res_write_header<W: Write>(w: &mut csv::Writer<W>, idents: &[String]) -> result::Result<(), csv::Error>
+{
+    for ident in idents {
+        w.write_field(ident)?;
+    }
+    w.write_record(None::<&[u8]>)
+}
+
+fn csv_res_write_record<W: Write>(w: &mut csv::Writer<W>, value: &Value, idents: &[String]) -> result::Result<(), csv::Error>
+{
+    match value {
+        Value::Ref(object) => {
+            let object_g = match rw_lock_read(&**object) {
+                Ok(tmp_object_g) => tmp_object_g,
+                Err(err) => return Err(csv::Error::custom(format!("{}", err))),
+            };
+            match &*object_g {
+                MutObject::Struct(fields) => {
+                    for ident in idents {
+                        match fields.get(ident) {
+                            Some(field) => csv_res_write_field(w, field)?,
+                            None => csv_res_write_field(w, &Value::Object(Arc::new(Object::String(String::new()))))?,
+                        }
+                    }
+                    w.write_record(None::<&[u8]>)
+                },
+                _ => Err(csv::Error::custom("unsupported type for serialization")),
+            }
+        },
+        _ => Err(csv::Error::custom("unsupported type for serialization")),
+    }
+}
+
+fn csv_res_write_record_without_header<W: Write>(w: &mut csv::Writer<W>, value: &Value, field_count: usize) -> result::Result<(), csv::Error>
+{
+    match value {
+        Value::Ref(object) => {
+            let object_g = match rw_lock_read(&**object) {
+                Ok(tmp_object_g) => tmp_object_g,
+                Err(err) => return Err(csv::Error::custom(format!("{}", err))),
+            };
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    for i in 0..field_count {
+                        match elems.get(i) {
+                            Some(elem) => csv_res_write_field(w, elem)?,
+                            None => csv_res_write_field(w, &Value::Object(Arc::new(Object::String(String::new()))))?,
+                        }
+                    }
+                    w.write_record(None::<&[u8]>)
+                },
+                _ => Err(csv::Error::custom("unsupported type for serialization")),
+            }
+        },
+        _ => Err(csv::Error::custom("unsupported type for serialization")),
+    }
+}
 
 struct ValueSeq(Value);
 
@@ -3660,6 +3747,116 @@ pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+fn create_idents(value: &Value, err_msg: &str) -> Result<Vec<String>>
+{
+    match value {
+        Value::Ref(object) => {
+            let object_g = rw_lock_read(&**object)?;
+            match &*object_g {
+                MutObject::Array(elems) => Ok(elems.iter().map(|e| format!("{}", e)).collect()),
+                _ => Err(Error::Interp(String::from(err_msg))),
+            }
+        },
+        _ => Err(Error::Interp(String::from(err_msg))),
+    }
+}
+
+pub fn csv2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 || arg_values.len() > 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Ref(object)), Some(ident_list_value)) => {
+            let object_g = rw_lock_read(&**object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    let idents = create_idents(&ident_list_value, "unsupported types for function csv2str")?;
+                    let is_semicolon = match arg_values.get(2) {
+                        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function csv2str"))),
+                        None => false,
+                    };
+                    let mut cursor = Cursor::new(Vec::<u8>::new());
+                    {
+                        let mut csvw = if is_semicolon {
+                            csv::WriterBuilder::new().delimiter(b';').from_writer(&mut cursor)
+                        } else {
+                            csv::WriterBuilder::new().from_writer(&mut cursor)
+                        };
+                        match csv_res_write_header(&mut csvw, idents.as_slice()) {
+                            Ok(()) => (),
+                            Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                        }
+                        for elem in elems {
+                            match csv_res_write_record(&mut csvw, elem, idents.as_slice()) {
+                                Ok(()) => (),
+                                Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                            }
+                        }
+                    }
+                    match String::from_utf8(cursor.get_ref().to_vec()) {
+                        Ok(s) => Ok(Value::Object(Arc::new(Object::String(s)))),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("utf8"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function csv2str")))
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function csv2str"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 || arg_values.len() > 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Ref(object)), Some(field_count_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let object_g = rw_lock_read(&**object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    if field_count_value.to_i64() < 0 {
+                        return Err(Error::Interp(String::from("number of fields is negative")));
+                    }
+                    if field_count_value.to_i64() > (isize::MAX as i64) {
+                        return Err(Error::Interp(String::from("too large number of fields")));
+                    }
+                    let field_count = field_count_value.to_i64() as usize;
+                    let is_semicolon = match arg_values.get(2) {
+                        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function csv2strwithouthdr"))),
+                        None => false,
+                    };
+                    let mut cursor = Cursor::new(Vec::<u8>::new());
+                    {
+                        let mut csvw = if is_semicolon {
+                            csv::WriterBuilder::new().delimiter(b';').from_writer(&mut cursor)
+                        } else {
+                            csv::WriterBuilder::new().from_writer(&mut cursor)
+                        };
+                        for elem in elems {
+                            match csv_res_write_record_without_header(&mut csvw, elem, field_count) {
+                                Ok(()) => (),
+                                Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                            }
+                        }
+                    }
+                    match String::from_utf8(cursor.get_ref().to_vec()) {
+                        Ok(s) => Ok(Value::Object(Arc::new(Object::String(s)))),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("utf8"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function csv2strwithouthdr")))
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function csv2strwithouthdr"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4233,6 +4430,104 @@ pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+pub fn savecsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 3 || arg_values.len() > 4 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function savecsv")?;
+    match (arg_values.get(1), arg_values.get(2)) {
+        (Some(Value::Ref(object)), Some(ident_list_value)) => {
+            let object_g = rw_lock_read(&**object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    let idents = create_idents(&ident_list_value, "unsupported types for function savecsv")?;
+                    let is_semicolon = match arg_values.get(3) {
+                        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function savecsv"))),
+                        None => false,
+                    };
+                    match File::create(file_name) {
+                        Ok(file) => {
+                            let w = BufWriter::new(file);
+                            let mut csvw = if is_semicolon {
+                                csv::WriterBuilder::new().delimiter(b';').from_writer(w)
+                            } else {
+                                csv::WriterBuilder::new().from_writer(w)
+                            };
+                            match csv_res_write_header(&mut csvw, idents.as_slice()) {
+                                Ok(()) => (),
+                                Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                            }
+                            for elem in elems {
+                                match csv_res_write_record(&mut csvw, elem, idents.as_slice()) {
+                                    Ok(()) => (),
+                                    Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                                }
+                            }
+                            Ok(Value::Bool(true))
+                        },
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function savecsv")))
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function savecsv"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 3 || arg_values.len() > 4 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function savecsvwithouthdr")?;
+    match (arg_values.get(1), arg_values.get(2)) {
+        (Some(Value::Ref(object)), Some(field_count_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let object_g = rw_lock_read(&**object)?;
+            match &*object_g {
+                MutObject::Array(elems) => {
+                    if field_count_value.to_i64() < 0 {
+                        return Err(Error::Interp(String::from("number of fields is negative")));
+                    }
+                    if field_count_value.to_i64() > (isize::MAX as i64) {
+                        return Err(Error::Interp(String::from("too large number of fields")));
+                    }
+                    let field_count = field_count_value.to_i64() as usize;
+                    let is_semicolon = match arg_values.get(3) {
+                        Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function savecsvwithouthdr"))),
+                        None => false,
+                    };
+                    match File::create(file_name) {
+                        Ok(file) => {
+                            let w = BufWriter::new(file);
+                            let mut csvw = if is_semicolon {
+                                csv::WriterBuilder::new().delimiter(b';').from_writer(w)
+                            } else {
+                                csv::WriterBuilder::new().from_writer(w)
+                            };
+                            for elem in elems {
+                                match csv_res_write_record_without_header(&mut csvw, elem, field_count) {
+                                    Ok(()) => (),
+                                    Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("csv"), format!("{}", err))))),
+                                }
+                            }
+                            Ok(Value::Bool(true))
+                        },
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+                    }
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function savecsvwithouthdr")))
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function savecsvwithouthdr"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 /// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
@@ -4424,6 +4719,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("json2str"), json2str);
     add_builtin_fun(root_mod, String::from("str2csv"), str2csv);
     add_builtin_fun(root_mod, String::from("str2csvwithouthdr"), str2csvwithouthdr);
+    add_builtin_fun(root_mod, String::from("csv2str"), csv2str);
+    add_builtin_fun(root_mod, String::from("csv2strwithouthdr"), csv2strwithouthdr);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
@@ -4449,6 +4746,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
     add_builtin_fun(root_mod, String::from("loadcsv"), loadcsv);
     add_builtin_fun(root_mod, String::from("loadcsvwithouthdr"), loadcsvwithouthdr);
+    add_builtin_fun(root_mod, String::from("savecsv"), savecsv);
+    add_builtin_fun(root_mod, String::from("savecsvwithouthdr"), savecsvwithouthdr);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
