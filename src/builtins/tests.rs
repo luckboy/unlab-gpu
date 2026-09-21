@@ -6885,7 +6885,7 @@ false,2,3.5,def
                     expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -6911,7 +6911,7 @@ false;2;3.5;def
                     expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -6942,7 +6942,7 @@ false,2,3.5,def
                 Ok(value) => {
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -6957,7 +6957,7 @@ false;2;3.5;def
                 Ok(value) => {
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -8431,7 +8431,7 @@ false,2,3.5,def
                     expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -8458,7 +8458,7 @@ false;2;3.5;def
                     expected_fields2.insert(String::from("c"), Value::Float(3.5));
                     expected_fields2.insert(String::from("d"), Value::Object(Arc::new(Object::String(String::from("def")))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Struct(expected_fields2))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -8500,7 +8500,7 @@ false,2,3.5,def
                 Ok(value) => {
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
@@ -8516,7 +8516,7 @@ false;2;3.5;def
                 Ok(value) => {
                     let expected_elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc"))))]))));
                     let expected_elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5), Value::Object(Arc::new(Object::String(String::from("def"))))]))));
-                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec!(expected_elem1, expected_elem2)))));
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![expected_elem1, expected_elem2]))));
                     assert_eq!(expected_value, value);
                 },
                 Err(_) => assert!(false),
