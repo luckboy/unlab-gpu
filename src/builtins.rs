@@ -117,7 +117,7 @@ fn csv_res_write_record<W: Write>(w: &mut csv::Writer<W>, value: &Value, idents:
                     for ident in idents {
                         match fields.get(ident) {
                             Some(field) => csv_res_write_field(w, field)?,
-                            None => csv_res_write_field(w, &Value::Object(Arc::new(Object::String(String::new()))))?,
+                            None => w.write_field("")?,
                         }
                     }
                     w.write_record(None::<&[u8]>)
@@ -142,7 +142,7 @@ fn csv_res_write_record_without_header<W: Write>(w: &mut csv::Writer<W>, value: 
                     for i in 0..field_count {
                         match elems.get(i) {
                             Some(elem) => csv_res_write_field(w, elem)?,
-                            None => csv_res_write_field(w, &Value::Object(Arc::new(Object::String(String::new()))))?,
+                            None => w.write_field("")?,
                         }
                     }
                     w.write_record(None::<&[u8]>)
