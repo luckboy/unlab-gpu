@@ -44,7 +44,6 @@ use std::time::Duration;
 use std::time::SystemTime;
 use chrono::DateTime;
 use chrono::Local;
-use chrono::Utc;
 use opener::open_browser;
 use rand::random;
 use rand::random_range;
@@ -3941,23 +3940,28 @@ pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
         (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), None | Some(Value::Bool(false))) => {
-            let millis = millis_value.to_i64();
             match &**fmt_object {
                 Object::String(fmt) => {
-                    let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
-                    let date_time: DateTime<Local> = DateTime::from(sys_time);
-                    Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
+                    let millis = millis_value.to_i64();
+                    match DateTime::from_timestamp_millis(millis) {
+                        Some(utc_date_time) => {
+                            let local_date_time: DateTime<Local> = DateTime::from(utc_date_time);
+                            Ok(Value::Object(Arc::new(Object::String(format!("{}", local_date_time.format(fmt.as_str()))))))
+                        },
+                        None => Ok(Value::None),
+                    }
                 },
                 _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
             }
         },
         (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), Some(Value::Bool(true))) => {
-            let millis = millis_value.to_i64();
             match &**fmt_object {
                 Object::String(fmt) => {
-                    let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
-                    let date_time: DateTime<Utc> = DateTime::from(sys_time);
-                    Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
+                    let millis = millis_value.to_i64();
+                    match DateTime::from_timestamp_millis(millis) {
+                        Some(utc_date_time) => Ok(Value::Object(Arc::new(Object::String(format!("{}", utc_date_time.format(fmt.as_str())))))),
+                        None => Ok(Value::None),
+                    }
                 },
                 _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
             }
