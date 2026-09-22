@@ -7144,6 +7144,69 @@ false;2;3.5;
 }
 
 #[test]
+fn test_strftime_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("strftime")) {
+        Some(fun_value) => {
+            let millis = 1790068368871u64;
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("%Y %b %d %H:%M:%S%.3f %z"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Int(millis as i64)]) {
+                Ok(value) => {
+                   let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis);
+                   let date_time: DateTime<Local> = DateTime::from(sys_time);
+                   let expected_s = format!("{}", date_time.format("%Y %b %d %H:%M:%S%.3f %z"));
+                   assert_eq!(Value::Object(Arc::new(Object::String(expected_s))), value);
+                },
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[arg_value.clone(), Value::Int(millis as i64), Value::Bool(true)]) {
+                Ok(value) => {
+                   let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis);
+                   let date_time: DateTime<Utc> = DateTime::from(sys_time);
+                   let expected_s = format!("{}", date_time.format("%Y %b %d %H:%M:%S%.3f %z"));
+                   assert_eq!(Value::Object(Arc::new(Object::String(expected_s))), value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_strptime_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("strptime")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("2026 Sep 22 11:12:48.871 +0200"))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("%Y %b %d %H:%M:%S%.3f %z"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2.clone()]) {
+                Ok(value) => assert_eq!(Value::Int(1790068368871i64), value),
+                Err(_) => assert!(false),
+            }
+            let arg_value = Value::Object(Arc::new(Object::String(String::from("2026 Sep 22 09:12:48.871 +0000"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => assert_eq!(Value::Int(1790068368871i64), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_barrier_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
@@ -8571,6 +8634,18 @@ fn test_setreadonly_is_applied_with_success()
 }
 
 #[test]
+fn test_fileatime_is_existent()
+{ shared_test_fun_is_existent("fileatime", fileatime); }
+
+#[test]
+fn test_filectime_is_existent()
+{ shared_test_fun_is_existent("filectime", filectime); }
+
+#[test]
+fn test_filemtime_is_existent()
+{ shared_test_fun_is_existent("filemtime", filemtime); }
+
+#[test]
 fn test_pspawn_is_existent()
 { shared_test_fun_is_existent("pspawn", pspawn); }
 
@@ -8858,3 +8933,7 @@ false;2;3.5;
         None => assert!(false),
     }
 }
+
+#[test]
+fn test_time_is_existent()
+{ shared_test_fun_is_existent("time", time); }
