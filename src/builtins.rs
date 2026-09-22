@@ -3948,7 +3948,7 @@ pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                             let local_date_time: DateTime<Local> = DateTime::from(utc_date_time);
                             Ok(Value::Object(Arc::new(Object::String(format!("{}", local_date_time.format(fmt.as_str()))))))
                         },
-                        None => Ok(Value::None),
+                        None => Ok(Value::Object(Arc::new(Object::Error(String::from("datetime"), String::from("millis is too small or too large"))))),
                     }
                 },
                 _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
@@ -3960,7 +3960,7 @@ pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
                     let millis = millis_value.to_i64();
                     match DateTime::from_timestamp_millis(millis) {
                         Some(utc_date_time) => Ok(Value::Object(Arc::new(Object::String(format!("{}", utc_date_time.format(fmt.as_str())))))),
-                        None => Ok(Value::None),
+                        None => Ok(Value::Object(Arc::new(Object::Error(String::from("datetime"), String::from("millis is too small or too large"))))),
                     }
                 },
                 _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
