@@ -41,6 +41,10 @@ use std::sync::Mutex;
 use std::sync::RwLock;
 use std::sync::Weak;
 use std::time::Duration;
+use std::time::SystemTime;
+use chrono::DateTime;
+use chrono::Local;
+use chrono::Utc;
 use opener::open_browser;
 use rand::random;
 use rand::random_range;
@@ -3930,6 +3934,61 @@ pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 2 || arg_values.len() > 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
+       (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), None | Some(Value::Bool(false))) => {
+           let millis = millis_value.to_i64();
+           match &**fmt_object {
+               Object::String(fmt) => {
+                   let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
+                   let date_time: DateTime<Local> = DateTime::from(sys_time);
+                   Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
+               },
+               _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
+           }
+       },
+       (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), Some(Value::Bool(true))) => {
+           let millis = millis_value.to_i64();
+           match &**fmt_object {
+               Object::String(fmt) => {
+                   let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
+                   let date_time: DateTime<Utc> = DateTime::from(sys_time);
+                   Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
+               },
+               _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
+           }
+       },
+       (Some(_), Some(_), _) => Err(Error::Interp(String::from("unsupported types for function strftime"))),
+       (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn strptime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+       (Some(Value::Object(object)), Some(Value::Object(fmt_object))) => {
+           match (&**object, &**fmt_object) {
+               (Object::String(s), Object::String(fmt)) => {
+                   match DateTime::parse_from_str(s.as_str(), fmt.as_str()) {
+                       Ok(date_time) => Ok(Value::Int(date_time.timestamp_millis())),
+                       Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("parsetime"), format!("{}", err))))),
+                   }
+               },
+               (_, _) => Err(Error::Interp(String::from("unsupported types for function strptime"))),
+           }               
+       },
+       (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function strptime"))),
+       (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4352,6 +4411,69 @@ pub fn setreadonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+pub fn fileatime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function fileatime")?;
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => {
+            let atime = match metadata.accessed() {
+                Ok(tmp_atime) => tmp_atime,
+                Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            };
+            match atime.duration_since(SystemTime::UNIX_EPOCH) {
+                Ok(duration) => Ok(Value::Int(duration.as_millis() as i64)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("time"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn filectime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function filectime")?;
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => {
+            let ctime = match metadata.created() {
+                Ok(tmp_ctime) => tmp_ctime,
+                Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            };
+            match ctime.duration_since(SystemTime::UNIX_EPOCH) {
+                Ok(duration) => Ok(Value::Int(duration.as_millis() as i64)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("time"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
+pub fn filemtime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let file_name = get_first_arg_string(arg_values, "unsupported type for function filemtime")?;
+    match fs::metadata(file_name.as_str()) {
+        Ok(metadata) => {
+            let mtime = match metadata.created() {
+                Ok(tmp_mtime) => tmp_mtime,
+                Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            };
+            match mtime.duration_since(SystemTime::UNIX_EPOCH) {
+                Ok(duration) => Ok(Value::Int(duration.as_millis() as i64)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("time"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 {
@@ -4601,6 +4723,18 @@ pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+pub fn time(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 0 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let sys_time = SystemTime::now();
+    match sys_time.duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(duration) => Ok(Value::Int(duration.as_millis() as i64)),
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("time"), format!("{}", err))))),
+    }
+}
+
 /// Adds the built-in function to the root module.
 pub fn add_builtin_fun(root_mod: &mut ModNode<Value, ()>, ident: String, f: fn(&mut Interp, &mut Env, &[Value]) -> Result<Value>)
 { root_mod.add_var(ident.clone(), Value::Object(Arc::new(Object::BuiltinFun(ident, f)))) }
@@ -4797,6 +4931,8 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("str2csvwithouthdr"), str2csvwithouthdr);
     add_builtin_fun(root_mod, String::from("csv2str"), csv2str);
     add_builtin_fun(root_mod, String::from("csv2strwithouthdr"), csv2strwithouthdr);
+    add_builtin_fun(root_mod, String::from("strftime"), strftime);
+    add_builtin_fun(root_mod, String::from("strptime"), strptime);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
     add_builtin_fun(root_mod, String::from("mutex"), mutex);
     add_builtin_fun(root_mod, String::from("monitor"), monitor);
@@ -4819,11 +4955,15 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("filebytes"), filebytes);
     add_builtin_fun(root_mod, String::from("readonly"), readonly);
     add_builtin_fun(root_mod, String::from("setreadonly"), setreadonly);
+    add_builtin_fun(root_mod, String::from("fileatime"), fileatime);
+    add_builtin_fun(root_mod, String::from("filectime"), filectime);
+    add_builtin_fun(root_mod, String::from("filemtime"), filemtime);
     add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
     add_builtin_fun(root_mod, String::from("loadcsv"), loadcsv);
     add_builtin_fun(root_mod, String::from("loadcsvwithouthdr"), loadcsvwithouthdr);
     add_builtin_fun(root_mod, String::from("savecsv"), savecsv);
     add_builtin_fun(root_mod, String::from("savecsvwithouthdr"), savecsvwithouthdr);
+    add_builtin_fun(root_mod, String::from("time"), time);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);
     add_builtin_fun(root_mod, String::from("getoptsusage"), getoptsusage);
