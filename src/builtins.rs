@@ -3940,30 +3940,30 @@ pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
-       (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), None | Some(Value::Bool(false))) => {
-           let millis = millis_value.to_i64();
-           match &**fmt_object {
-               Object::String(fmt) => {
-                   let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
-                   let date_time: DateTime<Local> = DateTime::from(sys_time);
-                   Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
-               },
-               _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
-           }
-       },
-       (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), Some(Value::Bool(true))) => {
-           let millis = millis_value.to_i64();
-           match &**fmt_object {
-               Object::String(fmt) => {
-                   let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
-                   let date_time: DateTime<Utc> = DateTime::from(sys_time);
-                   Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
-               },
-               _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
-           }
-       },
-       (Some(_), Some(_), _) => Err(Error::Interp(String::from("unsupported types for function strftime"))),
-       (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+        (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), None | Some(Value::Bool(false))) => {
+            let millis = millis_value.to_i64();
+            match &**fmt_object {
+                Object::String(fmt) => {
+                    let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
+                    let date_time: DateTime<Local> = DateTime::from(sys_time);
+                    Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
+            }
+        },
+        (Some(Value::Object(fmt_object)), Some(millis_value @ (Value::Int(_) | Value::Float(_))), Some(Value::Bool(true))) => {
+            let millis = millis_value.to_i64();
+            match &**fmt_object {
+                Object::String(fmt) => {
+                    let sys_time = SystemTime::UNIX_EPOCH + Duration::from_millis(millis as u64);
+                    let date_time: DateTime<Utc> = DateTime::from(sys_time);
+                    Ok(Value::Object(Arc::new(Object::String(format!("{}", date_time.format(fmt.as_str()))))))
+                },
+                _ => Err(Error::Interp(String::from("unsupported types for function strftime"))),
+            }
+        },
+        (Some(_), Some(_), _) => Err(Error::Interp(String::from("unsupported types for function strftime"))),
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
@@ -3973,19 +3973,19 @@ pub fn strptime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
     match (arg_values.get(0), arg_values.get(1)) {
-       (Some(Value::Object(object)), Some(Value::Object(fmt_object))) => {
-           match (&**object, &**fmt_object) {
-               (Object::String(s), Object::String(fmt)) => {
-                   match DateTime::parse_from_str(s.as_str(), fmt.as_str()) {
-                       Ok(date_time) => Ok(Value::Int(date_time.timestamp_millis())),
-                       Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("parsetime"), format!("{}", err))))),
-                   }
-               },
-               (_, _) => Err(Error::Interp(String::from("unsupported types for function strptime"))),
-           }               
-       },
-       (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function strptime"))),
-       (_, _) => Err(Error::Interp(String::from("no argument"))),
+        (Some(Value::Object(object)), Some(Value::Object(fmt_object))) => {
+            match (&**object, &**fmt_object) {
+                (Object::String(s), Object::String(fmt)) => {
+                    match DateTime::parse_from_str(s.as_str(), fmt.as_str()) {
+                        Ok(date_time) => Ok(Value::Int(date_time.timestamp_millis())),
+                        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("parsetime"), format!("{}", err))))),
+                    }
+                },
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function strptime"))),
+            }               
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function strptime"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
 
