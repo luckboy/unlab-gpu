@@ -1301,8 +1301,9 @@ impl Value
                 }
             },
             Value::FloatBox(a) => {
+                let new_indent = indent + 4;
                 write!(f, "floatbox(")?;
-                Value::Float(*a).fmt_with_indent(f, indent, is_width)?;
+                Value::Float(*a).fmt_with_indent(f, new_indent, is_width)?;
                 write!(f, ")")?;
             }
             Value::UserObject(_) => write!(f, "userobject(...)")?,
