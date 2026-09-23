@@ -60,7 +60,7 @@ pub struct BackendConfig
     pub device: Option<usize>,
     /// If this field is `true`, the CUDA backend uses the cuBLAS library.
     pub cublas: Option<bool>,
-    /// If this field is `true`, the CUDA backend uses the mma instruction.
+    /// If this field is `true`, the CUDA backend uses the mma instruction (ignored).
     pub mma: Option<bool>,
     /// If this field is `true`, the CUDA backend uses the mudule in PTX.
     pub ptx: Option<bool>,

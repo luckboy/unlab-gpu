@@ -21,6 +21,16 @@ use crate::value::Value;
 ///
 /// The synchrozization object can be used to synchronization of threads. These threads can use
 /// this object to synchronization, notifying about, sending messages, and receiving messages.
+/// The synchronization object can be:
+///
+/// - barrier
+/// - mutex
+/// - monitor
+/// - reader-writer lock
+/// - channel
+///
+/// Methods of the synchronization object return an error if the synchronization object has an
+/// unexpected kind for the specified method.
 #[derive(Debug)]
 pub enum SyncObject
 {
