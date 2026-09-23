@@ -4608,6 +4608,33 @@ pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `fileappend` built-in function.
+pub fn fileappend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    let (file_name, str_value) = match (arg_values.get(0), arg_values.get(1)) {
+        (Some(file_name_value), Some(str_value)) => {
+            match file_name_value.to_opt_string() {
+                Some(tmp_file_name) => (tmp_file_name, str_value.clone()),
+                None => return Err(Error::Interp(String::from("unsupported type for function fileappend"))),
+            }
+        },
+        (_, _) => return Err(Error::Interp(String::from("no argument"))),
+    };
+    match File::options().create(true).append(true).open(file_name.as_str()) {
+        Ok(file) => {
+            let mut w = BufWriter::new(file);
+            match write!(&mut w, "{}", str_value) {
+                Ok(()) => Ok(Value::Bool(true)),
+                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+            }
+        },
+        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
+    }
+}
+
 /// A `loadcsv` built-in function.
 pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -4636,33 +4663,6 @@ pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
                 }
             }
             Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
-        },
-        Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
-    }
-}
-
-/// A `fileappend` built-in function.
-pub fn fileappend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{
-    if arg_values.len() != 2 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    let (file_name, str_value) = match (arg_values.get(0), arg_values.get(1)) {
-        (Some(file_name_value), Some(str_value)) => {
-            match file_name_value.to_opt_string() {
-                Some(tmp_file_name) => (tmp_file_name, str_value.clone()),
-                None => return Err(Error::Interp(String::from("unsupported type for function fileappend"))),
-            }
-        },
-        (_, _) => return Err(Error::Interp(String::from("no argument"))),
-    };
-    match File::options().create(true).append(true).open(file_name.as_str()) {
-        Ok(file) => {
-            let mut w = BufWriter::new(file);
-            match write!(&mut w, "{}", str_value) {
-                Ok(()) => Ok(Value::Bool(true)),
-                Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
-            }
         },
         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
     }
