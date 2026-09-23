@@ -126,7 +126,7 @@ pub fn condvar_wait<'a, T>(condvar: &Condvar, guard: MutexGuard<'a, T>) -> Resul
     }
 }
 
-/// Waits for a notification utnil timout.
+/// Waits for a notification until timeout.
 pub fn condvar_wait_timeout<'a, T>(condvar: &Condvar, guard: MutexGuard<'a, T>, duration: Duration) -> Result<(MutexGuard<'a, T>, WaitTimeoutResult)>
 {
     match condvar.wait_timeout(guard, duration) {
