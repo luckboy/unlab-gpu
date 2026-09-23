@@ -3509,6 +3509,7 @@ pub fn tests(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
 // Built-in functions since version 0.2.0.
 //
 
+/// A `functionkind` built-in function.
 pub fn functionkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3529,9 +3530,11 @@ pub fn functionkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
     }
 }
 
+/// A `floatbox` built-in function.
 pub fn floatbox(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::FloatBox(a.to_f32()))) }
 
+/// A `bytes` built-in function.
 pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3549,6 +3552,7 @@ pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `splitre` built-in function.
 pub fn splitre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -3574,7 +3578,7 @@ pub fn splitre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
-
+/// A `containsre` built-in function.
 pub fn containsre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -3598,6 +3602,7 @@ pub fn containsre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) ->
     }
 }
 
+/// A `replacere` built-in function.
 pub fn replacere(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -3621,6 +3626,7 @@ pub fn replacere(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `fold` built-in function.
 pub fn fold(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 4 {
@@ -3647,6 +3653,7 @@ pub fn fold(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     }
 }
 
+/// A `map` built-in function.
 pub fn map(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -3673,6 +3680,7 @@ pub fn map(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// A `str2toml` built-in function.
 pub fn str2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3695,6 +3703,7 @@ pub fn str2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `toml2str` built-in function.
 pub fn toml2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3711,6 +3720,7 @@ pub fn toml2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `str2json` built-in function.
 pub fn str2json(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3733,6 +3743,7 @@ pub fn str2json(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `json2str` built-in function.
 pub fn json2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3749,6 +3760,7 @@ pub fn json2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `str2csv` built-in function.
 pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -3786,6 +3798,7 @@ pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `str2csvwithouthdr` built-in function.
 pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -3837,6 +3850,7 @@ fn create_idents(value: &Value, err_msg: &str) -> Result<Vec<String>>
     }
 }
 
+/// A `csv2str` built-in function.
 pub fn csv2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 || arg_values.len() > 3 {
@@ -3884,6 +3898,7 @@ pub fn csv2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `csv2strwithouthdr` built-in function.
 pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 || arg_values.len() > 3 {
@@ -3933,6 +3948,7 @@ pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+/// A `strftime` built-in function.
 pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 || arg_values.len() > 3 {
@@ -3971,6 +3987,7 @@ pub fn strftime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `strptime` built-in function.
 pub fn strptime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -3993,6 +4010,7 @@ pub fn strptime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `barrier` built-in function.
 pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4014,6 +4032,7 @@ pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `mutex` built-in function.
 pub fn mutex(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4025,6 +4044,7 @@ pub fn mutex(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `monitor` built-in function.
 pub fn monitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4036,6 +4056,7 @@ pub fn monitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `rwlock` built-in function.
 pub fn rwlock(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4047,6 +4068,7 @@ pub fn rwlock(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `channel` built-in function.
 pub fn channel(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {
@@ -4104,6 +4126,7 @@ fn set_value_and_return_bool(ret_value: Value, value: &mut Value) -> Result<bool
     }
 }
 
+/// A `barrierwait` built-in function.
 pub fn barrierwait(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4115,6 +4138,7 @@ pub fn barrierwait(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `lock` built-in function.
 pub fn lock(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -4131,6 +4155,7 @@ pub fn lock(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<
     }
 }
 
+/// A `lockwait` built-in function.
 pub fn lockwait(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 5 {
@@ -4151,6 +4176,7 @@ pub fn lockwait(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `lockwaittimeout` built-in function.
 pub fn lockwaittimeout(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 6 {
@@ -4176,6 +4202,7 @@ pub fn lockwaittimeout(interp: &mut Interp, env: &mut Env, arg_values: &[Value])
     }
 }
 
+/// A `locknotifyone` built-in function.
 pub fn locknotifyone(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -4192,6 +4219,7 @@ pub fn locknotifyone(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `locknotifyall` built-in function.
 pub fn locknotifyall(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -4208,6 +4236,7 @@ pub fn locknotifyall(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `rwlockread` built-in function.
 pub fn rwlockread(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -4225,6 +4254,7 @@ pub fn rwlockread(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `rwlockwrite` built-in function.
 pub fn rwlockwrite(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 3 {
@@ -4241,6 +4271,7 @@ pub fn rwlockwrite(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `recv` built-in function.
 pub fn recv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4252,6 +4283,7 @@ pub fn recv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `recvtimeout` built-in function.
 pub fn recvtimeout(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -4273,6 +4305,7 @@ pub fn recvtimeout(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `send` built-in function.
 pub fn send(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -4287,6 +4320,7 @@ pub fn send(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `thread` built-in function.
 pub fn thread(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -4330,6 +4364,7 @@ pub fn thread(_interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `threadjoin` built-in function.
 pub fn threadjoin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4348,6 +4383,7 @@ pub fn threadjoin(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) ->
     }
 }
 
+/// A `sleep` built-in function.
 pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4367,6 +4403,7 @@ pub fn sleep(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `filebytes` built-in function.
 pub fn filebytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4379,6 +4416,7 @@ pub fn filebytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `readonly` built-in function.
 pub fn readonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4391,6 +4429,7 @@ pub fn readonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
 }
 
+/// A `setreadonly` built-in function.
 pub fn setreadonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -4415,6 +4454,7 @@ pub fn setreadonly(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -
     }
 }
 
+/// A `fileatime` built-in function.
 pub fn fileatime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4436,6 +4476,7 @@ pub fn fileatime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `filectime` built-in function.
 pub fn filectime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4457,6 +4498,7 @@ pub fn filectime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `filemtime` built-in function.
 pub fn filemtime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -4478,6 +4520,7 @@ pub fn filemtime(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
     }
 }
 
+/// A `pspawn` built-in function.
 pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 {
@@ -4565,6 +4608,7 @@ pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `loadcsv` built-in function.
 pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -4597,6 +4641,7 @@ pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `fileappend` built-in function.
 pub fn fileappend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -4623,6 +4668,7 @@ pub fn fileappend(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) ->
     }
 }
 
+/// A `loadcsvwithouthdr` built-in function.
 pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
@@ -4655,6 +4701,7 @@ pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+/// A `savecsv` built-in function.
 pub fn savecsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 3 || arg_values.len() > 4 {
@@ -4703,6 +4750,7 @@ pub fn savecsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
+/// A `savecsvwithouthdr` built-in function.
 pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 3 || arg_values.len() > 4 {
@@ -4753,6 +4801,7 @@ pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
     }
 }
 
+/// A `time` built-in function.
 pub fn time(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 0 {

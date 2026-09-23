@@ -1093,6 +1093,9 @@ impl Value
         }
     }
 
+    /// Returns the synchronization object.
+    ///
+    /// If the value hasn't the synchronization object, this method returns an error.
     pub fn sync(&self) -> Result<&SyncObject>
     {
         match self {
@@ -1105,7 +1108,10 @@ impl Value
             _ => Err(Error::Interp(String::from("unsupported type for synchronization"))),
         }
     }
-    
+
+    /// Waits for the thread.
+    ///
+    /// If the value isn't a join handle, this method returns an error.
     pub fn join(&self) -> Result<Option<Value>>
     {
         match self {

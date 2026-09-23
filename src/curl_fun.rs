@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
+//! A cURL module.
 use std::fs;
 use std::fs::File;
 use std::fs::remove_file;
@@ -574,6 +575,7 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
     Ok((header, content, byte_counts))
 }
 
+/// A `curl` built-in function.
 pub fn curl_fun(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 && arg_values.len() > 2 {
