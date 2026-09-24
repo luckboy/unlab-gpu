@@ -214,6 +214,10 @@ Synchronization object kinds are:
 - reader-writer lock
 - channel
 
+A mutex, a monitor, or a reader-writer lock contains other value that is protected.
+
+A join handle is an object that is created while a thread creation and allows to wait for the thread.
+
 ### Mutable objects
 
 Mutable object types are:
