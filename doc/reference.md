@@ -194,6 +194,8 @@ Immutable object types are:
 - matrix row slice
 - error
 - window identifier
+- synchronization object
+- join handle
 
 Function kinds are:
 
@@ -203,6 +205,14 @@ Function kinds are:
 - user function
 
 The user functions allow user to create own functions in other programming language.
+
+Synchronization object kinds are:
+
+- barrier
+- mutex
+- monitor
+- reader-writer lock
+- channel
 
 ### Mutable objects
 
@@ -234,6 +244,8 @@ Value types and object types with properties are:
 | matrix row slice          | iterable, indexable | number     | floating-point number | `true`     |
 | error                     |                     |            |                       | `false`    |
 | window identifier         |                     |            |                       | `true`     |
+| synchronization object    |                     |            |                       | `true`     |
+| join handle               |                     |            |                       | `true`     |
 | array                     | iterable, indexable | number     | any value             | `true`     |
 | structure                 | indexable           | string     | any value             | `true`     |
 | floating-point number box |                     |            |                       | `a != 0.0` |
