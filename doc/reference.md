@@ -723,7 +723,7 @@ The syntax of lambda literal is:
     arguments = [argument, {",", argument}, [","]];
     argument = identifier
 
-The lambda literal allows to use lambda expressions. The lambda expression creates named function.
+The lambda literal allows to use lambda expressions. The lambda expression creates unnamed function.
 The unnamed function hasn't a closure that contains local variables outside the unnamed function.
 
 ## Name
