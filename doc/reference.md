@@ -175,6 +175,7 @@ Value types are:
 - reference to immutable object
 - strong reference to mutable object
 - weak reference to mutable object
+- floating-point number box
 - reference to immutable user object
 - reference to mutable user object
 
@@ -235,6 +236,7 @@ Value types and object types with properties are:
 | window identifier         |                     |            |                       | `true`     |
 | array                     | iterable, indexable | number     | any value             | `true`     |
 | structure                 | indexable           | string     | any value             | `true`     |
+| floating-point number box |                     |            |                       | `a != 0.0` |
 | immutable user object     |                     |            |                       | `true`     |
 | mutable user object       |                     |            |                       | `true`     |
 
