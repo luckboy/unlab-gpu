@@ -692,7 +692,7 @@ the filled matrix or the number of columns for the filled matrix row. Each eleme
 must be a number that is converted to floating-point number. If this element isn't a number, an error
 occurs.
 
-### Array literal
+### Array literals
 
 The syntax of array literal is:
 
@@ -705,7 +705,7 @@ The array can also be filled with the filling expression by the `fill` keyword. 
 is separately evaluated for each element. The expression after the `fill` keyword specifies the number
 of elements.
 
-### Structure literal
+### Structure literals
 
 The syntax of structure literal is:
 
@@ -715,11 +715,11 @@ The syntax of structure literal is:
 
 The field with same identifier can only be defined once in same structure.
 
-### Lambda literal
+### Lambda literals
 
 The syntax of lambda literal is:
 
-    lambda literal = "@", "(", arguments, ")", "{", statements, "}";
+    lambda literal = "@", "(", arguments, ")", (expression | "{", statements, "}");
     arguments = [argument, {",", argument}, [","]];
     argument = identifier
 
