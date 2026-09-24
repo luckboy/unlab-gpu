@@ -647,8 +647,8 @@ The syntax of none literal is:
 
 The syntax of none literal is:
 
-    none literal = "false"
-                 | "true";
+    boolean literal = "false"
+                    | "true";
 
 ### Integer literals
 
@@ -658,7 +658,7 @@ The syntax of integer literal is:
 
 ### Floating-point literals
 
-The syntax of float-point literal is:
+The syntax of floating-point literal is:
 
     float number literal = float
                          | "inf"
