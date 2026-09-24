@@ -76,7 +76,8 @@ The lexical definition of punctuation tokens is:
                 | "."
                 | ":"
                 | "::"
-                | ",";
+                | ","
+                | "@";
 
 A punctuation token is operator or separator.
 
@@ -174,6 +175,8 @@ Value types are:
 - reference to immutable object
 - strong reference to mutable object
 - weak reference to mutable object
+- reference to immutable user object
+- reference to mutable user object
 
 The integer numbers are 64-bit and floating-point numbers are 32-bit.
 
@@ -191,12 +194,25 @@ Immutable object types are:
 - error
 - window identifier
 
+Function kinds are:
+
+- named function
+- built-in function
+- unnamed function
+- user function
+
+The user functions allow user to create own functions in other programming language.
+
 ### Mutable objects
 
 Mutable object types are:
 
 - array
 - structure
+
+### User objects
+
+The user objects allow user to create own objects in other programming language.
 
 ### Value properties
 
@@ -219,6 +235,8 @@ Value types and object types with properties are:
 | window identifier         |                     |            |                       | `true`     |
 | array                     | iterable, indexable | number     | any value             | `true`     |
 | structure                 | indexable           | string     | any value             | `true`     |
+| immutable user object     |                     |            |                       | `true`     |
+| mutable user object       |                     |            |                       | `true`     |
 
 Strong references only have the properties for the mutable objects.
 
@@ -487,7 +505,7 @@ structure. Two operands can't be a matrix and an array or a structure. If the op
 number, the operand is converted to a floating-point number and then there performs the
 operation.
 
-The comparison operator except the `==` operator and the `!=` operator comperes the boolean value to
+The comparison operator except the `==` operator and the `!=` operator compares the boolean value to
 the boolean value, the number to the number, the string to the string.
 
 The `==` operator comperes two values. The result of this operator is `true` if two values are equal,
@@ -499,6 +517,10 @@ otherwise `true`.
 The `==` operator and the `!=` operator don't compare two matrices. The result of these operators is
 `false` for the `==` operator or `true` for the `!=` operator if two values are matrices which aren't
 same object. These operators don't compare value types for integer numbers and floating-point numbers.
+
+The `==` operator returns `true` and the `!=` operator returns `false` for two same user functions
+or two same user objects. If two user function or two user objects are different, the `==` operator
+returns `false` and the `!=` operator returns `true`.
 
 ### Expressions of logical operators
 
@@ -594,7 +616,8 @@ The syntax of literal is:
             | string literal
             | matrix literal
             | array literal
-            | structure literal;
+            | structure literal
+            | lambda literal;
 
 ### None literals
 
@@ -673,6 +696,17 @@ The syntax of structure literal is:
     field pair = identifier, ":", expression;
 
 The field with same identifier can only be defined once in same structure.
+
+### Lambda literal
+
+The syntax of lambda literal is:
+
+    lambda literal = "@", "(", arguments, ")", "{", statements, "}";
+    arguments = [argument, {",", argument}, [","]];
+    argument = identifier
+
+The lambda literal allows to use lambda expressions. The lambda expression creates named function.
+The unnamed function hasn't a closure that contains local variables outside the unnamed function.
 
 ## Name
 
