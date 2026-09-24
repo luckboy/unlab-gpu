@@ -518,9 +518,9 @@ The `==` operator and the `!=` operator don't compare two matrices. The result o
 `false` for the `==` operator or `true` for the `!=` operator if two values are matrices which aren't
 same object. These operators don't compare value types for integer numbers and floating-point numbers.
 
-The `==` operator returns `true` and the `!=` operator returns `false` for two same user functions
-or two same user objects. If two user function or two user objects are different, the `==` operator
-returns `false` and the `!=` operator returns `true`.
+The `==` operator returns `true` and the `!=` operator returns `false` for two user functions or two
+user objects are same object. If two user functions or two user objects are different objects, the
+`==` operator returns `false` and the `!=` operator returns `true`.
 
 ### Expressions of logical operators
 
