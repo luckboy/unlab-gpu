@@ -80,15 +80,15 @@ pub enum Value
     Bool(bool),
     /// An integer number.
     Int(i64),
-    /// Floating-point number.
+    /// A floating-point number.
     Float(f32),
-    /// An immutablke object.
+    /// An immutable object.
     Object(Arc<Object>),
     /// A strong reference to a mutable object.
     Ref(Arc<RwLock<MutObject>>),
     /// A weak reference to a mutable object.
     Weak(Weak<RwLock<MutObject>>),
-    /// A box of floating-point number.
+    /// A floating-point number box.
     FloatBox(f32),
     /// An immutable user object.
     UserObject(UserObject),
