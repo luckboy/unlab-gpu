@@ -719,7 +719,7 @@ The field with same identifier can only be defined once in same structure.
 
 The syntax of lambda literal is:
 
-    lambda literal = "@", "(", arguments, ")", (expression | "{", statements, "}");
+    lambda literal = "@", "(", arguments, ")", ("{", statements, "}" | expression);
     arguments = [argument, {",", argument}, [","]];
     argument = identifier
 
