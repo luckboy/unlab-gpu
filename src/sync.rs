@@ -21,7 +21,7 @@ use crate::value::Value;
 ///
 /// The synchrozization object can be used to synchronization of threads. These threads can use
 /// this object to synchronization, notifying about, sending messages, and receiving messages.
-/// The synchronization object can be:
+/// This synchronization object can be:
 ///
 /// - barrier
 /// - mutex
@@ -83,7 +83,7 @@ impl SyncObject
     /// Locks the monitor and waits for a notification.
     ///
     /// This methods locks the monitor and then applies the first function. If the first function
-    /// returns `true`, this method waits for the notification. This method applies the second
+    /// returns `true`, this method waits for the notification and then applies the second
     /// function. Waiting for the notification is repeated if the second function returns `true`.
     /// The third is applied and then the monitor is unlocked if the first function or the second
     /// function returns `false`. All functions take the data and a mutable reference to the 
@@ -114,10 +114,10 @@ impl SyncObject
     /// Locks the monitor and waits for a notification until timeout.
     ///
     /// This method locks the monitor and then applies the first function. If the first function
-    /// returns `true`, this method wait for the notification until timeout. This method applies
-    /// the second function. Waiting for the notification is repeated if the second function
-    /// returns `true`. The third function and then the monitor is unlocked if first function or
-    /// the second function returns `true`. The second function takes the flag that is set if a
+    /// returns `true`, this method wait for the notification until timeout and then applies the
+    /// second function. Waiting for the notification is repeated if the second function returns
+    /// `true`. The third function and then the monitor is unlocked if first function or the
+    /// second function returns `true`. The second function takes the flag that is set if a
     /// timeout occurs. All functions take the data and a mutable reference to the monitor value.
     /// If an error occurs, this method automatically unlocks the monitor.
     pub fn lock_and_wait_timeout<T, F, G, H>(&self, duration: Duration, data: &mut T, f: F, mut g: G, h: H) -> Result<()>
