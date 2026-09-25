@@ -6820,10 +6820,7 @@ fn test_reduce_is_applied_with_success()
                 Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| Ok(&arg_values[1] + &arg_values[2] * &arg_values[0])))))]);
             match res {
                 Ok(value) => assert_eq!(Value::Int(19), value),
-                Err(err) => {
-                    println!("{}", err);
-                    assert!(false)
-                },
+                Err(_) => assert!(false),
             }
             let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
             let res = fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(2), 
