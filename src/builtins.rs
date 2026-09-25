@@ -3680,6 +3680,37 @@ pub fn map(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<V
     }
 }
 
+/// A `reduce` built-in function.
+pub fn reduce(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 3 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(2), arg_values.get(3)) {
+        (Some(a_value), Some(data_value), Some(fun_value)) => {
+            match a_value.iter()? {
+                Some(mut iter) => {
+                    let mut x_value = match iter.next() {
+                        Some(Ok(first_elem)) => first_elem,
+                        Some(Err(err)) => return Err(err),
+                        None => return Ok(Value::None),
+                    };
+                    loop {
+                        match iter.next() {
+                            Some(Ok(elem)) => x_value = fun_value.apply(interp, env, &[data_value.clone(), x_value, elem])?,
+                            Some(Err(err)) => return Err(err),
+                            None => break,
+                        }
+                    }
+                    Ok(x_value)
+                },
+                None => Err(Error::Interp(String::from("value isn't iterable"))),
+            }
+        },
+        (_, _, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 /// A `str2toml` built-in function.
 pub fn str2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -5002,6 +5033,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("replacere"), replacere);
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
+    add_builtin_fun(root_mod, String::from("reduce"), reduce);
     add_builtin_fun(root_mod, String::from("str2toml"), str2toml);
     add_builtin_fun(root_mod, String::from("toml2str"), toml2str);
     add_builtin_fun(root_mod, String::from("str2json"), str2json);
