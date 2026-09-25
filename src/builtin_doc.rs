@@ -165,12 +165,11 @@ Returns a copy of the `X` object.
 
 If the `X` object isn't a mutable object, this function returns the `X` object.
 "#;
-    sig_root_mod.add_var(String::from("bool"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("clone"), Sig::BuiltinFun(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
-    doc_root_mod.add_var(String::from("bool"), String::from(&doc[1..]));
-    
-    
+    doc_root_mod.add_var(String::from("clone"), String::from(&doc[1..]));
+        
     let doc = r#"
 Converts the `X` value to a boolean value.
 
@@ -449,14 +448,6 @@ If the `t` string isn't passed, this function uses whitespaces as a separator.
         BuiltinFunArg::OptArg(String::from("t"))
     ]));
     doc_root_mod.add_var(String::from("split"), String::from(&doc[1..]));
-
-    let doc = r#"
-Returns the `s` string without the start whitespaces and the end whitespaces.
-"#;
-    sig_root_mod.add_var(String::from("trim"), Sig::BuiltinFun(vec![
-        BuiltinFunArg::Arg(String::from("s"))
-    ]));
-    doc_root_mod.add_var(String::from("trim"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the `s` string without the start whitespaces and the end whitespaces.
