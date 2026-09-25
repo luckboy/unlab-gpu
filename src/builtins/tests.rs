@@ -6834,7 +6834,6 @@ fn test_reduce_is_applied_with_success()
     }
 }
 
-
 #[test]
 fn test_str2toml_is_applied_with_success()
 {
