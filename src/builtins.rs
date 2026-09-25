@@ -3686,7 +3686,7 @@ pub fn reduce(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     if arg_values.len() != 3 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    match (arg_values.get(0), arg_values.get(2), arg_values.get(3)) {
+    match (arg_values.get(0), arg_values.get(1), arg_values.get(2)) {
         (Some(a_value), Some(data_value), Some(fun_value)) => {
             match a_value.iter()? {
                 Some(mut iter) => {

@@ -6805,6 +6805,40 @@ fn test_map_is_applied_with_success()
 }
 
 #[test]
+fn test_reduce_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("reduce")) {
+        Some(fun_value) => {
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3), Value::Int(4)]))));
+            let res = fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(2), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| Ok(&arg_values[1] + &arg_values[2] * &arg_values[0])))))]);
+            match res {
+                Ok(value) => assert_eq!(Value::Int(19), value),
+                Err(err) => {
+                    println!("{}", err);
+                    assert!(false)
+                },
+            }
+            let arg_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(Vec::new()))));
+            let res = fun_value.apply(&mut interp, &mut env, &[arg_value, Value::Int(2), 
+                Value::Object(Arc::new(Object::UserFun(UserFun::new(move |_, _, arg_values| Ok(&arg_values[1] + &arg_values[2] * &arg_values[0])))))]);
+            match res {
+                Ok(value) => assert_eq!(Value::None, value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+
+#[test]
 fn test_str2toml_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
