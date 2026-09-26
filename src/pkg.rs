@@ -2613,7 +2613,7 @@ impl PkgManager
                                     src.update()?;
                                 }
                                 let versions = src.versions()?;
-                                let old_dependants = if old_version.is_some() {
+                                let old_dependents = if old_version.is_some() {
                                     let mut old_dependents_file = data.pkg_info_dir(name);
                                     old_dependents_file.push("dependents.toml");
                                     load_version_reqs(old_dependents_file)?
@@ -2621,7 +2621,7 @@ impl PkgManager
                                     HashMap::new()
                                 };
                                 let mut tmp_new_version: Option<Version> = None; 
-                                for old_version_req in old_dependants.values() {
+                                for old_version_req in old_dependents.values() {
                                     let max_version = max_pkg_version(&versions, Some(old_version_req), data.constraints.get(name), data.locks.get(name));
                                     match &max_version {
                                         Some(max_version) => {
