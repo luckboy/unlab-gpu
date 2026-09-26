@@ -88,10 +88,13 @@ pub enum BuiltinFunArg
     DotDotDot,
 }
 
+/// An enumeration of function arguments.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum SigArgs<'a>
 {
+    /// Function arguments
     Fun(&'a [String]),
+    /// Built-in function arguments.
     BuiltinFun(&'a [BuiltinFunArg]),
 }
 
@@ -121,6 +124,8 @@ pub enum Sig
 
 impl Sig
 {
+    /// Returns the function arguments if the signature is a function signature, otherwise
+    /// `None`.
     pub fn args(&self) -> Option<SigArgs<'_>>
     {
         match self {
@@ -134,6 +139,8 @@ impl Sig
         }
     }
     
+    /// Returns the version from which the variable or the function is available if this version
+    /// is specified in the signature, otherwise `None`.
     pub fn since(&self) -> Option<&str>
     {
         match self {
