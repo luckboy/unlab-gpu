@@ -68,7 +68,7 @@ push(opts, .[ "g", "ghi", "Ghi option" .])
 println(getopts(opts, .[ "-a", "--def", "file.txt" .])?)
 ```
 "#;
-    sig_root_mod.add_var(String::from("getopts"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("getopts"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("opts")),
         BuiltinFunArg::OptArg(String::from("args"))
     ]));
@@ -87,7 +87,7 @@ push(opts, .[ "g", "ghi", "Ghi option" .])
 println(getoptsusage(opts, "Usage: program [options]"))
 ```
 "#;
-    sig_root_mod.add_var(String::from("getoptsusage"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("getoptsusage"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("opts")),
         BuiltinFunArg::Arg(String::from("brief"))
     ]));

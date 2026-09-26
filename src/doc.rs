@@ -88,6 +88,13 @@ pub enum BuiltinFunArg
     DotDotDot,
 }
 
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum SigArgs<'a>
+{
+    Fun(&'a [String]),
+    BuiltinFun(&'a [BuiltinFunArg]),
+}
+
 /// A signature structure.
 ///
 /// The signature specifies whether a variable is a normal variable, a function, or a built-in
@@ -98,10 +105,47 @@ pub enum Sig
 {
     /// A normal variable.
     Var,
+    /// A normal variable since the first version.
+    VarSinceFirst,
+    /// A normal variable since a version.
+    VarSince(String),
     /// A function.
     Fun(Vec<String>),
     /// A built-in function.
     BuiltinFun(Vec<BuiltinFunArg>),
+    /// A built-in function since the first version.
+    BuiltinFunSinceFirst(Vec<BuiltinFunArg>),
+    /// A built-in function since a version.
+    BuiltinFunSince(Vec<BuiltinFunArg>, String),
+}
+
+impl Sig
+{
+    pub fn args(&self) -> Option<SigArgs<'_>>
+    {
+        match self {
+            Sig::Var => None,
+            Sig::VarSinceFirst => None,
+            Sig::VarSince(_) => None,
+            Sig::Fun(args) => Some(SigArgs::Fun(args.as_slice())),
+            Sig::BuiltinFun(args) => Some(SigArgs::BuiltinFun(args.as_slice())),
+            Sig::BuiltinFunSinceFirst(args) => Some(SigArgs::BuiltinFun(args.as_slice())),
+            Sig::BuiltinFunSince(args, _) => Some(SigArgs::BuiltinFun(args.as_slice())),
+        }
+    }
+    
+    pub fn since(&self) -> Option<&str>
+    {
+        match self {
+            Sig::Var => None,
+            Sig::VarSinceFirst => Some("0.1.0"),
+            Sig::VarSince(version) => Some(version.as_str()),
+            Sig::Fun(_) => None,
+            Sig::BuiltinFun(_) => None,
+            Sig::BuiltinFunSinceFirst(_) => Some("0.1.0"),
+            Sig::BuiltinFunSince(_, version) => Some(version.as_str()),
+        }
+    }
 }
 
 /// A structure of documentation tree.
@@ -486,15 +530,18 @@ impl DocGen
     fn ident_and_sig_to_html(ident: &str, sig: &Sig) -> String
     {
         let mut html = String::new();
+        match sig.since() {
+            Some(version) => html.push_str(format!("<span class=\"version\">Since {}</span>", version).as_str()),
+            None => (),
+        }
         html.push_str("<h3 class=\"sig\">");
-        match sig {
-            Sig::Var => (),
-            Sig::Fun(_) | Sig::BuiltinFun(_) => html.push_str("<span class=\"keyword\">function</span> "),
+        match sig.args() {
+            Some(SigArgs::Fun(_) | SigArgs::BuiltinFun(_)) => html.push_str("<span class=\"keyword\">function</span> "),
+            None => (),
         }
         html.push_str(format!("<a href=\"#var.{}\" class=\"var\">{}</a>", ident, ident).as_str());
-        match sig {
-            Sig::Var => (),
-            Sig::Fun(args) => {
+        match sig.args() {
+            Some(SigArgs::Fun(args)) => {
                 html.push('(');
                 let mut is_first = true;
                 for arg in args {
@@ -506,7 +553,7 @@ impl DocGen
                 }
                 html.push(')');
             },
-            Sig::BuiltinFun(args) => {
+            Some(SigArgs::BuiltinFun(args)) => {
                 html.push('(');
                 let mut is_first = true;
                 for arg in args {
@@ -522,6 +569,7 @@ impl DocGen
                 }
                 html.push(')');
             },
+            None => (),
         }
         html.push_str("</h3>");
         html

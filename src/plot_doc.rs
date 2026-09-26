@@ -121,7 +121,7 @@ end
 plot(chart, -1.0 to 1.0 by 0.02, f, ",x^2")?
 ```
 "#;
-    sig_root_mod.add_var(String::from("plot"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("plot"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("chart")),
         BuiltinFunArg::OptArg(String::from("X1")),
         BuiltinFunArg::OptArg(String::from("Y1")),
@@ -184,7 +184,7 @@ end
 plot3(chart, -3.0 to 3.0 by 0.1, f, -3.0 to 3.0 by 0.1, "sxz,surface")?
 ```
 "#;
-    sig_root_mod.add_var(String::from("plot3"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("plot3"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("chart")),
         BuiltinFunArg::OptArg(String::from("X1")),
         BuiltinFunArg::OptArg(String::from("Y1")),
@@ -222,7 +222,7 @@ d = .[ 1, 1, 2, 2, 1, 3, 3, 2, 2, 1, 1, 2, 2, 2, 3, 3, 1, 2, 3 .]
 histogram(chart, d, "")?
 ```
 "#;
-    sig_root_mod.add_var(String::from("histogram"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("histogram"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("chart")),
         BuiltinFunArg::OptArg(String::from("d1")),
         BuiltinFunArg::OptArg(String::from("s1")),
@@ -235,7 +235,7 @@ histogram(chart, d, "")?
     let doc = r#"
 This function is alias to the [`histogram`](#var.histogram) function.
 "#;
-    sig_root_mod.add_var(String::from("hist"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("hist"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("chart")),
         BuiltinFunArg::OptArg(String::from("d1")),
         BuiltinFunArg::OptArg(String::from("s1")),

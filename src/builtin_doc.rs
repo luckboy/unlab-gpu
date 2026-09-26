@@ -112,25 +112,25 @@ These functions load and/or save the following values:
     let doc = r#"
 A $\pi$ number.
 "#;
-    sig_root_mod.add_var(String::from("pi"), Sig::Var);
+    sig_root_mod.add_var(String::from("pi"), Sig::VarSinceFirst);
     doc_root_mod.add_var(String::from("pi"), String::from(&doc[1..]));
 
     let doc = r#"
 An $e$ number.
 "#;
-    sig_root_mod.add_var(String::from("e"), Sig::Var);
+    sig_root_mod.add_var(String::from("e"), Sig::VarSinceFirst);
     doc_root_mod.add_var(String::from("e"), String::from(&doc[1..]));
 
     let doc = r#"
 A machine epsilon number.
 "#;
-    sig_root_mod.add_var(String::from("eps"), Sig::Var);
+    sig_root_mod.add_var(String::from("eps"), Sig::VarSinceFirst);
     doc_root_mod.add_var(String::from("eps"), String::from(&doc[1..]));
 
     let doc = r#"
 A path separator that can be `"/"` for Unix or `"\\"` for Windows.
 "#;
-    sig_root_mod.add_var(String::from("pathsep"), Sig::Var);
+    sig_root_mod.add_var(String::from("pathsep"), Sig::VarSinceFirst);
     doc_root_mod.add_var(String::from("pathsep"), String::from(&doc[1..]));
     
     let doc = r#"
@@ -155,7 +155,7 @@ The stings corresponding to the value types and the object types are:
 - `"struct"` - structure
 - `"weak"` - weak reference
 "#;
-    sig_root_mod.add_var(String::from("type"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("type"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("type"), String::from(&doc[1..]));
@@ -165,7 +165,7 @@ Returns a copy of the `X` object.
 
 If the `X` object isn't a mutable object, this function returns the `X` object.
 "#;
-    sig_root_mod.add_var(String::from("clone"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("clone"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("clone"), String::from(&doc[1..]));
@@ -176,7 +176,7 @@ Converts the `X` value to a boolean value.
 This function returns `true` if the `X` value isn't `none`, `false`, zero, or an error; otherwise
 `false`.
 "#;
-    sig_root_mod.add_var(String::from("bool"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("bool"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("bool"), String::from(&doc[1..]));
@@ -187,7 +187,7 @@ Converts the `X` value to an integer number.
 The `X` number is converted to an integer number by this function. This function returns `1` for a
 non-numeric value if the `X` value isn't `none`, `false`, or an error; otherwise `0`.
 "#;
-    sig_root_mod.add_var(String::from("int"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("int"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("int"), String::from(&doc[1..]));
@@ -198,7 +198,7 @@ Converts the `X` value to a float-point number.
 The `X` number is converted to a float-point number by this function. This function returns `1.0`
 for a non-numeric value if the `X` value isn't `none`, `false`, or an error; otherwise `0.0`.
 "#;
-    sig_root_mod.add_var(String::from("float"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("float"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("float"), String::from(&doc[1..]));
@@ -206,7 +206,7 @@ for a non-numeric value if the `X` value isn't `none`, `false`, or an error; oth
     let doc = r#"
 Converts the `X` value to a string.
 "#;
-    sig_root_mod.add_var(String::from("string"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("string"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("string"), String::from(&doc[1..]));
@@ -217,7 +217,7 @@ The returned matrix is:
 
 $$ \begin{bmatrix} 0 & 0 & \ldots & 0 \\ 0 & 0 & \ldots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \ldots & 0 \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("zeros"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("zeros"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("N")),
         BuiltinFunArg::Arg(String::from("M"))
     ]));
@@ -230,7 +230,7 @@ The returned matrix is:
 
 $$ \begin{bmatrix} 1 & 1 & \ldots & 1 \\ 1 & 1 & \ldots & 1 \\ \vdots & \vdots & \ddots & \vdots \\ 1 & 1 & \ldots & 1 \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("ones"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("ones"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("N")),
         BuiltinFunArg::Arg(String::from("M"))
     ]));
@@ -243,7 +243,7 @@ The identity matrix is:
 
 $$ \begin{bmatrix} 1 & 0 & \ldots & 0 \\ 0 & 1 & \ldots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \ldots & 1 \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("eye"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("eye"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("N"))
     ]));
     doc_root_mod.add_var(String::from("eye"), String::from(&doc[1..]));
@@ -255,7 +255,7 @@ This function applies the `f` function to the `D` value and the element indices
 
 $$ \begin{bmatrix} f(\mathbf{D}, 1, 1) & f(\mathbf{D}, 1, 2) & \ldots & f(\mathbf{D}, 1, M) \\ f(\mathbf{D}, 2, 1) & f(\mathbf{D}, 2, 2) & \ldots & f(\mathbf{D}, 2, M) \\ \vdots & \vdots & \ddots & \vdots \\ f(\mathbf{D}, N, 1) & f(\mathbf{D}, N, 2) & \ldots & f(\mathbf{D}, N, M) \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("init"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("init"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("N")),
         BuiltinFunArg::Arg(String::from("M")),
         BuiltinFunArg::Arg(String::from("D")),
@@ -272,7 +272,7 @@ initialized diagonal matrix is:
 
 $$ \begin{bmatrix} f(\mathbf{D}, 1) & 0 & \ldots & 0 \\ 0  & f(\mathbf{D}, 2) & \ldots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \ldots & f(\mathbf{D}, N) \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("initdiag"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("initdiag"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("N")),
         BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
@@ -288,7 +288,7 @@ If the `X` object is a matrix, this function returns the `X` object. The created
 $$ \begin{bmatrix} x_{1 1} & x_{1 2} & \ldots & x_{1M} \\ x_{2 1} & x_{2 2} & \ldots & x_{2M} \\ \vdots & \vdots & \ddots & \vdots \\ x_{N1} & x_{N2} & \ldots & x_{NM} \end{bmatrix} $$
 
 "#;
-    sig_root_mod.add_var(String::from("matrix"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("matrix"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("matrix"), String::from(&doc[1..]));
@@ -301,7 +301,7 @@ with one row is:
 
 $$ \begin{bmatrix} x_1 & x_2 & \ldots & x_N \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("rowvector"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("rowvector"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("rowvector"), String::from(&doc[1..]));
@@ -314,7 +314,7 @@ matrix with one column is:
 
 $$ \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_N \end{bmatrix} $$
 "#;
-    sig_root_mod.add_var(String::from("colvector"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("colvector"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("colvector"), String::from(&doc[1..]));
@@ -324,7 +324,7 @@ Converts the `X` matrix to a matrix array.
 
 If the `X` object is a matrix array, this function returns the `X` object.
 "#;
-    sig_root_mod.add_var(String::from("matrixarray"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("matrixarray"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("matrixarray"), String::from(&doc[1..]));
@@ -332,7 +332,7 @@ If the `X` object is a matrix array, this function returns the `X` object.
     let doc = r#"
 Creates an error with the `kind` error kind and the `msg` message which are strings.
 "#;
-    sig_root_mod.add_var(String::from("error"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("error"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("kind")),
         BuiltinFunArg::Arg(String::from("msg"))
     ]));
@@ -343,7 +343,7 @@ Creates an array from the `X` iterable object.
 
 If the `X` value is an array, this function returns the `X` value.
 "#;
-    sig_root_mod.add_var(String::from("array"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("array"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("array"), String::from(&doc[1..]));
@@ -353,7 +353,7 @@ Converts the `R` reference to the strong reference.
 
 If the `R` reference is strong, this function returns the `R` reference. 
 "#;
-    sig_root_mod.add_var(String::from("strong"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("strong"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("R"))
     ]));
     doc_root_mod.add_var(String::from("strong"), String::from(&doc[1..]));
@@ -363,7 +363,7 @@ Converts the `R` reference to the weak reference.
 
 If the `R` reference is weak, this function returns the `R` reference. 
 "#;
-    sig_root_mod.add_var(String::from("weak"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("weak"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("R"))
     ]));
     doc_root_mod.add_var(String::from("weak"), String::from(&doc[1..]));
@@ -373,7 +373,7 @@ Returns `true` if the `X` object is empty, otherwise `false`.
 
 The `X` object can be a string, a matrix array, a matrix row slice, or an array. 
 "#;
-    sig_root_mod.add_var(String::from("isempty"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("isempty"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("isempty"), String::from(&doc[1..]));
@@ -385,7 +385,7 @@ The `X` object can be a string, a matrix array, a matrix row slice, or an array.
 returns the number of UTF-8 characters for a string, the number of rows for a matrix array, or the
 number of columns for a matrix row slice. 
 "#;
-    sig_root_mod.add_var(String::from("length"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("length"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("length"), String::from(&doc[1..]));
@@ -395,7 +395,7 @@ Returns the number of rows in the `X` object.
 
 The `X` object can be a matrix or a matrix array.
 "#;
-    sig_root_mod.add_var(String::from("rows"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("rows"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("rows"), String::from(&doc[1..]));
@@ -405,7 +405,7 @@ Returns the number of columns in the `X` object.
 
 The `X` object can be a matrix or a matrix array.
 "#;
-    sig_root_mod.add_var(String::from("columns"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("columns"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("columns"), String::from(&doc[1..]));
@@ -421,7 +421,7 @@ element of matrix for a matrix row slice if the `j` index isn't passed. The fiel
 identifier in the `X` structure is returned if the `j` index isn't passed and the `X` object is
 structure.
 "#;
-    sig_root_mod.add_var(String::from("get"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("get"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("i")),
         BuiltinFunArg::OptArg(String::from("j"))
@@ -432,7 +432,7 @@ structure.
 Returns the element with the `i` index in the diagonal of the `X` matrix array if the diagonal of
 `X` matrix array contains the element, otherwise `none`.
 "#;
-    sig_root_mod.add_var(String::from("getdiag"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("getdiag"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("i"))
     ]));
@@ -443,7 +443,7 @@ Returns the substrings of the `s` string which are separated by the `t` string.
 
 If the `t` string isn't passed, this function uses whitespaces as a separator.
 "#;
-    sig_root_mod.add_var(String::from("split"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("split"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::OptArg(String::from("t"))
     ]));
@@ -452,7 +452,7 @@ If the `t` string isn't passed, this function uses whitespaces as a separator.
     let doc = r#"
 Returns the `s` string without the start whitespaces and the end whitespaces.
 "#;
-    sig_root_mod.add_var(String::from("trim"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("trim"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("trim"), String::from(&doc[1..]));
@@ -460,7 +460,7 @@ Returns the `s` string without the start whitespaces and the end whitespaces.
     let doc = r#"
 Returns the `true` if the `s` string contains the `t`, otherwise `false`.
 "#;
-    sig_root_mod.add_var(String::from("contains"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("contains"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::Arg(String::from("t"))
     ]));
@@ -469,7 +469,7 @@ Returns the `true` if the `s` string contains the `t`, otherwise `false`.
     let doc = r#"
 Returns the `true` if the `t` is the prefix of the `s` string, otherwise `false`.
 "#;
-    sig_root_mod.add_var(String::from("startswith"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("startswith"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::Arg(String::from("t"))
     ]));
@@ -478,7 +478,7 @@ Returns the `true` if the `t` is the prefix of the `s` string, otherwise `false`
     let doc = r#"
 Returns the `true` if the `t` is the suffix of the `s` string, otherwise `false`.
 "#;
-    sig_root_mod.add_var(String::from("endswith"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("endswith"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::Arg(String::from("t"))
     ]));
@@ -489,7 +489,7 @@ Replaces all occurrences of the `t` string in the `s` string with the `u` string
 
 This function returns a new string with replaced occurrences of the `t` string to the `u` string.
 "#;
-    sig_root_mod.add_var(String::from("replace"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("replace"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::Arg(String::from("t")),
         BuiltinFunArg::Arg(String::from("u"))
@@ -499,7 +499,7 @@ This function returns a new string with replaced occurrences of the `t` string t
     let doc = r#"
 Returns an uppercase string corresponding the `s` string.
 "#;
-    sig_root_mod.add_var(String::from("upper"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("upper"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("upper"), String::from(&doc[1..]));
@@ -507,7 +507,7 @@ Returns an uppercase string corresponding the `s` string.
     let doc = r#"
 Returns a lowercase string corresponding the `s` string.
 "#;
-    sig_root_mod.add_var(String::from("lower"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("lower"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("lower"), String::from(&doc[1..]));
@@ -521,7 +521,7 @@ more elements in the `x` array have the different sorting value types, an error 
 integer numbers and the the floating-point numbers have same sorting value type. An error occurs
 if any element in the `x` array is `nan`.
 "#;
-    sig_root_mod.add_var(String::from("sort"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("sort"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("sort"), String::from(&doc[1..]));
@@ -529,7 +529,7 @@ if any element in the `x` array is `nan`.
     let doc = r#"
 Reverses the order of elements in the `x` array.
 "#;
-    sig_root_mod.add_var(String::from("reverse"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("reverse"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("reverse"), String::from(&doc[1..]));
@@ -538,7 +538,7 @@ Reverses the order of elements in the `x` array.
 Returns `true` if the `f` function with the passed `D` value returns a convertible value to `true`
 for any element in the `X` iterable object ($f(\mathbf{D}, {\mathbf{x}}_i)$), otherwise `false`.
 "#;
-    sig_root_mod.add_var(String::from("any"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("any"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
@@ -550,7 +550,7 @@ Returns `true` if the `f` function with the passed `D` value returns a convertib
 for all elements in the `X` iterable object ($f(\mathbf{D}, {\mathbf{x}}_i)$), otherwise
 `false`.
 "#;
-    sig_root_mod.add_var(String::from("all"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("all"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
@@ -565,7 +565,7 @@ object ($f(\mathbf{D}, {\mathbf{x}}_i)$) until the `f` function returns a conver
 `true` and then returns the index of this element. If the `f` function doesn't return the 
 convertible value to `true` for any element, this function returns `none`.
 "#;
-    sig_root_mod.add_var(String::from("find"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("find"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
@@ -579,7 +579,7 @@ This function applies the `f` function to the `D` value and each element in the 
 object ($f(\mathbf{D}, {\mathbf{x}}_i)$) and then returns the indices of elements for which the
 `f` function returns a convertible value to `true`.
 "#;
-    sig_root_mod.add_var(String::from("filter"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("filter"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
@@ -596,7 +596,7 @@ mutable object. If the `X` value and the `Y` value are integer numbers, this fun
 returns an integer number. This function returns `none` if the `X` iterable object is empty and
 the `Y` value isn't passed.
 "#;
-    sig_root_mod.add_var(String::from("max"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("max"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::OptArg(String::from("Y"))
     ]));
@@ -612,7 +612,7 @@ mutable object. If the `X` value and the `Y` value are integer numbers, this fun
 returns an integer number. This function returns `none` if the `X` iterable object is empty and
 the `Y` value isn't passed.
 "#;
-    sig_root_mod.add_var(String::from("min"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("min"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::OptArg(String::from("Y"))
     ]));
@@ -623,7 +623,7 @@ Finds maximum element in the `X` iterable object and returns its index.
 
 This function returns `none` if the `X` iterable object is empty.
 "#;
-    sig_root_mod.add_var(String::from("imax"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("imax"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("imax"), String::from(&doc[1..]));
@@ -633,7 +633,7 @@ Finds minumum element in the `X` iterable object and returns its index.
 
 This function returns `none` if the `X` iterable object is empty.
 "#;
-    sig_root_mod.add_var(String::from("imin"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("imin"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("imin"), String::from(&doc[1..]));
@@ -641,7 +641,7 @@ This function returns `none` if the `X` iterable object is empty.
     let doc = r#"
 Pushes the `y` value to the back of the`X` array.
 "#;
-    sig_root_mod.add_var(String::from("push"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("push"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("y"))
     ]));
@@ -652,7 +652,7 @@ Removes the last element from the `X` array and returns the last element.
 
 If the `X` array is empty, this function returns `none`.
 "#;
-    sig_root_mod.add_var(String::from("pop"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("pop"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("pop"), String::from(&doc[1..]));
@@ -664,7 +664,7 @@ The `X` mutable object and the `Y` mutable object must be arrays or structures. 
 two structures have same field identifier, the field in the first structure is overwritten by a
 value from the field in the second structure.
 "#;
-    sig_root_mod.add_var(String::from("append"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("append"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -679,7 +679,7 @@ If the `X` mutable object is an array, this function inserts the `y` value as an
 with the `i` identifier to the `X` structure and then returns the replaced field. This function
 returns `none` if the `X` structure doesn't contain the field with the `i` identifier. 
 "#;
-    sig_root_mod.add_var(String::from("insert"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("insert"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("i")),
         BuiltinFunArg::Arg(String::from("y"))
@@ -695,7 +695,7 @@ is a structure, this function removes a field with the `i` identifier from the `
 This finction returns the removed element or the removed field if the `X` mutable object contains
 the element with the `i` index or the field with the `i` identifier, otherwise `none`.
 "#;
-    sig_root_mod.add_var(String::from("remove"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("remove"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("i"))
     ]));
@@ -704,7 +704,7 @@ the element with the `i` index or the field with the `i` identifier, otherwise `
     let doc = r#"
 Returns the error kind for the `e` error.
 "#;
-    sig_root_mod.add_var(String::from("errorkind"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("errorkind"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("e"))
     ]));
     doc_root_mod.add_var(String::from("errorkind"), String::from(&doc[1..]));
@@ -712,7 +712,7 @@ Returns the error kind for the `e` error.
     let doc = r#"
 Returns the error message for the `e` error.
 "#;
-    sig_root_mod.add_var(String::from("errormsg"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("errormsg"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("e"))
     ]));
     doc_root_mod.add_var(String::from("errormsg"), String::from(&doc[1..]));
@@ -724,7 +724,7 @@ This function doesn't compare matrices. The result of this function is `false` i
 matrices. This function doesn't compare value types for integer numbers and floating-point
 numbers.
 "#;
-    sig_root_mod.add_var(String::from("isequal"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("isequal"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -737,7 +737,7 @@ This function doesn't compare matrices. The result of this function is `true` if
 matrices. This function doesn't compare value types for integer numbers and floating-point
 numbers.
 "#;
-    sig_root_mod.add_var(String::from("isnotequal"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("isnotequal"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -749,7 +749,7 @@ Returns `true` if the `X` value is less than the `Y` value, otherwise `false`.
 This function compares two boolean values, two numbers, or two strings. The result of this
 function is `false` for two other values.
 "#;
-    sig_root_mod.add_var(String::from("isless"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("isless"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -761,7 +761,7 @@ Returns `true` if the `X` value is greater than or equal to the `Y` value, other
 This function compares two boolean values, two numbers, or two strings. The result of this
 function is `false` for two other values.
 "#;
-    sig_root_mod.add_var(String::from("isgreaterequal"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("isgreaterequal"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -773,7 +773,7 @@ Returns `true` if the `X` value is greater than the `Y` value, otherwise `false`
 This function compares two boolean values, two numbers, or two strings. The result of this
 function is `false` for two other values.
 "#;
-    sig_root_mod.add_var(String::from("isgreater"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("isgreater"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -785,7 +785,7 @@ Returns `true` if the `X` value is less than or equal to the `Y` value, otherwis
 This function compares two boolean values, two numbers, or two strings. The result of this
 function is `false` for two other values.
 "#;
-    sig_root_mod.add_var(String::from("islessequal"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("islessequal"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -796,7 +796,7 @@ Calculates sigmoid function for the `X` value ($\operatorname{sigmoid}(\mathbf{X
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("sigmoid"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("sigmoid"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("sigmoid"), String::from(&doc[1..]));
@@ -806,7 +806,7 @@ Calculates hyperbolic tangent for the `X` value ($\tanh(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("tanh"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("tanh"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("tanh"), String::from(&doc[1..]));
@@ -816,7 +816,7 @@ Calculates swish function for the `X` value ($\operatorname{swish}(\mathbf{X})$)
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("swish"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("swish"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("swish"), String::from(&doc[1..]));
@@ -826,7 +826,7 @@ Calculates softmax function for the `X` value ($\operatorname{softmax}(\mathbf{X
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("softmax"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("softmax"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("softmax"), String::from(&doc[1..]));
@@ -836,7 +836,7 @@ Calculates square root of the `X` value ($\sqrt{x}$ or $\sqrt{x_{ij}}$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("sqrt"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("sqrt"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("sqrt"), String::from(&doc[1..]));
@@ -844,7 +844,7 @@ This function is a mathematical function that takes a number, a matrix, or a mut
     let doc = r#"
 Indeed transposes the `X` matrix (${\mathbf{X}}^\top$).
 "#;
-    sig_root_mod.add_var(String::from("reallytranspose"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("reallytranspose"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("reallytranspose"), String::from(&doc[1..]));
@@ -852,7 +852,7 @@ Indeed transposes the `X` matrix (${\mathbf{X}}^\top$).
     let doc = r#"
 This function is alias to the [`reallytranspose`](#var.reallytranspose) function.
 "#;
-    sig_root_mod.add_var(String::from("rt"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("rt"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("rt"), String::from(&doc[1..]));
@@ -860,7 +860,7 @@ This function is alias to the [`reallytranspose`](#var.reallytranspose) function
     let doc = r#"
 Repeats the `x` vector as column or row.
 "#;
-    sig_root_mod.add_var(String::from("repeat"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("repeat"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("repeat"), String::from(&doc[1..]));
@@ -871,7 +871,7 @@ Calculates remainder of division the `x` value by the `y` value ($\operatorname{
 If the `x` value and the `y` value are integer numbers, this function also returns an integer
 number.
 "#;
-    sig_root_mod.add_var(String::from("mod"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("mod"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x")),
         BuiltinFunArg::Arg(String::from("y"))
     ]));
@@ -883,7 +883,7 @@ Calculates absolute value of the `X` value ($|x|$ or $|x_{ij}|$).
 This function is a mathematical function that takes a number, a matrix, or a mutable object. If
 the `X` value is an integer number, this function also returns an integer value.
 "#;
-    sig_root_mod.add_var(String::from("abs"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("abs"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("abs"), String::from(&doc[1..]));
@@ -895,7 +895,7 @@ ${x_{ij}}^{y_{ij}}$).
 This function is a mathematical function that takes two arguments. This argument can be a number,
 a matrix, or a mutable object. These arguments can't be a matrix and a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("pow"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("pow"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("Y"))
     ]));
@@ -906,7 +906,7 @@ Calculates exponentional function of the `X` value ($e^x$ or $e^{x_{ij}}$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("exp"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("exp"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("exp"), String::from(&doc[1..]));
@@ -916,7 +916,7 @@ Calculates natural logarithm of the `X` value ($\ln{x}$ or $\ln{x_{ij}}$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("log"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("log"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("log"), String::from(&doc[1..]));
@@ -926,7 +926,7 @@ Calculates base 2 logarithm of the `X` value ($\log_2{x}$ or $\log_2{x_{ij}}$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("log2"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("log2"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("log2"), String::from(&doc[1..]));
@@ -936,7 +936,7 @@ Calculates base 10 logarithm of the `X` value ($\log_10{x}$ or $\log_10{x_{ij}}$
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("log10"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("log10"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("log10"), String::from(&doc[1..]));
@@ -946,7 +946,7 @@ Calculates sine function for the `X` value ($\sin(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("sin"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("sin"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("sin"), String::from(&doc[1..]));
@@ -956,7 +956,7 @@ Calculates cosine function for the `X` value ($\cos(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("cos"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("cos"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("cos"), String::from(&doc[1..]));
@@ -966,7 +966,7 @@ Calculates tangent function for the `X` value ($\tan(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("tan"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("tan"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("tan"), String::from(&doc[1..]));
@@ -976,7 +976,7 @@ Calculates arcsine function for the `X` value ($\arcsin(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("asin"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("asin"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("asin"), String::from(&doc[1..]));
@@ -986,7 +986,7 @@ Calculates arccosine function for the `X` value ($\arccos(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("acos"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("acos"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("acos"), String::from(&doc[1..]));
@@ -996,7 +996,7 @@ Calculates arctangent function for the `X` value ($\arctan(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("atan"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("atan"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("atan"), String::from(&doc[1..]));
@@ -1008,7 +1008,7 @@ $\arctan(\frac{x_{ij}}{y})$, $\arctan(\frac{x}{y_{ij}})$, or $\arctan(\frac{x_{i
 This function is a mathematical function that takes two arguments. This argument can be a number,
 a matrix, or a mutable object. These arguments can't be a matrix and a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("atan2"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("atan2"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("atan2"), String::from(&doc[1..]));
@@ -1018,7 +1018,7 @@ Calculates hyperbolic sine function for the `X` value ($\sinh(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("sinh"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("sinh"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("sinh"), String::from(&doc[1..]));
@@ -1028,7 +1028,7 @@ Calculates hyperbolic cosine function for the `X` value ($\cosh(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("cosh"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("cosh"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("cosh"), String::from(&doc[1..]));
@@ -1039,7 +1039,7 @@ Calculates inverse hyperbolic sine function for the `X` value
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("asinh"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("asinh"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("asinh"), String::from(&doc[1..]));
@@ -1050,7 +1050,7 @@ Calculates inverse hyperbolic cosine function for the `X` value
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("acosh"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("acosh"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("acosh"), String::from(&doc[1..]));
@@ -1061,7 +1061,7 @@ Calculates inverse hyperbolic tangent function for the `X` value
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("atanh"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("atanh"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("atanh"), String::from(&doc[1..]));
@@ -1071,7 +1071,7 @@ Calculates signum function for the `X` value ($\operatorname{sgn}(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("sign"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("sign"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("sign"), String::from(&doc[1..]));
@@ -1081,7 +1081,7 @@ Calculates ceil function for the `X` value ($\operatorname{ceil}(\mathbf{X})$).
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("ceil"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("ceil"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("ceil"), String::from(&doc[1..]));
@@ -1091,7 +1091,7 @@ Calculates floor function for the `X` value ($\operatorname{floor}(\mathbf{X})$)
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("floor"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("floor"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("floor"), String::from(&doc[1..]));
@@ -1101,7 +1101,7 @@ Calculates round function for the `X` value ($\operatorname{round}(\mathbf{X})$)
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("round"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("round"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("round"), String::from(&doc[1..]));
@@ -1111,7 +1111,7 @@ Calculates trunc function for the `X` value ($\operatorname{trunc}(\mathbf{X})$)
 
 This function is a mathematical function that takes a number, a matrix, or a mutable object.
 "#;
-    sig_root_mod.add_var(String::from("trunc"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("trunc"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
     ]));
     doc_root_mod.add_var(String::from("trunc"), String::from(&doc[1..]));
@@ -1119,13 +1119,13 @@ This function is a mathematical function that takes a number, a matrix, or a mut
     let doc = r#"
 Generates a random floating-point number in range $[0, 1)$.
 "#;
-    sig_root_mod.add_var(String::from("rand"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("rand"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("rand"), String::from(&doc[1..]));
 
     let doc = r#"
 Generates a random integer number in range $[1, N]$ or range $[N, M]$.
 "#;
-    sig_root_mod.add_var(String::from("randi"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("randi"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("N")),
         BuiltinFunArg::OptArg(String::from("M"))
     ]));
@@ -1137,7 +1137,7 @@ Converts the `s` string to an integer number.
 If the `s` string can be converted to the integer number, this function returns an error with the
 `"parseint"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("str2int"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("str2int"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("str2int"), String::from(&doc[1..]));
@@ -1148,7 +1148,7 @@ Converts the `s` string to a floating-point number.
 If the `s` string can be converted to the floating-point number, this function returns an error
 with the `"parsefloat"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("str2float"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("str2float"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("str2float"), String::from(&doc[1..]));    
@@ -1159,7 +1159,7 @@ Converts the hexadecimal number as the `s` string to a decimal integer number.
 If the `s` string can be converted to the decimal integer number, this function returns an error 
 with the error kind `"parseint"`.
 "#;
-    sig_root_mod.add_var(String::from("hex2dec"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("hex2dec"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("hex2dec"), String::from(&doc[1..]));
@@ -1169,7 +1169,7 @@ Converts the first character of the `s` string to a character code as an integer
 
 If the `s` string is empty, this function returns `none`.
 "#;
-    sig_root_mod.add_var(String::from("char2code"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("char2code"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("char2code"), String::from(&doc[1..]));
@@ -1179,7 +1179,7 @@ Converts the character code as the `x` integer number to the string with the cha
 
 If the `x` character code is invalid, this function returns `none`.
 "#;
-    sig_root_mod.add_var(String::from("code2char"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("code2char"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("x"))
     ]));
     doc_root_mod.add_var(String::from("code2char"), String::from(&doc[1..]));
@@ -1195,7 +1195,7 @@ The formats with examples are:
 
 If the `fmt` format is invalid, this function returns an error with the `"format"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("formatmillis"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("formatmillis"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("fmt")),
         BuiltinFunArg::Arg(String::from("millis"))
     ]));
@@ -1215,7 +1215,7 @@ If the `align` alignment isn't passed, this function uses the left alignment for
 the `X` value by default. If the `width` width and/or the `align` alignment are/is invalid, this 
 function returns an error with the `"format"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("withwidth"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("withwidth"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("width")),
         BuiltinFunArg::OptArg(String::from("align"))
@@ -1229,7 +1229,7 @@ If the string of the `X` value has a number of characters less than the `width` 
 of `X` value is padded with zeros according to the right alignment. If the `width` width is 
 invalid, this function returns an error with the `"format"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("withzeros"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("withzeros"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("width"))
     ]));
@@ -1241,13 +1241,13 @@ Reads a line from the standard input.
 If an I/O error occurs while this operation, this function returns an error with the `"io"` error 
 kind.
 "#;
-    sig_root_mod.add_var(String::from("readline"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("readline"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("readline"), String::from(&doc[1..]));
 
     let doc = r#"
 Formats the values and then returns the formatted values as a string.
 "#;
-    sig_root_mod.add_var(String::from("format"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("format"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
     ]));
@@ -1256,7 +1256,7 @@ Formats the values and then returns the formatted values as a string.
     let doc = r#"
 Prints the values to the standard output.
 "#;
-    sig_root_mod.add_var(String::from("print"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("print"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
     ]));
@@ -1265,7 +1265,7 @@ Prints the values to the standard output.
     let doc = r#"
 Prints the values with the newline character to the standard output.
 "#;
-    sig_root_mod.add_var(String::from("println"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("println"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
     ]));
@@ -1274,7 +1274,7 @@ Prints the values with the newline character to the standard output.
     let doc = r#"
 Prints the values to the standard error.
 "#;
-    sig_root_mod.add_var(String::from("eprint"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("eprint"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
     ]));
@@ -1283,7 +1283,7 @@ Prints the values to the standard error.
     let doc = r#"
 Prints the values with the newline character to the standard error.
 "#;
-    sig_root_mod.add_var(String::from("eprintln"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("eprintln"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
     ]));
@@ -1296,7 +1296,7 @@ This function writes all unwritten buffered data in the stream of standard outpu
 output. Also, this function returns `true` if an I/O error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("flush"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("flush"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("flush"), String::from(&doc[1..]));
 
     let doc = r#"
@@ -1306,7 +1306,7 @@ This function writes all unwritten buffered data in the stream of standard error
 error. Also, this function returns `true` if an I/O error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("eflush"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("eflush"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("eflush"), String::from(&doc[1..]));
 
     let doc = r#"
@@ -1315,7 +1315,7 @@ Changes the current working directory to the `path` directory.
 This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
 error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("cd"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("cd"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("cd"), String::from(&doc[1..]));
@@ -1326,7 +1326,7 @@ Returns the path of current working directory.
 If an I/O error occur while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
-    sig_root_mod.add_var(String::from("pwd"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("pwd"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("pwd"), String::from(&doc[1..]));
 
     let doc = r#"
@@ -1335,7 +1335,7 @@ Returns `true` if the `path` file exists, otherwise `false`.
 If an I/O error occur while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
-    sig_root_mod.add_var(String::from("exist"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("exist"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("exist"), String::from(&doc[1..]));
@@ -1351,7 +1351,7 @@ The file types are:
 If an I/O error occur while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
-    sig_root_mod.add_var(String::from("filetype"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("filetype"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("filetype"), String::from(&doc[1..]));
@@ -1362,7 +1362,7 @@ Returns file names in the `path` directory.
 If an I/O error occur while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
-    sig_root_mod.add_var(String::from("dir"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("dir"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("dir"), String::from(&doc[1..]));
@@ -1370,7 +1370,7 @@ kind.
     let doc = r#"
 This function is alias to the [`dir`](#var.dir) function.
 "#;
-    sig_root_mod.add_var(String::from("ls"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("ls"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("ls"), String::from(&doc[1..]));
@@ -1381,7 +1381,7 @@ Creates a `path` directory.
 This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
 error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("mkdir"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("mkdir"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("mkdir"), String::from(&doc[1..]));
@@ -1392,7 +1392,7 @@ Removes the `path` directory.
 This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
 error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("rmdir"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("rmdir"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("rmdir"), String::from(&doc[1..]));
@@ -1403,7 +1403,7 @@ Removes the `path` file.
 This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
 error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("rmfile"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("rmfile"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("rmfile"), String::from(&doc[1..]));
@@ -1415,7 +1415,7 @@ This function overwrites the content of the `dstpath` file if the `dstpath` file
 Also, this function returns `true` if an I/O error doesn't occur while this operation, otherwise
 an error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("copy"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("copy"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("srcpath")),
         BuiltinFunArg::Arg(String::from("dstpath"))
     ]));
@@ -1428,7 +1428,7 @@ This function replaces the `newpath` file if the `newpath` file already exists. 
 function returns `true` if an I/O error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("rename"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("rename"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("oldpath")),
         BuiltinFunArg::Arg(String::from("newpath"))
     ]));
@@ -1441,7 +1441,7 @@ This function returns the exit code if an I/O error doesn't occur while this ope
 an error with the `"io"` error kind. Also, this function returns an error with the `"exitstatus"`
 error kind if child process terminated by signal.
 "#;
-    sig_root_mod.add_var(String::from("spawn"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("spawn"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("cmdname")),
         BuiltinFunArg::OptArg(String::from("arg")),
         BuiltinFunArg::DotDotDot
@@ -1451,7 +1451,7 @@ error kind if child process terminated by signal.
     let doc = r#"
 Terminates the current process with the `exitcode` exit code.
 "#;
-    sig_root_mod.add_var(String::from("exit"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("exit"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("exitcode"))
     ]));
     doc_root_mod.add_var(String::from("exit"), String::from(&doc[1..]));
@@ -1462,7 +1462,7 @@ Loads values from the `path` file in the binary format.
 This function returns the loaded values if an I/O error doesn't occur while this operation, 
 otherwise an error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("load"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("load"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("load"), String::from(&doc[1..]));
@@ -1473,7 +1473,7 @@ Saves the values to the `path` file in the binary format.
 This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
 error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("save"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("save"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path")),
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
@@ -1486,7 +1486,7 @@ Loads a string from the `path` text file.
 This function returns the loaded string if an I/O error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("loadstr"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("loadstr"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("loadstr"), String::from(&doc[1..]));
@@ -1497,7 +1497,7 @@ Saves the `s` string to the `path` text file.
 This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
 error with the `"io"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("savestr"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("savestr"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path")),
         BuiltinFunArg::Arg(String::from("s"))
     ]));
@@ -1509,7 +1509,7 @@ Loads a value from the `path` file in the [TOML](https://en.wikipedia.org/wiki/T
 This function returns the loaded value if an error doesn't occur while this operation, otherwise
 an error with the `"io"` error kind or the `"toml"` kind error.
 "#;
-    sig_root_mod.add_var(String::from("loadtoml"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("loadtoml"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("loadtoml"), String::from(&doc[1..]));
@@ -1520,7 +1520,7 @@ Saves the `X` value to the `path` file in the [TOML](https://en.wikipedia.org/wi
 This function returns `true` if an error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind or the `"toml"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("savetoml"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("savetoml"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path")),
         BuiltinFunArg::Arg(String::from("X"))
     ]));
@@ -1532,7 +1532,7 @@ Loads a value from the `path` file in the [JSON](https://en.wikipedia.org/wiki/J
 This function returns the loaded value if an error doesn't occur while this operation, otherwise
 an error with the `"io"` error kind or the `"json"` kind error.
 "#;
-    sig_root_mod.add_var(String::from("loadjson"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("loadjson"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("loadjson"), String::from(&doc[1..]));
@@ -1543,7 +1543,7 @@ Saves the `X` value to the `path` file in the [JSON](https://en.wikipedia.org/wi
 This function returns `true` if an error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind or the `"json"` error kind.
 "#;
-    sig_root_mod.add_var(String::from("savejson"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("savejson"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path")),
         BuiltinFunArg::Arg(String::from("X"))
     ]));
@@ -1552,31 +1552,31 @@ with the `"io"` error kind or the `"json"` error kind.
     let doc = r#"
 Returns the arguments which are passed for this script.
 "#;
-    sig_root_mod.add_var(String::from("args"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("args"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("args"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the environment variables of current process as strings.
 "#;
-    sig_root_mod.add_var(String::from("env"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("env"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("env"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the path to the script directory.
 "#;
-    sig_root_mod.add_var(String::from("scriptdir"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("scriptdir"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("scriptdir"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the library paths as the string.
 "#;
-    sig_root_mod.add_var(String::from("libpath"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("libpath"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("libpath"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the domain of current library if interpreter is in the libary, otherwise `None`.
 "#;
-    sig_root_mod.add_var(String::from("domain"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("domain"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("domain"), String::from(&doc[1..]));
 
     let doc = r#"
@@ -1588,7 +1588,7 @@ name should contain the domain and the name which are separeted by the `/` chara
 `libname` library name hasn't the domain and the interpreter is in the library, this function
 loads the library with the domain of current library.
 "#;
-    sig_root_mod.add_var(String::from("uselib"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("uselib"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("libname"))
     ]));
     doc_root_mod.add_var(String::from("uselib"), String::from(&doc[1..]));
@@ -1601,7 +1601,7 @@ name should contain the domain and the name which are separeted by the `/` chara
 `libname` library name hasn't the domain and the interpreter is in the library, this function
 loads the library with the domain of current library.
 "#;
-    sig_root_mod.add_var(String::from("reuselib"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("reuselib"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("libname"))
     ]));
     doc_root_mod.add_var(String::from("reuselib"), String::from(&doc[1..]));
@@ -1614,7 +1614,7 @@ runned in the current module. The `/` path separators can be used in the `path` 
 of the operating system because  the `/` path separators are replaced to the system path
 separators.
 "#;
-    sig_root_mod.add_var(String::from("run"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("run"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("run"), String::from(&doc[1..]));
@@ -1625,7 +1625,7 @@ This function is alias to the [`run`](#var.run) function.
 This alias adds the documetation comments from the `path` file while documentation generation. 
 The `path` path should be a string literal so that documentation comment are added.
 "#;
-    sig_root_mod.add_var(String::from("runwithdoc"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("runwithdoc"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
     ]));
     doc_root_mod.add_var(String::from("runwithdoc"), String::from(&doc[1..]));
@@ -1633,7 +1633,7 @@ The `path` path should be a string literal so that documentation comment are add
     let doc = r#"
 Returns the elapsed time in milliseconds since an interpreter start.
 "#;
-    sig_root_mod.add_var(String::from("clock"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("clock"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("clock"), String::from(&doc[1..]));
 
     let doc = r#"
@@ -1644,7 +1644,7 @@ identifier. The `modname` name should contain the module identifiers which are s
 `::` character sequence. The first module identifier in the `modname` name can be the `root`
 keyword that refers to the root module. The `modname` name can have the `::` prefix.
 "#;
-    sig_root_mod.add_var(String::from("usemod"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("usemod"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("modname")),
         BuiltinFunArg::OptArg(String::from("newident"))
     ]));
@@ -1657,7 +1657,7 @@ The `modname` name should contain the module identifiers which are separated by 
 character sequence.  The first module identifier in the `modname` name can be the `root` keyword
 that refers to the root module. The `modname` name can have the `::` prefix.
 "#;
-    sig_root_mod.add_var(String::from("usemods"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("usemods"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("modname"))
     ]));
     doc_root_mod.add_var(String::from("usemods"), String::from(&doc[1..]));
@@ -1671,7 +1671,7 @@ identifier which are separated by the `::` character sequence. The first module 
 `varname` name can be the `root` keyword that refers to the root module. The `varname` name can
 have the `::` prefix.
 "#;
-    sig_root_mod.add_var(String::from("usevar"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("usevar"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("varname")),
         BuiltinFunArg::OptArg(String::from("newident"))
     ]));
@@ -1684,7 +1684,7 @@ The `modname` name should contain the module identifiers which are separated by 
 character sequence.  The first module identifier in the `modname` name can be the `root`
 keyword that refers to the root module. The `modname` name can have the `::` prefix.
 "#;
-    sig_root_mod.add_var(String::from("usevars"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("usevars"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("modname"))
     ]));
     doc_root_mod.add_var(String::from("usevars"), String::from(&doc[1..]));
@@ -1692,7 +1692,7 @@ keyword that refers to the root module. The `modname` name can have the `::` pre
     let doc = r#"
 Removes the module import with the `ident` identifier from the current module.
 "#;
-    sig_root_mod.add_var(String::from("removeusemod"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("removeusemod"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("ident"))
     ]));
     doc_root_mod.add_var(String::from("removeusemod"), String::from(&doc[1..]));
@@ -1700,7 +1700,7 @@ Removes the module import with the `ident` identifier from the current module.
     let doc = r#"
 Removes the variable import with the `ident` identifier from the current module.
 "#;
-    sig_root_mod.add_var(String::from("removeusevar"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("removeusevar"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("ident"))
     ]));
     doc_root_mod.add_var(String::from("removeusevar"), String::from(&doc[1..]));
@@ -1708,7 +1708,7 @@ Removes the variable import with the `ident` identifier from the current module.
     let doc = r#"
 Removes the module with the `ident` identifier from the current module.
 "#;
-    sig_root_mod.add_var(String::from("removemod"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("removemod"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("ident"))
     ]));
     doc_root_mod.add_var(String::from("removemod"), String::from(&doc[1..]));
@@ -1716,7 +1716,7 @@ Removes the module with the `ident` identifier from the current module.
     let doc = r#"
 Removes the variable with the `ident` identifier from the current module.
 "#;
-    sig_root_mod.add_var(String::from("removevar"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("removevar"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("ident"))
     ]));
     doc_root_mod.add_var(String::from("removevar"), String::from(&doc[1..]));
@@ -1724,7 +1724,7 @@ Removes the variable with the `ident` identifier from the current module.
     let doc = r#"
 Removes the local variable with the `ident` identifier.
 "#;
-    sig_root_mod.add_var(String::from("removelocalvar"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("removelocalvar"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("ident"))
     ]));
     doc_root_mod.add_var(String::from("removelocalvar"), String::from(&doc[1..]));
@@ -1732,25 +1732,25 @@ Removes the local variable with the `ident` identifier.
     let doc = r#"
 An interruption error occurs if an interruption is occurred.
 "#;
-    sig_root_mod.add_var(String::from("checkintr"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("checkintr"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("checkintr"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the backend name as a string.
 "#;
-    sig_root_mod.add_var(String::from("backend"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("backend"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("backend"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the Unlab-gpu version.
 "#;
-    sig_root_mod.add_var(String::from("version"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("version"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("version"), String::from(&doc[1..]));
 
     let doc = r#"
 An version error if the Unlab-gpu version isn't matched to the `s` version requirement.
 "#;
-    sig_root_mod.add_var(String::from("reqver"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("reqver"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s"))
     ]));
     doc_root_mod.add_var(String::from("reqver"), String::from(&doc[1..]));
@@ -1758,7 +1758,7 @@ An version error if the Unlab-gpu version isn't matched to the `s` version requi
     let doc = r#"
 Returns the documentation paths as the string.
 "#;
-    sig_root_mod.add_var(String::from("docpath"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("docpath"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("docpath"), String::from(&doc[1..]));
 
     let doc = r#"
@@ -1767,7 +1767,7 @@ Opens the documentation.
 If the `libname` library name isn't passed, this function opens this documentation. The `libname`
 library name should contain the domain and the name which are separeted by the `/` character. 
 "#;
-    sig_root_mod.add_var(String::from("doc"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("doc"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("libname"))
     ]));
     doc_root_mod.add_var(String::from("doc"), String::from(&doc[1..]));
@@ -1775,7 +1775,7 @@ library name should contain the domain and the name which are separeted by the `
     let doc = r#"
 This function is alias to the [`doc`](#var.doc) function.
 "#;
-    sig_root_mod.add_var(String::from("help"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("help"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::OptArg(String::from("libname"))
     ]));
     doc_root_mod.add_var(String::from("help"), String::from(&doc[1..]));
@@ -1786,7 +1786,7 @@ Asserts that the `V` value is `true`.
 An assertion error occurs if the `V` value isn't `true`. If next arguments are passed, an
 assertion error has the message that is the formatted next arguments.
 "#;
-    sig_root_mod.add_var(String::from("assert"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("assert"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("V")),
         BuiltinFunArg::OptArg(String::from("X")),
         BuiltinFunArg::DotDotDot
@@ -1799,7 +1799,7 @@ Asserts that the `L` value is equal to the `R` value.
 An assertion error occurs if the `L` value isn't equal to the `R` value. If next arguments are
 passed, an assertion error has the message that is the formatted next arguments.
 "#;
-    sig_root_mod.add_var(String::from("asserteq"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("asserteq"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("L")),
         BuiltinFunArg::Arg(String::from("R")),
         BuiltinFunArg::OptArg(String::from("X")),
@@ -1813,7 +1813,7 @@ Asserts that the `L` value isn't equal to the `R` value.
 An assertion error occurs if the `L` value is equal to the `R` value. If next arguments are
 passed, an assertion error has the message that is the formatted next arguments.
 "#;
-    sig_root_mod.add_var(String::from("assertne"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("assertne"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("L")),
         BuiltinFunArg::Arg(String::from("R")),
         BuiltinFunArg::OptArg(String::from("X")),
@@ -1832,7 +1832,7 @@ types for matrix arrays, matrix row slices, arrays, or structures. The differenc
 elements or two fields are checked if two elements or two fields are numbers, otherwise this
 function compares two element or two fields.
 "#;
-    sig_root_mod.add_var(String::from("assertnearlyeq"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("assertnearlyeq"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("L")),
         BuiltinFunArg::Arg(String::from("R")),
         BuiltinFunArg::Arg(String::from("eps")),
@@ -1852,7 +1852,7 @@ types for matrix arrays, matrix row slices, arrays, or structures. The differenc
 elements or two fields are checked if two elements or two fields are numbers, otherwise this
 function compares two element or two fields.
 "#;
-    sig_root_mod.add_var(String::from("assertnearlyne"), Sig::BuiltinFun(vec![
+    sig_root_mod.add_var(String::from("assertnearlyne"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("L")),
         BuiltinFunArg::Arg(String::from("R")),
         BuiltinFunArg::Arg(String::from("eps")),
@@ -1864,7 +1864,7 @@ function compares two element or two fields.
     let doc = r#"
 Adds the current module to the test suites.
 "#;
-    sig_root_mod.add_var(String::from("tests"), Sig::BuiltinFun(vec![]));
+    sig_root_mod.add_var(String::from("tests"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("tests"), String::from(&doc[1..]));
 
     add_getopts_doc(sig_root_mod, doc_root_mod);

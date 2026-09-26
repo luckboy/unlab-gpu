@@ -142,6 +142,11 @@ main {
     color: darkblue;
 }
 
+.version {
+    float: right;
+    color: gray;
+}
+
 section {
     margin: 0;
     padding: 0;
