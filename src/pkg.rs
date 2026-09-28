@@ -2614,9 +2614,16 @@ impl PkgManager
                                 }
                                 let versions = src.versions()?;
                                 let old_dependents = if old_version.is_some() {
-                                    let mut old_dependents_file = data.pkg_info_dir(name);
-                                    old_dependents_file.push("dependents.toml");
-                                    load_version_reqs(old_dependents_file)?
+                                    let mut new_part_dependents_file = data.pkg_new_part_info_dir(name);
+                                    new_part_dependents_file.push("dependents.toml");
+                                    match load_opt_version_reqs(new_part_dependents_file)? {
+                                        Some(new_part_dependents) => new_part_dependents,
+                                        None => {
+                                            let mut old_dependents_file = data.pkg_info_dir(name);
+                                            old_dependents_file.push("dependents.toml");
+                                            load_version_reqs(old_dependents_file)?
+                                        },
+                                    }
                                 } else {
                                     HashMap::new()
                                 };
