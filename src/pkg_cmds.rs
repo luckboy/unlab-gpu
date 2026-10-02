@@ -41,6 +41,7 @@ use crate::tester;
 use crate::tester::*;
 use crate::utils::*;
 use crate::value::*;
+use crate::version::*;
 
 fn create_home<F>(home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, is_work_dir: bool, f: F) -> Option<Home>
     where F: FnOnce(&mut Home) -> bool
@@ -766,9 +767,22 @@ fn io_res_init(bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool, are_t
     Ok(())
 }
 
-fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool, are_tests: bool) -> Result<()>
+fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is_lib: bool, are_tests: bool, is_unlab_gpu_version: bool) -> Result<()>
 {
-    let manifest = Manifest::new(pkg_name.clone());
+    let mut manifest = Manifest::new(pkg_name.clone());
+    if is_unlab_gpu_version {
+        let version = env!("CARGO_PKG_VERSION");
+        let len = match version.find('.') {
+            Some(i) => {
+                match &version[(i + 1)..].find('.') {
+                    Some(j) => i + j + 1,
+                    None => version.len(),
+                }
+            },
+            None => version.len(),
+        };
+        manifest.package.unlab_gpu_version = Some(VersionReq::parse(format!(">={}", &version[..len]).as_str())?);
+    }
     PkgManager::save_manifest(&manifest)?;
     match io_res_init(bin_name, lib_name, is_bin, is_lib, are_tests) {
         Ok(()) => Ok(()),
@@ -777,7 +791,7 @@ fn res_init(pkg_name: &PkgName, bin_name: &str, lib_name: &str, is_bin: bool, is
 }
 
 /// A `init` command.
-pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, is_unlab_gpu_version: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     match path {
@@ -876,7 +890,7 @@ pub fn init<F>(path: &Option<String>, name: &Option<String>, account: &Option<St
             return Some(1);
         },
     };
-    match res_init(&pkg_name, bin_name.as_str(), lib_name.as_str(), is_bin, is_lib, are_tests) {
+    match res_init(&pkg_name, bin_name.as_str(), lib_name.as_str(), is_bin, is_lib, are_tests, is_unlab_gpu_version) {
         Ok(()) => None,
         Err(err) => {
             eprint_error(&err);
@@ -906,7 +920,7 @@ fn change_and_remove_dir<P: AsRef<Path>, Q: AsRef<Path>>(path: P, saved_current_
 }
 
 /// A `new` command.
-pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
+pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domain: &Option<String>, is_bin: bool, is_lib: bool, are_tests: bool, is_unlab_gpu_version: bool, home_dir: &Option<String>, bin_path: &Option<String>, lib_path: &Option<String>, doc_path: &Option<String>, f: F) -> Option<i32>
     where F: FnOnce(&mut Home) -> bool
 {
     let saved_current_dir = match create_and_change_dir(path) {
@@ -916,7 +930,7 @@ pub fn new<F>(path: &str, name: &Option<String>, account: &Option<String>, domai
             return Some(1);
         },
     };
-    match init(&None, name, account, domain, is_bin, is_lib, are_tests, home_dir, bin_path, lib_path, doc_path, f) {
+    match init(&None, name, account, domain, is_bin, is_lib, are_tests, is_unlab_gpu_version, home_dir, bin_path, lib_path, doc_path, f) {
         None => None,
         Some(exit_code) => {
             match change_and_remove_dir(path, saved_current_dir) {

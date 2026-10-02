@@ -171,6 +171,9 @@ struct InitArgs
     /// Use template tests
     #[arg(short, long)]
     tests: bool,
+    /// Add unlab-gpu version to manifest.
+    #[arg(short , long)]
+    unlab_gpu_version: bool,
     /// Directory
     dir: Option<String>,
 }
@@ -196,6 +199,9 @@ struct NewArgs
     /// Use template of tests
     #[arg(short, long)]
     tests: bool,
+    /// Add unlab-gpu version to manifest.
+    #[arg(short , long)]
+    unlab_gpu_version: bool,
     /// Directory
     dir: String,
 }
@@ -439,10 +445,10 @@ fn main()
             config(&args2.account, &args2.domain, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Init(args2) => {
-            init(&args2.dir, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, args2.tests, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            init(&args2.dir, &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, args2.tests, args2.unlab_gpu_version, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::New(args2) => {
-            new(args2.dir.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, args2.tests, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
+            new(args2.dir.as_str(), &args2.name, &args2.account, &args2.domain, args2.bin, args2.lib, args2.tests, args2.unlab_gpu_version, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs)
         },
         Subcmd::Run(args2) => {
             run(args2.bin_name.as_str(), args2.args.clone(), !args2.no_ctrl_c, !args2.no_plotter_windows, &args.home_dir, &args.bin_path, &args.lib_path, &args.doc_path, add_dirs, add_std_builtin_funs)
