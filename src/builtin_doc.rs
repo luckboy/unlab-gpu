@@ -35,6 +35,9 @@ Value types are:
 - reference to immutable object
 - strong reference to mutable object
 - weak reference to mutable object
+- floating-point number box
+- immutable user object
+- mutable user object
 
 Immutable object types are:
 
@@ -47,6 +50,12 @@ Immutable object types are:
 - matrix row slice
 - error
 - window identifier
+- barrier
+- mutex
+- monitor
+- reader-writer lock
+- channel
+- join handle
 
 Mutable object types are:
 
@@ -136,7 +145,7 @@ A path separator that can be `"/"` for Unix or `"\\"` for Windows.
     let doc = r#"
 Returns a string corresponding to the type of the `X` value.
 
-The stings corresponding to the value types and the object types are:
+The strings corresponding to the value types and the object types are:
 
 - `"none"` - none value
 - `"bool"` - boolean value
@@ -151,9 +160,18 @@ The stings corresponding to the value types and the object types are:
 - `"matrixrowslice"` - matrix row slice
 - `"error"` - error
 - `"windowid"` - window identifier
+- `"barrier"` - barrier
+- `"mutex"` - mutex
+- `"monitor"` - monitor
+- `"rwlock"` - reader-writer lock
+- `"channel"` - channel
+- `"joinhadle"` - join handle
 - `"array"` - array
 - `"struct"` - structure
 - `"weak"` - weak reference
+- `"floatbox"` - floating-point number box
+- `"userobject"` - immutable user object
+- `"mutuserobject"` - mutable user object
 "#;
     sig_root_mod.add_var(String::from("type"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -379,7 +397,7 @@ The `X` object can be a string, a matrix array, a matrix row slice, or an array.
     doc_root_mod.add_var(String::from("isempty"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the number of elements in the`X` object.
+Returns the number of elements in the `X` object.
 
 The `X` object can be a string, a matrix array, a matrix row slice, or an array. This function
 returns the number of UTF-8 characters for a string, the number of rows for a matrix array, or the
@@ -458,7 +476,7 @@ Returns the `s` string without the start whitespaces and the end whitespaces.
     doc_root_mod.add_var(String::from("trim"), String::from(&doc[1..]));
 
     let doc = r#"
-Returns the `true` if the `s` string contains the `t`, otherwise `false`.
+Returns the `true` if the `s` string contains the `t` string, otherwise `false`.
 "#;
     sig_root_mod.add_var(String::from("contains"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -1866,6 +1884,84 @@ Adds the current module to the test suites.
 "#;
     sig_root_mod.add_var(String::from("tests"), Sig::BuiltinFunSinceFirst(vec![]));
     doc_root_mod.add_var(String::from("tests"), String::from(&doc[1..]));
+
+    //
+    // Documentation of built-in functions since version 0.2.0.
+    //
+
+    let doc = r#"
+Returns a string corresponding to the function kind of the `f` value if the `f` value is a
+function, otherwise `none`.
+
+The strings corresponding to the function kinds:
+
+- `"named"` - named function
+- `"builtin"` - built-in function
+- `"unnamed"` - unnamed function
+- `"user"` - user function
+"#;
+    sig_root_mod.add_var(String::from("functionkind"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("functionkind"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `X` value to a float-point number and creates a floating-point number box with the
+converted `X` value.
+
+The `X` number is converted to a float-point number by this function. This function converts the
+`X` value to `1.0` for a non-numeric value if the `X` value isn't `none`, `false`, or an error;
+otherwise `0.0`.
+"#;
+    sig_root_mod.add_var(String::from("floatbox"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("floatbox"), String::from(&doc[1..]));
+    
+    let doc = r#"
+Returns the number of bytes in the `s` string.
+"#;
+    sig_root_mod.add_var(String::from("bytes"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("bytes"), String::from(&doc[1..]));
+    
+    let doc = r#"
+Returns the substrings of the `s` string which are separated by the `t` regular expression.
+"#;
+    sig_root_mod.add_var(String::from("splitre"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("splitre"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the `true` if the `s` string contains one or more matches of the `t` regular expression,
+otherwise `false`.
+"#;
+    sig_root_mod.add_var(String::from("containsre"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("containsre"), String::from(&doc[1..]));    
+    
+    let doc = r#"
+Replaces all matches of the `t` regular expression in the `s` string with the `u` a regular
+string.
+
+This function returns a new string with replaced matches of the `t` regular expression to the
+`u` regular string. The regular string can have references to groups in the regular expression.
+"#;
+    sig_root_mod.add_var(String::from("replacere"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t")),
+        BuiltinFunArg::Arg(String::from("u"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("replacere"), String::from(&doc[1..]));
+
+    //
+    // Documentation of built-in functions from other modules.
+    //
 
     add_getopts_doc(sig_root_mod, doc_root_mod);
     #[cfg(feature = "plot")]
