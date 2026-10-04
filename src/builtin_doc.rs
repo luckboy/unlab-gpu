@@ -35,9 +35,9 @@ Value types are:
 - reference to immutable object
 - strong reference to mutable object
 - weak reference to mutable object
-- floating-point number box
-- immutable user object
-- mutable user object
+- floating-point number box (since 0.2.0)
+- immutable user object (since 0.2.0)
+- mutable user object (since 0.2.0)
 
 Immutable object types are:
 
@@ -50,12 +50,12 @@ Immutable object types are:
 - matrix row slice
 - error
 - window identifier
-- barrier
-- mutex
-- monitor
-- reader-writer lock
-- channel
-- join handle
+- barrier (since 0.2.0)
+- mutex (since 0.2.0)
+- monitor (since 0.2.0)
+- reader-writer lock (since 0.2.0)
+- channel (since 0.2.0)
+- join handle (since 0.2.0)
 
 Mutable object types are:
 
@@ -160,18 +160,18 @@ The strings corresponding to the value types and the object types are:
 - `"matrixrowslice"` - matrix row slice
 - `"error"` - error
 - `"windowid"` - window identifier
-- `"barrier"` - barrier
-- `"mutex"` - mutex
-- `"monitor"` - monitor
-- `"rwlock"` - reader-writer lock
-- `"channel"` - channel
-- `"joinhadle"` - join handle
+- `"barrier"` - barrier (since 0.2.0)
+- `"mutex"` - mutex (since 0.2.0)
+- `"monitor"` - monitor (since 0.2.0)
+- `"rwlock"` - reader-writer lock (since 0.2.0)
+- `"channel"` - channel (since 0.2.0)
+- `"joinhandle"` - join handle (since 0.2.0)
 - `"array"` - array
 - `"struct"` - structure
 - `"weak"` - weak reference
-- `"floatbox"` - floating-point number box
-- `"userobject"` - immutable user object
-- `"mutuserobject"` - mutable user object
+- `"floatbox"` - floating-point number box (since 0.2.0)
+- `"userobject"` - immutable user object (since 0.2.0)
+- `"mutuserobject"` - mutable user object (since 0.2.0)
 "#;
     sig_root_mod.add_var(String::from("type"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("X"))
@@ -1949,8 +1949,8 @@ otherwise `false`.
 Replaces all matches of the `t` regular expression in the `s` string with the `u` a regular
 string.
 
-This function returns a new string with replaced matches of the `t` regular expression to the
-`u` regular string. The regular string can have references to groups in the regular expression.
+This function returns a new string with replaced matches of the `t` regular expression to the `u`
+regular string. The regular string can have references to groups in the regular expression.
 "#;
     sig_root_mod.add_var(String::from("replacere"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -1959,6 +1959,53 @@ This function returns a new string with replaced matches of the `t` regular expr
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("replacere"), String::from(&doc[1..]));
 
+    let doc = r#"
+Folds the elements in the `X` iterable object.
+
+This function applies the `f` function with the `D` value and accumulator for each element in the
+`X` iterable object
+($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, \mathbf{z}, {\mathbf{x}}_1), {\mathbf{x}}_2) \ldots), {\mathbf{x}}_N)$).
+The first value of accumulator is the `z` value and the next values of accumulator are results of
+the `f` function.
+"#;
+    sig_root_mod.add_var(String::from("fold"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("z")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("fold"), String::from(&doc[1..]));
+
+    let doc = r#"
+Maps the elements in the `X` iterable object.
+
+This function creates a new array with the mapped elements by the `f` function with the `D` value
+($f(\mathbf{D}, {\mathbf{x}}_i)$).
+"#;
+    sig_root_mod.add_var(String::from("map"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("map"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Reduce the elements in the `X` iterable object.
+
+This function applies the `f` function with the `D` value and accumulator for each element
+except the first element in the `X` iterable object
+($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, {\mathbf{x}}_1, {\mathbf{x}}_2), {\mathbf{x}}_3) \ldots), {\mathbf{x}}_N)$).
+The first value of accumulator is the first element in the `X` iterable object and the next
+values of accumulator are results of the `f` function. If the `X` iterable object is empty, this
+function returns `none`.
+"#;
+    sig_root_mod.add_var(String::from("reduce"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("reduce"), String::from(&doc[1..]));
+    
     //
     // Documentation of built-in functions from other modules.
     //
