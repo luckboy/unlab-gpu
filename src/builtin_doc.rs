@@ -1962,11 +1962,9 @@ regular string. The regular string can have references to groups in the regular 
     let doc = r#"
 Folds the elements in the `X` iterable object.
 
-This function applies the `f` function with the `D` value and accumulator for each element in the
-`X` iterable object
+This function applies the `f` function with the `D` value and the `z` value or the previous
+result of the `f` function for each element in the `X` iterable object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, \mathbf{z}, {\mathbf{x}}_1), {\mathbf{x}}_2) \ldots), {\mathbf{x}}_N)$).
-The first value of accumulator is the `z` value and the next values of accumulator are results of
-the `f` function.
 "#;
     sig_root_mod.add_var(String::from("fold"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -1992,12 +1990,11 @@ This function creates a new array with the mapped elements by the `f` function w
     let doc = r#"
 Reduce the elements in the `X` iterable object.
 
-This function applies the `f` function with the `D` value and accumulator for each element
-except the first element in the `X` iterable object
+This function applies the `f` function with the `D` value and the first element in the `X`
+iterable object or the previous result of the `f` function for each element except the first
+element in the `X` iterable object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, {\mathbf{x}}_1, {\mathbf{x}}_2), {\mathbf{x}}_3) \ldots), {\mathbf{x}}_N)$).
-The first value of accumulator is the first element in the `X` iterable object and the next
-values of accumulator are results of the `f` function. If the `X` iterable object is empty, this
-function returns `none`.
+If the `X` iterable object is empty, this function returns `none`.
 "#;
     sig_root_mod.add_var(String::from("reduce"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
