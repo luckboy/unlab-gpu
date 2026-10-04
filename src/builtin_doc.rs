@@ -1962,8 +1962,9 @@ regular string. The regular string can have references to groups in the regular 
     let doc = r#"
 Folds the elements in the `X` iterable object.
 
-This function applies the `f` function with the `D` value and the `z` value or the previous
-result of the `f` function for each element in the `X` iterable object
+This function applies the `f` function with the `D` value and the `z` value for the first
+application or the previous result of the `f` function for each element in the `X` iterable
+object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, \mathbf{z}, {\mathbf{x}}_1), {\mathbf{x}}_2) \ldots), {\mathbf{x}}_N)$).
 A result of this function is a last result of the f` function.
 "#;
@@ -1992,11 +1993,11 @@ This function creates a new array with the mapped elements by the `f` function w
 Reduce the elements in the `X` iterable object.
 
 This function applies the `f` function with the `D` value and the first element in the `X`
-iterable object or the previous result of the `f` function for each element except the first
-element in the `X` iterable object
+iterable object for the first application or the previous result of the `f` function for each
+element except the first element in the `X` iterable object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, {\mathbf{x}}_1, {\mathbf{x}}_2), {\mathbf{x}}_3) \ldots), {\mathbf{x}}_N)$).
 A result of this function is a last result of the `f` function if the `X` iterable object isn't
-empty, otherwise this function returns `none`.
+empty, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("reduce"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
