@@ -1966,7 +1966,8 @@ This function applies the `f` function with the `D` value and the `z` value for 
 application or the previous result of the `f` function for each element in the `X` iterable
 object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, \mathbf{z}, {\mathbf{x}}_1), {\mathbf{x}}_2) \ldots), {\mathbf{x}}_N)$).
-A result of this function is a last result of the f` function.
+A result of this function is a last result of the `f` function if the `X` iterable object isn't
+empty, otherwise the `z` value.
 "#;
     sig_root_mod.add_var(String::from("fold"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -1996,8 +1997,8 @@ This function applies the `f` function with the `D` value and the first element 
 iterable object for the first application or the previous result of the `f` function for each
 element except the first element in the `X` iterable object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, {\mathbf{x}}_1, {\mathbf{x}}_2), {\mathbf{x}}_3) \ldots), {\mathbf{x}}_N)$).
-A result of this function is a last result of the `f` function if the `X` iterable object isn't
-empty, otherwise `none`.
+A result of this function is a last result of the `f` function for more elements than one or one
+element for one element if the `X` iterable object isn't empty, otherwise `none`.
 "#;
     sig_root_mod.add_var(String::from("reduce"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
