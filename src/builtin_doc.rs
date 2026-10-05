@@ -94,16 +94,20 @@ and other argument is a number.
 
 # TOML format and JSON format
 
-This library contains the following functions to loading values and saving values for the
-[TOML](https://en.wikipedia.org/wiki/TOML) format and the
+This library contains the following functions to converting from/to values, loading values, and
+saving values for the [TOML](https://en.wikipedia.org/wiki/TOML) format and the
 [JSON](https://en.wikipedia.org/wiki/JSON) format:
 
+- [`str2toml`](#var.str2toml) (since 0.2.0)
+- [`toml2str`](#var.toml2str) (since 0.2.0)
+- [`str2json`](#var.str2json) (since 0.2.0)
+- [`json2str`](#var.json2str) (since 0.2.0)
 - [`loadtoml`](#var.loadtoml)
 - [`savetoml`](#var.savetoml)
 - [`loadjson`](#var.loadjson)
 - [`savejson`](#var.savejson)
 
-These functions load and/or save the following values:
+These functions to converting from/to, loading, and saving the following values:
 
 - none
 - boolean
@@ -112,6 +116,23 @@ These functions load and/or save the following values:
 - string
 - array
 - structure
+
+# CSV format
+
+This library has the following functions to converting from/to arrays, loading arrays, and saving
+arrays for the [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format:
+
+- [`str2csv`](#var.str2csv) (since 0.2.0)
+- [`str2csvwithouthdr`](#var.str2csvwithouthdr) (since 0.2.0)
+- [`csv2str`](#var.csv2str) (since 0.2.0)
+- [`csv2strwithouthdr`](#var.csv2strwithouthdr) (since 0.2.0)
+
+These functions to converting from/to, loading, and saving the following values:
+
+- boolean
+- integer number
+- floating-point number
+- string
 "#;
     match doc_root_mod.value() {
         Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
@@ -1525,7 +1546,7 @@ error with the `"io"` error kind.
 Loads a value from the `path` file in the [TOML](https://en.wikipedia.org/wiki/TOML) format.
 
 This function returns the loaded value if an error doesn't occur while this operation, otherwise
-an error with the `"io"` error kind or the `"toml"` kind error.
+an error with the `"io"` error kind or the `"toml"` error kind.
 "#;
     sig_root_mod.add_var(String::from("loadtoml"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -1548,7 +1569,7 @@ with the `"io"` error kind or the `"toml"` error kind.
 Loads a value from the `path` file in the [JSON](https://en.wikipedia.org/wiki/JSON) format.
 
 This function returns the loaded value if an error doesn't occur while this operation, otherwise
-an error with the `"io"` error kind or the `"json"` kind error.
+an error with the `"io"` error kind or the `"json"` error kind.
 "#;
     sig_root_mod.add_var(String::from("loadjson"), Sig::BuiltinFunSinceFirst(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -2007,6 +2028,123 @@ element for one element if the `X` iterable object isn't empty, otherwise `none`
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("reduce"), String::from(&doc[1..]));
     
+    let doc = r#"
+Converts the `s` string with the content in the [TOML](https://en.wikipedia.org/wiki/TOML) format
+to a value.
+
+This function returns the value if an error doesn't occur while this conversion, otherwise an
+error with the `"toml"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("str2toml"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("str2toml"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `X` value to a string with a content in the
+[TOML](https://en.wikipedia.org/wiki/TOML) format.
+
+This function returns the string if an error doesn't occur while this conversion, otherwise an
+error with the `"toml"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("toml2str"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("toml2str"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `s` string with the content in the [JSON](https://en.wikipedia.org/wiki/JSON) format
+to a value.
+
+This function returns the value if an error doesn't occur while this conversion, otherwise an
+error with the `"json"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("str2json"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("str2json"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `X` value to a string with a content in the
+[JSON](https://en.wikipedia.org/wiki/JSON) format.
+
+This function returns the string if an error doesn't occur while this conversion, otherwise an
+error with the `"json"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("json2str"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("json2str"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Converts the `s` string with the content in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format to an array.
+
+The array has elements which are structures with fields. The structure contains the field
+identifiers which are the header in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. If the `issemicolon` boolean
+is `true`, this function uses semicolon as the field separator instead comma. This function
+returns the array if an error doesn't occur while this conversion, otherwise an error with the
+`"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("str2csv"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::OptArg(String::from("issemicolon")),
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("str2csv"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Converts the `s` string with the content without the header in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format to an array.
+
+The array has elements which are arrays with elements as record fields. If the `issemicolon`
+boolean is `true`, this function uses semicolon as the field separator instead comma. This
+function returns the array if an error doesn't occur while this conversion, otherwise an error
+with the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("str2csvwithouthdr"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("str2csvwithouthdr"), String::from(&doc[1..]));    
+    
+    let doc = r#"
+Converts the `X` array to a string with a content in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+The array has elements which are structures with fields. The structure contains the field
+identifiers which are the header in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. This function also requires
+the `fieldnames` array that contains the field names which specify which record fields are
+written. If some structure field doesn't exist in the array element, the record field is empty.
+If the `issemicolon` boolean is `true`, this function uses semicolon as the field separator
+instead comma. This function returns the string if an error doesn't occur while this conversion,
+otherwise an error with the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("csv2str"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("fieldnames")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("csv2str"), String::from(&doc[1..]));    
+    
+    let doc = r#"
+Converts the `X` array to a string with a content without the header in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+The array has elements which are arrays with elements as record fields. This function also
+requires the `fields` number that determines how many record the fields are written. If the
+`issemicolon` boolean is `true`, this function uses semicolon as the field separator instead
+comma. This function returns the string if an error doesn't occur while this conversion,
+otherwise an error with the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("csv2strwithouthdr"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("fields")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("csv2strwithouthdr"), String::from(&doc[1..]));    
+
     //
     // Documentation of built-in functions from other modules.
     //
