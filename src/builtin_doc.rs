@@ -127,7 +127,7 @@ arrays for the [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) forma
 - [`csv2str`](#var.csv2str) (since 0.2.0)
 - [`csv2strwithouthdr`](#var.csv2strwithouthdr) (since 0.2.0)
 
-These functions to converting from/to, loading, and saving the following values:
+These functions to converting from/to, loading, and saving the following values as record fields:
 
 - boolean
 - integer number
