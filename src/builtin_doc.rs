@@ -126,6 +126,10 @@ arrays for the [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) forma
 - [`str2csvwithouthdr`](#var.str2csvwithouthdr) (since 0.2.0)
 - [`csv2str`](#var.csv2str) (since 0.2.0)
 - [`csv2strwithouthdr`](#var.csv2strwithouthdr) (since 0.2.0)
+- [`loadcsv`](#var.loadcsv) (since 0.2.0)
+- [`loadcsvwithouthdr`](#var.loadcsvwithouthdr) (since 0.2.0)
+- [`savecsv`](#var.savecsv) (since 0.2.0)
+- [`savecsvwithouthdr`](#var.savecsvwithouthdr) (since 0.2.0)
 
 These functions to converting from/to, loading, and saving the following values as record fields:
 
@@ -2145,6 +2149,77 @@ otherwise an error with the `"csv"` error kind.
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("csv2strwithouthdr"), String::from(&doc[1..]));    
 
+    let doc = r#"
+Loads an array from the `path` file in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+The array has elements which are structures with fields. The structure contains the field
+identifiers which are the header in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. If the `issemicolon` boolean
+is `true`, this function uses semicolon as the field separator instead comma. This function
+returns the array if an error doesn't occur while this operation, otherwise an error with the
+`"io"` error kind or the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("loadcsv"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("loadcsv"), String::from(&doc[1..]));
+
+    let doc = r#"
+Loads an array from the `path` file in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+The array has elements which are arrays with elements as record fields. If the `issemicolon`
+boolean is `true`, this function uses semicolon as the field separator instead comma. This
+function returns the array if an error doesn't occur while this operation, otherwise an error
+with the `"io"` error kind or the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("loadcsvwithouthdr"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("loadcsvwithouthdr"), String::from(&doc[1..]));    
+    
+    let doc = r#"
+Saves the `X` array to the `path` file in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+The array has elements which are structures with fields. The structure contains the field
+identifiers which are the header in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. This function also requires
+the `fieldnames` array that contains the field names which specify which record fields are
+written. If some structure field doesn't exist in the array element, the record field is empty.
+If the `issemicolon` boolean is `true`, this function uses semicolon as the field separator
+instead comma. This function returns the string if an error doesn't occur while this operation,
+otherwise an error with the `"io"` error kind or the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("savecsv"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("fieldnames")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("savecsv"), String::from(&doc[1..]));
+
+    let doc = r#"
+Saves the `X` array to the `path` file in the
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+The array has elements which are arrays with elements as record fields. This function also
+requires the `fields` number that determines how many record the fields are written. If the
+`issemicolon` boolean is `true`, this function uses semicolon as the field separator instead
+comma. This function returns the string if an error doesn't occur while this operation,
+otherwise an error with the `"io"` error kind or the `"csv"` error kind. 
+"#;
+    sig_root_mod.add_var(String::from("savecsvwithouthdr"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("X")),
+        BuiltinFunArg::Arg(String::from("fields")),
+        BuiltinFunArg::OptArg(String::from("issemicolon"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("savecsvwithouthdr"), String::from(&doc[1..]));
+    
     //
     // Documentation of built-in functions from other modules.
     //
