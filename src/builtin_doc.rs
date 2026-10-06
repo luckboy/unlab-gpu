@@ -2338,12 +2338,12 @@ unlocks the `m` monitor. The following algorithm in pseudocode describes how wor
 
 ```
 lock monitor
-is_continue = apply f(D,value from monitor)
-if is continue
-    while is_continuer
+is_continuation = apply f(D,value from monitor)
+if is_continuation
+    while true
         wait monitor for notification
-        is_continue = apply g(D, value from monitor)
-        if not is_continue
+        is_continuation = apply g(D, value from monitor)
+        if not is_continuation
             break
         end
     end
@@ -2380,12 +2380,12 @@ this function:
 
 ```
 lock monitor
-is_continue = apply f(D, value from monitor)
-if is continue
-    while is_continuer
+is_continuation = apply f(D, value from monitor)
+if is_continuation
+    while true
         wait monitor for notification until timeout
-        is_continue = apply g(D, value from monitor, is_timeout)
-        if not is_continue
+        is_continuation = apply g(D, value from monitor, is_timeout)
+        if not is_continuation
             break
         end
     end
