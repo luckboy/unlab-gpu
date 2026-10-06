@@ -2308,13 +2308,15 @@ Waits for number of specified threads in the `b` barrier.
 Locks the `m` mutex or monitor.
 
 This function locks the `m` mutex or monitor and then applies the `f` function. The `m` mutex or
-monitor is unlocked after leaving the `f` function. The `f` function takes the value from the `m`
-mutex or monitor and can return an array with a new value for the `m` mutex or monitor. If the
-`f` returns other value, this function doesn't write the new value to the `m` mutex or monitor.
-If an error occurs, this function automatically unlocks the `m` mutex or monitor.
+monitor is unlocked after leaving the `f` function. The `f` function takes the `D` value and
+the value from the `m` mutex or monitor and can return an array with a new value for the `m`
+mutex or monitor. If the `f` returns other value, this function doesn't write the new value to
+the `m` mutex or monitor. If an error occurs, this function automatically unlocks the `m` mutex
+or monitor.
 "#;
     sig_root_mod.add_var(String::from("lock"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
+        BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("lock"), String::from(&doc[1..]));    
@@ -2326,32 +2328,33 @@ This function locks the `m` mutex or monitor and then applies the `f` function. 
 function informs about continuation, this function waits for a notification and then applies the
 `g` function. Waiting for the notification is repeated if the `g` function informs about
 continuation. The `h` function is applied if the `f` function or the `g` function informs about
-stop. All passed function take the value from the `m` monitor and can return an array with a new
-value for the `m` monitor. The `f` function and the `g` function should have a convertible value
-to the boolean as a returned value or a second element in the returned array. The passed function
-informs about continuation if the convertible value can be converted to `true`, otherwise informs
-about stop. If the `h` function returns other value, this function doesn't write the new value
-to the `m` monitor. If an error occurs, this function automatically unlocks the `m` monitor. The
-following algorithm in pseudocode describes how works this function:
+stop. All passed function take the `D` value and the value from the `m` monitor and can return an
+array with a new value for the `m` monitor. The `f` function and the `g` function should return a
+convertible value to the boolean as a returned value or a second element in the returned array.
+The passed  function informs about continuation if the convertible value can be converted to
+`true`, otherwise informs about stop. If the `h` function returns other value, this function
+doesn't write the new value to the `m` monitor. If an error occurs, this function automatically
+unlocks the `m` monitor. The following algorithm in pseudocode describes how works this function:
 
 ```
 lock monitor
-is_continue = apply f(value from monitor)
+is_continue = apply f(D,value from monitor)
 if is continue
     while is_continuer
         wait monitor for notification
-        is_continue = apply g(value from monitor)
+        is_continue = apply g(D, value from monitor)
         if not is_continue
             break
         end
     end
 end
-apply h(value from monitor)
+apply h(D, value from monitor)
 unlock monitor
 ```
 "#;
     sig_root_mod.add_var(String::from("lockwait"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
+        BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f")),
         BuiltinFunArg::Arg(String::from("g")),
         BuiltinFunArg::Arg(String::from("h"))
@@ -2359,41 +2362,42 @@ unlock monitor
     doc_root_mod.add_var(String::from("lockwait"), String::from(&doc[1..]));
 
     let doc = r#"
-Locks the `m` monitor and waits for a notification.
+Locks the `m` monitor and waits for a notification until timeout.
 
 This function locks the `m` mutex or monitor and then applies the `f` function. If the `f`
 function informs about continuation, this function waits for a notification until timeout and
 then applies the `g` function. Waiting for the notification is repeated if the `g` function
 informs about continuation. The `h` function is applied if the `f` function or the `g` function
-informs about stop. All passed function take the value from the `m` monitor and can return an
-array with a new value for the `m` monitor. The `f` function and the `g` function should have a
-convertible value to the boolean as a returned value or a second element in the returned array.
-The passed function informs about continuation if the convertible value can be converted to 
-`true`, otherwise informs about stop. The `g` function also takes the timeout flag. If the
-timeout flag is `true`, the timeout occurred. If the `h` function returns other value, this
-function doesn't write the new value to the `m` monitor. If an error occurs, this function
+informs about stop. All passed function take the `D` value and the value from the `m` monitor and
+can return an array with a new value for the `m` monitor. The `f` function and the `g` function
+should return a convertible value to the boolean as a returned value or a second element in the
+returned array. The passed function informs about continuation if the convertible value can be
+converted to `true`, otherwise informs about stop. The `g` function also takes the timeout flag.
+If the timeout flag is `true`, the timeout occurred. If the `h` function returns other value,
+this function doesn't write the new value to the `m` monitor. If an error occurs, this function
 automatically unlocks the `m` monitor. The following algorithm in pseudocode describes how works
 this function:
 
 ```
 lock monitor
-is_continue = apply f(value from monitor)
+is_continue = apply f(D, value from monitor)
 if is continue
     while is_continuer
         wait monitor for notification until timeout
-        is_continue = apply g(value from monitor, is_timeout)
+        is_continue = apply g(D, value from monitor, is_timeout)
         if not is_continue
             break
         end
     end
 end
-apply h(value from monitor)
+apply h(D, value from monitor)
 unlock monitor
 ```
 "#;
     sig_root_mod.add_var(String::from("lockwaittimeout"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
         BuiltinFunArg::Arg(String::from("millis")),
+        BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f")),
         BuiltinFunArg::Arg(String::from("g")),
         BuiltinFunArg::Arg(String::from("h"))
@@ -2404,13 +2408,14 @@ unlock monitor
 Locks the `m` monitor and notifies one thread.
 
 This function locks the `m` monitor and then applies the `f` function. One thread is notified and
-then the `m` monitor is unlocked after leaving the `f` function.  The `f` function takes the
-value from the `m` monitor and can return an array with a new value for the `m` monitor. If the
-`f` returns other value, this function doesn't write the new value to the `m` monitor. If an
-error occurs, this function automatically unlocks the `m` mutex or monitor.
+then the `m` monitor is unlocked after leaving the `f` function.  The `f` function takes the `D`
+value and the value from the `m` monitor and can return an array with a new value for the `m`
+monitor. If the `f` returns other value, this function doesn't write the new value to the `m`
+monitor. If an error occurs, this function automatically unlocks the `m` mutex or monitor.
 "#;
     sig_root_mod.add_var(String::from("locknotifyone"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
+        BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("locknotifyone"), String::from(&doc[1..]));
@@ -2420,12 +2425,13 @@ Locks the `m` monitor and notifies all threads.
 
 This function locks the `m` monitor and then applies the `f` function. All thread are notified
 and then the `m` monitor is unlocked after leaving the `f` function.  The `f` function takes the
-value from the `m` monitor and can return an array with a new value for the `m` monitor. If the
-`f` returns other value, this function doesn't write the new value to the `m` monitor. If an
-error occurs, this function automatically unlocks the `m` mutex or monitor.
+`D` value and the value from the `m` monitor and can return an array with a new value for the `m`
+monitor. If the `f` returns other value, this function doesn't write the new value to the `m`
+monitor. If an error occurs, this function automatically unlocks the `m` mutex or monitor.
 "#;
     sig_root_mod.add_var(String::from("locknotifyall"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
+        BuiltinFunArg::Arg(String::from("D")),
         BuiltinFunArg::Arg(String::from("f"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("locknotifyall"), String::from(&doc[1..]));
