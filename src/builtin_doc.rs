@@ -92,6 +92,21 @@ elements or two fields aren't equal, an error occurs. One element or one field i
 isn't a floating-point number, a matrix, or a mutable object; one argument is a mutable object;
 and other argument is a number.
 
+# Loading and saving values
+
+This library contains the [`load`](#var.load) function and [`save`](#var.save) function which
+allows to load and/or save values. Almost all values can be loaded and/or saved except the
+following objects:
+
+- unnamed function (since 0.2.0)
+- user function (since 0.2.0)
+- window identifier
+- barrier (since 0.2.0)
+- channel (since 0.2.0)
+- join handle (since 0.2.0)
+- immutable user object (since 0.2.0)
+- mutable user object (since 0.2.0)
+
 # TOML format and JSON format
 
 This library contains the following functions to converting from/to values, loading values, and
