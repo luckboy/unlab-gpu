@@ -61,7 +61,8 @@ impl SyncObject
     ///
     /// This method locks the mutex or the monitor and then applies the function. The mutex or
     /// the monitor is unlocked after the leaving from the function. The function takes a mutable
-    /// reference to the mutex value or the monitor value.
+    /// reference to the mutex value or the monitor value. If the function returns an error, the
+    /// mutex or the monitor is automatically unlocked.
     pub fn lock<F>(&self, f: F) -> Result<()>
         where F: FnOnce(&mut Value) -> Result<()>
     {
@@ -145,7 +146,7 @@ impl SyncObject
         }
     }
 
-    /// Locks and notifies one threads.
+    /// Locks and notifies one thread.
     ///
     /// This method locks the monitor and then applies the function. One thread is notified and
     /// then the monitor is unlocked after the leaving from the function. The function takes a 
