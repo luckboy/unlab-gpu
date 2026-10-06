@@ -137,6 +137,74 @@ These functions to converting from/to, loading, and saving the following values 
 - integer number
 - floating-point number
 - string
+
+# Time format
+
+The following specifiers can be used in the format by the [`strftime`](#var.strftime) function
+and the  [`strptime`](#var.strptime) function:
+
+- `%Y` - year with zero padding
+- `%C` - century with zero padding
+- `%y` - year in century with zero padding
+- `%q` - quartar of year
+- `%m` - month number with zero padding
+- `%b` - abbreviated month name
+- `%B` - full month name
+- `%h` - same as `%b`
+- `%d` - day of month with zero padding
+- `%e` - day of month with spece padding
+- `%a` - abbreviated weekday name
+- `%A` - full weekday name
+- `%w` - Sunday = 0, Monday = 1, ..., Saturday = 6
+- `%u` - Monday = 1, Tuesday = 2, ..., Sunday = 7
+- `%U` - week number starting with Sunday (00-53) with zero padding
+- `%W` - week number starting with Monday (00-53) witn zero padding
+- `%G` - year corresponding to the ISO week number with zero padding
+- `%g` - year in century corresponding to the ISO week number with zero padding
+- `%V` - ISO week number (01-53) with zero padding
+- `%j` - day of year with zero padding
+- `%D` - same as `%m/%d/%y`
+- `%x` - locale's date
+- `%F` - same as `%Y-%b-%d`
+- `%v` - same as `%e-%b-%Y`
+- `%H` - hour number (00-23) with zero padding
+- `%k` - hour number ( 0-23) with space padding
+- `%I` - hour number in 12-hour clocks (01-12) with zero padding
+- `%l` - hour number in 12-hour clocks ( 1-12) with space padding
+- `%P` - `am` or `pm` in 12-hour clocks
+- `%p` - `AM` or `PM` in 12-hour clocks
+- `%M` - minute number with zero padding
+- `%S` - second number with zero padding
+- `%f` - number of nanoseconds since of last second
+- `%.f` - decimal faction of second with dot
+- `%.3f` - decimal faction of second with dot and 3 digits
+- `%.6f` - decimal faction of second with dot and 6 digits
+- `%.9f` - decimal faction of second with dot and 9 digits
+- `%3f` - decimal faction of second without dot with 3 digits
+- `%6f` - decimal faction of second without dot with 6 digits
+- `%9f` - decimal faction of second without dot with 9 digits
+- `%R` - same as `%H:%M`
+- `%T` - same as `%H:%M:%S`
+- `%X` - locale's time
+- `%r` - locale's 12-hour closks time
+- `%Z` - local tiem zone name
+- `%z` - offset from the local time to UTC
+- `%:z` - offset from the local time to UTC with colon
+- `%::z` - offset from the local time to UTC with seconds
+- `%:::z` - offset from the local time to UTC without minutes
+- `%#z` - offset from the local time to UTC with minutes or without minutes (parsing only)
+- `%c` - locale's date and time
+- `%+` - date and time in ISO 8601/RFC 3339 format
+- `%s` - UNIX timestamp
+- `%t` - literal tab
+- `%n` - literal newline
+- `%%` - literal percent sign
+
+The above specifiers can have the following modifiers:
+
+- `-` - specifier without padding
+- `_` - specifier with space padding
+- `0` - specifier with zero padding
 "#;
     match doc_root_mod.value() {
         Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
@@ -2149,6 +2217,32 @@ otherwise an error with the `"csv"` error kind.
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("csv2strwithouthdr"), String::from(&doc[1..]));    
 
+    let doc = r#"
+Formats the `millis` number of milliseconds as the UNIX timestamp according the `fmt` format.
+
+If the `isutc` is `true`, this function uses the UTC time zone instead the local time zone. This
+function returns a string if the `millis` number of milliseconds isn't too small or too large,
+otherwise an error with the `"datetime"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("strftime"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("fmt")),
+        BuiltinFunArg::Arg(String::from("millis")),
+        BuiltinFunArg::OptArg(String::from("isutc"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("strftime"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `s` string to the UNIX timestamp in milliseconds according the `fmt` format.
+
+This function returns an integer number if a parsing error occurs for a time, otherwise an error
+with the `"parsetime"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("strptime"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("fmt"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("strptime"), String::from(&doc[1..]));    
+    
     let doc = r#"
 Loads an array from the `path` file in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
