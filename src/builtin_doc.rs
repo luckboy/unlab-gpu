@@ -2308,11 +2308,10 @@ Waits for number of specified threads in the `b` barrier.
 Locks the `m` mutex or monitor.
 
 This function locks the `m` mutex or monitor and then applies the `f` function. The `m` mutex or
-monitor is unlocked after leaving the `f` function. The `f` function takes the `D` value and
+monitor is unlocked after leaving from the `f` function. The `f` function takes the `D` value and
 the value from the `m` mutex or monitor and can return an array with a new value for the `m`
 mutex or monitor. If the `f` returns other value, this function doesn't write the new value to
-the `m` mutex or monitor. If an error occurs, this function automatically unlocks the `m` mutex
-or monitor.
+the `m` mutex or monitor.
 "#;
     sig_root_mod.add_var(String::from("lock"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
@@ -2333,8 +2332,8 @@ array with a new value for the `m` monitor. The `f` function and the `g` functio
 convertible value to the boolean as a returned value or a second element in the returned array.
 The passed  function informs about continuation if the convertible value can be converted to
 `true`, otherwise informs about stop. If the `h` function returns other value, this function
-doesn't write the new value to the `m` monitor. If an error occurs, this function automatically
-unlocks the `m` monitor. The following algorithm in pseudocode describes how works this function:
+doesn't write the new value to the `m` monitor. The following algorithm in pseudocode describes
+how works this function:
 
 ```
 lock monitor
@@ -2374,9 +2373,8 @@ should return a convertible value to the boolean as a returned value or a second
 returned array. The passed function informs about continuation if the convertible value can be
 converted to `true`, otherwise informs about stop. The `g` function also takes the timeout flag.
 If the timeout flag is `true`, the timeout occurred. If the `h` function returns other value,
-this function doesn't write the new value to the `m` monitor. If an error occurs, this function
-automatically unlocks the `m` monitor. The following algorithm in pseudocode describes how works
-this function:
+this function doesn't write the new value to the `m` monitor. The following algorithm in
+pseudocode describes how works this function:
 
 ```
 lock monitor
@@ -2408,10 +2406,10 @@ unlock monitor
 Locks the `m` monitor and notifies one thread.
 
 This function locks the `m` monitor and then applies the `f` function. One thread is notified and
-then the `m` monitor is unlocked after leaving the `f` function.  The `f` function takes the `D`
-value and the value from the `m` monitor and can return an array with a new value for the `m`
+then the `m` monitor is unlocked after leaving from the `f` function.  The `f` function takes the
+`D` value and the value from the `m` monitor and can return an array with a new value for the `m`
 monitor. If the `f` returns other value, this function doesn't write the new value to the `m`
-monitor. If an error occurs, this function automatically unlocks the `m` mutex or monitor.
+monitor.
 "#;
     sig_root_mod.add_var(String::from("locknotifyone"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
@@ -2424,10 +2422,10 @@ monitor. If an error occurs, this function automatically unlocks the `m` mutex o
 Locks the `m` monitor and notifies all threads.
 
 This function locks the `m` monitor and then applies the `f` function. All thread are notified
-and then the `m` monitor is unlocked after leaving the `f` function.  The `f` function takes the
-`D` value and the value from the `m` monitor and can return an array with a new value for the `m`
-monitor. If the `f` returns other value, this function doesn't write the new value to the `m`
-monitor. If an error occurs, this function automatically unlocks the `m` mutex or monitor.
+and then the `m` monitor is unlocked after leaving from the `f` function.  The `f` function takes
+the `D` value and the value from the `m` monitor and can return an array with a new value for the
+`m` monitor. If the `f` returns other value, this function doesn't write the new value to the `m`
+monitor.
 "#;
     sig_root_mod.add_var(String::from("locknotifyall"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("m")),
@@ -2435,6 +2433,99 @@ monitor. If an error occurs, this function automatically unlocks the `m` mutex o
         BuiltinFunArg::Arg(String::from("f"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("locknotifyall"), String::from(&doc[1..]));
+
+    let doc = r#"
+Locks the `rwl` reader-writer lock with shared read access.
+
+This function locks the `rwl` reader-writer lock with shared read access and then applies the `f`
+function. The `rwl` read-writer lock is unlocked after leaving from the `f` function. The `f`
+function takes the `D` value and the value from the `rwl` reader-writer lock.
+"#;
+    sig_root_mod.add_var(String::from("rwlockread"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("rwl")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("rwlockread"), String::from(&doc[1..]));
+
+    let doc = r#"
+Locks the `rwl` reader-writer lock with exclusive write access.
+
+This function locks the `rwl` reader-writer lock with exclusive write access and then applies the
+`f` function. The `rwl` read-writer lock is unlocked after leaving from the `f` function. The `f`
+function takes the `D` value and the value from the `rwl` reader-writer lock and can return an
+array with a new value for the `rwl` reader-writer lock. If the `f` returns other value, this
+function doesn't write the new value to the `rwl` reader-writer lock.
+"#;
+    sig_root_mod.add_var(String::from("rwlockwrite"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("rwl")),
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("rwlockwrite"), String::from(&doc[1..]));
+
+    let doc = r#"
+Receives a message via the `c` channel.
+
+This function returns the message.
+"#;
+    sig_root_mod.add_var(String::from("recv"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("c"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("recv"), String::from(&doc[1..]));
+
+    let doc = r#"
+Receives a message via the `c` channel until timeout.
+
+This function returns an array with the message if timeout doesn't occur, otherwise `none`.
+"#;
+    sig_root_mod.add_var(String::from("recvtimeout"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("c")),
+        BuiltinFunArg::Arg(String::from("millis"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("recvtimeout"), String::from(&doc[1..]));        
+
+    let doc = r#"
+Sends the `X` message via the `c` channel.
+"#;
+    sig_root_mod.add_var(String::from("send"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("c")),
+        BuiltinFunArg::Arg(String::from("X"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("send"), String::from(&doc[1..]));
+
+    let doc = r#"
+Creates a new thread.
+
+This function applies the `f` function with the `D` value in the new thread and then returns a
+join handle. If an error occurs for the `f` function, this function returns an error with the
+`"threadfunction" errro kind. This function can return an error with the `"io"` if an I/O error
+occurs while a thread creation.
+"#;
+    sig_root_mod.add_var(String::from("thread"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("D")),
+        BuiltinFunArg::Arg(String::from("f"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("thread"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Waits for the thread.
+
+This function returns the returned value by a thread function if an error doesn't occur,
+otherwise an error with `"threadjoin"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("threadjoin"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("jh")),
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("threadjoin"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Puts the current thread to sleep for at least the `millis` number of milliseconds.
+"#;
+    sig_root_mod.add_var(String::from("sleep"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("millis"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("sleep"), String::from(&doc[1..]));
     
     let doc = r#"
 Loads an array from the `path` file in the
