@@ -2566,9 +2566,8 @@ kind.
     let doc = r#"
 Returns the last access time as the UNIX timestamp in milliseconds for the `path` file.
 
-If an I/O error occurs while this operation, this function returns an error with the `"io"` error
-kind. Also, this function returns an error with the `"time"` error kind if a time error occurs
-while this operation.
+If an error occurs while this operation, this function returns an error with the `"io"` error
+kind or an error with the `"time"` error kind.
 "#;
     sig_root_mod.add_var(String::from("fileatime"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -2578,9 +2577,8 @@ while this operation.
     let doc = r#"
 Returns the creation time as the UNIX timestamp in milliseconds for the `path` file.
 
-If an I/O error occurs while this operation, this function returns an error with the `"io"` error
-kind. Also, this function returns an error with the `"time"` error kind if a time error occurs
-while this operation.
+If an error occurs while this operation, this function returns an error with the `"io"` error
+kind or an error with the `"time"` error kind.
 "#;
     sig_root_mod.add_var(String::from("filectime"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -2590,9 +2588,8 @@ while this operation.
     let doc = r#"
 Returns the last modification time as the UNIX timestamp in milliseconds for the `path` file.
 
-If an I/O error occurs while this operation, this function returns an error with the `"io"` error
-kind. Also, this function returns an error with the `"time"` error kind if a time error occurs
-while this operation.
+If an error occurs while this operation, this function returns an error with the `"io"` error
+kind or an error with the `"time"` error kind.
 "#;
     sig_root_mod.add_var(String::from("filemtime"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("path"))
@@ -2610,9 +2607,9 @@ string or `none`, this function doesn't write data to the standard input pipe. T
 returns an array with two strings which are read from the standard output pipe and the standard
 error pipe. This function returns the exit code if an I/O error doesn't occur while this
 operation, otherwise an error with the `"io"` error kind. Also, this function returns an error
-with the `"exitstatus"` error kind if child process terminated by signal. Also, an error with the
-`"threadjoin"` is returned by this function if this function can't wait for the thread that
-writes data to the standard input pipe. 
+with the `"exitstatus"` error kind if child process terminated by signal. An error with the
+`"threadjoin"` error kind also is returned by this function if this function can't wait for the
+thread that writes data to the standard input pipe.
 "#;
     sig_root_mod.add_var(String::from("pspawn"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("stdin")),
@@ -2708,8 +2705,8 @@ otherwise an error with the `"io"` error kind or the `"csv"` error kind.
     let doc = r#"
 Returns the current time as the UNIX timestamp in milliseconds.
 
-If a time error occurs while this operation, this function returns an error with the `"time"`
-error kind.
+If an error occurs while the calculation of UNIX timestamp, this function returns an error with
+the `"time"` error kind.
 "#;
     sig_root_mod.add_var(String::from("time"), Sig::BuiltinFunSince(vec![], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("time"), String::from(&doc[1..]));
