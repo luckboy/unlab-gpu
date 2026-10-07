@@ -2070,7 +2070,7 @@ regular string. The regular string can have references to groups in the regular 
     let doc = r#"
 Folds the elements in the `X` iterable object.
 
-This function applies the `f` function with the `D` value and the `z` value for the first
+This function applies the `f` function to the `D` value and the `z` value for the first
 application or the previous result of the `f` function for each element in the `X` iterable
 object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, \mathbf{z}, {\mathbf{x}}_1), {\mathbf{x}}_2) \ldots), {\mathbf{x}}_N)$).
@@ -2101,9 +2101,9 @@ This function creates a new array with the mapped elements by the `f` function w
     let doc = r#"
 Reduce the elements in the `X` iterable object.
 
-This function applies the `f` function with the `D` value and the first element in the `X`
-iterable object for the first application or the previous result of the `f` function for each
-element except the first element in the `X` iterable object
+This function applies the `f` function to the `D` value and the first element in the `X` iterable
+object for the first application or the previous result of the `f` function for each element
+except the first element in the `X` iterable object
 ($f(\mathbf{D}, f(\ldots f(\mathbf{D}, f(\mathbf{D}, {\mathbf{x}}_1, {\mathbf{x}}_2), {\mathbf{x}}_3) \ldots), {\mathbf{x}}_N)$).
 A result of this function is a last result of the `f` function for more elements than one or one
 element for one element if the `X` iterable object isn't empty, otherwise `none`.
@@ -2497,10 +2497,10 @@ Sends the `X` message via the `c` channel.
     let doc = r#"
 Creates a new thread.
 
-This function applies the `f` function with the `D` value in the new thread and then returns a
-join handle. If an error occurs for the `f` function, this function returns an error with the
-`"threadfunction" errro kind. This function can return an error with the `"io"` if an I/O error
-occurs while a thread creation.
+This function applies the `f` function to the `D` value in the new thread and then returns a join
+handle. The new thread terminates with a returned value by the `f` function if an error occurs
+for the `f` function, terminates with an error with the `"threadfunction"` errro kind. This
+function can return an error with the `"io"` if an I/O error occurs while a thread creation.
 "#;
     sig_root_mod.add_var(String::from("thread"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("D")),
@@ -2511,8 +2511,8 @@ occurs while a thread creation.
     let doc = r#"
 Waits for the thread.
 
-This function returns the returned value by a thread function if an error doesn't occur,
-otherwise an error with `"threadjoin"` error kind.
+This function returns a value from the terminated thread of the `jh` join handle if an error
+doesn't occur, otherwise an error with `"threadjoin"` error kind.
 "#;
     sig_root_mod.add_var(String::from("threadjoin"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("jh")),
