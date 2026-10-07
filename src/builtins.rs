@@ -4561,7 +4561,7 @@ pub fn pspawn(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
         Some(tmp_stdin_value) => tmp_stdin_value.clone(),
         None => return Err(Error::Interp(String::from("no argument"))),
     };
-    let cmd_name = get_second_arg_string(arg_values, "unsupported type for function pipelyspawn")?;
+    let cmd_name = get_second_arg_string(arg_values, "unsupported type for function pspawn")?;
     let mut cmd_args: Vec<String> = Vec::new();
     for arg_value in &arg_values[2..] {
         cmd_args.push(format!("{}", arg_value));
