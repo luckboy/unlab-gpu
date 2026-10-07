@@ -1449,7 +1449,7 @@ error with the `"io"` error kind.
     let doc = r#"
 Returns the path of current working directory.
 
-If an I/O error occur while this operation, this function returns an error with the `"io"` error
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
     sig_root_mod.add_var(String::from("pwd"), Sig::BuiltinFunSinceFirst(vec![]));
@@ -1458,7 +1458,7 @@ kind.
     let doc = r#"
 Returns `true` if the `path` file exists, otherwise `false`.
 
-If an I/O error occur while this operation, this function returns an error with the `"io"` error
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
     sig_root_mod.add_var(String::from("exist"), Sig::BuiltinFunSinceFirst(vec![
@@ -1474,7 +1474,7 @@ The file types are:
 - `"dir"` - directory
 - `"file"` - any file except directory
 
-If an I/O error occur while this operation, this function returns an error with the `"io"` error
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
     sig_root_mod.add_var(String::from("filetype"), Sig::BuiltinFunSinceFirst(vec![
@@ -1485,7 +1485,7 @@ kind.
     let doc = r#"
 Returns file names in the `path` directory.
 
-If an I/O error occur while this operation, this function returns an error with the `"io"` error
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
 kind.
 "#;
     sig_root_mod.add_var(String::from("dir"), Sig::BuiltinFunSinceFirst(vec![
@@ -2233,7 +2233,7 @@ otherwise an error with the `"csv"` error kind.
     doc_root_mod.add_var(String::from("csv2strwithouthdr"), String::from(&doc[1..]));    
 
     let doc = r#"
-Formats the `millis` number of milliseconds as the UNIX timestamp according the `fmt` format.
+Formats the `millis` UNIX timestamp in milliseconds according the `fmt` format.
 
 If the `isutc` is `true`, this function uses the UTC time zone instead the local time zone. This
 function returns a string if the `millis` number of milliseconds isn't too small or too large,
@@ -2519,7 +2519,7 @@ doesn't occur, otherwise an error with `"threadjoin"` error kind.
         BuiltinFunArg::Arg(String::from("jh")),
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("threadjoin"), String::from(&doc[1..]));    
-
+    
     let doc = r#"
 Puts the current thread to sleep for at least the `millis` number of milliseconds.
 "#;
@@ -2527,6 +2527,112 @@ Puts the current thread to sleep for at least the `millis` number of millisecond
         BuiltinFunArg::Arg(String::from("millis"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("sleep"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the number of bytes in the `path` file.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("filebytes"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("filebytes"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns `true` the `path` file if the `path` file is read only, otherwise `false`.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("readonly"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("readonly"), String::from(&doc[1..]));
+
+    let doc = r#"
+Sets the `path` file to read-only if the `isreadonly` boolean is `true`, otherwise sets the
+`path` file to read-write.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("setreadonly"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("isreadonly"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("setreadonly"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the last access time as the UNIX timestamp in milliseconds for the `path` file.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
+kind. Also, this function returns an error with the `"time"` error kind if a time error occurs
+while this operation.
+"#;
+    sig_root_mod.add_var(String::from("fileatime"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("fileatime"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the creation time as the UNIX timestamp in milliseconds for the `path` file.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
+kind. Also, this function returns an error with the `"time"` error kind if a time error occurs
+while this operation.
+"#;
+    sig_root_mod.add_var(String::from("filectime"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("filectime"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the last modification time as the UNIX timestamp in milliseconds for the `path` file.
+
+If an I/O error occurs while this operation, this function returns an error with the `"io"` error
+kind. Also, this function returns an error with the `"time"` error kind if a time error occurs
+while this operation.
+"#;
+    sig_root_mod.add_var(String::from("filemtime"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("filemtime"), String::from(&doc[1..]));
+
+    let doc = r#"
+Executes the command with the `cmdname` command name and the arguments as a child process with
+pipes.
+
+This function creates pipes are connected with the standard input of child process, the standard 
+output of child process, and the standard error of child process. The `stdin` value as a string
+is written to the standard input pipe for the child process. If the `stdin` value is an empty
+string or `none`, this function doesn't write data to the standard input pipe. This function
+returns an array with two strings which are read from the standard output pipe and the standard
+error pipe. This function returns the exit code if an I/O error doesn't occur while this
+operation, otherwise an error with the `"io"` error kind. Also, this function returns an error
+with the `"exitstatus"` error kind if child process terminated by signal. Also, an error with the
+`"threadjoin"` is returned by this function if this function can't wait for the thread that
+writes data to the standard input pipe. 
+"#;
+    sig_root_mod.add_var(String::from("pspawn"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("stdin")),
+        BuiltinFunArg::Arg(String::from("cmdname")),
+        BuiltinFunArg::OptArg(String::from("arg")),
+        BuiltinFunArg::DotDotDot
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("pspawn"), String::from(&doc[1..]));
+
+    let doc = r#"
+Appends the `s` string to the `path` text file.
+
+This function returns `true` if an I/O error doesn't occur while this operation, otherwise an
+error with the `"io"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("fileappend"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("path")),
+        BuiltinFunArg::Arg(String::from("s"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("fileappend"), String::from(&doc[1..]));
     
     let doc = r#"
 Loads an array from the `path` file in the
@@ -2598,6 +2704,15 @@ otherwise an error with the `"io"` error kind or the `"csv"` error kind.
         BuiltinFunArg::OptArg(String::from("issemicolon"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("savecsvwithouthdr"), String::from(&doc[1..]));
+
+    let doc = r#"
+Returns the current time as the UNIX timestamp in milliseconds.
+
+If a time error occurs while this operation, this function returns an error with the `"time"`
+error kind.
+"#;
+    sig_root_mod.add_var(String::from("time"), Sig::BuiltinFunSince(vec![], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("time"), String::from(&doc[1..]));
     
     //
     // Documentation of built-in functions from other modules.
