@@ -190,7 +190,8 @@ impl SyncObject
     ///
     /// This method locks the reader-writer lock with shared read access and then applies the
     /// function. The reader-writer lock is unlocked after the leaving from the function. The
-    /// function takes an immutable reference to the reader-writer lock value.
+    /// function takes an immutable reference to the reader-writer lock value. If the function
+    /// returns an error, the reader-writer lock is automatically unlocked.
     pub fn read<F>(&self, f: F) -> Result<()>
         where F: FnOnce(&Value) -> Result<()>
     {
@@ -208,7 +209,8 @@ impl SyncObject
     ///
     /// This method locks the reader-writer lock with exclusive write access and then applies the
     /// function. The reader-writer lock is unlocked after the leaving from the function. The
-    /// function takes a mutable reference to the reader-writer lock value.
+    /// function takes a mutable reference to the reader-writer lock value. If the function
+    /// returns an error, the reader-writer lock is automatically unlocked.
     pub fn write<F>(&self, f: F) -> Result<()>
         where F: FnOnce(&mut Value) -> Result<()>
     {
