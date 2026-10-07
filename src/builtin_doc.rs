@@ -2498,9 +2498,10 @@ Sends the `X` message via the `c` channel.
 Creates a new thread.
 
 This function applies the `f` function to the `D` value in the new thread and then returns a join
-handle. The new thread terminates with a returned value by the `f` function if an error occurs
-for the `f` function, terminates with an error with the `"threadfunction"` errro kind. This
-function can return an error with the `"io"` if an I/O error occurs while a thread creation.
+handle. The new thread terminates with a returned value by the `f` function if the `f` function
+returns without an error, terminates with an error with the `"threadfunction"` error kind. If an 
+I/O error occurs while a thread creation, this function returns an error with the `"io"` error
+kind.
 "#;
     sig_root_mod.add_var(String::from("thread"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("D")),
