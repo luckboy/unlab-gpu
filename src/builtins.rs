@@ -3602,6 +3602,31 @@ pub fn containsre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) ->
     }
 }
 
+/// A `matchesre` built-in function.
+pub fn matchesre(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Object(object)), Some(Value::Object(object2))) => {
+            match (&**object, &**object2) {
+                (Object::String(s), Object::String(t)) => {
+                    let re = match Regex::new(t.as_str()) {
+                        Ok(tmp_re) => tmp_re,
+                        Err(err) => return Ok(Value::Object(Arc::new(Object::Error(String::from("regex"), format!("{}", err))))),
+                    };
+                    let elems: Vec<Value> = re.find_iter(s.as_str()).map(|m| Value::Object(Arc::new(Object::String(String::from(m.as_str()))))).collect();
+                    Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
+                },
+                (_, _) => Err(Error::Interp(String::from("unsupported types for function matchesre"))),
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function matchesre"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 /// A `replacere` built-in function.
 pub fn replacere(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -5030,6 +5055,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("bytes"), bytes);
     add_builtin_fun(root_mod, String::from("splitre"), splitre);
     add_builtin_fun(root_mod, String::from("containsre"), containsre);
+    add_builtin_fun(root_mod, String::from("matchesre"), matchesre);
     add_builtin_fun(root_mod, String::from("replacere"), replacere);
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
