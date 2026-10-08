@@ -2226,7 +2226,7 @@ the `fieldnames` array that contains the field names which specify which record 
 written. If some structure field doesn't exist in the array element, the record field is empty.
 If the `issemicolon` boolean is `true`, this function uses semicolon as the field separator
 instead comma. This function returns the string if an error doesn't occur while this conversion,
-otherwise an error with the `"csv"` error kind. 
+otherwise an error with the `"csv"` error kind or the `"utf8"` error kind. 
 "#;
     sig_root_mod.add_var(String::from("csv2str"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
@@ -2243,7 +2243,7 @@ The array has elements which are arrays with elements as record fields. This fun
 requires the `fields` number that determines how many record the fields are written. If the
 `issemicolon` boolean is `true`, this function uses semicolon as the field separator instead
 comma. This function returns the string if an error doesn't occur while this conversion,
-otherwise an error with the `"csv"` error kind. 
+otherwise an error with the `"csv"` error kind or the `"utf8"` error kind. 
 "#;
     sig_root_mod.add_var(String::from("csv2strwithouthdr"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
