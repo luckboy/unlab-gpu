@@ -20,6 +20,7 @@
 //! - standard built-in functions
 //! - getopts
 //! - plotter
+//! - cURL
 //! - documentation generator
 //! - package manager
 //! - tester
