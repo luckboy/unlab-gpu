@@ -2036,6 +2036,9 @@ Returns the number of bytes in the `s` string.
     
     let doc = r#"
 Returns the substrings of the `s` string which are separated by the `t` regular expression.
+
+If the `t` regular expression is invalid, this function returns an error with the `"regex"` error
+kind.
 "#;
     sig_root_mod.add_var(String::from("splitre"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("s")),
@@ -2046,19 +2049,36 @@ Returns the substrings of the `s` string which are separated by the `t` regular 
     let doc = r#"
 Returns the `true` if the `s` string contains one or more matches of the `t` regular expression,
 otherwise `false`.
+
+If the `t` regular expression is invalid, this function returns an error with the `"regex"` error
+kind.
 "#;
     sig_root_mod.add_var(String::from("containsre"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::Arg(String::from("t"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("containsre"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Returns the matches of the `t` regular expression as strings in the `s` string.
+
+If the `t` regular expression is invalid, this function returns an error with the `"regex"` error
+kind.
+"#;
+    sig_root_mod.add_var(String::from("matchesre"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("s")),
+        BuiltinFunArg::Arg(String::from("t"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("matchesre"), String::from(&doc[1..]));        
     
     let doc = r#"
 Replaces all matches of the `t` regular expression in the `s` string with the `u` a regular
 string.
 
 This function returns a new string with replaced matches of the `t` regular expression to the `u`
-regular string. The regular string can have references to groups in the regular expression.
+regular string. The regular string can have references to groups in the regular expression. If
+the `t` regular expression is invalid, this function returns an error with the `"regex"` error
+kind.
 "#;
     sig_root_mod.add_var(String::from("replacere"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("s")),
