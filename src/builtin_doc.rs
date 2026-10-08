@@ -179,7 +179,7 @@ and the  [`strptime`](#var.strptime) function:
 - `%V` - ISO week number (01-53) with zero padding
 - `%j` - day of year with zero padding
 - `%D` - same as `%m/%d/%y`
-- `%x` - locale's date
+- `%x` - date for the current locale
 - `%F` - same as `%Y-%b-%d`
 - `%v` - same as `%e-%b-%Y`
 - `%H` - hour number (00-23) with zero padding
@@ -200,15 +200,15 @@ and the  [`strptime`](#var.strptime) function:
 - `%9f` - decimal faction of second without dot with 9 digits
 - `%R` - same as `%H:%M`
 - `%T` - same as `%H:%M:%S`
-- `%X` - locale's time
-- `%r` - locale's 12-hour closks time
-- `%Z` - local tiem zone name
+- `%X` - time for the current locale
+- `%r` - 12-hour closks time for the current locale
+- `%Z` - local time zone name
 - `%z` - offset from the local time to UTC
 - `%:z` - offset from the local time to UTC with colon
 - `%::z` - offset from the local time to UTC with seconds
 - `%:::z` - offset from the local time to UTC without minutes
 - `%#z` - offset from the local time to UTC with minutes or without minutes (parsing only)
-- `%c` - locale's date and time
+- `%c` - date and time for the current locale
 - `%+` - date and time in ISO 8601/RFC 3339 format
 - `%s` - UNIX timestamp
 - `%t` - literal tab
