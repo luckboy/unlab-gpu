@@ -94,7 +94,7 @@ and other argument is a number.
 
 # Loading and saving values
 
-This library contains the [`load`](#var.load) function and [`save`](#var.save) function which
+This library contains the [`load`](#var.load) function and the [`save`](#var.save) function which
 allows to load and/or save values. Almost all values can be loaded and/or saved except the
 following objects:
 
