@@ -6736,6 +6736,36 @@ fn test_containsre_is_applied_with_success()
 }
 
 #[test]
+fn test_matchesre_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("matchesre")) {
+        Some(fun_value) => {
+            let arg_value = Value::Object(Arc::new(Object::String(String::from(" abc  def ghi "))));
+            let arg_value2 = Value::Object(Arc::new(Object::String(String::from("[a-z]+"))));
+            match fun_value.apply(&mut interp, &mut env, &[arg_value, arg_value2]) {
+                Ok(value) => {
+                    let elems = vec![
+                        Value::Object(Arc::new(Object::String(String::from("abc")))),
+                        Value::Object(Arc::new(Object::String(String::from("def")))),
+                        Value::Object(Arc::new(Object::String(String::from("ghi"))))
+                    ];
+                    let expected_value = Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems))));
+                    assert_eq!(expected_value, value);
+                },
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_replacere_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
