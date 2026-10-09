@@ -42,7 +42,7 @@ The `opts` structure can have the following fields:
   of uploading and downloading (default: false) (optional)
 - `username` - the username (cURL option: `CURLOPT_USERNAME`) (optional)
 - `password` - the password (cURL option: `CURLOPT_PASSWORD`) (optional)
-- `httpheaders` - the HTTP headers are an array with strings (cURL option: `CURLOPT_HTTPHEADER`)
+- `httpheaders` - the HTTP headers are an array (cURL option: `CURLOPT_HTTPHEADER`) (optional)
 - `get` - if this field has the convertible value to `true`, this function uses the HTTP GET
   request (cURL option: `CURLOPT_HTTPGET`) (optional)
 - `post` - if this field has the convertible value to `true`, this function uses the HTTP POST
@@ -67,8 +67,9 @@ The `opts` structure can have the following fields:
 - `uploadfile` - the uploading file (optional)
 - `downloadfile` - the downloading file (optional)
 
-If an error occurs while this operation, this functio returns an error with the `"curl"` error
-kind, the `"io"` error kind, or the `"utf8"` error kind.
+The `read` field is ignored if the `uploadfile` field is set. Also `write` field is ignored if the
+`downloadfile` field is set. If an error occurs while this operation, this functio returns an error
+with the `"curl"` error kind, the `"io"` error kind, or the `"utf8"` error kind.
 "#;
     sig_root_mod.add_var(String::from("curl"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("url")),
