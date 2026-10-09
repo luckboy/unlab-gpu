@@ -50,7 +50,6 @@ struct CurlOptions
     key_password: Option<String>,
     pinned_public_key: Option<String>,
     connect_timeout: Option<Duration>,
-    dns_cache_timeout: Option<Duration>,
     timeout: Option<Duration>,
     upload_file: Option<String>,
     download_file: Option<String>,
@@ -241,15 +240,6 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         },
                         None => None,
                     };
-                    let dns_cache_timeout = match fields.get(&String::from("dnscachetimeout")) {
-                        Some(field) => {
-                            match field {
-                                Value::None => None,
-                                _ => Some(Duration::from_millis(field.to_i64() as u64)),
-                            }
-                        },
-                        None => None,
-                    };
                     let timeout = match fields.get(&String::from("timeout")) {
                         Some(field) => {
                             match field {
@@ -297,7 +287,6 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                             key_password,
                             pinned_public_key,
                             connect_timeout,
-                            dns_cache_timeout,
                             timeout,
                             upload_file,
                             download_file,
@@ -417,10 +406,6 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
             }
             match opts.connect_timeout {
                 Some(connect_timeout) => easy.connect_timeout(connect_timeout)?,
-                None => (),
-            }
-            match opts.dns_cache_timeout {
-                Some(dns_cache_timeout) => easy.dns_cache_timeout(dns_cache_timeout)?,
                 None => (),
             }
             match opts.timeout {
