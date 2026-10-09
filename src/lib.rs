@@ -41,6 +41,7 @@ pub mod backend;
 pub mod builtin_doc;
 pub mod builtins;
 pub mod curl_fun;
+pub mod curl_fun_doc;
 pub mod dfs;
 pub mod doc;
 pub mod env;

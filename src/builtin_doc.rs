@@ -7,6 +7,7 @@
 //
 //! A module of documentation of built-in functions.
 use crate::doc::*;
+use crate::curl_fun_doc::*;
 use crate::getopts_doc::*;
 use crate::mod_node::*;
 #[cfg(feature = "plot")]
@@ -2738,4 +2739,5 @@ the `"time"` error kind.
     add_getopts_doc(sig_root_mod, doc_root_mod);
     #[cfg(feature = "plot")]
     add_plot_doc(sig_root_mod, doc_root_mod);
+    add_curl_fun_doc(sig_root_mod, doc_root_mod);
 }
