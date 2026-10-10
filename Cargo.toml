@@ -20,7 +20,7 @@ chrono = "0.4"
 clap = { version = "4.6", default-features = false, features = ["std", "help", "usage", "error-context", "derive"] }
 csv = "1.4"
 ctrlc = "3.5"
-curl = "0.4"
+curl = { version = "0.4.37", features = ["protocol-ftp"] }
 getopts = "0.2"
 home = "0.5"
 itoa = "1.0"
