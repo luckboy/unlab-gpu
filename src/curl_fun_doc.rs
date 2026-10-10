@@ -16,9 +16,9 @@ pub fn add_curl_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut 
     let doc = r#"
 # CURL function
 
-The [cURL](#var.curl) function allows to connect with network by many protocols. Data can be
-transferred by the [cURL](#var.curl) function from/to servers by using for example HTTP or HTTPS.
-This function uses the cURL library to connect with network.
+The [cURL](#var.curl) function allows to connect with network by the URLs. Data can be transferred
+by this function from/to servers by using for example HTTP or HTTPS. This function uses the cURL
+library to create connections with servers.
 "#;
     match doc_root_mod.value() {
         Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
