@@ -29,9 +29,9 @@ Transfers data from/to the `url` URL.
 
 This function returns an array or a string. The result of this function is the header or the
 content if this function returns the string, otherwise the array with the header and the content.
-Also, this function can return `true` if the header isn't received and the content isn't
-downloaded. If the `opts` structure isn't passed, this function returns the content as a string.
-The `opts` structure can have the following fields:
+Also, this function can return `true` if the header and the content aren't returned. If the `opts`
+structure isn't passed, this function returns the content as a string. The `opts` structure can
+have the following fields:
 
 - `read` - the uploading data (optional)
 - `write` -  if this field has the convertible value to `true`, this function returns a downloaded
