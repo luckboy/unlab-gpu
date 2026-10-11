@@ -58,6 +58,8 @@ structure can have the following fields:
   HTTP 3xx redirect (cURL option: `CURLOPT_FOLLOWLOCATION`) (optional)
 - `customrequest` - the custom method of HTTP request (cURL option: `CURLOPT_CUSTOMREQUEST`)
   (optional)
+- `sslcerttype` - the type of certificate (cURL option: `CURLOPT_SSLCERTTYPE`) (optional)
+- `sslcert` - the file of certificate (cURL option: `CURLOPT_SSLCERT`) (optional)
 - `sslkeytype` - the type of private key (cURL option: `CURLOPT_SSLKEYTYPE`) (optional)
 - `sslkey` - the file of private key (cURL option: `CURLOPT_SSLKEY`) (optional)
 - `keypassword` - the passphrase to private key (cURL option: `CURLOPT_KEYPASSWD`) (optional)
