@@ -16,9 +16,9 @@ pub fn add_curl_fun_doc(sig_root_mod: &mut ModNode<Sig, ()>, doc_root_mod: &mut 
     let doc = r#"
 # CURL function
 
-The [cURL](#var.curl) function allows to connect with network by the URLs. Data can be transferred
-by this function from/to servers by using for example HTTP or HTTPS. This function uses the cURL
-library to create connections with servers.
+The [`curl`](#var.curl) function allows to connect to network. Data can be transferred by this
+function from/to servers by using for example HTTP, HTTPS, or FTP. This function uses the cURL
+library to create server connections.
 "#;
     match doc_root_mod.value() {
         Some(prev_doc) => doc_root_mod.set_value(Some(prev_doc.clone() + "\n" + &doc[1..])),
@@ -28,13 +28,13 @@ library to create connections with servers.
     let doc = r#"
 Transfers data from/to the `url` URL.
 
-This function returns an array or a string. The result of this function is the header or the
-content if this function returns the string, otherwise the array with the header and the content.
-Also, this function can return `true` if the header and the content aren't returned. If the `opts`
-structure isn't passed, this function returns the content as a string. The `opts` structure can
-have the following fields:
+This function returns an array, a string, or `true`. The result of this function is the header or
+the content if this function returns the string, otherwise the array with the header and the
+content. Also, this function can return `true` if the header and the content aren't returned. If
+the `opts` structure isn't passed, this function returns the content as the string. The `opts`
+structure can have the following fields:
 
-- `read` - the uploading data (optional)
+- `read` - the uploading content (optional)
 - `write` -  if this field has the convertible value to `true`, this function returns a downloaded
   content (default: false) (optional)
 - `header` - if this field has the convertible value to `true`, this function returns a received
