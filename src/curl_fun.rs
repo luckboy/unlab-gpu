@@ -45,6 +45,8 @@ struct CurlOptions
     fail_on_error: Option<bool>,
     follow_location: Option<bool>,
     custom_request: Option<String>,
+    ssl_cert_type: Option<String>,
+    ssl_cert: Option<String>,
     ssl_key_type: Option<String>,
     ssl_key: Option<String>,
     key_password: Option<String>,
@@ -195,6 +197,24 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                         },
                         None => None,
                     };
+                    let ssl_cert_type = match fields.get(&String::from("sslcerttype")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
+                    let ssl_cert = match fields.get(&String::from("sslcert")) {
+                        Some(field) => {
+                            match field {
+                                Value::None => None,
+                                _ => Some(format!("{}", field)),
+                            }
+                        },
+                        None => None,
+                    };
                     let ssl_key_type = match fields.get(&String::from("sslkeytype")) {
                         Some(field) => {
                             match field {
@@ -282,6 +302,8 @@ fn create_curl_options(value: &Value) -> Result<CurlOptions>
                             fail_on_error,
                             follow_location,
                             custom_request,
+                            ssl_cert_type,
+                            ssl_cert,
                             ssl_key_type,
                             ssl_key,
                             key_password,
@@ -376,6 +398,14 @@ fn curl_res_curl_fun(url: &str, opts: &Option<CurlOptions>) -> result::Result<(A
             }
             match &opts.custom_request {
                 Some(custom_request) => easy.custom_request(custom_request.as_str())?,
+                None => (),
+            }
+            match &opts.ssl_cert_type {
+                Some(ssl_cert_type) => easy.ssl_cert_type(ssl_cert_type.as_str())?,
+                None => (),
+            }
+            match &opts.ssl_cert {
+                Some(ssl_cert) => easy.ssl_cert(ssl_cert.as_str())?,
                 None => (),
             }
             match &opts.ssl_key_type {
