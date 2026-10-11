@@ -58,15 +58,16 @@ structure can have the following fields:
   HTTP 3xx redirect (cURL option: `CURLOPT_FOLLOWLOCATION`) (optional)
 - `customrequest` - the custom method of HTTP request (cURL option: `CURLOPT_CUSTOMREQUEST`)
   (optional)
-- `sslcerttype` - the type of certificate (cURL option: `CURLOPT_SSLCERTTYPE`) (optional)
-- `sslcert` - the file of certificate (cURL option: `CURLOPT_SSLCERT`) (optional)
-- `sslkeytype` - the type of private key (cURL option: `CURLOPT_SSLKEYTYPE`) (optional)
-- `sslkey` - the file of private key (cURL option: `CURLOPT_SSLKEY`) (optional)
-- `keypassword` - the passphrase to private key (cURL option: `CURLOPT_KEYPASSWD`) (optional)
+- `sslcerttype` - the type of SSL certificate (cURL option: `CURLOPT_SSLCERTTYPE`) (optional)
+- `sslcert` - the file of SSL certificate (cURL option: `CURLOPT_SSLCERT`) (optional)
+- `sslkeytype` - the type of SSL private key (cURL option: `CURLOPT_SSLKEYTYPE`) (optional)
+- `sslkey` - the file of SSL private key (cURL option: `CURLOPT_SSLKEY`) (optional)
+- `keypassword` - the passphrase to SSL private key (cURL option: `CURLOPT_KEYPASSWD`) (optional)
 - `pinnedpublickey` - the pinned public key (cURL option: `CURLOPT_PINNEDPUBLICKEY`) (optional)
-- `connecttimeout` - the timeout in milliseconds for the connect phase (cURL:
+- `connecttimeout` - the timeout in milliseconds for the connect phase (cURL option:
   `CURLOPT_CONNECTTIMEOUT_MS`) (optional)
-- `timeout` - the timeout in milliseconds for the request (cURL: `CURLOPT_TIMEOUT_MS`) (optional)
+- `timeout` - the timeout in milliseconds for the request (cURL option: `CURLOPT_TIMEOUT_MS`)
+  (optional)
 - `uploadfile` - the uploading file (optional)
 - `downloadfile` - the downloading file (optional)
 
