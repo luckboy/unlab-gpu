@@ -3590,6 +3590,7 @@ pub fn bitxor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `bitshift` built-in function.
 pub fn bitshift(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
