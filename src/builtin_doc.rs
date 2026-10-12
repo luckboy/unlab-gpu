@@ -2018,7 +2018,8 @@ The strings corresponding to the function kinds:
 Calculates bitwise NOT for the `x` value.
 
 If the `x` value is a boolean, this function also returns a boolean. This function returns an
-integer number if the `x` value is a number.
+integer number if the `x` value is a number. The floating-point number is converted to an
+integer number before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitnot"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x"))
@@ -2029,7 +2030,8 @@ integer number if the `x` value is a number.
 Calculates bitwise AND for the `x` value and the `y` value.
 
 If the `x` value and the `y` value are booleans, this function also returns a boolean. This
-function returns an integer number if the `x` value and the `y` value are numbers.
+function returns an integer number if the `x` value and the `y` value are numbers. The
+floating-point numbers are converted to integer numbers before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitand"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -2041,7 +2043,8 @@ function returns an integer number if the `x` value and the `y` value are number
 Calculates bitwise OR for the `x` value and the `y` value.
 
 If the `x` value and the `y` value are booleans, this function also returns a boolean. This
-function returns an integer number if the `x` value and the `y` value are numbers.
+function returns an integer number if the `x` value and the `y` value are numbers. The
+floating-point numbers are converted to integer numbers before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitor"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -2053,7 +2056,8 @@ function returns an integer number if the `x` value and the `y` value are number
 Calculates bitwise XOR for the `x` value and the `y` value.
 
 If the `x` value and the `y` value are booleans, this function also returns a boolean. This
-function returns an integer number if the `x` value and the `y` value are numbers.
+function returns an integer number if the `x` value and the `y` value are numbers. The
+floating-point numbers are converted to integer numbers before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitxor"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -2067,7 +2071,8 @@ Shifts the bits of the `x` value by the `y` value.
 This function shifts the bits of the `x` value to left by the absolute `y` value if the `y` value
 is positive, otherwise shifts the bits of the `x` value to right by the absolute `y` value. If
 the `y` value is zero, this function doesn't shift the bits of the `x` value. This function
-returns an integer number.
+returns an integer number. The floating-point numbers are converted to integer numbers before
+this operation.
 "#;
     sig_root_mod.add_var(String::from("bitshift"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
