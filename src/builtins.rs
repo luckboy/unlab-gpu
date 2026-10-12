@@ -3590,6 +3590,25 @@ pub fn bitxor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+pub fn bitshift(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => {
+            let shift = value2.to_i64();
+            if shift >= 0 {
+                Ok(Value::Int(value.to_i64() << shift))
+            } else {
+                Ok(Value::Int(value.to_i64() >> (-shift)))
+            }
+        },
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function bitshift"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 /// A `bytes` built-in function.
 pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -5087,6 +5106,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("bitand"), bitand);
     add_builtin_fun(root_mod, String::from("bitor"), bitor);
     add_builtin_fun(root_mod, String::from("bitxor"), bitxor);
+    add_builtin_fun(root_mod, String::from("bitshift"), bitshift);
     add_builtin_fun(root_mod, String::from("floatbox"), floatbox);
     add_builtin_fun(root_mod, String::from("bytes"), bytes);
     add_builtin_fun(root_mod, String::from("splitre"), splitre);
