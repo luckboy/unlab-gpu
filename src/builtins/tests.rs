@@ -6804,6 +6804,38 @@ fn test_bitxor_is_applied_with_success()
 }
 
 #[test]
+fn test_bitshift_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("bitshift")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(5), Value::Int(2)]) {
+                Ok(value) => assert_eq!(Value::Int(20), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(5.5), Value::Float(2.5)]) {
+                Ok(value) => assert_eq!(Value::Int(20), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(20), Value::Int(-2)]) {
+                Ok(value) => assert_eq!(Value::Int(5), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(20.5), Value::Float(-2.5)]) {
+                Ok(value) => assert_eq!(Value::Int(5), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_bytes_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
