@@ -6652,6 +6652,158 @@ fn test_floatbox_is_applied_with_success()
 }
 
 #[test]
+fn test_bitnot_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("bitnot")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1)]) {
+                Ok(value) => assert_eq!(Value::Int(-2), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(1.5)]) {
+                Ok(value) => assert_eq!(Value::Int(-2), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_bitand_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("bitand")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(5)]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(3.5), Value::Float(5.5)]) {
+                Ok(value) => assert_eq!(Value::Int(1), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_bitor_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("bitor")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(5)]) {
+                Ok(value) => assert_eq!(Value::Int(7), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(3.5), Value::Float(5.5)]) {
+                Ok(value) => assert_eq!(Value::Int(7), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
+fn test_bitxor_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("bitxor")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Bool(false)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(false), Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(true), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Bool(true), Value::Bool(true)]) {
+                Ok(value) => assert_eq!(Value::Bool(false), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(3), Value::Int(5)]) {
+                Ok(value) => assert_eq!(Value::Int(6), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Float(3.5), Value::Float(5.5)]) {
+                Ok(value) => assert_eq!(Value::Int(6), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_bytes_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
