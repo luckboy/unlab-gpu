@@ -2060,6 +2060,20 @@ function returns an integer number if the `x` value and the `y` value are number
         BuiltinFunArg::Arg(String::from("y"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("bitxor"), String::from(&doc[1..]));    
+
+    let doc = r#"
+Shifts the bits of the `x` value by the `y` value.
+
+This function shifts the bits of the `x` value to left by the absolute `y` value if the `y` value
+is positive, otherwise shifts the bits of the `x` value to right by the absolute `y` value. If
+the `y` value is zero, this function doesn't shift the bits of the `x` value. This function
+returns an integer number.
+"#;
+    sig_root_mod.add_var(String::from("bitshift"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("bitshift"), String::from(&doc[1..]));    
     
     let doc = r#"
 Converts the `X` value to a float-point number and creates a floating-point number box with the
