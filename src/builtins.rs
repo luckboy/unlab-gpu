@@ -3534,6 +3534,58 @@ pub fn functionkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
 pub fn floatbox(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::FloatBox(a.to_f32()))) }
 
+pub fn bitnot(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 1 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match arg_values.get(0) {
+        Some(Value::Bool(a)) => Ok(Value::Bool(!a)),
+        Some(value @ (Value::Int(_) | Value::Float(_))) => Ok(Value::Int(!value.to_i64())),
+        Some(_) => Err(Error::Interp(String::from("unsupported type for function bitnot"))),
+        None => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn bitand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Bool(a)), Some(Value::Bool(b))) => Ok(Value::Bool(a & b)),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Int(value.to_i64() & value2.to_i64())),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function bitand"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn bitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Bool(a)), Some(Value::Bool(b))) => Ok(Value::Bool(a | b)),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Int(value.to_i64() | value2.to_i64())),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function bitor"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
+pub fn bitxor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() != 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(Value::Bool(a)), Some(Value::Bool(b))) => Ok(Value::Bool(a ^ b)),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => Ok(Value::Int(value.to_i64() ^ value2.to_i64())),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function bitxor"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 /// A `bytes` built-in function.
 pub fn bytes(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -5027,6 +5079,10 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("tests"), tests);
     // Built-in functions since version 0.2.0.
     add_builtin_fun(root_mod, String::from("functionkind"), functionkind);
+    add_builtin_fun(root_mod, String::from("bitnot"), bitnot);
+    add_builtin_fun(root_mod, String::from("bitand"), bitand);
+    add_builtin_fun(root_mod, String::from("bitor"), bitor);
+    add_builtin_fun(root_mod, String::from("bitxor"), bitxor);
     add_builtin_fun(root_mod, String::from("floatbox"), floatbox);
     add_builtin_fun(root_mod, String::from("bytes"), bytes);
     add_builtin_fun(root_mod, String::from("splitre"), splitre);
