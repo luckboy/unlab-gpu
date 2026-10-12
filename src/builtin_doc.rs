@@ -139,13 +139,13 @@ This library has the following functions to converting from/to arrays, loading a
 arrays for the [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format:
 
 - [`str2csv`](#var.str2csv) (since 0.2.0)
-- [`str2csvwithouthdr`](#var.str2csvwithouthdr) (since 0.2.0)
+- [`str2csvnohdr`](#var.str2csvnohdr) (since 0.2.0)
 - [`csv2str`](#var.csv2str) (since 0.2.0)
-- [`csv2strwithouthdr`](#var.csv2strwithouthdr) (since 0.2.0)
+- [`csv2strnohdr`](#var.csv2strnohdr) (since 0.2.0)
 - [`loadcsv`](#var.loadcsv) (since 0.2.0)
-- [`loadcsvwithouthdr`](#var.loadcsvwithouthdr) (since 0.2.0)
+- [`loadcsvnohdr`](#var.loadcsvnohdr) (since 0.2.0)
 - [`savecsv`](#var.savecsv) (since 0.2.0)
-- [`savecsvwithouthdr`](#var.savecsvwithouthdr) (since 0.2.0)
+- [`savecsvnohdr`](#var.savecsvnohdr) (since 0.2.0)
 
 These functions to converting from/to, loading, and saving the following values as record fields:
 
@@ -2210,11 +2210,11 @@ boolean is `true`, this function uses semicolon as the field separator instead c
 function returns the array if an error doesn't occur while this conversion, otherwise an error
 with the `"csv"` error kind. 
 "#;
-    sig_root_mod.add_var(String::from("str2csvwithouthdr"), Sig::BuiltinFunSince(vec![
+    sig_root_mod.add_var(String::from("str2csvnohdr"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("s")),
         BuiltinFunArg::OptArg(String::from("issemicolon"))
     ], String::from("0.2.0")));
-    doc_root_mod.add_var(String::from("str2csvwithouthdr"), String::from(&doc[1..]));    
+    doc_root_mod.add_var(String::from("str2csvnohdr"), String::from(&doc[1..]));    
     
     let doc = r#"
 Converts the `X` array to a string with a content in the
@@ -2246,12 +2246,12 @@ requires the `fields` number that determines how many record the fields are writ
 comma. This function returns the string if an error doesn't occur while this conversion,
 otherwise an error with the `"csv"` error kind or the `"utf8"` error kind. 
 "#;
-    sig_root_mod.add_var(String::from("csv2strwithouthdr"), Sig::BuiltinFunSince(vec![
+    sig_root_mod.add_var(String::from("csv2strnohdr"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("fields")),
         BuiltinFunArg::OptArg(String::from("issemicolon"))
     ], String::from("0.2.0")));
-    doc_root_mod.add_var(String::from("csv2strwithouthdr"), String::from(&doc[1..]));    
+    doc_root_mod.add_var(String::from("csv2strnohdr"), String::from(&doc[1..]));    
 
     let doc = r#"
 Formats the `millis` UNIX timestamp in milliseconds according the `fmt` format.
@@ -2678,11 +2678,11 @@ boolean is `true`, this function uses semicolon as the field separator instead c
 function returns the array if an error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind or the `"csv"` error kind. 
 "#;
-    sig_root_mod.add_var(String::from("loadcsvwithouthdr"), Sig::BuiltinFunSince(vec![
+    sig_root_mod.add_var(String::from("loadcsvnohdr"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("path")),
         BuiltinFunArg::OptArg(String::from("issemicolon"))
     ], String::from("0.2.0")));
-    doc_root_mod.add_var(String::from("loadcsvwithouthdr"), String::from(&doc[1..]));    
+    doc_root_mod.add_var(String::from("loadcsvnohdr"), String::from(&doc[1..]));    
     
     let doc = r#"
 Saves the `X` array to the `path` file in the
@@ -2715,13 +2715,13 @@ requires the `fields` number that determines how many record the fields are writ
 comma. This function returns the string if an error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind or the `"csv"` error kind. 
 "#;
-    sig_root_mod.add_var(String::from("savecsvwithouthdr"), Sig::BuiltinFunSince(vec![
+    sig_root_mod.add_var(String::from("savecsvnohdr"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("path")),
         BuiltinFunArg::Arg(String::from("X")),
         BuiltinFunArg::Arg(String::from("fields")),
         BuiltinFunArg::OptArg(String::from("issemicolon"))
     ], String::from("0.2.0")));
-    doc_root_mod.add_var(String::from("savecsvwithouthdr"), String::from(&doc[1..]));
+    doc_root_mod.add_var(String::from("savecsvnohdr"), String::from(&doc[1..]));
 
     let doc = r#"
 Returns the current time as the UNIX timestamp in milliseconds.

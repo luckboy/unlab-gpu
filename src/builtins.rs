@@ -3854,8 +3854,8 @@ pub fn str2csv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
-/// A `str2csvwithouthdr` built-in function.
-pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+/// A `str2csvnohdr` built-in function.
+pub fn str2csvnohdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3866,7 +3866,7 @@ pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                 Object::String(s) => {
                     let is_semicolon = match arg_values.get(1) {
                         Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
-                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function str2csvwithouthdr"))),
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function str2csvnohdr"))),
                         None => false,
                     };
                     let cursor = Cursor::new(s.as_bytes());
@@ -3884,10 +3884,10 @@ pub fn str2csvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                     }
                     Ok(Value::Ref(Arc::new(RwLock::new(MutObject::Array(elems)))))
                 },
-                _ => Err(Error::Interp(String::from("unsupported types for function str2csvwithouthdr"))),
+                _ => Err(Error::Interp(String::from("unsupported types for function str2csvnohdr"))),
             }
         },
-        Some(_) => Err(Error::Interp(String::from("unsupported types for function str2csvwithouthdr"))),
+        Some(_) => Err(Error::Interp(String::from("unsupported types for function str2csvnohdr"))),
         None => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -3954,8 +3954,8 @@ pub fn csv2str(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
-/// A `csv2strwithouthdr` built-in function.
-pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+/// A `csv2strnohdr` built-in function.
+pub fn csv2strnohdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 2 || arg_values.len() > 3 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
@@ -3974,7 +3974,7 @@ pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                     let field_count = field_count_value.to_i64() as usize;
                     let is_semicolon = match arg_values.get(2) {
                         Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
-                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function csv2strwithouthdr"))),
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function csv2strnohdr"))),
                         None => false,
                     };
                     let mut cursor = Cursor::new(Vec::<u8>::new());
@@ -3996,10 +3996,10 @@ pub fn csv2strwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("utf8"), format!("{}", err))))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported types for function csv2strwithouthdr")))
+                _ => Err(Error::Interp(String::from("unsupported types for function csv2strnohdr")))
             }
         },
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function csv2strwithouthdr"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function csv2strnohdr"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -4724,16 +4724,16 @@ pub fn loadcsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
-/// A `loadcsvwithouthdr` built-in function.
-pub fn loadcsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+/// A `loadcsvnohdr` built-in function.
+pub fn loadcsvnohdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = get_first_arg_string(arg_values, "unsupported types for function loadcsvwithouthdr")?;
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function loadcsvnohdr")?;
     let is_semicolon = match arg_values.get(1) {
         Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
-        Some(_) => return Err(Error::Interp(String::from("unsupported types for function loadcsvwithouthdr"))),
+        Some(_) => return Err(Error::Interp(String::from("unsupported types for function loadcsvnohdr"))),
         None => false,
     };
     match File::open(file_name.as_str()) {
@@ -4806,13 +4806,13 @@ pub fn savecsv(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
     }
 }
 
-/// A `savecsvwithouthdr` built-in function.
-pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+/// A `savecsvnohdr` built-in function.
+pub fn savecsvnohdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 3 || arg_values.len() > 4 {
         return Err(Error::Interp(String::from("invalid number of arguments")));
     }
-    let file_name = get_first_arg_string(arg_values, "unsupported types for function savecsvwithouthdr")?;
+    let file_name = get_first_arg_string(arg_values, "unsupported types for function savecsvnohdr")?;
     match (arg_values.get(1), arg_values.get(2)) {
         (Some(Value::Ref(object)), Some(field_count_value @ (Value::Int(_) | Value::Float(_)))) => {
             let object_g = rw_lock_read(&**object)?;
@@ -4827,7 +4827,7 @@ pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                     let field_count = field_count_value.to_i64() as usize;
                     let is_semicolon = match arg_values.get(3) {
                         Some(Value::Bool(tmp_is_semicolon)) => *tmp_is_semicolon,
-                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function savecsvwithouthdr"))),
+                        Some(_) => return Err(Error::Interp(String::from("unsupported types for function savecsvnohdr"))),
                         None => false,
                     };
                     match File::create(file_name) {
@@ -4849,10 +4849,10 @@ pub fn savecsvwithouthdr(_interp: &mut Interp, _env: &mut Env, arg_values: &[Val
                         Err(err) => Ok(Value::Object(Arc::new(Object::Error(String::from("io"), format!("{}", err))))),
                     }
                 },
-                _ => Err(Error::Interp(String::from("unsupported types for function savecsvwithouthdr")))
+                _ => Err(Error::Interp(String::from("unsupported types for function savecsvnohdr")))
             }
         },
-        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function savecsvwithouthdr"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function savecsvnohdr"))),
         (_, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
@@ -5065,9 +5065,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("str2json"), str2json);
     add_builtin_fun(root_mod, String::from("json2str"), json2str);
     add_builtin_fun(root_mod, String::from("str2csv"), str2csv);
-    add_builtin_fun(root_mod, String::from("str2csvwithouthdr"), str2csvwithouthdr);
+    add_builtin_fun(root_mod, String::from("str2csvnohdr"), str2csvnohdr);
     add_builtin_fun(root_mod, String::from("csv2str"), csv2str);
-    add_builtin_fun(root_mod, String::from("csv2strwithouthdr"), csv2strwithouthdr);
+    add_builtin_fun(root_mod, String::from("csv2strnohdr"), csv2strnohdr);
     add_builtin_fun(root_mod, String::from("strftime"), strftime);
     add_builtin_fun(root_mod, String::from("strptime"), strptime);
     add_builtin_fun(root_mod, String::from("barrier"), barrier);
@@ -5098,9 +5098,9 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("pspawn"), pspawn);
     add_builtin_fun(root_mod, String::from("fileappend"), fileappend);
     add_builtin_fun(root_mod, String::from("loadcsv"), loadcsv);
-    add_builtin_fun(root_mod, String::from("loadcsvwithouthdr"), loadcsvwithouthdr);
+    add_builtin_fun(root_mod, String::from("loadcsvnohdr"), loadcsvnohdr);
     add_builtin_fun(root_mod, String::from("savecsv"), savecsv);
-    add_builtin_fun(root_mod, String::from("savecsvwithouthdr"), savecsvwithouthdr);
+    add_builtin_fun(root_mod, String::from("savecsvnohdr"), savecsvnohdr);
     add_builtin_fun(root_mod, String::from("time"), time);
     // Built-in functions from other modules.
     add_builtin_fun(root_mod, String::from("getopts"), getopts);

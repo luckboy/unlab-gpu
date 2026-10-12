@@ -7064,7 +7064,7 @@ false;2;3.5;def
 }
 
 #[test]
-fn test_str2csvwithouthdr_is_applied_with_success()
+fn test_str2csvnohdr_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
@@ -7072,7 +7072,7 @@ fn test_str2csvwithouthdr_is_applied_with_success()
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from("str2csvwithouthdr")) {
+    match root_mod_g.var(&String::from("str2csvnohdr")) {
         Some(fun_value) => {
             let s = "
 true,1,2.5,abc
@@ -7164,7 +7164,7 @@ false;2;;def
 }
 
 #[test]
-fn test_csv2strwithouthdr_is_applied_with_success()
+fn test_csv2strnohdr_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
@@ -7172,7 +7172,7 @@ fn test_csv2strwithouthdr_is_applied_with_success()
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from("csv2strwithouthdr")) {
+    match root_mod_g.var(&String::from("csv2strnohdr")) {
         Some(fun_value) => {
             let elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(5)]))));
             let elem2 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(false), Value::Int(2), Value::Float(3.5)]))));
@@ -8845,7 +8845,7 @@ false;2;3.5;def
 }
 
 #[sealed_test]
-fn test_loadcsvwithouthdr_is_applied_with_success()
+fn test_loadcsvnohdr_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
@@ -8853,7 +8853,7 @@ fn test_loadcsvwithouthdr_is_applied_with_success()
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from("loadcsvwithouthdr")) {
+    match root_mod_g.var(&String::from("loadcsvnohdr")) {
         Some(fun_value) => {
             let s = "
 true,1,2.5,abc
@@ -8983,7 +8983,7 @@ false;2;;def
 }
 
 #[sealed_test]
-fn test_savecsvwithouthdr_is_applied_with_success()
+fn test_savecsvnohdr_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
     add_std_builtin_funs(&mut root_mod);
@@ -8991,7 +8991,7 @@ fn test_savecsvwithouthdr_is_applied_with_success()
     let mut interp = Interp::new();
     let root_mod = env.root_mod().clone();
     let root_mod_g = root_mod.read().unwrap();
-    match root_mod_g.var(&String::from("savecsvwithouthdr")) {
+    match root_mod_g.var(&String::from("savecsvnohdr")) {
         Some(fun_value) => {
             let arg_value = Value::Object(Arc::new(Object::String(String::from("test.csv"))));
             let elem1 = Value::Ref(Arc::new(RwLock::new(MutObject::Array(vec![Value::Bool(true), Value::Int(1), Value::Float(2.5), Value::Object(Arc::new(Object::String(String::from("abc")))), Value::Int(5)]))));
