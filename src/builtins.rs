@@ -3598,11 +3598,20 @@ pub fn bitshift(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> R
     }
     match (arg_values.get(0), arg_values.get(1)) {
         (Some(value @ (Value::Int(_) | Value::Float(_))), Some(value2 @ (Value::Int(_) | Value::Float(_)))) => {
+            let a = value.to_i64();
             let shift = value2.to_i64();
-            if shift >= 0 {
-                Ok(Value::Int(value.to_i64() << shift))
+            if shift > 0 {
+                if shift >= 64 {
+                    return Err(Error::Interp(String::from("overflow in function bitshift")));
+                }
+                Ok(Value::Int(a << shift))
+            } else if shift < 0 {
+                if shift <= -64 {
+                    return Err(Error::Interp(String::from("overflow in function bitshift")));
+                }
+                Ok(Value::Int(a >> -shift))
             } else {
-                Ok(Value::Int(value.to_i64() >> (-shift)))
+                Ok(Value::Int(a))
             }
         },
         (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function bitshift"))),
