@@ -3534,6 +3534,7 @@ pub fn functionkind(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) 
 pub fn floatbox(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 { fun1(arg_values, |a| Ok(Value::FloatBox(a.to_f32()))) }
 
+/// A `bitnot` built-in function.
 pub fn bitnot(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 1 {
@@ -3547,6 +3548,7 @@ pub fn bitnot(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `bitand` built-in function.
 pub fn bitand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -3560,6 +3562,7 @@ pub fn bitand(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Res
     }
 }
 
+/// A `bitor` built-in function.
 pub fn bitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
@@ -3573,6 +3576,7 @@ pub fn bitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Resu
     }
 }
 
+/// A `bitxor` built-in function.
 pub fn bitxor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() != 2 {
