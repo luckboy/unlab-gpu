@@ -4090,39 +4090,15 @@ pub fn barrier(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Re
 
 /// A `mutex` built-in function.
 pub fn mutex(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{
-    if arg_values.len() != 1 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    match arg_values.get(0) {
-        Some(value) => Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(value.clone())))))),
-        None => Err(Error::Interp(String::from("no argument"))),
-    }
-}
+{ fun1(arg_values, |a| Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Mutex(Mutex::new(a.clone()))))))) }
 
 /// A `monitor` built-in function.
 pub fn monitor(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{
-    if arg_values.len() != 1 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    match arg_values.get(0) {
-        Some(value) => Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(value.clone()), Condvar::new()))))),
-        None => Err(Error::Interp(String::from("no argument"))),
-    }
-}
+{ fun1(arg_values, |a| Ok(Value::Object(Arc::new(Object::Sync(SyncObject::Monitor(Mutex::new(a.clone()), Condvar::new())))))) }
 
 /// A `rwlock` built-in function.
 pub fn rwlock(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
-{
-    if arg_values.len() != 1 {
-        return Err(Error::Interp(String::from("invalid number of arguments")));
-    }
-    match arg_values.get(0) {
-        Some(value) => Ok(Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(value.clone())))))),
-        None => Err(Error::Interp(String::from("no argument"))),
-    }
-}
+{ fun1(arg_values, |a| Ok(Value::Object(Arc::new(Object::Sync(SyncObject::RwLock(RwLock::new(a.clone()))))))) }
 
 /// A `channel` built-in function.
 pub fn channel(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
