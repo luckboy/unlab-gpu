@@ -2015,6 +2015,53 @@ The strings corresponding to the function kinds:
     doc_root_mod.add_var(String::from("functionkind"), String::from(&doc[1..]));
 
     let doc = r#"
+Calculates bitwise NOT for the `x` value.
+
+If the `x` value is a boolean, this function also returns a boolean. This function returns an
+integer number if the `x` value is a number.
+"#;
+    sig_root_mod.add_var(String::from("bitnot"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("x"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("bitnot"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates bitwise AND for the `x` value and the `y` value.
+
+If the `x` value and the `y` value are booleans, this function also returns a boolean. This
+function returns an integer number if the `x` value and the `y` value are numbers.
+"#;
+    sig_root_mod.add_var(String::from("bitand"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("bitand"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates bitwise OR for the `x` value and the `y` value.
+
+If the `x` value and the `y` value are booleans, this function also returns a boolean. This
+function returns an integer number if the `x` value and the `y` value are numbers.
+"#;
+    sig_root_mod.add_var(String::from("bitor"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("bitor"), String::from(&doc[1..]));
+
+    let doc = r#"
+Calculates bitwise XOR for the `x` value and the `y` value.
+
+If the `x` value and the `y` value are booleans, this function also returns a boolean. This
+function returns an integer number if the `x` value and the `y` value are numbers.
+"#;
+    sig_root_mod.add_var(String::from("bitxor"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::Arg(String::from("y"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("bitxor"), String::from(&doc[1..]));    
+    
+    let doc = r#"
 Converts the `X` value to a float-point number and creates a floating-point number box with the
 converted `X` value.
 
