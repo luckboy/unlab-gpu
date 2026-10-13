@@ -2255,7 +2255,7 @@ pub fn withwidth(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> 
                 _ => Err(Error::Interp(String::from("unsupported types for function withwidth"))),
             }
         },
-        (Some(_), Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function withwidth"))),
+        (Some(_), Some(_), _) => Err(Error::Interp(String::from("unsupported types for function withwidth"))),
         (_, _, _) => Err(Error::Interp(String::from("no argument"))),
     }
 }
