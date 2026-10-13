@@ -1302,7 +1302,7 @@ If the `s` string is empty, this function returns `none`.
     doc_root_mod.add_var(String::from("char2code"), String::from(&doc[1..]));
 
     let doc = r#"
-Converts the character code as the `x` integer number to the string with the character.
+Converts the character code as the `x` number to the string with the character.
 
 If the `x` character code is invalid, this function returns `none`.
 "#;
