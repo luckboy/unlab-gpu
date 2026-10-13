@@ -3821,6 +3821,7 @@ pub fn reduce(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+/// A `dec2hex` built-in function.
 pub fn dec2hex(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
     if arg_values.len() < 1 || arg_values.len() > 2 {
