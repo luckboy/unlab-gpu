@@ -7049,6 +7049,30 @@ fn test_reduce_is_applied_with_success()
 }
 
 #[test]
+fn test_dec2hex_is_applied_with_success()
+{
+    let mut root_mod: ModNode<Value, ()> = ModNode::new(());
+    add_std_builtin_funs(&mut root_mod);
+    let mut env = Env::new(Arc::new(RwLock::new(root_mod)));
+    let mut interp = Interp::new();
+    let root_mod = env.root_mod().clone();
+    let root_mod_g = root_mod.read().unwrap();
+    match root_mod_g.var(&String::from("dec2hex")) {
+        Some(fun_value) => {
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("4D2")))), value),
+                Err(_) => assert!(false),
+            }
+            match fun_value.apply(&mut interp, &mut env, &[Value::Int(1234), Value::Int(10)]) {
+                Ok(value) => assert_eq!(Value::Object(Arc::new(Object::String(String::from("00000004D2")))), value),
+                Err(_) => assert!(false),
+            }
+        },
+        None => assert!(false),
+    }
+}
+
+#[test]
 fn test_str2toml_is_applied_with_success()
 {
     let mut root_mod: ModNode<Value, ()> = ModNode::new(());
