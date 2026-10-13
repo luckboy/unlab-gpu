@@ -2201,6 +2201,19 @@ element for one element if the `X` iterable object isn't empty, otherwise `none`
         BuiltinFunArg::Arg(String::from("f"))
     ], String::from("0.2.0")));
     doc_root_mod.add_var(String::from("reduce"), String::from(&doc[1..]));
+
+    let doc = r#"
+Converts the `x` number to a hexadecimal integer number as a string. 
+
+If the `width` width is passed, the converted `x` number is padded with zeros according to the
+right alignment. If the `width` width is invalid, this function returns an error with the
+`"format"` error kind.
+"#;
+    sig_root_mod.add_var(String::from("dec2hex"), Sig::BuiltinFunSince(vec![
+        BuiltinFunArg::Arg(String::from("x")),
+        BuiltinFunArg::OptArg(String::from("width"))
+    ], String::from("0.2.0")));
+    doc_root_mod.add_var(String::from("dec2hex"), String::from(&doc[1..]));
     
     let doc = r#"
 Converts the `s` string with the content in the [TOML](https://en.wikipedia.org/wiki/TOML) format
