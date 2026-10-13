@@ -3821,6 +3821,29 @@ pub fn reduce(interp: &mut Interp, env: &mut Env, arg_values: &[Value]) -> Resul
     }
 }
 
+pub fn dec2hex(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
+{
+    if arg_values.len() < 1 || arg_values.len() > 2 {
+        return Err(Error::Interp(String::from("invalid number of arguments")));
+    }
+    match (arg_values.get(0), arg_values.get(1)) {
+        (Some(value @ (Value::Int(_) | Value::Float(_))), None) => Ok(Value::Object(Arc::new(Object::String(format!("{:X}", value.to_i64()))))),
+        (Some(value @ (Value::Int(_) | Value::Float(_))), Some(width_value @ (Value::Int(_) | Value::Float(_)))) => {
+            let width = width_value.to_i64();
+            if width < 0 {
+                return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("width is negative")))));
+            }
+            if width > (isize::MAX as i64) {
+                return Ok(Value::Object(Arc::new(Object::Error(String::from("format"), String::from("too large width")))));
+            }
+            Ok(Value::Object(Arc::new(Object::String(format!("{:0width$X}", value.to_i64(), width = width as usize)))))
+        }
+        (Some(_), None) => Err(Error::Interp(String::from("unsupported type for function dec2hex"))),
+        (Some(_), Some(_)) => Err(Error::Interp(String::from("unsupported types for function dec2hex"))),
+        (_, _) => Err(Error::Interp(String::from("no argument"))),
+    }
+}
+
 /// A `str2toml` built-in function.
 pub fn str2toml(_interp: &mut Interp, _env: &mut Env, arg_values: &[Value]) -> Result<Value>
 {
@@ -5126,6 +5149,7 @@ pub fn add_std_builtin_funs(root_mod: &mut ModNode<Value, ()>)
     add_builtin_fun(root_mod, String::from("fold"), fold);
     add_builtin_fun(root_mod, String::from("map"), map);
     add_builtin_fun(root_mod, String::from("reduce"), reduce);
+    add_builtin_fun(root_mod, String::from("dec2hex"), dec2hex);
     add_builtin_fun(root_mod, String::from("str2toml"), str2toml);
     add_builtin_fun(root_mod, String::from("toml2str"), toml2str);
     add_builtin_fun(root_mod, String::from("str2json"), str2json);
