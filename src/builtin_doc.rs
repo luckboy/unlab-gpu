@@ -2205,9 +2205,9 @@ element for one element if the `X` iterable object isn't empty, otherwise `none`
     let doc = r#"
 Converts the `x` number to a hexadecimal integer number as a string. 
 
-If the `width` width is passed, the converted `x` number is padded with zeros according to the
-right alignment. If the `width` width is invalid, this function returns an error with the
-`"format"` error kind.
+If the `width` width is passed and the converted `x` number has a number of digits less than the
+`width` width, the converted `x` number is padded with zeros according to the right alignment. If
+the `width` width is invalid, this function returns an error with the `"format"` error kind.
 "#;
     sig_root_mod.add_var(String::from("dec2hex"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
