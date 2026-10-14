@@ -1897,8 +1897,36 @@ found index = 3 for xs
 found index = none for ys
 ```
 
-Also, an unnamed functiuns is an object like other functions with the names. Yout can try the unnamed
-function is passed to the `filter` function by enter the following lines to the interpreter:
+Also, the function can be returned as an object by other function. You can try how the functions are
+returned as objects by enter the following lines to the interpreter:
+
+```unlab
+function f(x, y)
+    x + y
+end
+function g(x, y)
+    x * y
+end
+function h(s)
+    if s == "f"
+        f
+    else
+        g
+    end
+end
+println("h(\"f\")(1, 2) = ", h("f")(1, 2))
+println("h(\"g\")(1, 2) = ", h("g")(2, 3))
+```
+
+The output of the above lines is here:
+
+```
+h("f")(1, 2) = 3
+h("g")(2, 3) = 6
+```
+
+Also, an unnamed functiuns is an object like other functions with the names. You can try how the
+unnamed function is passed to the `filter` function by enter the following lines to the interpreter:
 
 ```unlab
 xs = .[ 1, 2, 3, 5, 6 .]
