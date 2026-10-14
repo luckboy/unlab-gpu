@@ -2741,6 +2741,27 @@ name = "github.com/luckboy/example"
 [dependencies]
 ```
 
+If you want to use the features and the functions for current version of this scripting language,
+you can use the `-u` option to added the `unlab-gpu-version` field with current of this scripting
+langauge. the `unlab-gpu-version` field specifies the required version of this scripting language.
+The sample package with the `unlab-gpu-version` field can be created by invoke the following command:
+
+```
+unlab-pkg new -tu example
+```
+
+The created package has the directory tree and the file contents which are same as the directory and
+the file contents for the previous sample package expect the content of `Unlab.toml` file. The content
+of `Unlab.toml` file of the created package is here:
+
+```toml
+[package]
+name = "github.com/luckboy/example"
+unlab-gpu-version = ">=0.2"
+
+[dependencies]
+```
+
 ### Git repository initialization
 
 The sample package is the git repository that should be initialized. The git repository of sample
