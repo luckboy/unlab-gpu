@@ -963,6 +963,7 @@ fib(10) = 55
 ```
 
 ### Return statement
+
 A return statement leaves from the function with the return value. You can try how the return
 statement with the return value by enter the following lines to the interpreter:
 
