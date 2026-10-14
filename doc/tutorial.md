@@ -1897,8 +1897,8 @@ found index = 3 for xs
 found index = none for ys
 ```
 
-Also, the function can be returned as an object by other function. You can try how the functions are
-returned as objects by enter the following lines to the interpreter:
+Also, the function can be returned by other function. You can try how the functions are returned by
+other function by enter the following lines to the interpreter:
 
 ```unlab
 function f(x, y)
