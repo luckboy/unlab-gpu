@@ -962,10 +962,67 @@ fib(5) = 5
 fib(10) = 55
 ```
 
+### Lambda expressions
+
+A lambda expresion creates unnamed function that can be passed as an argument of function or assigned
+to a variable. The lambda expression can have the body as the expresion. You can try the lambda
+expressions work by enter the following lines to the interpreter:
+
+```unlab
+f = @(x, y) x + y
+g = @(x, y) x * y
+println("f(1, 2) = ", f(1, 2))
+println("g(2, 3) = ", g(2, 3))
+```
+
+The output of the above lines is here:
+
+```
+f(1, 2) = 3
+g(2, 3) = 6
+```
+
+Also, the body of unnamed function can be the statements. The sample lambda expression with the
+statements as the body and the sample applications are here:
+
+```unlab
+f = @(x, y, z) {
+    a = x * y
+    b = a + z
+    a
+}
+println("f(1, 2, 3) = ", f(1, 2, 3))
+println("f(2, 3, 4) = ", f(2, 3, 4))
+```
+
+The output of the above lines is here:
+
+```
+f(1, 2, 3) = 2
+f(2, 3, 4) = 6
+```
+
+You can you try the lambda expression as the argument of function works by enter the following line
+to the interpreter:
+
+```unlab
+println(init(3, 2, 1.5, @(d, i, j) d + i * j))
+```
+
+The output of the above line is here:
+
+```
+[
+         2.5000      3.5000
+         3.5000      5.5000
+         4.5000      7.5000
+]
+```
+
 ### Return statement
 
 A return statement leaves from the function with the return value. You can try how the return
-statement with the return value by enter the following lines to the interpreter:
+statement with the return value works by enter the following lines to the interpreter:
 
 ```unlab
 function f(x, y)
@@ -985,8 +1042,8 @@ f(5, 2) = 2
 f(4, 0) = 0
 ```
 
-If you want the function to return the none value, you can omit the return expression. You can try how
-the return statement without the return value by enter the following lines to the interpreter:
+If you want the function to return the none value, you can omit the return expression. You can try
+how the return statement without the return value by enter the following lines to the interpreter:
 
 ```unlab
 function f(x, y)
@@ -1004,6 +1061,29 @@ The output of the above lines is here:
 ```
 f(5, 2) = 1
 f(4, 0) = none
+```
+
+Also, the return statement can be used in the unnamed functions which are created by the lambda
+expressions. You can try how the return statement in the unnamed function by enter the following
+lines to the interpreter:
+
+
+```unlab
+f = @(x, y) {
+    if y == 0
+        return 0
+    end
+    x / y
+}
+println("f(5, 2) = ", f(5, 2))
+println("f(4, 0) = ", f(4, 0))
+```
+
+The output of the above lines is here:
+
+```
+f(5, 2) = 2
+f(4, 0) = 0
 ```
 
 ## More values and objects
@@ -1797,7 +1877,7 @@ g(1, 2) = 3
 g(3, 4) = 7
 ```
 
-You can try how the function is passed to the `find` function by by enter the following lines to the
+You can try how the function is passed to the `find` function by enter the following lines to the
 interpreter:
 
 ```unlab
@@ -1815,6 +1895,20 @@ The output of the above lines is here:
 ```
 found index = 3 for xs
 found index = none for ys
+```
+
+Also, an unnamed functiuns is an object like other functions with the names. Yout can try the unnamed
+function is passed to the `filter` function by enter the following lines to the interpreter:
+
+```unlab
+xs = .[ 1, 2, 3, 5, 6 .]
+println("filtered indices = ", filter(xs, none, @(d, x) mod(x, 2) == 0))
+```
+
+The output of the above lines is here:
+
+```
+filtered indices = .[ 2 5 .]
 ```
 
 ### Errors and none values
