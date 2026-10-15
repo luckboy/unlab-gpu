@@ -2017,9 +2017,9 @@ The strings corresponding to the function kinds:
     let doc = r#"
 Calculates bitwise NOT for the `x` value.
 
-If the `x` value is a boolean, this function also returns a boolean. This function returns an
-integer number if the `x` value is a number. The floating-point number is converted to an
-integer number before this operation.
+If the `x` value is a boolean value, this function also returns a boolean value. This function
+returns an integer number if the `x` value is a number. The floating-point number is converted to
+an integer number before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitnot"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x"))
@@ -2029,9 +2029,9 @@ integer number before this operation.
     let doc = r#"
 Calculates bitwise AND for the `x` value and the `y` value.
 
-If the `x` value and the `y` value are booleans, this function also returns a boolean. This
-function returns an integer number if the `x` value and the `y` value are numbers. The
-floating-point numbers are converted to integer numbers before this operation.
+If the `x` value and the `y` value are boolean values, this function also returns a boolean
+value. This function returns an integer number if the `x` value and the `y` value are numbers.
+The floating-point numbers are converted to integer numbers before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitand"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -2042,9 +2042,9 @@ floating-point numbers are converted to integer numbers before this operation.
     let doc = r#"
 Calculates bitwise OR for the `x` value and the `y` value.
 
-If the `x` value and the `y` value are booleans, this function also returns a boolean. This
-function returns an integer number if the `x` value and the `y` value are numbers. The
-floating-point numbers are converted to integer numbers before this operation.
+If the `x` value and the `y` value are boolean values, this function also returns a boolean
+value. This function returns an integer number if the `x` value and the `y` value are numbers.
+The floating-point numbers are converted to integer numbers before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitor"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -2055,9 +2055,9 @@ floating-point numbers are converted to integer numbers before this operation.
     let doc = r#"
 Calculates bitwise XOR for the `x` value and the `y` value.
 
-If the `x` value and the `y` value are booleans, this function also returns a boolean. This
-function returns an integer number if the `x` value and the `y` value are numbers. The
-floating-point numbers are converted to integer numbers before this operation.
+If the `x` value and the `y` value are boolean values, this function also returns a boolean
+value. This function returns an integer number if the `x` value and the `y` value are numbers.
+The floating-point numbers are converted to integer numbers before this operation.
 "#;
     sig_root_mod.add_var(String::from("bitxor"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("x")),
@@ -2270,7 +2270,7 @@ Converts the `s` string with the content in the
 The array has elements which are structures with fields. The structure contains the field
 identifiers which are the header in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. If the `issemicolon` boolean
-is `true`, this function uses semicolon as the field separator instead comma. This function
+value is `true`, this function uses semicolon as the field separator instead comma. This function
 returns the array if an error doesn't occur while this conversion, otherwise an error with the
 `"csv"` error kind. 
 "#;
@@ -2285,7 +2285,7 @@ Converts the `s` string with the content without the header in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format to an array.
 
 The array has elements which are arrays with elements as record fields. If the `issemicolon`
-boolean is `true`, this function uses semicolon as the field separator instead comma. This
+boolean value is `true`, this function uses semicolon as the field separator instead comma. This
 function returns the array if an error doesn't occur while this conversion, otherwise an error
 with the `"csv"` error kind. 
 "#;
@@ -2304,7 +2304,7 @@ identifiers which are the header in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. This function also requires
 the `fieldnames` array that contains the field names which specify which record fields are
 written. If some structure field doesn't exist in the array element, the record field is empty.
-If the `issemicolon` boolean is `true`, this function uses semicolon as the field separator
+If the `issemicolon` boolean value is `true`, this function uses semicolon as the field separator
 instead comma. This function returns the string if an error doesn't occur while this conversion,
 otherwise an error with the `"csv"` error kind or the `"utf8"` error kind. 
 "#;
@@ -2321,8 +2321,8 @@ Converts the `X` array to a string with a content without the header in the
 
 The array has elements which are arrays with elements as record fields. This function also
 requires the `fields` number that determines how many record the fields are written. If the
-`issemicolon` boolean is `true`, this function uses semicolon as the field separator instead
-comma. This function returns the string if an error doesn't occur while this conversion,
+`issemicolon` boolean value is `true`, this function uses semicolon as the field separator
+instead comma. This function returns the string if an error doesn't occur while this conversion,
 otherwise an error with the `"csv"` error kind or the `"utf8"` error kind. 
 "#;
     sig_root_mod.add_var(String::from("csv2strnohdr"), Sig::BuiltinFunSince(vec![
@@ -2430,9 +2430,9 @@ function informs about continuation, this function waits for a notification and 
 continuation. The `h` function is applied if the `f` function or the `g` function informs about
 stop. All passed function take the `D` value and the value from the `m` monitor and can return an
 array with a new value for the `m` monitor. The `f` function and the `g` function should return a
-convertible value to the boolean as a returned value or a second element in the returned array.
-The passed  function informs about continuation if the convertible value can be converted to
-`true`, otherwise informs about stop. If the `h` function returns other value, this function
+convertible value to the boolean value as a returned value or a second element in the returned 
+array. The passed  function informs about continuation if the convertible value can be converted
+to `true`, otherwise informs about stop. If the `h` function returns other value, this function
 doesn't write the new value to the `m` monitor. The following algorithm in pseudocode describes
 how works this function:
 
@@ -2470,11 +2470,11 @@ then applies the `g` function. Waiting for the notification is repeated if the `
 informs about continuation. The `h` function is applied if the `f` function or the `g` function
 informs about stop. All passed function take the `D` value and the value from the `m` monitor and
 can return an array with a new value for the `m` monitor. The `f` function and the `g` function
-should return a convertible value to the boolean as a returned value or a second element in the
-returned array. The passed function informs about continuation if the convertible value can be
-converted to `true`, otherwise informs about stop. The `g` function also takes the timeout flag.
-If the timeout flag is `true`, the timeout occurred. If the `h` function returns other value,
-this function doesn't write the new value to the `m` monitor. The following algorithm in
+should return a convertible value to the boolean value as a returned value or a second element in
+the returned array. The passed function informs about continuation if the convertible value can
+be converted to `true`, otherwise informs about stop. The `g` function also takes the timeout
+flag. If the timeout flag is `true`, the timeout occurred. If the `h` function returns other
+value, this function doesn't write the new value to the `m` monitor. The following algorithm in
 pseudocode describes how works this function:
 
 ```
@@ -2652,7 +2652,7 @@ kind.
     doc_root_mod.add_var(String::from("readonly"), String::from(&doc[1..]));
 
     let doc = r#"
-Sets the `path` file to read-only if the `isreadonly` boolean is `true`, otherwise sets the
+Sets the `path` file to read-only if the `isreadonly` boolean value is `true`, otherwise sets the
 `path` file to read-write.
 
 If an I/O error occurs while this operation, this function returns an error with the `"io"` error
@@ -2739,7 +2739,7 @@ Loads an array from the `path` file in the
 The array has elements which are structures with fields. The structure contains the field
 identifiers which are the header in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. If the `issemicolon` boolean
-is `true`, this function uses semicolon as the field separator instead comma. This function
+value is `true`, this function uses semicolon as the field separator instead comma. This function
 returns the array if an error doesn't occur while this operation, otherwise an error with the
 `"io"` error kind or the `"csv"` error kind. 
 "#;
@@ -2754,7 +2754,7 @@ Loads an array from the `path` file in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
 
 The array has elements which are arrays with elements as record fields. If the `issemicolon`
-boolean is `true`, this function uses semicolon as the field separator instead comma. This
+boolean value is `true`, this function uses semicolon as the field separator instead comma. This
 function returns the array if an error doesn't occur while this operation, otherwise an error
 with the `"io"` error kind or the `"csv"` error kind. 
 "#;
@@ -2773,7 +2773,7 @@ identifiers which are the header in the
 [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format. This function also requires
 the `fieldnames` array that contains the field names which specify which record fields are
 written. If some structure field doesn't exist in the array element, the record field is empty.
-If the `issemicolon` boolean is `true`, this function uses semicolon as the field separator
+If the `issemicolon` boolean value is `true`, this function uses semicolon as the field separator
 instead comma. This function returns the string if an error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind or the `"csv"` error kind. 
 "#;
@@ -2791,8 +2791,8 @@ Saves the `X` array to the `path` file in the
 
 The array has elements which are arrays with elements as record fields. This function also
 requires the `fields` number that determines how many record the fields are written. If the
-`issemicolon` boolean is `true`, this function uses semicolon as the field separator instead
-comma. This function returns the string if an error doesn't occur while this operation,
+`issemicolon` boolean value is `true`, this function uses semicolon as the field separator
+instead comma. This function returns the string if an error doesn't occur while this operation,
 otherwise an error with the `"io"` error kind or the `"csv"` error kind. 
 "#;
     sig_root_mod.add_var(String::from("savecsvnohdr"), Sig::BuiltinFunSince(vec![
