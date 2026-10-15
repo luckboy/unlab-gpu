@@ -48,7 +48,8 @@ pub enum SyncObject
 
 impl SyncObject
 {
-    /// Waits for the specified number of threads.
+    /// Waits until the specified number of threads in the barrier invokes this method for the
+    /// barrier.
     pub fn wait(&self) -> Result<bool>
     {
         match self {
