@@ -2247,6 +2247,72 @@ function takes the name for the specified module. The sample import of all modul
 usemods("company")
 ```
 
+## Threads and synchronization
+
+Threads allows to parallely execute many task in this scripting language. The threads can communicate
+with each other by the synchronization. The standard library contain the functions for threads and
+synchronization.
+
+### Thread creation
+
+A new thread can be created by the `thread` function that takes the data and the thread function. You
+can create a new thread by enter the following line to the interpreter:
+
+```unlab
+thread("Hello world!!!", @(s) println(s))?
+```
+
+The output of the above line is here:
+
+```
+Hello world!!!
+```
+
+### Waiting for thread
+
+The `thread` function also returns a join handle that allows to wait for the created thread. The
+`threadjoin` function waits for the thread that has the join handle that is returned by the `thread`
+function. You can try how waiting for the thread works by enter the following lines to the interpreter:
+
+```unlab
+jh = thread(5, @(N) {
+    for i in 1 to N
+        sleep(1000)
+        println("i = ", i)
+    end
+    true
+})?
+threadjoin(jh)?
+```
+
+The output of the above lines is here:
+
+```
+i = 1
+i = 2
+i = 3
+i = 4
+i = 5
+```
+
+The above example uses the `sleep` function that puts the current thread to sleep at least the
+specified number of millisecond.
+
+Also, the `threadjoin` function returns the value that is returned by the thread function. The thread
+function is passed while the thread creation. You can try how the `threadjoin` function returns the
+result of thread function by enter the following lines to the interpreter:
+
+```unlab
+jh = thread(none, @(d) 1 + 2)?
+println(threadjoin(jh)?)
+```
+
+The output of the above lines is here:
+
+```
+3
+```
+
 ## Plotting
 
 The standard library contains the functions to plotting which draw charts and/or histograms. The
