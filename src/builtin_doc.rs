@@ -2397,7 +2397,8 @@ Creates a channel.
     doc_root_mod.add_var(String::from("channel"), String::from(&doc[1..]));        
 
     let doc = r#"
-Waits for number of specified threads in the `b` barrier.
+Waits until the number of specified threads in the `b` barrier applies this function to the `b`
+barrier.
 "#;
     sig_root_mod.add_var(String::from("barrierwait"), Sig::BuiltinFunSince(vec![
         BuiltinFunArg::Arg(String::from("b"))
