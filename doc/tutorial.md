@@ -2522,13 +2522,13 @@ The chart of loss function of neural network is here for recognition of trigonom
 ### Loading of neural networks
 
 The neural networks can be loaded by the `load` function that loads variables. You can load the neural
-network generation of trigonometric functions by the following line to the interpreter:
+network for generation of trigonometric functions by the following line to the interpreter:
 
 ```unlab
 tfg_net2 = (load("tfgen" + pathsep + "net.bin")?)[1]
 ```
 
-You can load the neural network recognition of trigonometric functions by the following line to the
+You can load the neural network for recognition of trigonometric functions by the following line to the
 interpreter:
 
 ```unlab
