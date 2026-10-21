@@ -2313,6 +2313,70 @@ The output of the above lines is here:
 3
 ```
 
+### Access to variables, elements, and fields
+
+You can have safe access to variables, elements of arrays, and fields of structure from many threads.
+The interpreter uses synchronization mechanism to protect the variables, the elements of array, and
+the fields of structure against simultaneous writing.
+
+### Sending and receiving messages
+
+Threads can communicate with each other by sending and/or receiving messages. A channel is needed by
+the threads for sending and/or receiving messages. You can create this channel by using the `channel`
+function. The `send` function allows you to send message and the `recv` function allows you to receive
+this message from other thread. The `recv` function blocks thread until it receives the message. You
+can try how inter-thread communication works by sending and receiving message by enter the following
+lines to the interpreter:
+
+```unlab
+println("Start")
+c = channel()
+jh = thread(c, @(c) {
+    sleep(1000)
+    send(c, "My message!")
+    true
+})?
+println("Received message: ", recv(c))
+threadjoin(jh)?
+```
+
+The output of the above lines is here:
+
+```
+Start
+Received message: My message!
+```
+
+Also, many threads can sending messages to one threads. You can try how inter-thread communication
+works for many threads which sending messages by enter the following lines to the interpreter:
+
+```unlab
+println("Start")
+c = channel()
+jh1 = thread(c, @(c) {
+    sleep(1000)
+    send(c, "First message!")
+    true
+})?
+jh2 = thread(c, @(c) {
+    sleep(1000)
+    send(c, "Second message!")
+    true
+})?
+println("Received message: ", recv(c))
+println("Received message: ", recv(c))
+threadjoin(jh1)?
+threadjoin(jh2)?
+```
+
+The output of the above lines is here:
+
+```
+Start
+Received message: First message!
+Received message: Second message!
+```
+
 ## Plotting
 
 The standard library contains the functions to plotting which draw charts and/or histograms. The
