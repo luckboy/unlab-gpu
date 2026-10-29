@@ -2347,8 +2347,8 @@ Start
 Received message: My message!
 ```
 
-Also, many threads can sending messages to one threads. You can try how inter-thread communication
-works for many threads which sending messages by enter the following lines to the interpreter:
+Also, many threads can sending messages to one thread. You can try how inter-thread communication
+works for many threads which send messages by enter the following lines to the interpreter:
 
 ```unlab
 println("Start")
@@ -2375,6 +2375,108 @@ The output of the above lines is here:
 Start
 Received message: First message!
 Received message: Second message!
+```
+
+### Mutexes
+
+A mutex allows to protect own value against simultaneous access. This protection is realized by locking the mutex. If one thread locks the mutex and then other threads want lock same mutex, others
+threads must wait until one thread unlocks this mutex. The mutexes contains own values which are
+protected. The mutex can be locked by the `lock` function that applies the other function to the mutex 
+value. Also, this function can return an array with new mutex value that is stored in the mutex.
+The mutex is automatically unlocked while leaving from this function. You can try how the mutex
+protection by enter the following lines to the interpreter:
+
+```unlab
+println("Start")
+m = mutex("some data")
+jh = thread(m, @(m) {
+    sleep(1000)
+    lock(m, none, @(d, s) {
+        println("2st thread operating on value ...")
+        sleep(1000)
+        println("2st thread done")
+    })
+    true
+})
+lock(m, none, @(d, s) {
+    println("1nd thread operating on value ...")
+    sleep(2000)
+    println("1nd thread done")
+})
+threadjoin(jh)?
+```
+
+The output of the above lines is here:
+
+```
+Start
+1nd thread operating on value ...
+1nd thread done
+2st thread operating on value ...
+2st thread done
+```
+
+You can try how many threads try lock one mutex by enter the following lines to the interpreter:
+
+```unlab
+println("Start")
+m = mutex("some data")
+jh1 = thread(m, @(m) {
+    sleep(1000)
+    lock(m, none, @(d, s) {
+        println("2st thread operating on value ...")
+        sleep(2000)
+        println("2st thread done")
+    })
+    true
+})
+jh2 = thread(m, @(m) {
+    sleep(3000)
+    lock(m, none, @(d, s) {
+        println("3rd thread operating on value ...")
+        sleep(1000)
+        println("3rd thread done")
+    })
+    true
+})
+lock(m, none, @(d, s) {
+    println("1nd thread operating on value ...")
+    sleep(2000)
+    println("1nd thread done")
+})
+threadjoin(jh1)?
+threadjoin(jh2)?
+```
+
+The output of the above lines is here:
+
+```
+Start
+1nd thread operating on value ...
+1nd thread done
+2st thread operating on value ...
+2st thread done
+3rd thread operating on value ...
+3rd thread done
+```
+
+You can try how store new value to mutex by enter the following lines to the interpreter:
+
+```unlab
+m = mutex(1)
+println("m = ", m);
+lock(m, 2, @(d, x) .[ x + d .])
+println("m = ", m);
+lock(m, 3, @(d, x) .[ x + d .])
+println("m = ", m);
+```
+
+The output of the above lines is here:
+
+```
+m = mutex(1)
+m = mutex(3)
+m = mutex(6)
 ```
 
 ## Plotting
