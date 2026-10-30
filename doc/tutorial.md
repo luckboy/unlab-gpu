@@ -2479,6 +2479,108 @@ m = mutex(3)
 m = mutex(6)
 ```
 
+### Monitors
+
+A monitor can be locked like a mutex but it have extra feature. A thread can wait a notification about
+change of protected value by using the monitor. The monitor is automatically unlocked before waiting
+about the notification. When the notification is arrived the thread, the monitor is automatically
+locked. Other thread can change protected value and notify the first thread about change of protected value. The monitor must be locked before changing protected value and then the monitor is unlocked
+after notifying the first thread. The thread can wait for the notification by using the `lockwait`
+funciton that takes three functions. The first function should initialize the monitor value and
+return an array with a new value and a boolean value or same boolean value. The thread waits for the notification if the returned boolean value is `true`, otherwise applies third function. The second
+function is applied after the notification and also should return the array or the boolean value like
+the first function. The thread again waits for the notification if the boolean value is `true`,
+otherwise th applies the third function. The third function should return an array with an new monitor
+value or `none`. The thread can notify other thread by applying the `locknotifyone` function that
+takes the function that should return an array with new monitor value or `none`. You can try how the
+`lockwait` function and the `locknotifyone` function work by enter the following lines to the
+interpreter:
+
+```unlab
+println("Start")
+m = monitor("first value")
+jh = thread(m, @(m) {
+    sleep(1000)
+    locknotifyone(m, none, @(d, s) {
+        println("Changing value ...")
+        .[ "second value" .]
+    })
+    sleep(1000)
+    locknotifyone(m, none, @(d, s) {
+        println("Changing value ...")
+        .[ "quit" .]
+    })
+    true
+})
+lockwait(m, none, @(d, s) {
+    println("In first function")
+    println("Value: ", s)
+    true
+}, @(d, s) {
+    println("In second function")
+    println("Value: ", s)
+    if s == "quit"
+        .[ "third value", false .]
+    else
+        true
+    end
+}, @(d, s) {
+    println("In third function")
+    println("Value: ", s)
+})
+threadjoin(jh)?
+```
+
+The output of the above lines is here:
+
+```
+Start
+In first function
+Value: first value
+Changing value ...
+In second function
+Value: second value
+Changing value ...
+In second function
+Value: quit
+In third function
+Value: third value
+```
+
+One thread cas notify many threads by applied the `locknotifyall` function. You can try how the
+`locknotifyall` function works by enter the following lines to the interpreter:
+
+```
+println("Start")
+m = monitor("some data")
+jh1 = thread(m, @(m) {
+    lockwait(m, none, @(d, s) true, @(d, s) {
+        println("1st thread received notification")
+        false
+    }, @(d, s) none)
+    true
+})
+jh2 = thread(m, @(m) {
+    lockwait(m, none, @(d, s) true, @(d, s) {
+        println("2nd thread received notification")
+        false
+    }, @(d, s) none)
+    true
+})
+sleep(1000)
+locknotifyall(m, none, @(d, s) none)
+threadjoin(jh1)?
+threadjoin(jh2)?
+```
+
+The output of the above lines is here:
+
+```
+Start
+1st thread received notification
+2nd thread received notification
+```
+
 ## Plotting
 
 The standard library contains the functions to plotting which draw charts and/or histograms. The
