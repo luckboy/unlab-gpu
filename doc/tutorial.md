@@ -2587,10 +2587,10 @@ Start
 
 If you want many threads can read data that is protected, you can use a reader-writer lock. The
 reader-writer lock can be created by appling the `rwlock` function. The `rwlockread` function allows
-many threads to read the protected value and locks write access. The `rwlockwrite` function locks
-the reader-writer lock and then other threads want to read access and/or write access must wait until
-one thread unlocks this lock. You can try how the reader-writer lock works by enter the following
-lines to the interpreter:
+many threads to simultaneously read the protected value and locks write access. The `rwlockwrite`
+function locks the reader-writer lock and then other threads want to read access and/or write access
+must wait until one thread unlocks this lock. You can try how the reader-writer lock works by enter
+the following lines to the interpreter:
 
 ```unlab
 println("Start")
