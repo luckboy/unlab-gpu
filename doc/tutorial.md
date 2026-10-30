@@ -2649,7 +2649,7 @@ Rwlock: rwlock(next value)
 
 Barriers allow to synchronize many threads by stops threads until all threads achieve the specified
 barrier. You can create the barrier by using the `barrier` function with the specified number of
-threads. The `barrierwait` waits until the specified number of threads apply this funciton with this
+threads. The `barrierwait` waits until the specified number of threads apply this funciton to this
 barrier. You can try the barrier works by enter the following lines to the interpreter:
 
 ```unblab
