@@ -2398,7 +2398,7 @@ jh = thread(m, @(m) {
         println("2st thread done")
     })
     true
-})
+})?
 lock(m, none, @(d, s) {
     println("1nd thread operating on value ...")
     sleep(2000)
@@ -2430,7 +2430,7 @@ jh1 = thread(m, @(m) {
         println("2st thread done")
     })
     true
-})
+})?
 jh2 = thread(m, @(m) {
     sleep(3000)
     lock(m, none, @(d, s) {
@@ -2439,7 +2439,7 @@ jh2 = thread(m, @(m) {
         println("3rd thread done")
     })
     true
-})
+})?
 lock(m, none, @(d, s) {
     println("1nd thread operating on value ...")
     sleep(2000)
@@ -2513,7 +2513,7 @@ jh = thread(m, @(m) {
         .[ "quit" .]
     })
     true
-})
+})?
 lockwait(m, none, @(d, s) {
     println("In first function")
     println("Value: ", s)
@@ -2561,14 +2561,14 @@ jh1 = thread(m, @(m) {
         false
     }, @(d, s) none)
     true
-})
+})?
 jh2 = thread(m, @(m) {
     lockwait(m, none, @(d, s) true, @(d, s) {
         println("2nd thread received notification")
         false
     }, @(d, s) none)
     true
-})
+})?
 sleep(1000)
 locknotifyall(m, none, @(d, s) none)
 threadjoin(jh1)?
@@ -2581,6 +2581,68 @@ The output of the above lines is here:
 Start
 1st thread received notification
 2nd thread received notification
+```
+
+### Reader-writer locks
+
+If you want many threads can read data that is protected, you can use a reader-writer lock. The
+reader-writer lock can be created by appling the `rwlock` function. The `rwlockread` function allows
+many threads to read the protected value and locks write access. The `rwlockwrite` function locks
+the reader-writer lock and then other threads want to read access and/or write access must wait until
+one thread unlocks this lock. You can try how the reader-writer lock works by enter the following
+lines to the interpreter:
+
+```unlab
+println("Start")
+rwl = rwlock("some data")
+jh1 = thread(rwl, @(rwl) {
+    sleep(1000)
+    rwlockread(rwl, none, @(d, s) {
+        println("2nd thread reading value ...")
+        sleep(1000)
+        println("2nd thread: ", s)
+    })
+    true
+})?
+jh2 = thread(rwl, @(rwl) {
+    sleep(1000)
+    rwlockread(rwl, none, @(d, s) {
+        println("3nd thread reading value ...")
+        sleep(1000)
+        println("3nd thread: ", s)
+    })
+    true
+})?
+jh3 = thread(rwl, @(rwl) {
+    sleep(3000)
+    rwlockwrite(rwl, none, @(d, s) {
+        println("4th thread write next value ...")
+        sleep(1000)
+        .[ "next value" .]
+    })
+    true
+})?
+rwlockwrite(rwl, none, @(d, s) {
+    println("1st thread writing new value ...")
+    sleep(2000)
+    .[ "new value" .]
+})
+threadjoin(jh1)?
+threadjoin(jh2)?
+threadjoin(jh3)?
+println("Rwlock: ", rwl)
+```
+
+The output of the above lines is here:
+
+```
+1st thread writing new value ...
+3nd thread reading value ...
+2nd thread reading value ...
+3nd thread: new value
+2nd thread: new value
+4th thread write next value ...
+Rwlock: rwlock(next value)
 ```
 
 ## Plotting
