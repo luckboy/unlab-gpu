@@ -2381,10 +2381,11 @@ Received message: Second message!
 
 A mutex allows to protect own value against simultaneous access. This protection is realized by locking the mutex. If one thread locks the mutex and then other threads want lock same mutex, others
 threads must wait until one thread unlocks this mutex. The mutexes contains own values which are
-protected. The mutex can be locked by the `lock` function that applies the other function to the mutex 
-value. Also, this function can return an array with new mutex value that is stored in the mutex.
-The mutex is automatically unlocked while leaving from this function. You can try how the mutex
-protection by enter the following lines to the interpreter:
+protected. You can create a mutex by using the `mutex` funciton. The mutex can be locked by the `lock`
+function that applies the other function to the mutex value. Also, this function can return an array
+with new mutex value that is stored in the mutex. The mutex is automatically unlocked while leaving
+from this function. You can try how the mutex protection by enter the following lines to the
+interpreter:
 
 ```unlab
 println("Start")
@@ -2485,16 +2486,17 @@ A monitor can be locked like a mutex but it have extra feature. A thread can wai
 change of protected value by using the monitor. The monitor is automatically unlocked before waiting
 about the notification. When the notification is arrived the thread, the monitor is automatically
 locked. Other thread can change protected value and notify the first thread about change of protected value. The monitor must be locked before changing protected value and then the monitor is unlocked
-after notifying the first thread. The thread can wait for the notification by using the `lockwait`
-funciton that takes three functions. The first function should initialize the monitor value and
-return an array with a new value and a boolean value or same boolean value. The thread waits for the notification if the returned boolean value is `true`, otherwise applies third function. The second
-function is applied after the notification and also should return the array or the boolean value like
-the first function. The thread again waits for the notification if the boolean value is `true`,
-otherwise th applies the third function. The third function should return an array with an new monitor
-value or `none`. The thread can notify other thread by applying the `locknotifyone` function that
-takes the function that should return an array with new monitor value or `none`. You can try how the
-`lockwait` function and the `locknotifyone` function work by enter the following lines to the
-interpreter:
+after notifying the first thread. The `monitor` function creates a monitor. The thread can wait for
+the notification by using the `lockwait` funciton that takes three functions. The first function
+should initialize the monitor value and return an array with a new value and a boolean value or same
+boolean value. The thread waits for the notification if the returned boolean value is `true`,
+otherwise applies third function. The second function is applied after the notification and also
+should return the array or the boolean value like the first function. The thread again waits for the
+notification if the boolean value is `true`, otherwise th applies the third function. The third
+function should return an array with an new monitor value or `none`. The thread can notify other
+thread by applying the `locknotifyone` function that takes the function that should return an array
+with new monitor value or `none`. You can try how the `lockwait` function and the `locknotifyone`
+function work by enter the following lines to the interpreter:
 
 ```unlab
 println("Start")
