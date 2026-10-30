@@ -2645,6 +2645,48 @@ The output of the above lines is here:
 Rwlock: rwlock(next value)
 ```
 
+### Barriers
+
+Barriers allow to synchronize many threads by stops threads until all threads achieve the specified
+barrier. You can create the barrier by using the `barrier` function with the specified number of
+threads. The `barrierwait` waits until the specified number of threads apply this funciton with this
+barrier. You can try the barrier works by enter the following lines to the interpreter:
+
+```unblab
+println("Start")
+b = barrier(5)
+jhs = .[.]
+for i in 1 to 5
+    jh = thread({ b: b; i: i }, @(s) {
+        sleep(s.i * 1000)
+        println("Waiting (", s.i,") ...")
+        barrierwait(s.b)
+        println("Done (", s.i,")")
+        true
+    })?
+    push(jhs, jh)
+end
+for jh in jhs
+    threadjoin(jh)?
+end
+```
+
+The output of the above lines is here:
+
+```
+Start
+Waiting (1) ...
+Waiting (2) ...
+Waiting (3) ...
+Waiting (4) ...
+Waiting (5) ...
+Done (5)
+Done (2)
+Done (1)
+Done (4)
+Done (3)
+```
+
 ## Plotting
 
 The standard library contains the functions to plotting which draw charts and/or histograms. The
