@@ -2687,6 +2687,14 @@ Done (4)
 Done (3)
 ```
 
+## Interruption
+
+The program can be interrupted by pressing the `Ctrl-C` key. This scripting language allows to check
+whether the interpreter interruption is occurred by using the `checkintr` function. This function
+generates an interruption error if the interpreter interruption is occurred. You can use this function
+to interruption of your large computations. If you want to immediately interrupt the interpreter while
+computation by pressing the `Ctrl-C` key, you can use the `-n` option for the interpreter.
+
 ## Plotting
 
 The standard library contains the functions to plotting which draw charts and/or histograms. The
