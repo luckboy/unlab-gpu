@@ -2842,6 +2842,49 @@ The result of the above lines is here:
 
 ![Histogram](plotting-histogram.png)
 
+## CURL
+
+The standard library contains the cURL function that allows you to access to network. You can download
+and upload data from/to websites and servers by this function.
+
+### Downloading files
+
+The `curl` function allows you downloads data from website. You can try how the `curl` function works 
+by enter the following line to the interpreter:
+
+```unlab
+println(curl("https://rust-lang.org/")?)
+```
+
+The `curl` function also can save the downloaded website as the file. You can try how the `curl`
+function save the downloaded website by enter the following line to the interpreter:
+
+```unlab
+curl("https://rust-lang.org/", { downloadfile: "index.html" })?
+```
+
+### Web API
+
+You can have access to Web API by using the `curl` function. You can convert the downloaded data in
+[JSON](https://en.wikipedia.org/wiki/JSON) to object in this scripting language by using the
+`str2json` function. You can access to the Web API of [GitHub](https://github.com) by enter the
+following lines to the interpreter:
+
+```unlab
+http_headers = .[.]
+push(http_headers, "User-Agent: Unlab-gpu/0.2.0")
+push(http_headers, "Accept: application/vnd.github+json")
+push(http_headers, "X-GitHub-Api-Version: 2026-03-10")
+copts = {
+    write: true
+    httpheaders: http_headers
+    followlocation: true
+}
+s = curl("https://api.github.com/repos/luckboy/unlab-gpu", copts)?
+json = str2json(s)?
+println(json)
+```
+
 ## Neural networks
 
 This scripting language is created for neural networks. We will create and train neural netoworks to
