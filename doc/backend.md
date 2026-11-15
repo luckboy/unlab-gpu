@@ -10,7 +10,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 ## Backend configuration file
 
-A backend configuration is the `backend.toml` file that is in the Unlab-gpu home directory.
+A backend configuration file is the `backend.toml` file that is in the Unlab-gpu home directory.
 
 ## Backend configuration file format
 
