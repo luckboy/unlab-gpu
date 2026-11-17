@@ -58,7 +58,7 @@ The following features of this crate can be used by you:
 - `cuda` - use CUDA
 - `cuda-*` - choose CUDA version (for example `cuda-11050`)
 - `default_cublas` - use the cuBLAS library to multiplication of matrices as default for CUDA
-- `default_mma` - use the mma instruction to multiplication of matrices as default for CUDA
+- `default_ptx` - use the module in PTX to multiplication of matrices as default for CUDA
 - `plot` - use plotter for the interpreter (default)
 
 ## Library installation
@@ -122,6 +122,8 @@ files in the `doc` directory are a documentation for this scipting language and 
   configuration
 - [`environment.md`](https://github.com/luckboy/unlab-gpu/blob/master/doc/environment.md) - the
   environment
+- [`github.md`](https://github.com/luckboy/unlab-gpu/blob/master/doc/github.md) - the GitHub
+  configuration
 
 If you want to browse the documentation of standard library, you can open this documentation by enter
 the following command to the interpreter:
