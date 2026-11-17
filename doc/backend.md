@@ -22,7 +22,8 @@ The structure of backend configuration file format is:
 - `platform` - the platform index for the OpenCL backend (default: `0`)
 - `device` - the device index for the OpenCL backend (default: `0`)
 - `cublas` - if this field is `true`, the CUDA backend uses the cuBLAS library (default: `true`)
-- `mma` - if this field is `true`, the CUDA backend uses the mma instruction (default: `false`)
+- `mma` - if this field is `true`, the CUDA backend uses the mma instruction (ignored)
+- `ptx` - if this field is `true`, the CUDA backend uses the mudule in PTX (default: `false`)
 
 The default value of the `backend` field is `"CUDA"` if Unlab-gpu is compiled with the `cuda` feature,
 otherwise `"OpenCL"`.
