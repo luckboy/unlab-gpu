@@ -1510,8 +1510,8 @@ can try how the index operator works for array by enter the following lines to t
 
 ```unlab
 s = { name: "John"; age: 20; height: 1.8 }
-println("s[\"name\"] = ", s.name)
-println("s[\"age\"] = ", s.age)
+println("s[\"name\"] = ", s["name"])
+println("s[\"age\"] = ", s["age"])
 ```
 
 The output of the above lines is here:
