@@ -2379,12 +2379,13 @@ Received message: Second message!
 
 ### Mutexes
 
-A mutex allows to protect own value against simultaneous access. This protection is realized by locking the mutex. If one thread locks the mutex and then other threads want lock same mutex, others
-threads must wait until one thread unlocks this mutex. The mutexes contains own values which are
-protected. You can create a mutex by using the `mutex` funciton. The mutex can be locked by the `lock`
-function that applies the other function to the mutex value. Also, this function can return an array
-with new mutex value that is stored in the mutex. The mutex is automatically unlocked while leaving
-from this function. You can try how the mutex protection by enter the following lines to the
+A mutex allows to protect own value against simultaneous access. This protection is realized by
+locking the mutex. If one thread locks the mutex and then other threads want to lock same mutex,
+others threads must wait until one thread unlocks this mutex. The mutexes contains own values which
+are protected. You can create a mutex by using the `mutex` funciton. The mutex can be locked by the
+`lock` function that applies the other function to the mutex value. Also, this function can return an
+array with new mutex value that is stored in the mutex. The mutex is automatically unlocked while
+leaving from this function. You can try how the mutex protection by enter the following lines to the
 interpreter:
 
 ```unlab
