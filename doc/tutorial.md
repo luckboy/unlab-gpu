@@ -84,8 +84,8 @@ unlab-gpu --help
 
 ## Lines and comments
 
-A code in the Unlab scripting language is divided to lines. The sample lines in this scriping language
-are here:
+A code in the Unlab scripting language is divided to lines. The sample lines in this scripting
+language are here:
 
 ```unlab
 println("Hello world!!!")
