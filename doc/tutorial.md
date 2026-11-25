@@ -3292,7 +3292,7 @@ that is in the package directory.
 
 ### Console
 
-The package manager allows yoy to run the interpreter for the package. You can run the interpreter for
+The package manager allows you to run the interpreter for the package. You can run the interpreter for
 sample package by invoke the following command in the directory of sample package:
 
 ```
