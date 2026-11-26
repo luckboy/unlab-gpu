@@ -1,6 +1,6 @@
 [package]
 name = "unlab-gpu"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Łukasz Szpakowski <luckboy@vp.pl>"]
 edition = "2018"
 license = "MPL-2.0"
