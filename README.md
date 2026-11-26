@@ -47,7 +47,7 @@ You can use the library of this crate by add the following lines in the `Cargo.t
 
 ```toml
 [dependencies]
-unlab-gpu = "0.1.1"
+unlab-gpu = "0.2.0"
 ```
 
 ## Features
